@@ -74,8 +74,8 @@ number_positions = 20
 ## death rate, reproduction chance
 death_rate_var = np.linspace(max_death_rate,0.001,21) # max to min
 repr_rate_var = np.linspace(0,max_repr_rate,21) # min to max
-## genome map
-gen_map = range(0,71)+range(116,171)+[201]
+## genome map: survival (0 to 70), reproduction (16 to 70), neutral (single)
+gen_map range(0,71)+range(116,171)+[201]
 shuffle(gen_map)
 ## plot variables
 snapshot_plot_stages = np.around(np.linspace(0,number_of_stages,16),0)
@@ -128,7 +128,12 @@ info_file.close()
 ## SIMULATION ##
 ################
 
+
 for n_run in range(1, number_of_runs+1):
+
+    # # # # # # # # # # #
+    # 0: INITIALISATION #
+    # # # # # # # # # # # 
 
     ## constants and lists
     resources = start_res
@@ -153,100 +158,43 @@ for n_run in range(1, number_of_runs+1):
     x = 1
 
     ## generating starting population
-    if start_age_var=='y': # If individuals start at reproduction age
-        start_age = 15
-        if surv_rate_distr=='random' and repr_rate_distr=='random':
-            for i in range(start_pop):
-                individual = [start_age,[],[]]
-                individual[1] += starting_genome(variance_var, number_of_bases)
-                individual[2] += starting_genome(variance_var, number_of_bases)
-                population.append(individual)
-        else:
-            for i in range(start_pop):
-                individual = [start_age,[],[]]
-                individual[1] += starting_genome(variance_var, number_of_bases)
-                individual[2] += starting_genome(variance_var, number_of_bases)
-                population.append(individual)
-
-            if surv_rate_distr!='random': # If distribution is not random, all individuals start with same % survival rate?
-                surv_rate_distr1 = (100-float(surv_rate_distr))/100 # convert % survival rate into proportional death rate
-                surv_rate_distr2 = find_nearest(death_rate_var,surv_rate_distr1)
-                srd3 = [1]*surv_rate_distr2+[0]*(20-surv_rate_distr2)
-                for i in population:
-                    k_count = 1
-                    for k in gen_map:
-                        my_shuffle(srd3)
-                        if k<100:
-                            for z in range(10):
-                                i[1].pop(k_count)
-                                i[2].pop(k_count)
-                            for z in range(10):
-                                i[1].insert(k_count, srd3[z])
-                                i[2].insert(k_count, srd3[z+10])
-                        k_count += 10
-
-            if repr_rate_distr!='random':
-                repr_rate_distr1 = find_nearest(repr_rate_var,float(repr_rate_distr)/100)
-                srd3 = [1]*repr_rate_distr1+[0]*(20-repr_rate_distr1)
-                for i in population:
-                    k_count = 1
-                    for k in gen_map:
-                        my_shuffle(srd3)
-                        if k>100 and k<200:
-                            for z in range(10):
-                                i[1].pop(k_count)
-                                i[2].pop(k_count)
-                            for z in range(10):
-                                i[1].insert(k_count, srd3[z])
-                                i[2].insert(k_count, srd3[z+10])
-                        k_count += 10
-
-    else:
-        if surv_rate_distr=='random' and repr_rate_distr=='random':
-            for i in range(start_pop):
-                individual = [randint(0,70),[],[]]
-                individual[1] += starting_genome(variance_var, number_of_bases)
-                individual[2] += starting_genome(variance_var, number_of_bases)
-                population.append(individual)
-        else:
-            for i in range(start_pop):
-                individual = [randint(0,70),[],[]]
-                individual[1] += starting_genome(variance_var, number_of_bases)
-                individual[2] += starting_genome(variance_var, number_of_bases)
-                population.append(individual)
-
-            if surv_rate_distr!='random':
-                surv_rate_distr1 = (100-float(surv_rate_distr))/100
-                surv_rate_distr2 = find_nearest(death_rate_var,surv_rate_distr1)
-                srd3 = [1]*surv_rate_distr2+[0]*(20-surv_rate_distr2)
-                for i in population:
-                    k_count = 1
-                    for k in gen_map:
-                        my_shuffle(srd3)
-                        if k<100:
-                            for z in range(10):
-                                i[1].pop(k_count)
-                                i[2].pop(k_count)
-                            for z in range(10):
-                                i[1].insert(k_count, srd3[z])
-                                i[2].insert(k_count, srd3[z+10])
-                        k_count += 10
-
-            if repr_rate_distr!='random':
-                repr_rate_distr1 = find_nearest(repr_rate_var,float(repr_rate_distr)/100)
-                srd3 = [1]*repr_rate_distr1+[0]*(20-repr_rate_distr1)
-                for i in population:
-                    k_count = 1
-                    for k in gen_map:
-                        my_shuffle(srd3)
-                        if k>100 and k<200:
-                            for z in range(10):
-                                i[1].pop(k_count)
-                                i[2].pop(k_count)
-                            for z in range(10):
-                                i[1].insert(k_count, srd3[z])
-                                i[2].insert(k_count, srd3[z+10])
-                        k_count += 10
+    for i in range(start_pop):
+        start_age = 15 if start_age_var=="y" else randint(0,70) # Uniform?
+        individual = [start_age,[],[]]
+        individual[1] += starting_genome(variance_var, number_of_bases)
+        individual[2] += starting_genome(variance_var, number_of_bases)
+        population.append(individual)
+    if surv_rate_distr!='random': # If distribution is not random, all individuals start with same % survival rate?
+        death_rate = (100-float(surv_rate_distr))/100 # convert % survival rate into proportional death rate
+        surv_rate_distr2 = find_nearest(death_rate_var,death_rate)
+        srd3 = [1]*surv_rate_distr2+[0]*(20-surv_rate_distr2)
+        for i in population:
+            k_count = 1
+            for k in gen_map:
+                my_shuffle(srd3)
+                if k<100:
+                    for z in range(10):
+                        i[1].pop(k_count)
+                        i[2].pop(k_count)
+                    for z in range(10):
+                        i[1].insert(k_count, srd3[z])
+                        i[2].insert(k_count, srd3[z+10])
+                k_count += 10
+    if repr_rate_distr!='random':
+        repr_rate_distr1 = find_nearest(repr_rate_var,float(repr_rate_distr)/100)
+        srd3 = [1]*repr_rate_distr1+[0]*(20-repr_rate_distr1)
+        for i in population:
+            k_count = 1
+            for k in gen_map:
+                my_shuffle(srd3)
+                if k>100 and k<200:
+                    for z in range(10):
+                        i[1].pop(k_count)
+                        i[2].pop(k_count)
+                    for z in range(10):
+                        i[1].insert(k_count, srd3[z])
+                        i[2].insert(k_count, srd3[z+10])
+                k_count += 10
 
     ## starting population output
     pop_file = open(out+'/pop_0_run'+str(n_run)+'.txt','wb')
