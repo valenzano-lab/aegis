@@ -4,6 +4,7 @@ from random import randint,uniform,choice,gauss,sample,shuffle
 import time
 import numpy as np
 import cPickle
+import scipy.stats as stats
 
 ## prompts
 #res_prompt = raw_input('\nResources as a function of population[pop] or a constant[const]? ')
@@ -82,7 +83,10 @@ ipx = np.arange(0,71)
 surv_fit_var = np.linspace(0,1,21)
 repr_fit_var = np.linspace(0,1,21)
 
-## define functions
+###############
+## FUNCTIONS ##
+###############
+
 def chance(z):
     z = round(z * 1000000, 0)
     if (randint(1, 1000000) <= z):
@@ -91,18 +95,14 @@ def chance(z):
         y = False
     return y
 
-def divers_function(x,n_base):
-    if x>1.4:
-        x = 1.4
-    x_var = round(uniform(-x,x),2)
-    if x_var>0:
-        sigma_var = 1.4+round(-579.73676*x_var**7+2482.6373*x_var**6-4175.34457*x_var**5+3529.51159*x_var**4-1568.36701*x_var**3+344.84699*x_var**2-27.5476*x_var,2)
-    else:
-        sigma_var = 1.4+x_var
-    a = np.array([gauss(mu=0.5, sigma=sigma_var) for i in range(n_base)], dtype=int)
-    a = np.absolute(a)
-    a[a>1] = 1
-    a = list(a)
+def starting_genome(var,n):
+    ### Returns a binary array of length n, with the proportion of 1's
+    ### determined by a truncated normal distribution with variance var
+    var=min(1.4, var)
+    sd = var**0.5
+    p=stats.truncnorm(-0.5/sd, 0.5/sd, loc=0.5, scale=sd).rvs(1) 
+    # Normal distribution with mean 0.5 and sd as given, truncated to between 0 and 1.
+    a = np.random.binomial(n,p)
     return a
 
 def find_nearest(array,value):
@@ -154,22 +154,22 @@ for n_run in range(1, number_of_runs+1):
 
     ## generating starting population
     if start_age_var=='y': # If individuals start at reproduction age
+        start_age = 15
         if surv_rate_distr=='random' and repr_rate_distr=='random':
-            start_age = 15
             for i in range(start_pop):
                 individual = [start_age,[],[]]
-                individual[1] += divers_function(variance_var, number_of_bases)
-                individual[2] += divers_function(variance_var, number_of_bases)
+                individual[1] += starting_genome(variance_var, number_of_bases)
+                individual[2] += starting_genome(variance_var, number_of_bases)
                 population.append(individual)
         else:
             for i in range(start_pop):
                 individual = [start_age,[],[]]
-                individual[1] += divers_function(variance_var, number_of_bases)
-                individual[2] += divers_function(variance_var, number_of_bases)
+                individual[1] += starting_genome(variance_var, number_of_bases)
+                individual[2] += starting_genome(variance_var, number_of_bases)
                 population.append(individual)
 
-            if surv_rate_distr!='random':
-                surv_rate_distr1 = (100-float(surv_rate_distr))/100
+            if surv_rate_distr!='random': # If distribution is not random, all individuals start with same % survival rate?
+                surv_rate_distr1 = (100-float(surv_rate_distr))/100 # convert % survival rate into proportional death rate
                 surv_rate_distr2 = find_nearest(death_rate_var,surv_rate_distr1)
                 srd3 = [1]*surv_rate_distr2+[0]*(20-surv_rate_distr2)
                 for i in population:
@@ -205,14 +205,14 @@ for n_run in range(1, number_of_runs+1):
         if surv_rate_distr=='random' and repr_rate_distr=='random':
             for i in range(start_pop):
                 individual = [randint(0,70),[],[]]
-                individual[1] += divers_function(variance_var, number_of_bases)
-                individual[2] += divers_function(variance_var, number_of_bases)
+                individual[1] += starting_genome(variance_var, number_of_bases)
+                individual[2] += starting_genome(variance_var, number_of_bases)
                 population.append(individual)
         else:
             for i in range(start_pop):
                 individual = [randint(0,70),[],[]]
-                individual[1] += divers_function(variance_var, number_of_bases)
-                individual[2] += divers_function(variance_var, number_of_bases)
+                individual[1] += starting_genome(variance_var, number_of_bases)
+                individual[2] += starting_genome(variance_var, number_of_bases)
                 population.append(individual)
 
             if surv_rate_distr!='random':
