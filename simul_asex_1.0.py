@@ -322,16 +322,12 @@ for n_run in range(1, number_of_runs+1):
         ## adult selection
         adult_pass = []
         for i in range(len(adult)):
-            repr_rate = 0 # in case age>70
-            down_limit = 0
-            up_limit = 10
-            for k in gen_map:
-                if k>100 and k<200:
-                    if adult[i][0]==k-100:
-                        repr_rate = repr_rate_var[adult[i][1][down_limit:up_limit].count(1)+adult[i][2][down_limit:up_limit].count(1)]
-                        break
-                down_limit = up_limit
-                up_limit += 10
+            I = adult[i]
+            if I[0] <= 70:
+                locus = np.nonzero((gen_map==I[0]+100)*1)[0][0] # Get position on gen_map corresponding to reproductive locus for this age
+                pos=(locus*10, (locus+1)*10) # Positions in the genome array to use for calculating reproductive probability.
+                repr_rate = repr_rate_var[ I[1][pos[0]:pos[1]].count(1) + I[2][pos[0]:pos[1]].count(1) ]
+            else: repr_rate = 0
             if chance(repr_rate):
                 adult_pass.append(adult[i])
 
