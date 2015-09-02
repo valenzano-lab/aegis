@@ -5,6 +5,8 @@ import time
 import numpy as np
 import cPickle
 import scipy.stats as stats
+import copy
+import itertools
 
 ## prompts
 #res_prompt = raw_input('\nResources as a function of population[pop] or a constant[const]? ')
@@ -339,19 +341,13 @@ for n_run in range(1, number_of_runs+1):
             resources = min(max(resources, 0), res_upper_limit) # resources cannot be negative or exceed limit
             # If resources are 0, death rate increases
             x = x*death_rate_increase if resources == 0 else 1.0
-
         else: # constant
             x = x*death_rate_increase if len(population)>resources else 1.0
+        ### So death rate increase compounds over multiple stages?
 
         ## adult sorting and genome data transcription so that parent genome remains unchanged after reproduction 
-        adult = []
-        for i in range(len(population)):
-            if (population[i][0] > 15):
-                u = []
-                u.append(population[i][0])
-                u.append(list(population[i][1]))
-                u.append(list(population[i][2]))
-                adult.append(u)
+        which_adults = np.array([item[0] for item in pop])>15
+        adult = copy.deepcopy(list(itertools.compress(population, which_adults)))
 
         ## adult selection
         adult_pass = []
