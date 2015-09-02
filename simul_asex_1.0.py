@@ -325,11 +325,11 @@ for n_run in range(1, number_of_runs+1):
             I = adult[i]
             if I[0] <= 70:
                 locus = np.nonzero((gen_map==I[0]+100)*1)[0][0] # Get position on gen_map corresponding to reproductive locus for this age
-                pos=(locus*10, (locus+1)*10) # Positions in the genome array to use for calculating reproductive probability.
+                pos = (locus*10, (locus+1)*10) # Positions in the genome array to use for calculating reproductive probability.
                 repr_rate = repr_rate_var[ I[1][pos[0]:pos[1]].count(1) + I[2][pos[0]:pos[1]].count(1) ]
             else: repr_rate = 0
             if chance(repr_rate):
-                adult_pass.append(adult[i])
+                adult_pass.append(I)
 
         ## creating a new individual
         for n in adult_pass: # every selected individual reproduces
