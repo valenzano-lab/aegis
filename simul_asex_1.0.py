@@ -102,7 +102,7 @@ def starting_genome(var,n):
     sd = var**0.5
     p=stats.truncnorm(-0.5/sd, 0.5/sd, loc=0.5, scale=sd).rvs(1) 
     # Normal distribution with mean 0.5 and sd as given, truncated to between 0 and 1.
-    a = np.random.binomial(n,p)
+    a = (stats.uniform(0,1).rvs(n)<p)*1
     return a
 
 def find_nearest(array,value):
@@ -211,7 +211,10 @@ for n_run in range(1, number_of_runs+1):
     cPickle.dump(gen_map,pop_file)
     pop_file.close()
 
-    ## stage loop
+    # # # # # # # # #
+    # 1: STAGE LOOP #
+    # # # # # # # # # 
+
     for n_stage in range(0, number_of_stages+1):
         print n_stage
         
@@ -221,19 +224,9 @@ for n_run in range(1, number_of_runs+1):
             res_txt.append(resources)
             print 'perished at stage '+str(n_stage)
             break
-
-        ## PLOT VALUES OUTPUT
-        # EVERY STAGE
-        n_age = np.zeros((71,))
-
-        ## output age_distr
-        for i in range(len(population)):
-            for k in range(71):
-                if population[i][0]==k:
-                    n_age[k]+=1
-                    break
-
-        n_age = n_age/len(population)
+        
+        # Get (proportional) age distribution:
+        n_age = np.bincount([i[0] for i in population])/len(population)
 
         pop_txt.append(len(population))
         res_txt.append(resources)
@@ -326,7 +319,7 @@ for n_run in range(1, number_of_runs+1):
             hetrz_mea_txt.append(hetrz_mea)
             hetrz_mea_sd_txt.append(hetrz_mea_sd)
 
-        # everyone gets 1 year older
+        # everyone gets 1 stage older
         for i in range(len(population)):
             population[i][0] += 1
 
