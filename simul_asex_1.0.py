@@ -323,29 +323,25 @@ for n_run in range(1, number_of_runs+1):
         for i in range(len(population)):
             population[i][0] += 1
 
-        ### RESOURCES
+        # Change in resources
+        # If res_prompt=='pop', resources are a function of population size and regrow:
+        # Each individuals consumes 1 resource per stage; if resources are left
+        # Multiply them by regrowth factor and add to set increment factor; else
+        # subtract deficit from increment factor. Death rate increases if resources
+        # run out.
+        #
+        # Else, resources are constant and death rate increases if there are
+        # more individuals than available resources.
+
         if res_prompt=='pop': # function of population
-            if (len(population) > resources):
-                k = 1
-            else:
-                k = k_var
-            resources = int((resources-len(population))*k+R) ## Res(s) = (Res(s-1)-N)*k+R
-            ## resources cannot be negative or higher than x
-            if (resources < 0):
-                resources = 0
-            elif (resources > res_upper_limit):
-                resources = res_upper_limit
-            ## x increases the death rate when resources are zero
-            if (resources == 0):
-                x = x*death_rate_increase
-            else:
-                x = 1.0
+            k = 1 if (len(population) > resources) else k_var
+            resources = int((resources-len(population))*k+R) # Res_{t+1} = (Res_t-N)*k+R
+            resources = min(max(resources, 0), res_upper_limit) # resources cannot be negative or exceed limit
+            # If resources are 0, death rate increases
+            x = x*death_rate_increase if resources == 0 else 1.0
 
         else: # constant
-            if len(population)>resources:
-                x = x*death_rate_increase
-            else:
-                x = 1.0
+            x = x*death_rate_increase if len(population)>resources else 1.0
 
         ## adult sorting and genome data transcription so that parent genome remains unchanged after reproduction 
         adult = []
