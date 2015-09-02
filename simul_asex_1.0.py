@@ -77,8 +77,8 @@ number_positions = 20
 death_rate_var = np.linspace(max_death_rate,0.001,21) # max to min
 repr_rate_var = np.linspace(0,max_repr_rate,21) # min to max
 ## genome map: survival (0 to 70), reproduction (16 to 70), neutral (single)
-gen_map range(0,71)+range(116,171)+[201]
-shuffle(gen_map)
+gen_map = np.asarray(range(0,71)+range(116,171)+[201])
+np.random.shuffle(gen_map)
 ## plot variables
 snapshot_plot_stages = np.around(np.linspace(0,number_of_stages,16),0)
 ipx = np.arange(0,71)
