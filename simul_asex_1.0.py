@@ -222,36 +222,42 @@ for n_run in range(1, number_of_runs+1):
             density_repr = np.zeros((21,))
             hetrz_mea = np.zeros((1260,)) # heterozigosity measure
             hetrz_mea_sd = [[]]*1260 # heterozigosity measure sd
-
-            ## output genome
+            
+            neut_locus = np.nonzero(gen_map==201)[0][0] # Position of neutral locus on gen_map
+            neut_pos = (neut_locus*10, (neut_locus+1)*10) # Positions in genome array corresponding to neutral locus
             for i in range(len(population)):
-                down_limit = 0
-                up_limit = 10
-                for k in gen_map:
-                    out_var = population[i][1][down_limit:up_limit].count(1)+population[i][2][down_limit:up_limit].count(1)
-                    if k<100:
-                        density_surv[out_var]+=1
-                        death_rate_out[k]+=death_rate_var[out_var]
-                        surv_rate_sd[k].append(1-death_rate_var[out_var]) # sd
-                        surv_fit[k]+=surv_fit_var[out_var]
-                        for t in range(10):
-                            hetrz_mea[k*10+t] += population[i][1][down_limit+t]+population[i][2][down_limit+t]
-                            hetrz_mea_sd[k*10+t].append(population[i][1][down_limit+t]+population[i][2][down_limit+t])
-                    elif k<200:
-                        density_repr[out_var]+=1
-                        repr_rate_out[k-100]+=repr_rate_var[out_var]
-                        repr_rate_sd[k-100].append(repr_rate_var[out_var]) # sd
-                        repr_fit[k-100]+=repr_fit_var[out_var]
-                        for t in range(10):
-                            hetrz_mea[(k-116)*10+710+t] += population[i][1][down_limit+t]+population[i][2][down_limit+t]
-                            hetrz_mea_sd[(k-116)*10+710+t].append(population[i][1][down_limit+t]+population[i][2][down_limit+t])
-                    else:
-                        death_rate_junk_out[0]+=death_rate_var[out_var]
-                        surv_fit_junk[0]+=surv_fit_var[out_var]
-                        repr_rate_junk_out[0]+=repr_rate_var[out_var]
-                        repr_fit_junk[0]+=repr_fit_var[out_var]
-                    down_limit = up_limit
-                    up_limit += 10
+                I = population[i] 
+                surv_locus = np.nonzero(gen_map==I[0])[0][0] # Position of age-appropriate survival locus on gen_map
+                repr_locus = np.nonzero(gen_map==(I[0]+100))[0][0] # Position of age-appropriate reproduction locus on gen_map
+                surv_pos = (surv_locus*10, (surv_locus+1)*10)  # Positions in genome array corresponding to survival locus
+                repr_pos = (repr_locus*10, (repr_locus+1)*10)  # Positions in genome array corresponding to reproduction locus
+                # Get genotype sums:
+                surv_out = I[1][surv_pos[0]:surv_pos[1]].count(1) + I[2][surv_pos[0]:surv_pos[1]].count(1)  
+                repr_out = I[1][repr_pos[0]:repr_pos[1]].count(1) + I[2][repr_pos[0]:repr_pos[1]].count(1)  
+                neut_out = I[1][neut_pos[0]:neut_pos[1]].count(1) + I[2][neut_pos[0]:neut_pos[1]].count(1)  
+                # Survival statistics:
+                density_surv[surv_out] += 1
+                death_rate_out[surv_locus] += death_rate_var[surv_out]
+                surv_rate_sd[surv_locus].append(1-death_rate_var[surv_out])
+                surv_fit[surv_locus] += surv_fit_var[surv_out]
+                for t in range(surv_pos[0], surv_pos[1]):
+                    hetrz = I[1][t]+I[2][t]
+                    hetrz_mea[t] += hetrz
+                    hetrz_mea_sd[t].append(hetrz)
+                # Reproduction statistics:
+                density_repr[repr_out] += 1
+                repr_rate_out[repr_locus] += repr_rate_var[repr_out]
+                repr_rate_sd[repr_locus].append(repr_rate_var[repr_out])
+                repr_fit[repr_locus] += repr_fit_var[repr_out]
+                for t in range(repr_pos[0], repr_pos[1]):
+                    hetrz = I[1][t]+I[2][t]
+                    hetrz_mea[t] += hetrz
+                    hetrz_mea_sd[t].append(hetrz)
+                # Neutral statistics
+                death_rate_junk_out[0] += death_rate_var[neut_out]
+                surv_fit_junk[0] += surv_fit_var[neut_out]
+                repr_rate_junk_out[0]+=repr_rate_var[neut_out]
+                repr_fit_junk[0]+=repr_fit_var[neut_out]
 
             ## average the output data 
             surv_rate_out = 1-death_rate_out/len(population)
@@ -319,7 +325,7 @@ for n_run in range(1, number_of_runs+1):
         which_adults = np.array([item[0] for item in pop])>15
         adult = copy.deepcopy(list(itertools.compress(population, which_adults)))
 
-        ## adult selection
+        ## parent selection
         adult_pass = []
         for i in range(len(adult)):
             I = adult[i]
@@ -327,52 +333,38 @@ for n_run in range(1, number_of_runs+1):
                 locus = np.nonzero((gen_map==I[0]+100)*1)[0][0] # Get position on gen_map corresponding to reproductive locus for this age
                 pos = (locus*10, (locus+1)*10) # Positions in the genome array to use for calculating reproductive probability.
                 repr_rate = repr_rate_var[ I[1][pos[0]:pos[1]].count(1) + I[2][pos[0]:pos[1]].count(1) ]
-            else: repr_rate = 0
-            if chance(repr_rate):
-                adult_pass.append(I)
-
-        ## creating a new individual
-        for n in adult_pass: # every selected individual reproduces
+                # Reproduction rate = min_rate + (max_rate-min_rate)/21 * locus_sum (across both chromosomes)
+                if chance(repr_rate):
+                    adult_pass.append(I)
+        
+        # Make new individuals from parents
+        for a in adult_pass: # every selected individual reproduces
+            chr1 = a[1]
+            chr2 = a[2]
             ## mutation
             for i in range(0, number_of_bases):
-                if chance(mutation_rate): 
-                    if n[1][i] == 0:
-                        if chance(0.1):
-                            n[1][i] = 1
-                    else:
-                        n[1][i] = 0
-                   
-                if chance(mutation_rate):
-                    if n[2][i] == 0:
-                        if chance(0.1):
-                            n[2][i] = 1
-                    else:
-                        n[2][i] = 0
+                mu = np.array([[chance(mutation_rate), 1-chance(0.1*mutation_rate)], 
+                    [chance(mutation_rate), 1-chance(0.1*mutation_rate)]])
+                # 0 -> 1 mutationts 10x as likely as 1 -> 0
+                chr1[i] = mu[0, chr1[i]]
+                chr2[i] = mu[1, chr1[i]]
+            population.append([0, itertools.copy(chr1), itertools.copy(chr2)]) # Add newborn to population
 
-            new_born = [0]
-            new_born.append(n[1])
-            new_born.append(n[2])
-            population.append(new_born)
-
-        ## dying    
+        ## death selection
         j = 0
         for i in range(len(population)):
-            death_rate = 1 # in case age>70
-            down_limit = 0
-            up_limit = 10
-            for k in gen_map:
-                if k<100:
-                    if population[i-j][0]==k:
-                        death_rate = death_rate_var[population[i-j][1][down_limit:up_limit].count(1)+population[i-j][2][down_limit:up_limit].count(1)]
-                        break
-                down_limit = up_limit
-                up_limit += 10
-                        
-            if chance(death_rate*x):
+            I = population[i]
+            if I[0] <= 70:
+                locus = np.nonzero((gen_map==I[0])*1)[0][0] # Get position on gen_map corresponding to survival locus for this age
+                pos = (locus*10, (locus+1)*10) # Positions in the genome array to use for calculating survival probability.
+                death_rate = death_rate_var[ I[1][pos[0]:pos[1]].count(1) + I[2][pos[0]:pos[1]].count(1) ]
+                # Death rate = max_rate - (max_rate-min_rate)/21 * locus_sum (across both chromosomes)
+            else: death_rate = 1
+            if chance(death_rate*x): # Genetic death rate compounded by resource shortage
                 population.pop(i-j)
                 j += 1
 
-        ## enviromental crisis
+        ## extrinsic death crisis
         if any(crisis_stages==n_stage):
             population = sample(population, int(sample_var*len(population)))
 
