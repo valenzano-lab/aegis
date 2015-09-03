@@ -9,6 +9,7 @@ import copy
 import itertools
 import simul_functions
 
+## PARAMETERS ## 
 res_prompt = 'pop' # Resource growth: population-dependent vs constant
 R = 1000 # Resource increment per stage
 k_var = 1.6 # Resource regrowth factor
@@ -70,12 +71,7 @@ info_file.close()
 ## SIMULATION ##
 ################
 
-
 for n_run in range(1, number_of_runs+1):
-
-    # # # # # # # # # # #
-    # 0: INITIALISATION #
-    # # # # # # # # # # # 
 
     ## constants and lists
     resources = start_res
@@ -103,42 +99,13 @@ for n_run in range(1, number_of_runs+1):
     for i in range(start_pop):
         start_age = 15 if start_age_var=="y" else randint(0,70) # Uniform?
         individual = [start_age,[],[]]
-        individual[1] += starting_genome(variance_var, number_of_bases)
-        individual[2] += starting_genome(variance_var, number_of_bases)
+        individual[1] += starting_genome(variance_var, number_of_bases, 
+                gen_map, surv_rate_distr, repr_rate_distr)
+        individual[2] += starting_genome(variance_var, number_of_bases,
+                gen_map, surv_rate_distr, repr_rate_distr)
         population.append(individual)
-    if surv_rate_distr!='random': # If distribution is not random, all individuals start with same % survival rate?
-        death_rate = (100-float(surv_rate_distr))/100 # convert % survival rate into proportional death rate
-        surv_rate_distr2 = find_nearest(death_rate_var,death_rate)
-        srd3 = [1]*surv_rate_distr2+[0]*(20-surv_rate_distr2)
-        for i in population:
-            k_count = 1
-            for k in gen_map:
-                my_shuffle(srd3)
-                if k<100:
-                    for z in range(10):
-                        i[1].pop(k_count)
-                        i[2].pop(k_count)
-                    for z in range(10):
-                        i[1].insert(k_count, srd3[z])
-                        i[2].insert(k_count, srd3[z+10])
-                k_count += 10
-    if repr_rate_distr!='random':
-        repr_rate_distr1 = find_nearest(repr_rate_var,float(repr_rate_distr)/100)
-        srd3 = [1]*repr_rate_distr1+[0]*(20-repr_rate_distr1)
-        for i in population:
-            k_count = 1
-            for k in gen_map:
-                my_shuffle(srd3)
-                if k>100 and k<200:
-                    for z in range(10):
-                        i[1].pop(k_count)
-                        i[2].pop(k_count)
-                    for z in range(10):
-                        i[1].insert(k_count, srd3[z])
-                        i[2].insert(k_count, srd3[z+10])
-                k_count += 10
 
-    ## starting population output
+    ## starting population output::
     pop_file = open(out+'/pop_0_run'+str(n_run)+'.txt','wb')
     cPickle.dump(population,pop_file)
     cPickle.dump(resources,pop_file)
