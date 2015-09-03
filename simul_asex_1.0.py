@@ -125,20 +125,19 @@ for n_run in range(1, number_of_runs+1):
     # # # # # # # # # 
 
     for n_stage in range(0, number_of_stages+1):
-        print n_stage
         
-        ## extinction check
-        if (len(population) == 0):
-            pop_txt.append(len(population))
-            res_txt.append(resources)
-            print 'perished at stage '+str(n_stage)
+        pop_txt.append(len(population))
+        res_txt.append(resources)
+
+        if(len(population)==0):
+            print "perished at stage "+str(n_stage)
             break
-        
+        else:
+            print n_stage
+
         # Get (proportional) age distribution:
         n_age = np.bincount([i[0] for i in population])/len(population)
 
-        pop_txt.append(len(population))
-        res_txt.append(resources)
         n_age_txt.append(n_age)
 
         ## ONLY 16 STAGES
