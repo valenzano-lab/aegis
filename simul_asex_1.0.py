@@ -19,7 +19,7 @@ res_upper_limit = 5000 # Max resources
 start_res = 0 # Starting resources
 start_age_var = 'random' # All individuals start at reproduction age ("y", or distribution is random ("random"):
 variance_var = 1.4 # "Variance index"?
-start_pop = 500 # Starting population size
+start_pop = 5000 # Starting population size
 number_of_stages = 200 # Total number of stages
 crisis_stages = '' # Stages of extrinsic death crisis
 if crisis_stages!='':
@@ -102,14 +102,14 @@ for n_run in range(1, number_of_runs+1):
     ## generating starting population
     print "Generating starting population...",
     # First row of population array
-    population = fn.make_individual(start_age_var, variance_var,
-            number_of_bases, gen_map, surv_rate_distr, repr_rate_distr)
+    population = []
     # Rest of population
     for i in range(start_pop-1):
         indiv = fn.make_individual(start_age_var, variance_var,
                 number_of_bases, gen_map, surv_rate_distr, 
                 repr_rate_distr)
-        population = np.vstack([population, indiv])
+        population.append(indiv)
+    population = np.array(population)
     print "done."
 
     ## starting population output:

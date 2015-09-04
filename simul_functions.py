@@ -13,7 +13,7 @@ def starting_genome(var,n,gen_map,s_dist,r_dist):
     ### determined by the initial distribution specified (random or
     ### a constant percentage).
     if n % len(gen_map) != 0:
-        raise ValueError("Invalid genome length; must be integer multiple of genome map.")
+        raise ValueError("Genome length must be integer multiple of map length.")
     q = n/len(gen_map)
     var=min(1.4, var)
     sd = var**0.5
@@ -28,7 +28,7 @@ def starting_genome(var,n,gen_map,s_dist,r_dist):
         s_pos = []
         for x in s_loci:
             s_pos.append(range(x*q, (x+1)*q))
-        a[s_pos] = rand.rvs(len(s_pos))<s
+        a[s_pos] = chance(s, len(s_pos))
     if r_dist != "random":
         r = float(r_dist)/100
         r_loci = np.nonzero(np.logical_and(gen_map>100,gen_map<200))[0]
@@ -37,7 +37,7 @@ def starting_genome(var,n,gen_map,s_dist,r_dist):
         for x in r_loci:
             r_pos.append(range(x*q, (x+1)*q))
         a[r_pos] = chance(s, len(r_pos))
-    return a
+    return list(a)
 
 def make_individual(age_var, var, n, gen_map, s_dist, r_dist):
     ### Returns a [1,2n+1]-dimensional array representing an individual
