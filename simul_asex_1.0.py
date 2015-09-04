@@ -162,24 +162,27 @@ for n_run in range(1, number_of_runs+1):
             x = x*death_rate_increase if len(population)>resources else 1.0
         ### So death rate increase compounds over multiple stages?
         print "done."
+
         # Reproduction
         print "Calculating reproduction...",
-        adults = population[np.nonzero(np.logical_and(ages>15,ages<71))[0],]
-        for a in adults:
-            locus = np.nonzero(gen_map==(a[0]+100))[0][0]
-            pos = np.arange(locus*10, (locus+1)*10)+1
-            gen = sum(a[np.append(pos, pos+number_of_bases)])
-            # locus sum across both chromosomes
-            repr_rate = repr_rate_var[gen]
-            # repr_rate = min_rate + (max_rate-min_rate)/21 * locus_sum
-            if fn.chance(repr_rate): 
-                child = copy.copy(a)
-                # Mutation:
-                child[child==0]=fn.chance(mutation_rate, sum(child==0))
-                child[child==1]=1-fn.chance(0.1*mutation_rate, sum(child==1))
-                child[0]=0 # Make newborn
-                population=np.vstack([population,child]) # Add to pop
-        print "done."
+        parents = []
+        for p in range(len(population)):
+            a = population[p]
+            if a[0]>15 and a[0]<71:
+                locus = np.nonzero(gen_map==(a[0]+100))[0][0]
+                pos = np.arange(locus*10, (locus+1)*10)+1
+                gen = sum(a[np.append(pos, pos+number_of_bases)])
+                # locus sum across both chromosomes
+                repr_rate = repr_rate_var[gen]
+                # repr_rate= min_rate+(max_rate-min_rate)/21 * locus_sum
+                if fn.chance(repr_rate): parents.append(p)
+        children = copy.deepcopy(population[parents])
+        # Mutation
+        children[children==0]=fn.chance(mutation_rate,np.sum(children==0))
+        children[children==1]=1-fn.chance(0.1*mutation_rate, np.sum(children==1))
+        children[:,0] = 0 # Make newborn
+        population=np.vstack([population,children]) # Add to population
+        print "done. "+str(len(children))+" new individuals born."
 
         # Death
         print "Calculating death...",
@@ -194,8 +197,9 @@ for n_run in range(1, number_of_runs+1):
                 death_rate = death_rate_var[gen]
             else: death_rate = 1
             if not fn.chance(death_rate*x): survivors.append(p)
+        dead = len(population) - len(survivors)
         population = population[survivors]
-        print "done."
+        print "done. "+str(dead)+" individuals died."
 
         # Extrinsic death crisis:
         if n_stage in crisis_stages:
