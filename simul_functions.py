@@ -39,10 +39,10 @@ def starting_genome(var,n,gen_map,s_dist,r_dist):
         a[r_pos] = chance(s, len(r_pos))
     return list(a)
 
-def make_individual(age_var, var, n, gen_map, s_dist, r_dist):
+def make_individual(age_random, var, n, gen_map, s_dist, r_dist):
     ### Returns a [1,2n+1]-dimensional array representing an individual
     ### with a starting age and two length-n chromosomes
-    age = 15 if age_var=="y" else randint(0,70) # Uniform?
+    age = randint(0,70) if age_random else 15
     chr1 = starting_genome(var, n, gen_map, s_dist, r_dist)
     chr2 = starting_genome(var, n, gen_map, s_dist, r_dist)
     individual = np.concatenate(([age], chr1, chr2))

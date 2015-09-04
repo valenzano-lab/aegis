@@ -3,54 +3,50 @@
 print "Initialising...",
 
 ## IMPORT LIBRARIES ##
-from random import randint,uniform,choice,gauss,sample,shuffle
+from random import sample
 import time
 import numpy as np
 import cPickle
-import copy
-import itertools
 import simul_functions as fn
 
 ## PARAMETERS ## 
-res_prompt = 'pop' # Resource growth: population-dependent vs constant
-R = 1000 # Resource increment per stage
-k_var = 1.6 # Resource regrowth factor
-res_upper_limit = 5000 # Max resources
+res_var = True # Resources vary with population and time?
+if(res_var):
+    R = 1000 # Per-stage increment
+    V = 1.6 # Proportional regrowth
+    limit = 5000 # Upper limit
 start_res = 0 # Starting resources
-start_age_var = 'random' # All individuals start at reproduction age ("y", or distribution is random ("random"):
-variance_var = 1.4 # "Variance index"?
-start_pop = 5000 # Starting population size
+age_random = True # Uniform starting age distribution; else all start as new adults
+variance_var = 1.4 # Spread of starting genome distribution
+start_pop = 500 # Starting population size
 number_of_stages = 200 # Total number of stages
 crisis_stages = '' # Stages of extrinsic death crisis
 if crisis_stages!='':
     crisis_stages = np.array(map(int,crisis_stages.split(',')))
 else:
     crisis_stages = np.array([-1])
-sample_var = '' # Fraction of crisis survivors (if applicable)
-if sample_var!='':
-    sample_var = float(sample_var)
-max_death_rate = 0.02 # Max death rate?
-surv_rate_distr = 'random' # Initial survival rate distribution (random or % value)
-repr_rate_distr = 'random' # Initial reproduction rate distribution (random or % value)
+crisis_sv = 0.05 # Fraction of crisis survivors (if applicable)
+max_death_rate = 0.02 # Max base death rate (excluding starvation)
+s_dist = 'random' # Initial distr. for survival genome (random or % value)
+r_dist = 'random' # Initial distr. for reprod. genome (random or % value)
 max_repr_rate = 0.2 # half the value of sex_model because here every individual has one offspring
-recomb_rate_var = 0.01 # Recombination rate
-mut_rate_var = 0.001 # Mutation rate
+r_rate = 0.01 # Recombination rate
+m_rate = 0.001 # Mutation rate
 number_of_runs = 1
 comment = 'test'
 out = "testrun/" 
-
-## constants
-recombination_rate = recomb_rate_var
-mutation_rate = mut_rate_var
-number_of_bases = 1270 # no sex gene
+max_ls = 71 # Must be <100
+maturity = 16
+n_base = 10 # Number of 0/1 units per genetic locus
 death_rate_increase = 3
-number_positions = 20
 
-## death rate, reproduction chance
-death_rate_var = np.linspace(max_death_rate,0.001,21) # max to min
-repr_rate_var = np.linspace(0,max_repr_rate,21) # min to max
-## genome map: survival (0 to 70), reproduction (16 to 70), neutral (single)
-gen_map = np.asarray(range(0,71)+range(116,171)+[201])
+# Derived parameters:
+gen_map = np.asarray(range(0,max_ls)+range(maturity+100,max_ls+100)+[201])
+# Genome map: survival (0 to max), reproduction (maturity to max), neutral
+gen_len = len(gen_map)*n_base # Length of chromosome in binary units
+d_range = np.linspace(max_death_rate,0.001,21) # max to min death rate
+r_range = np.linspace(0,max_repr_rate,21) # min to max repr rate
+
 ## plot variables
 snapshot_plot_stages = np.around(np.linspace(0,number_of_stages,16),0)
 ipx = np.arange(0,71)
@@ -61,11 +57,11 @@ repr_fit_var = np.linspace(0,1,21)
 time_print =  time.strftime('%X %x', time.gmtime())
 
 info_file = open(out+'info.txt', 'w')
-if res_prompt=='pop':
-    res_comm_var = '\n\nres_prompt = pop\nResource increment per stage: '+str(R)+'\nResource regrowth factor: '+str(k_var)+'\nResource upper limit: '+str(res_upper_limit)+'\nStarting amount of resources: '+str(start_res)
+if res_var:
+    res_comm_var = '\n\nres_var = pop\nResource increment per stage: '+str(R)+'\nResource regrowth factor: '+str(V)+'\nResource upper limit: '+str(limit)+'\nStarting amount of resources: '+str(start_res)
 else:
-    res_comm_var = '\n\nres_prompt = const\nResources: '+str(resources)
-info_file.write('Version 1.0\nStarted at: '+time_print+'\n\nStarting age variable: '+start_age_var+'\nVariance index: '+str(variance_var)+'\nStarting number of individuals: '+str(start_pop)+'\nNumber of stages: '+str(number_of_stages)+'\nStages of crisis occurence: '+str(crisis_stages)+'\nFraction of crisis survivors: '+str(sample_var)+'\nMaximal death rate: '+str(max_death_rate)+'\nInitial survival rate (distribution)[%]: '+str(surv_rate_distr)+'\nMaximal reproduction rate: '+str(max_repr_rate)+'\nRecombination rate: '+str(recomb_rate_var)+'\nMutation rate var: '+str(mut_rate_var)+'\nNumber of runs: '+str(number_of_runs)+'\n\nComment: '+comment)
+    res_comm_var = '\n\nres_var = const\nResources: '+str(resources)
+info_file.write('Version 1.0\nStarted at: '+time_print+'\n\nRandom starting ages: '+str(age_random)+'\nVariance index: '+str(variance_var)+'\nStarting number of individuals: '+str(start_pop)+'\nNumber of stages: '+str(number_of_stages)+'\nStages of crisis occurence: '+str(crisis_stages)+'\nFraction of crisis survivors: '+str(crisis_sv)+'\nMaximal death rate: '+str(max_death_rate)+'\nInitial survival rate (distribution)[%]: '+str(s_dist)+'\nMaximal reproduction rate: '+str(max_repr_rate)+'\nRecombination rate: '+str(r_rate)+'\nMutation rate var: '+str(m_rate)+'\nNumber of runs: '+str(number_of_runs)+'\n\nComment: '+comment)
 info_file.close()
 
 ################
@@ -105,9 +101,9 @@ for n_run in range(1, number_of_runs+1):
     population = []
     # Rest of population
     for i in range(start_pop-1):
-        indiv = fn.make_individual(start_age_var, variance_var,
-                number_of_bases, gen_map, surv_rate_distr, 
-                repr_rate_distr)
+        indiv = fn.make_individual(age_random, variance_var,
+                gen_len, gen_map, s_dist, 
+                r_dist)
         population.append(indiv)
     population = np.array(population)
     print "done."
@@ -116,14 +112,14 @@ for n_run in range(1, number_of_runs+1):
     pop_file = open(out+'pop_0_run'+str(n_run)+'.txt','wb')
     cPickle.dump(population,pop_file)
     cPickle.dump(resources,pop_file)
-    if res_prompt=='pop':
+    if res_var:
         cPickle.dump(R,pop_file)
-        cPickle.dump(k_var,pop_file)
-        cPickle.dump(res_upper_limit,pop_file)
+        cPickle.dump(V,pop_file)
+        cPickle.dump(limit,pop_file)
     cPickle.dump(max_death_rate,pop_file)
     cPickle.dump(max_repr_rate,pop_file)
-    cPickle.dump(recomb_rate_var,pop_file)
-    cPickle.dump(mut_rate_var,pop_file)
+    cPickle.dump(r_rate,pop_file)
+    cPickle.dump(m_rate,pop_file)
     cPickle.dump(gen_map,pop_file)
     pop_file.close()
 
@@ -152,28 +148,28 @@ for n_run in range(1, number_of_runs+1):
         ages = population[:,0]
 
         # Change in resources
-        if res_prompt=='pop': # function of population
-            resources = fn.update_resources(resources, N, R, k_var, 
-                    res_upper_limit, True)
+        if res_var: # function of population
+            resources = fn.update_resources(resources, N, R, V, 
+                    limit, True)
             x = x*death_rate_increase if resources == 0 else 1.0
         else: # constant; death rate increases if population exceeds
             x = x*death_rate_increase if N>resources else 1.0
 
         # Reproduction
         population = fn.reproduction_asex(population, N, gen_map,
-                number_of_bases, repr_rate_var, mutation_rate, True)
+                gen_len, r_range, m_rate, True)
         N = len(population)
 
         # Death
-        population = fn.death(population, N, gen_map, number_of_bases,
-                death_rate_var, x, True)
+        population = fn.death(population, N, gen_map, gen_len,
+                d_range, x, True)
 
         # Extrinsic death crisis:
         if n_stage in crisis_stages:
             N = len(population)
-            n_survivors = int(N*sample_var)
-            population = population[sample(range(len(N)), n_survivors)]
-            print "Extrinsic death crisis! "+str(len(population))+"individuals survived."
+            n_survivors = int(N*crisis_sv)
+            population = population[sample(range(N), n_survivors)]
+            print "Crisis! "+str(len(population))+" individuals survived."
 
     ## RUN ENDED
 
@@ -206,13 +202,13 @@ for n_run in range(1, number_of_runs+1):
     pop_file = open(out+'pop_'+str(n_stage)+'_run'+str(n_run)+'.txt','wb')
     cPickle.dump(population,pop_file)
     cPickle.dump(resources,pop_file)
-    if res_prompt=='pop':
+    if res_var:
         cPickle.dump(R,pop_file)
-        cPickle.dump(k_var,pop_file)
-        cPickle.dump(res_upper_limit,pop_file)
+        cPickle.dump(V,pop_file)
+        cPickle.dump(limit,pop_file)
     cPickle.dump(max_death_rate,pop_file)
     cPickle.dump(max_repr_rate,pop_file)
-    cPickle.dump(recomb_rate_var,pop_file)
-    cPickle.dump(mut_rate_var,pop_file)
+    cPickle.dump(r_rate,pop_file)
+    cPickle.dump(m_rate,pop_file)
     cPickle.dump(gen_map,pop_file)
     pop_file.close()
