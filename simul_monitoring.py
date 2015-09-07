@@ -1,5 +1,9 @@
-        if n_stage in np.linspace(0,number_of_stages,16).astype(int):
-            ## reseting output variables
+def some_report_function(population, N, gen_map, chr_len, n_bases, ...):
+            b = n_bases
+            # Initialise output variables:
+            density_surv = np.zeros((21,)) # Survival genotype sum distr
+            density_repr = np.zeros((21,)) # Reprodv genotype sum distr
+            
             repr_rate_out = np.zeros((71,))
             repr_rate_junk_out = np.zeros((1,))
             death_rate_out = np.zeros((71,))
@@ -11,23 +15,31 @@
             repr_fit_junk = np.zeros((1,))
             surv_fit = np.zeros((71,))
             surv_fit_junk = np.zeros((1,))
-            density_surv = np.zeros((21,))
-            density_repr = np.zeros((21,))
             hetrz_mea = np.zeros((1260,)) # heterozigosity measure
             hetrz_mea_sd = [[]]*1260 # heterozigosity measure sd
-            
-            neut_locus = np.nonzero(gen_map==201)[0][0] # Position of neutral locus on gen_map
-            neut_pos = (neut_locus*10, (neut_locus+1)*10) # Positions in genome array corresponding to neutral locus
-            for i in range(len(population)):
-                I = population[i] 
-                surv_locus = np.nonzero(gen_map==I[0])[0][0] # Position of age-appropriate survival locus on gen_map
-                repr_locus = np.nonzero(gen_map==(I[0]+100))[0][0] # Position of age-appropriate reproduction locus on gen_map
-                surv_pos = (surv_locus*10, (surv_locus+1)*10)  # Positions in genome array corresponding to survival locus
-                repr_pos = (repr_locus*10, (repr_locus+1)*10)  # Positions in genome array corresponding to reproduction locus
+
+
+            neut_locus = np.nonzero(gen_map==201)[0][0] 
+            neut_pos = np.arange(neut_locus*b, (neut_locus+1)*b)+1
+            for p in range(N):
+                # Get positions of loci (survival, reproductive, neutral):
+                a = population[p]
+                age = a[0]
+                surv_locus = np.nonzero(gen_map==age)[0][0]
+                repr_locus = np.nonzero(gen_map==(age+100))[0][0]
+                surv_pos = np.arange(surv_locus*b, (surv_locus+1)*b)+1
+                repr_pos = np.arange(repr_locus*b, (repr_locus+1)*b)+1
                 # Get genotype sums:
-                surv_out = I[1][surv_pos[0]:surv_pos[1]].count(1) + I[2][surv_pos[0]:surv_pos[1]].count(1)  
-                repr_out = I[1][repr_pos[0]:repr_pos[1]].count(1) + I[2][repr_pos[0]:repr_pos[1]].count(1)  
-                neut_out = I[1][neut_pos[0]:neut_pos[1]].count(1) + I[2][neut_pos[0]:neut_pos[1]].count(1)  
+                surv_gen = sum(a[np.append(surv_pos, surv_pos+chr_len)
+                repr_gen = sum(a[np.append(repr_pos, repr_pos+chr_len)
+                neut_gen = sum(a[np.append(neut_pos, neut_pos+chr_len)
+
+
+
+
+        if n_stage in np.linspace(0,number_of_stages,16).astype(int):
+            ## reseting output variables
+            
                 # Survival statistics:
                 density_surv[surv_out] += 1
                 death_rate_out[surv_locus] += death_rate_var[surv_out]

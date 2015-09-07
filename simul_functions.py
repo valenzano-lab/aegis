@@ -3,6 +3,9 @@ import numpy as np
 from random import randint
 import copy
 import time
+import os
+from importlib import import_module
+import sys
 
 rand = scipy.stats.uniform(0,1) # Generate random number generator
 
@@ -123,3 +126,49 @@ def getnumber(q, cl, default=""):
             return(cl(var))
         except ValueError:
             print "Invalid input.\n"
+
+def getconf(argv):
+    loop = True
+    while loop:
+        if len(argv)>1:
+            conf = argv[2]
+        else:
+            conf = raw_input("Name of config file in working directory:  ")
+        try:
+            p = import_module(conf)
+            loop = False
+        except ImportError:
+            if len(argv)>1:
+                sys.exit("ImportError: No such file in working directory.")
+            else:
+                print "No such file in working directory."
+    print "Config file: "+conf+".py"
+    return p
+
+def getwd(argv):
+    loop = True
+    while loop:
+        if len(argv)>1:
+            path = argv[1]
+        else:
+            path = raw_input("Path to working directory:  ")
+        try:
+            sys.path.remove(os.getcwd())
+            os.chdir(path)
+            loop = False
+        except ImportError:
+            if len(argv)>1:
+                sys.exit("OSError: Invalid path to working directory.")
+            else:
+                print "Invalid path to working directory."
+    sys.path.append(os.getcwd())
+    print "Working directory: "+os.getcwd()
+
+def some_function(gen_map, n_bases, ):
+
+    # Get positions of loci:
+
+
+
+
+
