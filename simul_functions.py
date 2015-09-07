@@ -2,6 +2,7 @@ import scipy.stats
 import numpy as np
 from random import randint
 import copy
+import time
 
 rand = scipy.stats.uniform(0,1) # Generate random number generator
 
@@ -102,3 +103,23 @@ def death(population, N, gen_map, chr_length, drange, x, verbose=False):
             print "done. "+str(dead)+" individuals died."
         return(new_population)
 
+def yesno(q):
+    yes = ["y", "Y", "yes", "Yes", "YES"]
+    no = ["n", "N", "no", "No", "NO"]
+    while True:
+        var = raw_input(q+" ").strip()
+        if q in yes: 
+            return True
+        elif q in no: 
+            return False
+        else:
+            print "Invalid input.\n"
+def getnumber(q, cl, default=""):
+    while True:
+        var = raw_input(q+" ").strip()
+        if var == "":
+            var = default
+        try:
+            return(cl(var))
+        except ValueError:
+            print "Invalid input.\n"

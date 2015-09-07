@@ -8,39 +8,9 @@ import time
 import numpy as np
 import cPickle
 import simul_functions as fn
+from params import * # Import parameters from config file
 
-## PARAMETERS ## 
-res_var = True # Resources vary with population and time?
-if(res_var):
-    R = 1000 # Per-stage increment
-    V = 1.6 # Proportional regrowth
-    limit = 5000 # Upper limit
-start_res = 0 # Starting resources
-age_random = True # Uniform starting age distribution; else all start as new adults
-variance_var = 1.4 # Spread of starting genome distribution
-start_pop = 500 # Starting population size
-number_of_stages = 200 # Total number of stages
-crisis_stages = '' # Stages of extrinsic death crisis
-if crisis_stages!='':
-    crisis_stages = np.array(map(int,crisis_stages.split(',')))
-else:
-    crisis_stages = np.array([-1])
-crisis_sv = 0.05 # Fraction of crisis survivors (if applicable)
-max_death_rate = 0.02 # Max base death rate (excluding starvation)
-s_dist = 'random' # Initial distr. for survival genome (random or % value)
-r_dist = 'random' # Initial distr. for reprod. genome (random or % value)
-max_repr_rate = 0.2 # half the value of sex_model because here every individual has one offspring
-r_rate = 0.01 # Recombination rate
-m_rate = 0.001 # Mutation rate
-number_of_runs = 1
-comment = 'test'
-out = "testrun/" 
-max_ls = 71 # Must be <100
-maturity = 16
-n_base = 10 # Number of 0/1 units per genetic locus
-death_rate_increase = 3
-
-# Derived parameters:
+## DERIVE ADDITIONAL PARAMETERS ##
 gen_map = np.asarray(range(0,max_ls)+range(maturity+100,max_ls+100)+[201])
 # Genome map: survival (0 to max), reproduction (maturity to max), neutral
 gen_len = len(gen_map)*n_base # Length of chromosome in binary units
@@ -58,7 +28,7 @@ time_print =  time.strftime('%X %x', time.gmtime())
 
 info_file = open(out+'info.txt', 'w')
 if res_var:
-    res_comm_var = '\n\nres_var = pop\nResource increment per stage: '+str(R)+'\nResource regrowth factor: '+str(V)+'\nResource upper limit: '+str(limit)+'\nStarting amount of resources: '+str(start_res)
+    res_comm_var = '\n\nres_var = pop\nResource increment per stage: '+str(R)+'\nResource regrowth factor: '+str(V)+'\nResource upper res_limit: '+str(res_limit)+'\nStarting amount of resources: '+str(res_start)
 else:
     res_comm_var = '\n\nres_var = const\nResources: '+str(resources)
 info_file.write('Version 1.0\nStarted at: '+time_print+'\n\nRandom starting ages: '+str(age_random)+'\nVariance index: '+str(variance_var)+'\nStarting number of individuals: '+str(start_pop)+'\nNumber of stages: '+str(number_of_stages)+'\nStages of crisis occurence: '+str(crisis_stages)+'\nFraction of crisis survivors: '+str(crisis_sv)+'\nMaximal death rate: '+str(max_death_rate)+'\nInitial survival rate (distribution)[%]: '+str(s_dist)+'\nMaximal reproduction rate: '+str(max_repr_rate)+'\nRecombination rate: '+str(r_rate)+'\nMutation rate var: '+str(m_rate)+'\nNumber of runs: '+str(number_of_runs)+'\n\nComment: '+comment)
@@ -74,7 +44,7 @@ for n_run in range(1, number_of_runs+1):
     print ""
     np.random.shuffle(gen_map) # reshuffle genome every run
     ## constants and lists
-    resources = start_res
+    resources = res_start
     population = []
     pop_txt = []
     res_txt = []
@@ -115,7 +85,7 @@ for n_run in range(1, number_of_runs+1):
     if res_var:
         cPickle.dump(R,pop_file)
         cPickle.dump(V,pop_file)
-        cPickle.dump(limit,pop_file)
+        cPickle.dump(res_limit,pop_file)
     cPickle.dump(max_death_rate,pop_file)
     cPickle.dump(max_repr_rate,pop_file)
     cPickle.dump(r_rate,pop_file)
@@ -150,7 +120,7 @@ for n_run in range(1, number_of_runs+1):
         # Change in resources
         if res_var: # function of population
             resources = fn.update_resources(resources, N, R, V, 
-                    limit, True)
+                    res_limit, True)
             x = x*death_rate_increase if resources == 0 else 1.0
         else: # constant; death rate increases if population exceeds
             x = x*death_rate_increase if N>resources else 1.0
@@ -205,7 +175,7 @@ for n_run in range(1, number_of_runs+1):
     if res_var:
         cPickle.dump(R,pop_file)
         cPickle.dump(V,pop_file)
-        cPickle.dump(limit,pop_file)
+        cPickle.dump(res_limit,pop_file)
     cPickle.dump(max_death_rate,pop_file)
     cPickle.dump(max_repr_rate,pop_file)
     cPickle.dump(r_rate,pop_file)
