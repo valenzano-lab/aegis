@@ -1,36 +1,36 @@
+def x_bincount(array):
+    return np.bincount(array, minlength=3)
+
 def some_report_function(population, N, gen_map, chr_len, n_bases, 
         d_range, r_range, max_ls):
+    # To save: mean and sd survival and reproduction
+    # Distribution of genotypes
+    # population fitness
+    # Average 1's per locus
+    # Sliding-window SD of ^
+    # N
+    # Resources
+
     # Determine if population is already sorted; if not, sort it by age:
+    
     ages = population[:,0]
     if ages != ages[ages.argsort()]:
         population = population[ages.argsort()]
     b = n_bases # Binary units per locus
 
-    ## INITIALISE OUTPUT VARIABLES ##
-
+    ## AGE-DEPENDENT STATS ##
     # Genotype sum distributions:
-    density_surv = np.zeros((21,))
-    density_repr = np.zeros((21,))
+    density_surv = np.zeros((2*b+1,))
+    density_repr = np.zeros((2*b+1,))
     # Mean death/repr rates by age:
     death_rate_out = np.zeros(max_ls)
     repr_rate_out = np.zeros(max_ls)
     # Death/repr rate SD by age:
     surv_rate_sd = np.zeros(max_ls)
     repr_rate_sd = np.zeros(max_ls)
-    # "Fit"?
-    surv_fit = np.zeros((71,))
-    repr_fit = np.zeros((71,))
-    # "Junk"?
-    repr_rate_junk_out = np.zeros((1,))
-    death_rate_junk_out = np.zeros((1,))
-    repr_fit_junk = np.zeros((1,))
-    surv_fit_junk = np.zeros((1,))
-    # Hetrz?
-    hetrz_mea = np.zeros((1260,)) # heterozigosity measure
-    hetrz_mea_sd = [[]]*1260 # heterozigosity measure sd
-
-    neut_locus = np.nonzero(gen_map==201)[0][0] 
-    neut_pos = np.arange(neut_locus*b, (neut_locus+1)*b)+1
+    # Mean fitness (normalised survival * reproduction) by age
+    fitness = np.zeros(max_ls)
+    # Loop over ages:
     for x in range(max(ages)):
         pop = population[population[,0]==x]
         # Find loci and binary units:
@@ -38,13 +38,13 @@ def some_report_function(population, N, gen_map, chr_len, n_bases,
         surv_pos = np.arange(surv_locus*b, (surv_locus+1)*b)+1
         # Subset array to relevant columns and find genotypes:
         surv_pop = pop[np.append(surv_pos, surv_pos+chr_len)]
-        surv_gen = np.sum(surv_pop, axis=0)
+        surv_gen = np.sum(surv_pop, axis=1)
         # Find death/reproduction rates:
         death_rates = d_range[surv_gen]
         # Calculate statistics:
         death_rate_out[x] = np.mean(death_rates)
         death_rate_sd[x] = np.std(death_rates)
-        surv_fit[x] = ??
+        density_surv += np.bincount(surv_gen, minlength=2*b+1)
         if x>=maturity:
             # Same for reproduction if they're adults
             repr_locus = np.nonzero(gen_map==(age+100))[0][0]
@@ -54,40 +54,25 @@ def some_report_function(population, N, gen_map, chr_len, n_bases,
             repr_rates = r_range[repr_gen]
             repr_rate_out[x] = np.mean(repr_rates)
             repr_rate_sd[x] = np.std(repr_rates)
-            repr_fit[x] = ??
-        # Junk variables??
+            density_repr += np.bincount(repr_gen, minlength=2*b+1)
+            fitness[x] = np.mean(surv_gen/20 * repr_gen/20)
 
-            
-                # Survival statistics:
-                surv_rate_sd[surv_locus].append(1-death_rate_var[surv_out])
-                surv_fit[surv_locus] += surv_fit_var[surv_out]
-                for t in range(surv_pos[0], surv_pos[1]):
-                    hetrz = I[1][t]+I[2][t]
-                    hetrz_mea[t] += hetrz
-                    hetrz_mea_sd[t].append(hetrz)
-                # Reproduction statistics:
-                repr_rate_out[repr_locus] += repr_rate_var[repr_out]
-                repr_rate_sd[repr_locus].append(repr_rate_var[repr_out])
-                repr_fit[repr_locus] += repr_fit_var[repr_out]
-                for t in range(repr_pos[0], repr_pos[1]):
-                    hetrz = I[1][t]+I[2][t]
-                    hetrz_mea[t] += hetrz
-                    hetrz_mea_sd[t].append(hetrz)
-                # Neutral statistics
-                death_rate_junk_out[0] += death_rate_var[neut_out]
-                surv_fit_junk[0] += surv_fit_var[neut_out]
-                repr_rate_junk_out[0]+=repr_rate_var[neut_out]
-                repr_fit_junk[0]+=repr_fit_var[neut_out]
+    ## AGE-INVARIANT STATS ##
+    # Shannon-Weaver index as measure of heterozygosity at each position:
+    chr1 = population[:,range(chr_len)+1]
+    chr2 = population[:,range(chr_len)+1+chr_len]
+    hetz = np.apply_along_axis(x_bincount, 0, chr1+chr2)/N
+    sh_w = np.apply_along_axis(scipy.stats.entropy, 0, hetz)
+    # Junk stats calculated from neutral locus
+    neut_locus = np.nonzero(gen_map==201)[0][0] 
+    neut_pos = np.arange(neut_locus*b, (neut_locus+1)*b)+1
+    neut_pop = population[np.append(neut_pos, neut_pos+chr_len)]
+    neut_gen = np.sum(neut_pop, axis=1)
+    death_rate_junk_out = np.mean(d_range[neut_gen])
+    repr_rate_junk_out = np.mean(r_range[neut_gen]) # Junk SDs?
+    fitness_junk = np.mean((neut_gen/20)**2)
 
             ## average the output data 
-            surv_rate_out = 1-death_rate_out/len(population)
-            surv_rate_junk_out = 1-death_rate_junk_out/len(population)
-            repr_rate_out = repr_rate_out/len(population)
-            repr_rate_junk_out = repr_rate_junk_out/len(population)
-            surv_fit = surv_fit/len(population)
-            surv_fit_junk = surv_fit_junk/len(population)
-            repr_fit = repr_fit/len(population)
-            repr_fit_junk = repr_fit_junk/len(population)
             density = (density_surv+density_repr)/(126*len(population))
             density_surv = density_surv/(71*len(population))
             density_repr = density_repr/(55*len(population))
