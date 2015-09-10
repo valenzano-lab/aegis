@@ -27,9 +27,9 @@ d_range = np.linspace(c.death_bound[1], c.death_bound[0],2*c.n_base+1)
 # max to min death rate
 r_range = np.linspace(c.repr_bound[0],c.repr_bound[1],2*c.n_base+1) 
 # min to max repr rate
-
 ## plot variables
-snapshot_plot_stages = np.around(np.linspace(0,c.number_of_stages,16),0)
+snapshot_stages = np.around(np.linspace(0,c.number_of_stages,
+    c.number_of_snapshots),0)
 ipx = np.arange(0,71)
 surv_fit_var = np.linspace(0,1,21)
 repr_fit_var = np.linspace(0,1,21)
@@ -59,6 +59,8 @@ for n_run in range(1, c.number_of_runs+1):
             c.window_size)
     x = 1
     resources = c.res_start
+    n_snap = 0 # number of first snapshot
+
     ## generating starting population
     print "Generating starting population...",
     # First row of population array
@@ -75,7 +77,7 @@ for n_run in range(1, c.number_of_runs+1):
     # 1: STAGE LOOP #
     # # # # # # # # # 
     print "Beginning stage loop."
-    for n_stage in range(0, c.number_of_stages+1):
+    for n_stage in range(c.number_of_stages):
 
         N = len(population)
         if(N==0):
@@ -90,6 +92,11 @@ for n_run in range(1, c.number_of_runs+1):
         # Get (proportional) age distribution:
         n_age = np.bincount(population[:,0])/N
 #        n_age_txt.append(n_age)
+        if n_stage in snapshot_stages:
+            record = fn.update_record(record, population, N, gen_map,
+                    chr_len, c.n_base, d_range, r_range,
+                    c.maturity, c.max_ls, c.window_size, n_snap)
+            n_snap += 1
 
         # everyone gets 1 stage older
         population[:,0] += 1
