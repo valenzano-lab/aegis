@@ -136,11 +136,12 @@ for n_run in range(1, c.number_of_runs+1):
             x = x*c.death_inc if N>resources else 1.0
         if c.verbose: print "Starvation factor: "+str(x)
         # Reproduction
-        population = fn.reproduction_asex(population, N, gen_map, chr_len, r_range, c.m_rate, c.verbose)
+        population = fn.reproduction_asex(population, c.maturity, 
+                c.max_ls, gen_map, chr_len, r_range, c.m_rate, c.verbose)
         N = len(population)
 
         # Death
-        population = fn.death(population, N, gen_map, chr_len,
+        population = fn.death(population, c.max_ls, gen_map, chr_len,
                 d_range, x, c.verbose)
 
         # Extrinsic death crisis:

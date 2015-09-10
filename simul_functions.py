@@ -1,7 +1,7 @@
 import scipy.stats
 import numpy as np
 from random import randint
-import copy
+from copy import copy,deepcopy
 import time
 import os
 from importlib import import_module
@@ -10,9 +10,7 @@ import sys
 rand = scipy.stats.uniform(0,1) # Generate random number generator
 
 def chance(z,n=1):
-    r = rand.rvs(n)<z
-    if n == 1: return r[0]
-    return r
+    return rand.rvs(n)<z
 
 def starting_genome(var,n,gen_map,s_dist,r_dist):
     ### Returns a binary array of length n, with the proportion of 1's
@@ -63,52 +61,63 @@ def update_resources(res0, N, R, V, limit, verbose=False):
     if verbose: print "Done. "+str(res0)+" -> "+str(res1)
     return res1
 
-def reproduction_asex(population, N, gen_map, chr_length, rrange, mrate, 
-        verbose=False):
+def reproduction_asex(population, maturity, max_ls, gen_map, chr_len, 
+        r_range, m_rate, verbose=False):
     if verbose: print "Calculating reproduction...",
-    parents = []
-    for p in range(N):
-        a = population[p]
-        age = a[0]
-        if age>15 and age<71:
-            locus = np.nonzero(gen_map==(age+100))[0][0]
-            pos = np.arange(locus*10, (locus+1)*10)+1
-            gen = sum(a[np.append(pos, pos+chr_length)])
-            # locus sum across both chromosomes
-            repr_rate = rrange[gen]
-            # repr_rate= min_rate+(max_rate-min_rate)/21 * gen
-            if chance(repr_rate): parents.append(p)
-    children = copy.deepcopy(population[parents])
-    # Mutation
-    children[children==0]=chance(mrate,np.sum(children==0))
-    children[children==1]=1-chance(0.1*mrate, np.sum(children==1))
+    parents = np.empty(0, int)
+    ages = population[:,0]
+    for age in range(maturity, min(max(ages), max_ls-1)):
+        # Get indices of reproductive locus
+        locus = np.nonzero(gen_map==(age+100))[0][0]
+        pos = np.arange(locus*10, (locus+1)*10)+1
+        # Get sub-population of correct age and subset genome to locus
+        match = (ages == age)
+        which = np.nonzero(match)[0]
+        pop = population[match][:,np.append(pos, pos+chr_len)]
+        gen = np.sum(pop, axis=1)
+        # Sum over reproductive locus for every individual of that age
+        # to get reprodctive genotype for each
+        repr_rates = r_range[gen]
+        # Convert reproductive genotypes into probabilities
+        # Determine parents in subpopulation and add indices to record
+        newparents = which[chance(repr_rates, len(repr_rates))]
+        parents = np.append(parents, newparents)
+    # Create and mutate children
+    children = deepcopy(population[parents])
+    children[children==0]=chance(m_rate,np.sum(children==0))
+    children[children==1]=1-chance(0.1*m_rate, np.sum(children==1))
     children[:,0] = 0 # Make newborn
     population=np.vstack([population,children]) # Add to population
     if verbose: print "done. "+str(len(children))+" new individuals born."
     return(population)
 
-def death(population, N, gen_map, chr_length, drange, x, verbose=False):
-        if verbose: print "Calculating death...",
-        survivors = []
-        for p in range(N):
-            a = population[p]
-            age = a[0]
-            if age<71:
-                locus = np.nonzero(gen_map==age)[0][0]
-                pos = np.arange(locus*10, (locus+1)*10)+1
-                gen = sum(a[np.append(pos, pos+chr_length)])
-                # locus sum across both chromosomes
-                death_rate = drange[gen]
-                # death_rate= max_rate-(max_rate-min_rate)/21 * gen
-            else: death_rate = 1
-            c = chance(death_rate*x)
-            if not c: 
-                survivors.append(p)
-        new_population = population[survivors]
-        if verbose:
-            dead = len(population) - len(survivors)
-            print "done. "+str(dead)+" individuals died."
-        return(new_population)
+def death(population, max_ls, gen_map, chr_len, 
+        d_range, x, verbose=False):
+    if verbose: print "Calculating death...",
+    survivors = np.empty(0, int)
+    ages = population[:,0]
+    for age in range(min(max(ages), max_ls-1)):
+        # Get indices of survival locus
+        locus = np.nonzero(gen_map==age)[0][0]
+        pos = np.arange(locus*10, (locus+1)*10)+1
+        # Get sub-population of correct age and subset genome to locus
+        match = (ages == age)
+        which = np.nonzero(match)[0]
+        pop = population[match][:,np.append(pos, pos+chr_len)]
+        gen = np.sum(pop, axis=1)
+        # Sum over survival locus for every individual of that age
+        # to get survival genotype for each
+        surv_rates = (1-d_range[gen]*x)
+        # Convert survival genotypes into probabilities (penalised by
+        # starvation factor)
+        # Determine survivors in subpopulation and add indices to record
+        newsurvivors = which[chance(surv_rates, len(surv_rates))]
+        survivors = np.append(survivors, newsurvivors)
+    new_population = population[survivors]
+    if verbose:
+        dead = len(population) - len(survivors)
+        print "done. "+str(dead)+" individuals died."
+    return(new_population)
 
 def yesno(q):
     yes = ["y", "Y", "yes", "Yes", "YES"]
