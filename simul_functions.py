@@ -10,7 +10,9 @@ import sys
 rand = scipy.stats.uniform(0,1) # Generate random number generator
 
 def chance(z,n=1):
-    return rand.rvs(n)<z
+    r = rand.rvs(n)<z
+    if n == 1: return r[0]
+    return r
 
 def starting_genome(var,n,gen_map,s_dist,r_dist):
     ### Returns a binary array of length n, with the proportion of 1's
@@ -99,7 +101,9 @@ def death(population, N, gen_map, chr_length, drange, x, verbose=False):
                 death_rate = drange[gen]
                 # death_rate= max_rate-(max_rate-min_rate)/21 * gen
             else: death_rate = 1
-            if not chance(death_rate*x): survivors.append(p)
+            c = chance(death_rate*x)
+            if not c: 
+                survivors.append(p)
         new_population = population[survivors]
         if verbose:
             dead = len(population) - len(survivors)
@@ -163,12 +167,3 @@ def getwd(argv):
                 print "Invalid path to working directory."
     sys.path.append(os.getcwd())
     print "Working directory: "+os.getcwd()
-
-def some_function(gen_map, n_bases, ):
-
-    # Get positions of loci:
-
-
-
-
-

@@ -83,7 +83,7 @@ def update_record(record, population, N, gen_map, chr_len,
     s1 = sqrt(moving_average(n1**2, w)-moving_average(n1, w)**2)
     # Shannon-Weaver entropy over entire genome population
     gen = population[1:,])
-    p1 = np.sum(gen)/np.ndarray.size(gen)
+    p1 = np.sum(gen)/np.size(gen)
     entropy = scipy.stats.entropy(np.array([1-p1, p1]))
     # Junk stats calculated from neutral locus
     neut_locus = np.nonzero(gen_map==201)[0][0] 

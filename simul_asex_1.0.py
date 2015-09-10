@@ -22,7 +22,7 @@ print "Initialising...",
 gen_map = np.asarray(range(0,c.max_ls)+range(c.maturity+100,
     c.max_ls+100)+[201])
 # Genome map: survival (0 to max), reproduction (maturity to max), neutral
-gen_len = len(gen_map)*c.n_base # Length of chromosome in binary units
+chr_len = len(gen_map)*c.n_base # Length of chromosome in binary units
 d_range = np.linspace(c.death_bound[1], c.death_bound[0],2*c.n_base+1) 
 # max to min death rate
 r_range = np.linspace(c.repr_bound[0],c.repr_bound[1],2*c.n_base+1) 
@@ -83,7 +83,7 @@ for n_run in range(1, c.number_of_runs+1):
     # Rest of population
     for i in range(c.start_pop-1):
         indiv = fn.make_individual(c.age_random, c.variance,
-                gen_len, gen_map, c.s_dist, c.r_dist)
+                chr_len, gen_map, c.s_dist, c.r_dist)
         population.append(indiv)
     population = np.array(population)
     print "done."
@@ -134,14 +134,13 @@ for n_run in range(1, c.number_of_runs+1):
             x = x*c.death_inc if resources == 0 else 1.0
         else: # constant; death rate increases if population exceeds
             x = x*c.death_inc if N>resources else 1.0
-
+        if c.verbose: print "Starvation factor: "+str(x)
         # Reproduction
-        population = fn.reproduction_asex(population, N, gen_map,
-                gen_len, r_range, c.m_rate, c.verbose)
+        population = fn.reproduction_asex(population, c.maturity, c.max_ls, gen_map, chr_len, r_range, c.m_rate, c.verbose)
         N = len(population)
 
         # Death
-        population = fn.death(population, N, gen_map, gen_len,
+        population = fn.death(population, c.max_ls, gen_map, chr_len,
                 d_range, x, c.verbose)
 
         # Extrinsic death crisis:
