@@ -12,6 +12,7 @@ crisis_stages = [] # Stages of extrinsic death crisis
 crisis_sv = 0.05 # Fraction of crisis survivors (if applicable)
 comment = 'test'
 out = "testrun/" # Output directory
+number_of_snapshots = 16 # Number of stages at which to store output data
 
 ## RESOURCE PARAMETERS ##
 res_start = 0 # Starting resource value
@@ -38,3 +39,4 @@ max_ls = 71 # Maximum lifespan; must be less than 100
 maturity = 16 # Age of sexual maturation
 n_base = 10 # Genome size (binary units per locus)
 death_inc = 3 # Per-stage death-rate increase under starvation
+window_size = 10 # Size of sliding window for recording p1 SD

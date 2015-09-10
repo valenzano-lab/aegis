@@ -5,27 +5,6 @@ def moving_average(a, n):
     c[n:] = c[n:]-c[:-n]
     return c[(n-1):]/n
 
-def initialise_record(m, max_ls, n_bases, chr_len, window_size):
-    array1 = np.zeros([m,max_ls])
-    array2 = np.zeros([m,2*n_bases+1])
-    array3 = np.zeros(m)
-    record = {
-    	"surv_mean":copy(array1)
-    	"surv_sd":copy(array1)
-    	"repr_mean":copy(array1)
-    	"repr_sd":copy(array1)
-    	"density_surv":copy(array2)
-    	"density_repr":copy(array2)
-    	"n1":np.zeros([m,chr_len])
-    	"s1":np.zeros([m,chr_len-window_size+1])
-    	"fitness":copy(array3)
-    	"entropy":copy(array3)
-    	"surv_junk":copy(array3)
-    	"repr_junk":copy(array3)
-    	"fitness_junk":copy(array3)
-        }
-    return record
-
 def update_record(record, population, N, gen_map, chr_len, 
         n_bases, d_range, r_range, max_ls, window_size):
 

@@ -176,3 +176,30 @@ def getwd(argv):
                 print "Invalid path to working directory."
     sys.path.append(os.getcwd())
     print "Working directory: "+os.getcwd()
+
+def initialise_record(m, n_stages, max_ls, n_bases, chr_len, window_size):
+    """ Create a new record dictionary object for recording output 
+    data from simulation """
+    array1 = np.zeros([m,max_ls])
+    array2 = np.zeros([m,2*n_bases+1])
+    array3 = np.zeros(m)
+    array4 = np.zeros(n_stages)
+    record = {
+        "population_size":copy(array4),
+        "resources":copy(array4),
+    	"surv_mean":copy(array1),
+    	"surv_sd":copy(array1),
+    	"repr_mean":copy(array1),
+    	"repr_sd":copy(array1),
+    	"density_surv":copy(array2),
+    	"density_repr":copy(array2),
+    	"n1":np.zeros([m,chr_len]),
+    	"s1":np.zeros([m,chr_len-window_size+1]),
+    	"fitness":copy(array3),
+    	"entropy":copy(array3),
+    	"surv_junk":copy(array3),
+    	"repr_junk":copy(array3),
+    	"fitness_junk":copy(array3)
+        }
+    return record
+

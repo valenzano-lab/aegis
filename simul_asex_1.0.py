@@ -37,7 +37,7 @@ repr_fit_var = np.linspace(0,1,21)
 # Write info file.
 time_print =  time.strftime('%X %x', time.gmtime())
 
-#info_file = open(out+'info.txt', 'w')
+##info_file = open(out+'info.txt', 'w')
 #if res_var:
 #    res_comm_var = '\n\nres_var = pop\nResource increment per stage: '+str(R)+'\nResource regrowth factor: '+str(V)+'\nResource upper res_limit: '+str(res_limit)+'\nStarting amount of resources: '+str(res_start)
 #else:
@@ -54,28 +54,11 @@ for n_run in range(1, c.number_of_runs+1):
     print "Beginning run "+str(n_run)+"."
     print ""
     np.random.shuffle(gen_map) # reshuffle genome every run
-    ## constants and lists
-    resources = c.res_start
-    population = []
-    pop_txt = []
-    res_txt = []
-    n_age_txt = []
-    repr_rate_txt = []
-    repr_rate_sd_txt = []
-    repr_rate_junk_txt = []
-    surv_rate_txt = []
-    surv_rate_sd_txt = []
-    surv_rate_junk_txt = []
-    repr_fit_txt = []
-    repr_fit_junk_txt = []
-    surv_fit_txt = []
-    surv_fit_junk_txt = []
-    density_surv_txt = []
-    density_repr_txt = []
-    hetrz_mea_txt = []
-    hetrz_mea_sd_txt = []
+    record = fn.initialise_record(c.number_of_snapshots, 
+            c.number_of_stages, c.max_ls, c.n_base, chr_len, 
+            c.window_size)
     x = 1
-
+    resources = c.res_start
     ## generating starting population
     print "Generating starting population...",
     # First row of population array
@@ -87,21 +70,6 @@ for n_run in range(1, c.number_of_runs+1):
         population.append(indiv)
     population = np.array(population)
     print "done."
-
-    ## starting population output:
-    pop_file = open('pop_0_run'+str(n_run)+'.txt','wb')
-    cPickle.dump(population,pop_file)
-    cPickle.dump(resources,pop_file)
-    if c.res_var:
-        cPickle.dump(c.R,pop_file)
-        cPickle.dump(c.V,pop_file)
-        cPickle.dump(c.res_limit,pop_file)
-    cPickle.dump(c.death_bound[1],pop_file)
-    cPickle.dump(c.repr_bound[1],pop_file)
-    cPickle.dump(c.r_rate,pop_file)
-    cPickle.dump(c.m_rate,pop_file)
-    cPickle.dump(gen_map,pop_file)
-    pop_file.close()
 
     # # # # # # # # #
     # 1: STAGE LOOP #
@@ -116,12 +84,12 @@ for n_run in range(1, c.number_of_runs+1):
         elif c.verbose or n_stage%10==0:
             print "Stage "+str(n_stage)+": "+str(N)+" individuals."
         
-        pop_txt.append(N)
-        res_txt.append(resources)
+##        pop_txt.append(N)
+#        res_txt.append(resources)
 
         # Get (proportional) age distribution:
         n_age = np.bincount(population[:,0])/N
-        n_age_txt.append(n_age)
+#        n_age_txt.append(n_age)
 
         # everyone gets 1 stage older
         population[:,0] += 1
@@ -155,31 +123,31 @@ for n_run in range(1, c.number_of_runs+1):
 
     ## pop-pyramid output
     males_females_age = n_age*100
-    males_females_age_txt = list(males_females_age)
+#    males_females_age_txt = list(males_females_age)
 
     ## text file
-    txt_file =  open('plot_values_run'+str(n_run)+'.txt','wb')
-    cPickle.dump(pop_txt,txt_file)
-    cPickle.dump(res_txt,txt_file)
-    cPickle.dump(n_age_txt,txt_file)
-    cPickle.dump(repr_rate_txt,txt_file)
-    cPickle.dump(repr_rate_sd_txt,txt_file)
-    cPickle.dump(repr_rate_junk_txt,txt_file)
-    cPickle.dump(surv_rate_txt,txt_file)
-    cPickle.dump(surv_rate_sd_txt,txt_file)
-    cPickle.dump(surv_rate_junk_txt,txt_file)
-    cPickle.dump(repr_fit_txt,txt_file)
-    cPickle.dump(repr_fit_junk_txt,txt_file)
-    cPickle.dump(surv_fit_txt,txt_file)
-    cPickle.dump(surv_fit_junk_txt,txt_file)
-    cPickle.dump(density_surv_txt,txt_file)
-    cPickle.dump(density_repr_txt,txt_file)
-    cPickle.dump(hetrz_mea_txt,txt_file)
-    cPickle.dump(hetrz_mea_sd_txt,txt_file)
-    cPickle.dump(males_females_age_txt,txt_file)
-    txt_file.close()
+#    txt_file =  open('plot_values_run'+str(n_run)+'.txt','wb')
+##    cPickle.dump(pop_txt,txt_file)
+#    cPickle.dump(res_txt,txt_file)
+#    cPickle.dump(n_age_txt,txt_file)
+#    cPickle.dump(repr_rate_txt,txt_file)
+#    cPickle.dump(repr_rate_sd_txt,txt_file)
+#    cPickle.dump(repr_rate_junk_txt,txt_file)
+#    cPickle.dump(surv_rate_txt,txt_file)
+#    cPickle.dump(surv_rate_sd_txt,txt_file)
+#    cPickle.dump(surv_rate_junk_txt,txt_file)
+#    cPickle.dump(repr_fit_txt,txt_file)
+#    cPickle.dump(repr_fit_junk_txt,txt_file)
+#    cPickle.dump(surv_fit_txt,txt_file)
+#    cPickle.dump(surv_fit_junk_txt,txt_file)
+#    cPickle.dump(density_surv_txt,txt_file)
+#    cPickle.dump(density_repr_txt,txt_file)
+#    cPickle.dump(hetrz_mea_txt,txt_file)
+#    cPickle.dump(hetrz_mea_sd_txt,txt_file)
+#    cPickle.dump(males_females_age_txt,txt_file)
+#    txt_file.close()
 
-    pop_file = open('pop_'+str(n_stage)+'_run'+str(n_run)+'.txt','wb')
+#    pop_file = open('pop_'+str(n_stage)+'_run'+str(n_run)+'.txt','wb')
     cPickle.dump(population,pop_file)
     cPickle.dump(resources,pop_file)
     if c.res_var:
