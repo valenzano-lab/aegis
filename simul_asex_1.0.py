@@ -35,17 +35,9 @@ for n_run in range(1, c.number_of_runs+1):
     resources = c.res_start
     n_snap = 0 # number of first snapshot
 
-    ## generating starting population
-    print "Generating starting population...",
-    # First row of population array
-    population = []
-    # Rest of population
-    for i in range(c.start_pop-1):
-        indiv = fn.make_individual(c.age_random, c.variance,
-                c.chr_len, c.gen_map, c.s_dist, c.r_dist)
-        population.append(indiv)
-    population = np.array(population)
-    print "done."
+    ## Generate starting population
+    population = fn.make_population(c.start_pop, c.age_random, 
+            c.variance, c.chr_len, c.gen_map, c.s_dist, c.r_dist)
 
     # # # # # # # # #
     # 2: STAGE LOOP #
@@ -62,9 +54,7 @@ for n_run in range(1, c.number_of_runs+1):
         elif c.verbose or n_stage%10==0:
             print "\nStage "+str(n_stage+1)+": "+str(N)+" individuals."
         
-        # Get (proportional) age distribution:
-        n_age = np.bincount(population[:,0])/N
-#        n_age_txt.append(n_age)
+        # Record output variables
         if n_stage in c.snapshot_stages:
             record = fn.update_record(record, population, N, resources, 
                     c.gen_map, c.chr_len, c.n_base, c.d_range, c.r_range,
@@ -73,9 +63,7 @@ for n_run in range(1, c.number_of_runs+1):
         else:
             fn.quick_update(record, n_stage, N, resources)
 
-        # everyone gets 1 stage older
-        population[:,0] += 1
-        ages = population[:,0]
+        population[:,0] += 1 # everyone gets 1 stage older
 
         # Change in resources
         if c.res_var: # function of population
@@ -102,6 +90,7 @@ for n_run in range(1, c.number_of_runs+1):
             population = population[sample(range(N), n_survivors)]
             if c.verbose:
                 print "Crisis! "+str(n.survivors)+" individuals survived."
+
     ## RUN ENDED
     print "\nEnd of run "+str(n_run)+".\n"
 

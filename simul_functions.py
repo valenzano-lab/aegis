@@ -52,6 +52,18 @@ def make_individual(age_random, var, n, gen_map, s_dist, r_dist):
     individual = np.concatenate(([age], chr1, chr2))
     return individual
 
+def make_population(start_pop, age_random, variance, chr_len, gen_map,
+        s_dist, r_dist):
+    print "Generating starting population...",
+    population = []
+    for i in range(start_pop-1):
+        indiv = make_individual(age_random, variance, chr_len, 
+                gen_map, s_dist, r_dist)
+        population.append(indiv)
+    population = np.array(population)
+    print "done."
+    return population
+
 def update_resources(res0, N, R, V, limit, verbose=False):
     if verbose: print "Updating resources...",
     k = 1 if N>res0 else V
