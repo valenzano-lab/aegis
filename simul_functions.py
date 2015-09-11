@@ -6,6 +6,7 @@ import time
 import os
 from importlib import import_module
 import sys
+import cPickle
 
 rand = scipy.stats.uniform(0,1) # Generate random number generator
 
@@ -318,3 +319,13 @@ def update_record(record, population, N, resources, gen_map, chr_len,
     record["fitness_junk"][n_snap] = fitness_junk
 
     return record
+
+def run_output(n_run, population, record):
+    pop_file = open("run_"+str(n_run)+"_pop.txt", "wb")
+    rec_file = open("run_"+str(n_run)+"_rec.txt", "wb")
+    try:
+        cPickle.dump(population, pop_file)
+        cPickle.dump(record, rec_file)
+    finally:
+        pop_file.close()
+        rec_file.close()

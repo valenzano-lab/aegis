@@ -7,9 +7,7 @@
 print "\nImporting libraries and config...",
 from sys import argv
 from random import sample
-import time
 import numpy as np
-import cPickle
 import simul_functions as fn
 
 fn.getwd(argv)
@@ -94,42 +92,5 @@ for n_run in range(1, c.number_of_runs+1):
     ## RUN ENDED
     print "\nEnd of run "+str(n_run)+".\n"
 
-    ## pop-pyramid output
-    males_females_age = n_age*100
-#    males_females_age_txt = list(males_females_age)
-
-    ## text file
-#    txt_file =  open('plot_values_run'+str(n_run)+'.txt','wb')
-##    cPickle.dump(pop_txt,txt_file)
-#    cPickle.dump(res_txt,txt_file)
-#    cPickle.dump(n_age_txt,txt_file)
-#    cPickle.dump(repr_rate_txt,txt_file)
-#    cPickle.dump(repr_rate_sd_txt,txt_file)
-#    cPickle.dump(repr_rate_junk_txt,txt_file)
-#    cPickle.dump(surv_rate_txt,txt_file)
-#    cPickle.dump(surv_rate_sd_txt,txt_file)
-#    cPickle.dump(surv_rate_junk_txt,txt_file)
-#    cPickle.dump(repr_fit_txt,txt_file)
-#    cPickle.dump(repr_fit_junk_txt,txt_file)
-#    cPickle.dump(surv_fit_txt,txt_file)
-#    cPickle.dump(surv_fit_junk_txt,txt_file)
-#    cPickle.dump(density_surv_txt,txt_file)
-#    cPickle.dump(density_repr_txt,txt_file)
-#    cPickle.dump(hetrz_mea_txt,txt_file)
-#    cPickle.dump(hetrz_mea_sd_txt,txt_file)
-#    cPickle.dump(males_females_age_txt,txt_file)
-#    txt_file.close()
-
-#    pop_file = open('pop_'+str(n_stage)+'_run'+str(n_run)+'.txt','wb')
-    cPickle.dump(population,pop_file)
-    cPickle.dump(resources,pop_file)
-    if c.res_var:
-        cPickle.dump(c.R,pop_file)
-        cPickle.dump(c.V,pop_file)
-        cPickle.dump(c.res_limit,pop_file)
-    cPickle.dump(c.death_bound[1],pop_file)
-    cPickle.dump(c.repr_bound[1],pop_file)
-    cPickle.dump(c.r_rate,pop_file)
-    cPickle.dump(c.m_rate,pop_file)
-    cPickle.dump(c.gen_map,pop_file)
-    pop_file.close()
+    ## WRITE POPULATION, RECORD TO FILE ##
+    fn.run_output(n_run, population, record)
