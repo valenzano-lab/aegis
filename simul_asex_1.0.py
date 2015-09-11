@@ -1,8 +1,10 @@
 #!/usr/bin/python
 
-## CONFIGURE RUN ##
+##########################
+## CONFIGURE SIMULATION ##
+##########################
 
-print "\nImporting libraries and config..."
+print "\nImporting libraries and config...",
 from sys import argv
 from random import sample
 import time
@@ -12,50 +14,22 @@ import simul_functions as fn
 
 fn.getwd(argv)
 c = fn.getconf(argv) # Import config file as "c".
-print ""
+print "done.\n"
 
-# lightweight version - outputs age_distr every stage and rest only snapshot data, no sha_wie
+####################
+## RUN SIMULATION ##
+####################
 
-print "Initialising...",
-
-## DERIVE ADDITIONAL PARAMETERS ##
-gen_map = np.asarray(range(0,c.max_ls)+range(c.maturity+100,
-    c.max_ls+100)+[201])
-# Genome map: survival (0 to max), reproduction (maturity to max), neutral
-chr_len = len(gen_map)*c.n_base # Length of chromosome in binary units
-d_range = np.linspace(c.death_bound[1], c.death_bound[0],2*c.n_base+1) 
-# max to min death rate
-r_range = np.linspace(c.repr_bound[0],c.repr_bound[1],2*c.n_base+1) 
-# min to max repr rate
-## plot variables
-snapshot_stages = np.around(np.linspace(0,c.number_of_stages,
-    c.number_of_snapshots),0)
-ipx = np.arange(0,71)
-surv_fit_var = np.linspace(0,1,21)
-repr_fit_var = np.linspace(0,1,21)
-
-# Write info file.
-time_print =  time.strftime('%X %x', time.gmtime())
-
-##info_file = open(out+'info.txt', 'w')
-#if res_var:
-#    res_comm_var = '\n\nres_var = pop\nResource increment per stage: '+str(R)+'\nResource regrowth factor: '+str(V)+'\nResource upper res_limit: '+str(res_limit)+'\nStarting amount of resources: '+str(res_start)
-#else:
-#    res_comm_var = '\n\nres_var = const\nResources: '+str(resources)
-#info_file.write('Version 1.0\nStarted at: '+time_print+'\n\nRandom starting ages: '+str(age_random)+'\nVariance index: '+str(variance)+'\nStarting number of individuals: '+str(start_pop)+'\nNumber of stages: '+str(number_of_stages)+'\nStages of crisis occurence: '+str(crisis_stages)+'\nFraction of crisis survivors: '+str(crisis_sv)+'\nMaximal death rate: '+str(death_bound[1])+'\nInitial survival rate (distribution)[%]: '+str(s_dist)+'\nMaximal reproduction rate: '+str(repr_bound[1])+'\nRecombination rate: '+str(r_rate)+'\nMutation rate var: '+str(m_rate)+'\nNumber of runs: '+str(number_of_runs)+'\n\nComment: '+comment)
-#info_file.close()
-
-################
-## SIMULATION ##
-################
-print "done."
 for n_run in range(1, c.number_of_runs+1):
-    print ""
-    print "Beginning run "+str(n_run)+"."
-    print ""
-    np.random.shuffle(gen_map) # reshuffle genome every run
+
+    # # # # # # # # # # # # # # #
+    # 1: INITIALISE POPULATION  #
+    # # # # # # # # # # # # # # # 
+    
+    print "\nBeginning run "+str(n_run)+".\n"
+    np.random.shuffle(c.gen_map) # reshuffle genome every run
     record = fn.initialise_record(c.number_of_snapshots, 
-            c.number_of_stages, c.max_ls, c.n_base, chr_len, 
+            c.number_of_stages, c.max_ls, c.n_base, c.chr_len, 
             c.window_size)
     x = 1
     resources = c.res_start
@@ -68,35 +42,36 @@ for n_run in range(1, c.number_of_runs+1):
     # Rest of population
     for i in range(c.start_pop-1):
         indiv = fn.make_individual(c.age_random, c.variance,
-                chr_len, gen_map, c.s_dist, c.r_dist)
+                c.chr_len, c.gen_map, c.s_dist, c.r_dist)
         population.append(indiv)
     population = np.array(population)
     print "done."
 
     # # # # # # # # #
-    # 1: STAGE LOOP #
+    # 2: STAGE LOOP #
     # # # # # # # # # 
+
     print "Beginning stage loop."
     for n_stage in range(c.number_of_stages):
 
         N = len(population)
+        
         if(N==0):
-            print "Perished at stage "+str(n_stage)+"."
+            print "\nPerished at stage "+str(n_stage+1)+"."
             break
         elif c.verbose or n_stage%10==0:
-            print "Stage "+str(n_stage)+": "+str(N)+" individuals."
+            print "\nStage "+str(n_stage+1)+": "+str(N)+" individuals."
         
-##        pop_txt.append(N)
-#        res_txt.append(resources)
-
         # Get (proportional) age distribution:
         n_age = np.bincount(population[:,0])/N
 #        n_age_txt.append(n_age)
-        if n_stage in snapshot_stages:
-            record = fn.update_record(record, population, N, gen_map,
-                    chr_len, c.n_base, d_range, r_range,
-                    c.maturity, c.max_ls, c.window_size, n_snap)
+        if n_stage in c.snapshot_stages:
+            record = fn.update_record(record, population, N, resources, 
+                    c.gen_map, c.chr_len, c.n_base, c.d_range, c.r_range,
+                    c.maturity, c.max_ls, c.window_size, n_stage, n_snap)
             n_snap += 1
+        else:
+            fn.quick_update(record, n_stage, N, resources)
 
         # everyone gets 1 stage older
         population[:,0] += 1
@@ -110,23 +85,25 @@ for n_run in range(1, c.number_of_runs+1):
         else: # constant; death rate increases if population exceeds
             x = x*c.death_inc if N>resources else 1.0
         if c.verbose: print "Starvation factor: "+str(x)
+
         # Reproduction
-        population = fn.reproduction_asex(population, c.maturity, 
-                c.max_ls, gen_map, chr_len, r_range, c.m_rate, c.verbose)
+        population = fn.reproduction_asex(population, c.maturity, c.max_ls,
+                c.gen_map, c.chr_len, c.r_range, c.m_rate, c.verbose)
         N = len(population)
 
         # Death
-        population = fn.death(population, c.max_ls, gen_map, chr_len,
-                d_range, x, c.verbose)
+        population = fn.death(population, c.max_ls, c.gen_map, c.chr_len,
+                c.d_range, x, c.verbose)
 
         # Extrinsic death crisis:
         if n_stage in c.crisis_stages:
             N = len(population)
             n_survivors = int(N*c.crisis_sv)
             population = population[sample(range(N), n_survivors)]
-            print "Crisis! "+str(len(population))+" individuals survived."
-
+            if c.verbose:
+                print "Crisis! "+str(n.survivors)+" individuals survived."
     ## RUN ENDED
+    print "\nEnd of run "+str(n_run)+".\n"
 
     ## pop-pyramid output
     males_females_age = n_age*100
@@ -165,5 +142,5 @@ for n_run in range(1, c.number_of_runs+1):
     cPickle.dump(c.repr_bound[1],pop_file)
     cPickle.dump(c.r_rate,pop_file)
     cPickle.dump(c.m_rate,pop_file)
-    cPickle.dump(gen_map,pop_file)
+    cPickle.dump(c.gen_map,pop_file)
     pop_file.close()

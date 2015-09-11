@@ -187,6 +187,7 @@ def initialise_record(m, n_stages, max_ls, n_bases, chr_len, window_size):
     record = {
         "population_size":copy(array4),
         "resources":copy(array4),
+        "age_distribution":copy(array1),
     	"surv_mean":copy(array1),
     	"surv_sd":copy(array1),
     	"repr_mean":copy(array1),
@@ -203,15 +204,24 @@ def initialise_record(m, n_stages, max_ls, n_bases, chr_len, window_size):
         }
     return record
 
+def quick_update(record, n_stage, N, resources):
+    record["population_size"][n_stage] = N
+    record["resources"][n_stage] = resources
+    return(record)
+
 def x_bincount(array):
     return np.bincount(array, minlength=3)
+
 def moving_average(a, n):
     c = np.cumsum(a, dtype=float)
     c[n:] = c[n:]-c[:-n]
     return c[(n-1):]/n
 
-def update_record(record, population, N, gen_map, chr_len, n_bases, 
-        d_range, r_range, maturity, max_ls, window_size, n_snap):
+def update_record(record, population, N, resources, gen_map, chr_len, 
+        n_bases, d_range, r_range, maturity, max_ls, window_size, 
+        n_stage, n_snap):
+
+    record = quick_update(record, n_stage, N, resources)
     ages = population[:,0]
     b = n_bases # Binary units per locus
 
@@ -279,18 +289,20 @@ def update_record(record, population, N, gen_map, chr_len, n_bases,
     fitness_junk = np.cumsum(np.cumprod(surv_junk) * repr_junk)
 
     ## APPEND RECORD OBJECT ##
-    record["surv_mean"][n_snap]=surv_mean
-    record["surv_sd"][n_snap]=surv_sd
-    record["repr_mean"][n_snap]=repr_mean
-    record["repr_sd"][n_snap]=repr_sd
-    record["density_surv"][n_snap]=density_surv
-    record["density_repr"][n_snap]=density_repr
-    record["fitness"][n_snap]=fitness
-    record["n1"][n_snap]=n1
-    record["s1"][n_snap]=s1
-    record["entropy"][n_snap]=entropy
-    record["surv_junk"][n_snap]=surv_junk
-    record["repr_junk"][n_snap]=repr_junk
-    record["fitness_junk"][n_snap]=fitness_junk
+    record["age_distribution"][n_snap] = np.bincount(ages, 
+            minlength = max_ls)/float(N)
+    record["surv_mean"][n_snap] = surv_mean
+    record["surv_sd"][n_snap] = surv_sd
+    record["repr_mean"][n_snap] = repr_mean
+    record["repr_sd"][n_snap] = repr_sd
+    record["density_surv"][n_snap] = density_surv
+    record["density_repr"][n_snap] = density_repr
+    record["fitness"][n_snap] = fitness
+    record["n1"][n_snap] = n1
+    record["s1"][n_snap] = s1
+    record["entropy"][n_snap] = entropy
+    record["surv_junk"][n_snap] = surv_junk
+    record["repr_junk"][n_snap] = repr_junk
+    record["fitness_junk"][n_snap] = fitness_junk
 
     return record

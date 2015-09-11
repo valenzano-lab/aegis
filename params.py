@@ -1,6 +1,6 @@
-##########################################
-## GENOME SIMULATION CONFIGURATION FILE ##
-##########################################
+################################################
+## GENOME SIMULATION v.1.5 CONFIGURATION FILE ##
+################################################
 
 sexual = False # Sexual or asexual reproduction
 verbose = True # Verbose printouts
