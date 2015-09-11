@@ -42,6 +42,7 @@ death_inc = 3 # Per-stage death-rate increase under starvation
 window_size = 10 # Size of sliding window for recording p1 SD
 
 ## DERIVED PARAMETERS ##
+import numpy as np
 gen_map = np.asarray(range(0,max_ls)+range(maturity+100,
     max_ls+100)+[201])
 # Genome map: survival (0 to max), reproduction (maturity to max), neutral
