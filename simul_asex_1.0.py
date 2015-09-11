@@ -45,6 +45,7 @@ for n_run in range(1, c.number_of_runs+1):
     for n_stage in range(c.number_of_stages):
 
         N = len(population)
+        x = 1.0 # Initial starvation factor
         
         if(N==0):
             print "\nPerished at stage "+str(n_stage+1)+"."
@@ -54,12 +55,12 @@ for n_run in range(1, c.number_of_runs+1):
         
         # Record output variables
         if n_stage in c.snapshot_stages:
-            record = fn.update_record(record, population, N, resources, 
+            record = fn.update_record(record, population, N, resources, x, 
                     c.gen_map, c.chr_len, c.n_base, c.d_range, c.r_range,
                     c.maturity, c.max_ls, c.window_size, n_stage, n_snap)
             n_snap += 1
         else:
-            fn.quick_update(record, n_stage, N, resources)
+            fn.quick_update(record, n_stage, N, resources, x)
 
         population[:,0] += 1 # everyone gets 1 stage older
 

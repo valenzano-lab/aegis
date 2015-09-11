@@ -200,6 +200,7 @@ def initialise_record(m, n_stages, max_ls, n_bases, chr_len, window_size):
     record = {
         "population_size":copy(array4),
         "resources":copy(array4),
+        "starvation_factor":copy(array4),
         "age_distribution":copy(array1),
     	"surv_mean":copy(array1),
     	"surv_sd":copy(array1),
@@ -217,9 +218,10 @@ def initialise_record(m, n_stages, max_ls, n_bases, chr_len, window_size):
         }
     return record
 
-def quick_update(record, n_stage, N, resources):
+def quick_update(record, n_stage, N, resources, x):
     record["population_size"][n_stage] = N
     record["resources"][n_stage] = resources
+    record["starvation_factor"][n_stage] = x
     return(record)
 
 def x_bincount(array):
@@ -230,11 +232,11 @@ def moving_average(a, n):
     c[n:] = c[n:]-c[:-n]
     return c[(n-1):]/n
 
-def update_record(record, population, N, resources, gen_map, chr_len, 
+def update_record(record, population, N, resources, x, gen_map, chr_len, 
         n_bases, d_range, r_range, maturity, max_ls, window_size, 
         n_stage, n_snap):
 
-    record = quick_update(record, n_stage, N, resources)
+    record = quick_update(record, n_stage, N, resources, x)
     ages = population[:,0]
     b = n_bases # Binary units per locus
 
