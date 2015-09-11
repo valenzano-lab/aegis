@@ -40,3 +40,15 @@ maturity = 16 # Age of sexual maturation
 n_base = 10 # Genome size (binary units per locus)
 death_inc = 3 # Per-stage death-rate increase under starvation
 window_size = 10 # Size of sliding window for recording p1 SD
+
+## DERIVED PARAMETERS ##
+gen_map = np.asarray(range(0,max_ls)+range(maturity+100,
+    max_ls+100)+[201])
+# Genome map: survival (0 to max), reproduction (maturity to max), neutral
+chr_len = len(gen_map)*n_base # Length of chromosome in binary units
+d_range = np.linspace(death_bound[1], death_bound[0],2*n_base+1) 
+# max to min death rate
+r_range = np.linspace(repr_bound[0],repr_bound[1],2*n_base+1) 
+# min to max repr rate
+snapshot_stages = np.around(np.linspace(0,number_of_stages,
+    number_of_snapshots),0) # Stages to save detailed record
