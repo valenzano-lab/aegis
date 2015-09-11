@@ -29,7 +29,7 @@ for n_run in range(1, c.number_of_runs+1):
     record = fn.initialise_record(c.number_of_snapshots, 
             c.number_of_stages, c.max_ls, c.n_base, c.chr_len, 
             c.window_size)
-    x = 1
+    x = 1.0 # Initial starvation factor
     resources = c.res_start
     n_snap = 0 # number of first snapshot
 
@@ -45,7 +45,6 @@ for n_run in range(1, c.number_of_runs+1):
     for n_stage in range(c.number_of_stages):
 
         N = len(population)
-        x = 1.0 # Initial starvation factor
         
         if(N==0):
             print "\nPerished at stage "+str(n_stage+1)+"."
