@@ -2,7 +2,7 @@
 
 from random import sample
 import numpy as np
-import simul_functions as fn
+import functions as fn
 import argparse
 
 ###################################
