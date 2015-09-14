@@ -1,3 +1,7 @@
+#############################
+## LIBRARIES AND GENERATOR ##
+#############################
+
 import scipy.stats
 import numpy as np
 from random import randint
@@ -8,17 +12,89 @@ from importlib import import_module
 import sys
 import cPickle
 
+
+
+
+#############################
+## CONFIGURATION FUNCTIONS ##
+#############################
+
+def get_dir(dir_name):
+    sys.path.remove(os.getcwd())
+    try:
+        os.chdir(dir_name)
+    except OSError:
+        loop = True
+        q = raw_input(
+                "Given directory does not exist. Create it? (y/n) ")
+        while loop:
+            if q in ["yes", "y", "YES", "Y", "Yes"]:
+                os.mkdir(dir_name)
+                os.chdir(dir_name)
+                loop = False
+            elif q in ["no", "n", "NO", "N", "No", ""]:
+                exit("Aborting: no valid working directory given.")
+            else:
+                q = raw_input("Invalid input. Create directory? (y/n) ")
+    sys.path.append(os.getcwd())
+    print "Working directory: "+os.getcwd()
+
+def get_conf(file_name):
+    try:
+        p = import_module(file_name)
+    except ImportError:
+        print "No such file in simulation directory: " + file_name
+        q = raw_input(
+                "Enter correct config file name, or skip to abort: ")
+        if q == "":
+            exit("Aborting: no valid configuration file given.")
+        else: 
+            return get_conf(q)
+    print "Config file: "+ file_name +".py"
+    return p
+
+def get_startpop(seed_name):
+    if seed_name == "": 
+        print "Seed: None."
+        return ""
+    try:
+        # Make sure includes extension
+        seed_split = seed_name.split(".")
+        if seed_split[-1] != "txt":
+            seed_name = seed_name + ".txt"
+        popfile = open(seed_name, "rb")
+        poparray = cPickle.load(popfile) # Import population array
+    except IOError:
+        print "No such seed file: " + seed_name
+        q = raw_input(
+                "Enter correct path to seed file, or skip to abort: ")
+        if q == "":
+            exit("Aborting: invalid seed file given.")
+        else:
+            return get_startpop(q)
+    print "Seed population file: " + seed_name
+    return poparray
+
+##############################
+## RANDOM NUMBER GENERATION ##
+##############################
+
 rand = scipy.stats.uniform(0,1) # Generate random number generator
 
 def chance(z,n=1):
     return rand.rvs(n)<z
 
-def starting_genome(var,n,gen_map,s_dist,r_dist):
+###########################
+## POPULATION GENERATION ##
+###########################
+
+def starting_genome(var, n, gen_map, s_dist, r_dist):
     ### Returns a binary array of length n, with the proportion of 1's
     ### determined by the initial distribution specified (random or
     ### a constant percentage).
     if n % len(gen_map) != 0:
-        raise ValueError("Genome length must be integer multiple of map length.")
+        raise ValueError(
+                "Genome length must be integer multiple of map length.")
     q = n/len(gen_map)
     var=min(1.4, var)
     sd = var**0.5
@@ -57,7 +133,7 @@ def make_population(start_pop, age_random, variance, chr_len, gen_map,
         s_dist, r_dist):
     print "Generating starting population...",
     population = []
-    for i in range(start_pop-1):
+    for i in range(start_pop):
         indiv = make_individual(age_random, variance, chr_len, 
                 gen_map, s_dist, r_dist)
         population.append(indiv)
@@ -131,64 +207,6 @@ def death(population, max_ls, gen_map, chr_len,
         dead = len(population) - len(survivors)
         print "done. "+str(dead)+" individuals died."
     return(new_population)
-
-def yesno(q):
-    yes = ["y", "Y", "yes", "Yes", "YES"]
-    no = ["n", "N", "no", "No", "NO"]
-    while True:
-        var = raw_input(q+" ").strip()
-        if q in yes: 
-            return True
-        elif q in no: 
-            return False
-        else:
-            print "Invalid input.\n"
-def getnumber(q, cl, default=""):
-    while True:
-        var = raw_input(q+" ").strip()
-        if var == "":
-            var = default
-        try:
-            return(cl(var))
-        except ValueError:
-            print "Invalid input.\n"
-
-def getconf(argv):
-    loop = True
-    while loop:
-        if len(argv)>1:
-            conf = argv[2]
-        else:
-            conf = raw_input("Name of config file in working directory:  ")
-        try:
-            p = import_module(conf)
-            loop = False
-        except ImportError:
-            if len(argv)>1:
-                sys.exit("ImportError: No such file in working directory.")
-            else:
-                print "No such file in working directory."
-    print "Config file: "+conf+".py"
-    return p
-
-def getwd(argv):
-    loop = True
-    while loop:
-        if len(argv)>1:
-            path = argv[1]
-        else:
-            path = raw_input("Path to working directory:  ")
-        try:
-            sys.path.remove(os.getcwd())
-            os.chdir(path)
-            loop = False
-        except ImportError:
-            if len(argv)>1:
-                sys.exit("OSError: Invalid path to working directory.")
-            else:
-                print "Invalid path to working directory."
-    sys.path.append(os.getcwd())
-    print "Working directory: "+os.getcwd()
 
 def initialise_record(m, n_stages, max_ls, n_bases, chr_len, window_size):
     """ Create a new record dictionary object for recording output 
