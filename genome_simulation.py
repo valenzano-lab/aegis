@@ -105,7 +105,7 @@ for n_run in range(1, c.number_of_runs+1):
             print " individuals survived."
 
     ## RUN ENDED
-    print "\nEnd of run "+str(n_run)+".\n"
+    print "\nEnd of run "+str(n_run)+". Final population: "+str(N)+".\n"
 
     ## WRITE POPULATION, RECORD TO FILE ##
     fn.run_output(n_run, population, record)
