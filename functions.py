@@ -4,16 +4,14 @@
 
 import scipy.stats
 import numpy as np
-from random import randint
+from random import randint,sample
 from copy import copy,deepcopy
 import time
 import os
 from importlib import import_module
 import sys
 import cPickle
-
-
-
+import warnings
 
 #############################
 ## CONFIGURATION FUNCTIONS ##
@@ -141,6 +139,10 @@ def make_population(start_pop, age_random, variance, chr_len, gen_map,
     print "done."
     return population
 
+######################
+## UPDATE FUNCTIONS ##
+######################
+
 def update_resources(res0, N, R, V, limit, verbose=False):
     if verbose: print "Updating resources...",
     k = 1 if N>res0 else V
@@ -150,9 +152,10 @@ def update_resources(res0, N, R, V, limit, verbose=False):
     if verbose: print "Done. "+str(res0)+" -> "+str(res1)
     return res1
 
-def reproduction_asex(population, maturity, max_ls, gen_map, chr_len, 
-        r_range, m_rate, verbose=False):
+def reproduction(population, maturity, max_ls, gen_map, chr_len, r_range,
+		m_rate, r_rate, sexual=False, verbose=False):
     if verbose: print "Calculating reproduction...",
+    # Selecting parents
     parents = np.empty(0, int)
     ages = population[:,0]
     for age in range(maturity, min(max(ages), max_ls-1)):
@@ -171,8 +174,30 @@ def reproduction_asex(population, maturity, max_ls, gen_map, chr_len,
         # Determine parents in subpopulation and add indices to record
         newparents = which[chance(repr_rates, len(repr_rates))]
         parents = np.append(parents, newparents)
-    # Create and mutate children
-    children = deepcopy(population[parents])
+    if sexual:
+	    # Must be even number of parents:
+	    if len(parents)%2 != 0: parents = parents[:-1]
+	    # Randomly assign mating partners:
+	    np.random.shuffle(parents) 
+	    # Recombination between chromosomes in each parent:
+	    rr = np.copy(population[parents])
+	    chr1 = np.arange(chr_len)+1
+	    chr2 = chr1 + chr_len
+	    for n in rr:
+		    r_sites = sample(range(chr_len), int(chr_len*r_rate))
+		    for r in r_sites:
+			    swap = np.copy(n[chr1][r:])
+			    n[chr1][r:] = n[chr2][r:]
+			    n[chr2][r:] = swap
+	    # Generate children from randomly-combined parental chromatids
+	    chr_choice = np.random.choice(["chr1","chr2"], len(rr))
+	    chr_dict = {"chr1":chr1, "chr2":chr2}
+	    for m in range(len(rr)/2):
+		    rr[2*m][chr_dict[chr_choice[2*m]]] = rr[2*m+1][chr_dict[chr_choice[2*m+1]]]
+	    children = np.copy(rr[::2])
+    else:
+	    children = np.copy(population[parents])
+    # Mutate children:
     children[children==0]=chance(m_rate,np.sum(children==0))
     children[children==1]=1-chance(0.1*m_rate, np.sum(children==1))
     children[:,0] = 0 # Make newborn
@@ -271,28 +296,35 @@ def update_record(record, population, N, resources, x, gen_map, chr_len,
     # Loop over ages:
     for age in range(max(ages)):
         pop = population[ages==age]
-        # Find loci and binary units:
-        surv_locus = np.nonzero(gen_map==age)[0][0]
-        surv_pos = np.arange(surv_locus*b, (surv_locus+1)*b)+1
-        # Subset array to relevant columns and find genotypes:
-        surv_pop = pop[:,np.append(surv_pos, surv_pos+chr_len)]
-        surv_gen = np.sum(surv_pop, axis=1)
-        # Find death/reproduction rates:
-        surv_rates = 1-d_range[surv_gen]
-        # Calculate statistics:
-        surv_mean[age] = np.mean(surv_rates)
-        surv_sd[age] = np.std(surv_rates)
-        density_surv += np.bincount(surv_gen, minlength=2*b+1)
-        if age>=maturity:
-            # Same for reproduction if they're adults
-            repr_locus = np.nonzero(gen_map==(age+100))[0][0]
-            repr_pos = np.arange(repr_locus*b, (repr_locus+1)*b)+1
-            repr_pop = pop[:,np.append(repr_pos, repr_pos+chr_len)]
-            repr_gen = np.sum(repr_pop, axis=1)
-            repr_rates = r_range[repr_gen]
-            repr_mean[age] = np.mean(repr_rates)
-            repr_sd[age] = np.std(repr_rates)
-            density_repr += np.bincount(repr_gen, minlength=2*b+1)
+	if len(pop) > 0:
+            # Find loci and binary units:
+            surv_locus = np.nonzero(gen_map==age)[0][0]
+            surv_pos = np.arange(surv_locus*b, (surv_locus+1)*b)+1
+            # Subset array to relevant columns and find genotypes:
+            surv_pop = pop[:,np.append(surv_pos, surv_pos+chr_len)]
+            surv_gen = np.sum(surv_pop, axis=1)
+            # Find death/reproduction rates:
+            surv_rates = 1-d_range[surv_gen]
+            # Calculate statistics:
+            surv_mean[age] = np.mean(surv_rates)
+            surv_sd[age] = np.std(surv_rates)
+            density_surv += np.bincount(surv_gen, minlength=2*b+1)
+            if age>=maturity:
+                # Same for reproduction if they're adults
+                repr_locus = np.nonzero(gen_map==(age+100))[0][0]
+                repr_pos = np.arange(repr_locus*b, (repr_locus+1)*b)+1
+                repr_pop = pop[:,np.append(repr_pos, repr_pos+chr_len)]
+                repr_gen = np.sum(repr_pop, axis=1)
+                repr_rates = r_range[repr_gen]
+                repr_mean[age] = np.mean(repr_rates)
+                repr_sd[age] = np.std(repr_rates)
+                density_repr += np.bincount(repr_gen, minlength=2*b+1)
+	else:
+	    surv_mean[age] = None
+	    surv_sd[age] = None
+	    if age >= maturity:
+	        repr_mean[age] = None
+		repr_sd[age] = None
     # Average densities over whole population
     density_surv /= float(N)
     density_repr /= float(N)

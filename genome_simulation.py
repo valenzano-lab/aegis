@@ -68,10 +68,12 @@ for n_run in range(1, c.number_of_runs+1):
         
         # Record output variables
         if n_stage in c.snapshot_stages:
+            if full_report: print "Taking snapshot...",
             record = fn.update_record(record, population, N, resources, x, 
                     c.gen_map, c.chr_len, c.n_base, c.d_range, c.r_range,
                     c.maturity, c.max_ls, c.window_size, n_stage, n_snap)
             n_snap += 1
+            print "done."
         else:
             fn.quick_update(record, n_stage, N, resources, x)
 
@@ -87,9 +89,9 @@ for n_run in range(1, c.number_of_runs+1):
         if full_report: print "Starvation factor: "+str(x)
 
         # Reproduction
-        population = fn.reproduction_asex(population, c.maturity, 
+        population = fn.reproduction(population, c.maturity, 
                 c.max_ls, c.gen_map, c.chr_len, c.r_range, c.m_rate, 
-                full_report)
+                c.r_rate, c.sexual, full_report)
         N = len(population)
 
         # Death
