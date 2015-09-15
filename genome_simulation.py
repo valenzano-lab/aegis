@@ -73,7 +73,7 @@ for n_run in range(1, c.number_of_runs+1):
                     c.gen_map, c.chr_len, c.n_base, c.d_range, c.r_range,
                     c.maturity, c.max_ls, c.window_size, n_stage, n_snap)
             n_snap += 1
-            print "done."
+            if full_report: print "done."
         else:
             fn.quick_update(record, n_stage, N, resources, x)
 

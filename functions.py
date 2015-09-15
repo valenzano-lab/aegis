@@ -320,11 +320,11 @@ def update_record(record, population, N, resources, x, gen_map, chr_len,
                 repr_sd[age] = np.std(repr_rates)
                 density_repr += np.bincount(repr_gen, minlength=2*b+1)
 	else:
-	    surv_mean[age] = None
-	    surv_sd[age] = None
+	    surv_mean[age] = 0
+	    surv_sd[age] = 0
 	    if age >= maturity:
-	        repr_mean[age] = None
-		repr_sd[age] = None
+	        repr_mean[age] = 0
+		repr_sd[age] = 0
     # Average densities over whole population
     density_surv /= float(N)
     density_repr /= float(N)
