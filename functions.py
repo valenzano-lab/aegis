@@ -233,14 +233,21 @@ def death(population, max_ls, gen_map, chr_len,
         print "done. "+str(dead)+" individuals died."
     return(new_population)
 
-def initialise_record(m, n_stages, max_ls, n_bases, chr_len, window_size):
+def initialise_record(snapshot_stages, n_stages, max_ls, n_bases, 
+        gen_map, chr_len, d_range, r_range, window_size):
     """ Create a new record dictionary object for recording output 
     data from simulation """
+    m = len(snapshot_stages)
     array1 = np.zeros([m,max_ls])
     array2 = np.zeros([m,2*n_bases+1])
     array3 = np.zeros(m)
     array4 = np.zeros(n_stages)
     record = {
+        "gen_map":gen_map,
+        "chr_len":chr_len,
+        "d_range":d_range,
+        "r_range":r_range,
+        "snapshot_stages":snapshot_stages,
         "population_size":copy(array4),
         "resources":copy(array4),
         "starvation_factor":copy(array4),

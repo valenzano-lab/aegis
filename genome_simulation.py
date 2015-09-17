@@ -25,6 +25,7 @@ print args
 fn.get_dir(args.dir)
 c = fn.get_conf(args.c) # Import config file as "c".
 startpop = fn.get_startpop(args.s) # Get seed population, if any.
+gen_map = np.copy(c.gen_map)
 
 ####################
 ## RUN SIMULATION ##
@@ -37,10 +38,10 @@ for n_run in range(1, c.number_of_runs+1):
     # # # # # # # # # # # # # # # 
     
     print "\nBeginning run "+str(n_run)+".\n"
-    np.random.shuffle(c.gen_map) # reshuffle genome every run
-    record = fn.initialise_record(c.number_of_snapshots, 
-            c.number_of_stages, c.max_ls, c.n_base, c.chr_len, 
-            c.window_size)
+    np.random.shuffle(gen_map) # reshuffle genome every run
+    record = fn.initialise_record(c.snapshot_stages, 
+            c.number_of_stages, c.max_ls, c.n_base, gen_map, c.chr_len, 
+            c.d_range, c.r_range, c.window_size)
     x = 1.0 # Initial starvation factor
     resources = c.res_start
     n_snap = 0 # number of first snapshot
@@ -48,7 +49,7 @@ for n_run in range(1, c.number_of_runs+1):
     ## Generate starting population (if no seed)
     population = startpop if startpop != "" else fn.make_population(
             c.start_pop, c.age_random, c.variance, c.chr_len, 
-            c.gen_map, c.s_dist, c.r_dist)
+            gen_map, c.s_dist, c.r_dist)
 
     # # # # # # # # #
     # 2: STAGE LOOP #
@@ -70,7 +71,7 @@ for n_run in range(1, c.number_of_runs+1):
         if n_stage in c.snapshot_stages:
             if full_report: print "Taking snapshot...",
             record = fn.update_record(record, population, N, resources, x, 
-                    c.gen_map, c.chr_len, c.n_base, c.d_range, c.r_range,
+                    gen_map, c.chr_len, c.n_base, c.d_range, c.r_range,
                     c.maturity, c.max_ls, c.window_size, n_stage, n_snap)
             n_snap += 1
             if full_report: print "done."
@@ -90,12 +91,12 @@ for n_run in range(1, c.number_of_runs+1):
 
         # Reproduction
         population = fn.reproduction(population, c.maturity, 
-                c.max_ls, c.gen_map, c.chr_len, c.r_range, c.m_rate, 
+                c.max_ls, gen_map, c.chr_len, c.r_range, c.m_rate, 
                 c.r_rate, c.sexual, full_report)
         N = len(population)
 
         # Death
-        population = fn.death(population, c.max_ls, c.gen_map, c.chr_len,
+        population = fn.death(population, c.max_ls, gen_map, c.chr_len,
                 c.d_range, x, full_report)
 
         # Extrinsic death crisis:
