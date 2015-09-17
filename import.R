@@ -20,6 +20,34 @@ get_item = function(item_name){
   return(item)
 }
 
+get_item_list = function(){
+  L = list(
+    population_size = get_item("population_size"),
+    resources = get_item("resources"),
+    starvation_factor = get_item("starvation_factor"),
+    age_distribution = get_item("age_distribution"),
+    surv_mean = get_item("surv_mean"),
+    surv_sd = get_item("surv_sd"),
+    repr_mean = get_item("repr_mean"),
+    repr_sd = get_item("repr_sd"),
+    density_surv = get_item("density_surv"),
+    density_repr = get_item("density_repr"),
+    n1 = get_item("n1"),
+    s1 = get_item("s1"),
+    fitness = get_item("fitness"),
+    entropy = get_item("entropy"),
+    surv_junk = get_item("surv_junk"),
+    repr_junk = get_item("repr_junk" ),
+    fitness_junk = get_item("fitness_junk")
+    )
+  return(L)
+}
+
+import_data <- function(path, run=1){
+  get_record(path, run=1)
+  return(get_item_list())
+}
+
 ### FULL LIST OF RECORD ITEMS ###
 #    "population_size" : Value of N
 #    "resources" : Resource level
