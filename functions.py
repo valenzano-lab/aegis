@@ -1,6 +1,6 @@
-#############################
-## LIBRARIES AND GENERATOR ##
-#############################
+###############
+## LIBRARIES ##
+###############
 
 import scipy.stats
 import numpy as np
@@ -18,6 +18,7 @@ import warnings
 #############################
 
 def get_dir(dir_name):
+    """Change to specified working directory and update PATH."""
     sys.path.remove(os.getcwd())
     try:
         os.chdir(dir_name)
@@ -38,6 +39,7 @@ def get_dir(dir_name):
     print "Working directory: "+os.getcwd()
 
 def get_conf(file_name):
+    """Import specified configuration file for simulation."""
     try:
         p = import_module(file_name)
     except ImportError:
@@ -52,6 +54,7 @@ def get_conf(file_name):
     return p
 
 def get_startpop(seed_name):
+    """Import any seed population (or return blank)."""
     if seed_name == "": 
         print "Seed: None."
         return ""
@@ -67,7 +70,7 @@ def get_startpop(seed_name):
         q = raw_input(
                 "Enter correct path to seed file, or skip to abort: ")
         if q == "":
-            exit("Aborting: invalid seed file given.")
+            exit("Aborting: no valid seed file given.")
         else:
             return get_startpop(q)
     print "Seed population file: " + seed_name
@@ -77,65 +80,53 @@ def get_startpop(seed_name):
 ## RANDOM NUMBER GENERATION ##
 ##############################
 
-rand = scipy.stats.uniform(0,1) # Generate random number generator
+rand = scipy.stats.uniform(0,1) # Uniform random number generator
 
 def chance(z,n=1):
+    """Generate array of independent booleans with P(True)=z."""
     return rand.rvs(n)<z
 
 ###########################
 ## POPULATION GENERATION ##
 ###########################
 
-def starting_genome(var, n, gen_map, s_dist, r_dist):
+def make_chromosome(variance, n_base, chr_len, gen_map, s_dist, r_dist):
+    """ Returns chromosome array of specified length and composition."""
     ### Returns a binary array of length n, with the proportion of 1's
     ### determined by the initial distribution specified (random or
     ### a constant percentage).
-    if n % len(gen_map) != 0:
-        raise ValueError(
-                "Genome length must be integer multiple of map length.")
-    q = n/len(gen_map)
-    var=min(1.4, var)
-    sd = var**0.5
+    variance = max(0, variance) # No negative variance values.
+    sd = variance**0.5
     p=scipy.stats.truncnorm(-0.5/sd, 0.5/sd, loc=0.5, scale=sd).rvs(1) 
     # 0/1-truncated normal distribution with mean 0.5 and sd as given
-    a = (rand.rvs(n)<p)*1
+    chromosome = (rand.rvs(chr_len)<p)*1
     # If survival and/or reproduction probability is not random, 
     # replace appropriate loci in genome with new 1/0 distribution.
     if s_dist != "random":
-        s = float(s_dist)/100
         s_loci = np.nonzero(gen_map<100)[0]
-        s_pos = []
-        for x in s_loci:
-            s_pos.append(range(x*q, (x+1)*q))
-        a[s_pos] = chance(s, len(s_pos))
+        s_pos = [range(n_base) + x for x in s_loci*10]
+        chromosome[s_pos] = chance(s_dist, len(s_pos))
     if r_dist != "random":
-        r = float(r_dist)/100
         r_loci = np.nonzero(np.logical_and(gen_map>100,gen_map<200))[0]
-        a[r_loci] = rand.rvs(len(r_loci))<r
-        r_pos = []
-        for x in r_loci:
-            r_pos.append(range(x*q, (x+1)*q))
-        a[r_pos] = chance(s, len(r_pos))
-    return list(a)
+        r_pos = [range(n_base) + x for x in r_loci*10]
+        chromosome[r_pos] = chance(r_dist, len(r_pos))
+    return list(chromosome)
 
-def make_individual(age_random, var, n, gen_map, s_dist, r_dist):
-    ### Returns a [1,2n+1]-dimensional array representing an individual
-    ### with a starting age and two length-n chromosomes
-    age = randint(0,70) if age_random else 15
-    chr1 = starting_genome(var, n, gen_map, s_dist, r_dist)
-    chr2 = starting_genome(var, n, gen_map, s_dist, r_dist)
-    individual = np.concatenate(([age], chr1, chr2))
-    return individual
+def make_individual(age_random, max_ls, maturity, variance, n_base, 
+        chr_len, gen_map, s_dist, r_dist):
+    """ Generate array for an individual, with age and 2 chromosomes."""
+    age = randint(0,max_ls-1) if age_random else (maturity-1)
+    chromosomes = [make_chromosome(variance, n_base, chr_len, gen_map, 
+            s_dist, r_dist) for _ in range(2)]
+    return np.concatenate(([age], chromosomes[0], chromosomes[1]))
 
-def make_population(start_pop, age_random, variance, chr_len, gen_map,
-        s_dist, r_dist):
+def make_population(start_pop, age_random, max_ls, maturity,  variance, 
+        n_base, chr_len, gen_map, s_dist, r_dist):
+    """ Generate starting population of given size and composition."""
     print "Generating starting population...",
-    population = []
-    for i in range(start_pop):
-        indiv = make_individual(age_random, variance, chr_len, 
-                gen_map, s_dist, r_dist)
-        population.append(indiv)
-    population = np.array(population)
+    population = np.array([make_individual(age_random, max_ls, 
+        maturity, variance, n_base, chr_len, gen_map, s_dist, 
+        r_dist) for _ in range(start_pop)])
     print "done."
     return population
 
@@ -144,6 +135,7 @@ def make_population(start_pop, age_random, variance, chr_len, gen_map,
 ######################
 
 def update_resources(res0, N, R, V, limit, verbose=False):
+    """Implement consumption and regrowth of resources."""
     if verbose: print "Updating resources...",
     k = 1 if N>res0 else V
     res1 = int((res0-N)*k+R)
@@ -152,91 +144,92 @@ def update_resources(res0, N, R, V, limit, verbose=False):
     if verbose: print "Done. "+str(res0)+" -> "+str(res1)
     return res1
 
-def reproduction(population, maturity, max_ls, gen_map, chr_len, r_range,
-		m_rate, r_rate, sexual=False, verbose=False):
-    if verbose: print "Calculating reproduction...",
-    # Selecting parents
-    parents = np.empty(0, int)
+def get_subpop(population, gen_map, min_age, max_age, offset, n_base,
+        chr_len, val_range):
+    """Randomly select a subset of the population based on genotype."""
+    subpop = np.empty(0,int)
     ages = population[:,0]
-    for age in range(maturity, min(max(ages), max_ls-1)):
-        # Get indices of reproductive locus
-        locus = np.nonzero(gen_map==(age+100))[0][0]
-        pos = np.arange(locus*10, (locus+1)*10)+1
-        # Get sub-population of correct age and subset genome to locus
+    for age in range(min_age, min(max_age, max(ages))):
+        # Get indices of appropriate locus for that age:
+        locus = np.nonzero(gen_map==(age+offset))[0][0]
+        pos = np.arange(locus*n_base, (locus+1)*n_base)+1
+        # Get sub-population of correct age and subset genome to locus:
         match = (ages == age)
         which = np.nonzero(match)[0]
         pop = population[match][:,np.append(pos, pos+chr_len)]
+        # Get sum of genotype for every individual:
         gen = np.sum(pop, axis=1)
-        # Sum over reproductive locus for every individual of that age
-        # to get reprodctive genotype for each
-        repr_rates = r_range[gen]
-        # Convert reproductive genotypes into probabilities
-        # Determine parents in subpopulation and add indices to record
-        newparents = which[chance(repr_rates, len(repr_rates))]
-        parents = np.append(parents, newparents)
-    if sexual:
-	    # Must be even number of parents:
-	    if len(parents)%2 != 0: parents = parents[:-1]
-	    # Randomly assign mating partners:
-	    np.random.shuffle(parents) 
-	    # Recombination between chromosomes in each parent:
-	    rr = np.copy(population[parents])
-	    chr1 = np.arange(chr_len)+1
-	    chr2 = chr1 + chr_len
-	    for n in rr:
-		    r_sites = sample(range(chr_len), int(chr_len*r_rate))
-		    for r in r_sites:
-			    swap = np.copy(n[chr1][r:])
-			    n[chr1][r:] = n[chr2][r:]
-			    n[chr2][r:] = swap
-	    # Generate children from randomly-combined parental chromatids
-	    chr_choice = np.random.choice(["chr1","chr2"], len(rr))
-	    chr_dict = {"chr1":chr1, "chr2":chr2}
-	    for m in range(len(rr)/2):
-		    rr[2*m][chr_dict[chr_choice[2*m]]] = rr[2*m+1][chr_dict[chr_choice[2*m+1]]]
-	    children = np.copy(rr[::2])
+        # Convert genotypes into inclusion probabilities:
+        inc_rates = val_range[gen]
+        included = which[chance(inc_rates, len(inc_rates))]
+        subpop = np.append(subpop, included)
+    return subpop
+
+
+def generate_children(sexual, population, parents, chr_len, r_rate): 
+    """Generate array of children through a/sexual reproduction."""
+    if not sexual:
+	children = np.copy(population[parents])
     else:
-	    children = np.copy(population[parents])
+        # Must be even number of parents:
+        if len(parents)%2 != 0: parents = parents[:-1]
+        # Randomly assign mating partners:
+        np.random.shuffle(parents) 
+        # Recombination between chromosomes in each parent:
+        rr = np.copy(population[parents])
+        chr1 = np.arange(chr_len)+1
+        chr2 = chr1 + chr_len
+        for n in rr:
+            r_sites = sample(range(chr_len), int(chr_len*r_rate))
+            for r in r_sites:
+                swap = np.copy(n[chr1][r:])
+                n[chr1][r:] = np.copy(n[chr2][r:])
+                n[chr2][r:] = swap
+        # Generate children from randomly-combined parental chromatids
+        chr_choice = np.random.choice(["chr1","chr2"], len(rr))
+        chr_dict = {"chr1":chr1, "chr2":chr2}
+        for m in range(len(rr)/2):
+            rr[2*m][chr_dict[chr_choice[2*m]]] = \
+                    rr[2*m+1][chr_dict[chr_choice[2*m+1]]]
+        children = np.copy(rr[::2])
+    return(children)
+
+def reproduction(population, maturity, max_ls, gen_map, n_base, chr_len, 
+        r_range, m_rate, r_rate, sexual=False, verbose=False):
+    """Select parents, generate children, mutate and add to population."""
+    if verbose: print "Calculating reproduction...",
+    parents = get_subpop(population, gen_map, maturity, max_ls, 100, 
+            n_base, chr_len, r_range) # Select parents
+    children = generate_children(sexual, population, parents, chr_len,
+            r_rate) # Generate children from parents
     # Mutate children:
     children[children==0]=chance(m_rate,np.sum(children==0))
     children[children==1]=1-chance(0.1*m_rate, np.sum(children==1))
     children[:,0] = 0 # Make newborn
     population=np.vstack([population,children]) # Add to population
-    if verbose: print "done. "+str(len(children))+" new individuals born."
+    if verbose:
+        print "done. "+str(len(children))+" new individuals born."
     return(population)
 
-def death(population, max_ls, gen_map, chr_len, 
-        d_range, x, verbose=False):
+def death(population, max_ls, gen_map, n_base, chr_len, d_range, 
+        starvation_factor, verbose=False):
+    """Select survivors and kill rest of population."""
     if verbose: print "Calculating death...",
-    survivors = np.empty(0, int)
-    ages = population[:,0]
-    for age in range(min(max(ages), max_ls-1)):
-        # Get indices of survival locus
-        locus = np.nonzero(gen_map==age)[0][0]
-        pos = np.arange(locus*10, (locus+1)*10)+1
-        # Get sub-population of correct age and subset genome to locus
-        match = (ages == age)
-        which = np.nonzero(match)[0]
-        pop = population[match][:,np.append(pos, pos+chr_len)]
-        gen = np.sum(pop, axis=1)
-        # Sum over survival locus for every individual of that age
-        # to get survival genotype for each
-        surv_rates = (1-d_range[gen]*x)
-        # Convert survival genotypes into probabilities (penalised by
-        # starvation factor)
-        # Determine survivors in subpopulation and add indices to record
-        newsurvivors = which[chance(surv_rates, len(surv_rates))]
-        survivors = np.append(survivors, newsurvivors)
+    survivors = get_subpop(population, gen_map, 0, max_ls, 0, n_base,
+        chr_len, 1-(d_range*starvation_factor))
     new_population = population[survivors]
     if verbose:
         dead = len(population) - len(survivors)
         print "done. "+str(dead)+" individuals died."
     return(new_population)
 
+####################################
+## RECORDING AND OUTPUT FUNCTIONS ##
+####################################
+
 def initialise_record(snapshot_stages, n_stages, max_ls, n_bases, 
         gen_map, chr_len, d_range, r_range, window_size):
-    """ Create a new record dictionary object for recording output 
-    data from simulation """
+    """ Create a new dictionary object for recording output data."""
     m = len(snapshot_stages)
     array1 = np.zeros([m,max_ls])
     array2 = np.zeros([m,2*n_bases+1])
@@ -269,15 +262,18 @@ def initialise_record(snapshot_stages, n_stages, max_ls, n_bases,
     return record
 
 def quick_update(record, n_stage, N, resources, x):
+    """Record only population size, resource and starvation data."""
     record["population_size"][n_stage] = N
     record["resources"][n_stage] = resources
     record["starvation_factor"][n_stage] = x
     return(record)
 
 def x_bincount(array):
+    """Auxiliary bincount function for update_record."""
     return np.bincount(array, minlength=3)
 
 def moving_average(a, n):
+    """Calculate moving average of an array along a sliding window."""
     c = np.cumsum(a, dtype=float)
     c[n:] = c[n:]-c[:-n]
     return c[(n-1):]/n
@@ -285,7 +281,7 @@ def moving_average(a, n):
 def update_record(record, population, N, resources, x, gen_map, chr_len, 
         n_bases, d_range, r_range, maturity, max_ls, window_size, 
         n_stage, n_snap):
-
+    """Record detailed population data at current stage."""
     record = quick_update(record, n_stage, N, resources, x)
     ages = population[:,0]
     b = n_bases # Binary units per locus
@@ -361,8 +357,12 @@ def update_record(record, population, N, resources, x, gen_map, chr_len,
     fitness_junk = np.cumsum(np.cumprod(surv_junk) * repr_junk)
 
     ## APPEND RECORD OBJECT ##
-    record["age_distribution"][n_snap] = np.bincount(ages, 
+    try:
+        record["age_distribution"][n_snap] = np.bincount(ages, 
             minlength = max_ls)/float(N)
+    except ValueError:
+        print str(max(ages))
+        raise ValueError
     record["surv_mean"][n_snap] = surv_mean
     record["surv_sd"][n_snap] = surv_sd
     record["repr_mean"][n_snap] = repr_mean
@@ -380,6 +380,8 @@ def update_record(record, population, N, resources, x, gen_map, chr_len,
     return record
 
 def run_output(n_run, population, record):
+    """Save population and record objects as output files."""
+    print "Saving output files...", 
     pop_file = open("run_"+str(n_run)+"_pop.txt", "wb")
     rec_file = open("run_"+str(n_run)+"_rec.txt", "wb")
     try:
@@ -388,3 +390,4 @@ def run_output(n_run, population, record):
     finally:
         pop_file.close()
         rec_file.close()
+        print "done."

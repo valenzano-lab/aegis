@@ -9,8 +9,6 @@ number_of_runs = 1 # Total number of independent runs
 number_of_stages = 200 # Total number of stages per run
 crisis_stages = [] # Stages of extrinsic death crisis
 crisis_sv = 0.05 # Fraction of crisis survivors (if applicable)
-comment = 'test'
-out = "testrun/" # Output directory
 number_of_snapshots = 16 # Number of stages at which to store output data
 
 ## RESOURCE PARAMETERS ##
@@ -22,10 +20,13 @@ res_limit = 5000 # Maximum resource value, if variable
 
 ## STARTING POPULATION PARAMETERS ##
 start_pop = 500 # Starting population size
-age_random = True # Uniform starting age distribution; else all start as new adults
-# Proportion of 1's and 0's in the genome can be randomly chosen for each chromosome in each individual (drawn from a truncated normal about 0.5) or set at a constant percentage value, separately for survival and reproductive loci:
-s_dist = "random" # "random" or PERCENTAGE value (0-100) for S loci
-r_dist = "random" # "random" or PERCENTAGE value (0-100) for R loci
+age_random = True # Random starting ages; else all start as new adults
+# Proportion of 1's and 0's in the genome can be randomly chosen for each 
+# chromosome in each individual (drawn from a truncated normal about 0.5) or 
+# set at a constant percentage value, separately for survival and reproductive 
+# loci:
+s_dist = "random" # "random" or PROPORTIONAL value (0.0-1.0) for S loci
+r_dist = "random" # "random" or PROPORTIONAL value (0.0-1.0) for R loci
 variance = 1.4 # Variance of parameter distribution, if random
 
 ## SIMULATION FUNDAMENTALS: CHANGE WITH CARE ##
@@ -50,5 +51,5 @@ d_range = np.linspace(death_bound[1], death_bound[0],2*n_base+1)
 # max to min death rate
 r_range = np.linspace(repr_bound[0],repr_bound[1],2*n_base+1) 
 # min to max repr rate
-snapshot_stages = np.around(np.linspace(0,number_of_stages-1,
-    number_of_snapshots),0) # Stages to save detailed record
+snapshot_stages = int(np.around(np.linspace(0,number_of_stages-1,
+    number_of_snapshots),0)) # Stages to save detailed record
