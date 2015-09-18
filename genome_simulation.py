@@ -2,7 +2,7 @@
 
 from random import sample
 import numpy as np
-import functions as fn
+import gs_functions as fn
 import argparse
 
 ###################################
