@@ -22,6 +22,11 @@ get_item = function(item_name){
 
 get_item_list = function(){
   L = list(
+    gen_map = get_item("gen_map"),
+    chr_len = get_item("chr_len"),
+    d_range = get_item("d_range"),
+    r_range = get_item("r_range"),
+    snapshot_stages = get_item("snapshot_stages"),
     population_size = get_item("population_size"),
     resources = get_item("resources"),
     starvation_factor = get_item("starvation_factor"),
@@ -49,6 +54,11 @@ import_data <- function(path, run=1){
 }
 
 ### FULL LIST OF RECORD ITEMS ###
+#    "gen_map" : genome map for the run
+#    "chr_len" : length of each chromosome in bits
+#    "d_range" : range of possible death probabilities, from max to min
+#    "r_range" : range of possible reproduction probabilities (min->max)
+#    "snapshot_stages" : stages of run at which detailed info recorded
 #    "population_size" : Value of N
 #    "resources" : Resource level
 #    "starvation_factor" : Value of x
