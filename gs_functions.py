@@ -5,13 +5,11 @@
 import scipy.stats
 import numpy as np
 from random import randint,sample
-from copy import copy,deepcopy
-import time
+import datetime
 import os
 from importlib import import_module
 import sys
 import cPickle
-import warnings
 
 #############################
 ## CONFIGURATION FUNCTIONS ##
@@ -241,23 +239,23 @@ def initialise_record(snapshot_stages, n_stages, max_ls, n_bases,
         "d_range":d_range,
         "r_range":r_range,
         "snapshot_stages":snapshot_stages,
-        "population_size":copy(array4),
-        "resources":copy(array4),
-        "starvation_factor":copy(array4),
-        "age_distribution":copy(array1),
-    	"surv_mean":copy(array1),
-    	"surv_sd":copy(array1),
-    	"repr_mean":copy(array1),
-    	"repr_sd":copy(array1),
-    	"density_surv":copy(array2),
-    	"density_repr":copy(array2),
+        "population_size":np.copy(array4),
+        "resources":np.copy(array4),
+        "starvation_factor":np.copy(array4),
+        "age_distribution":np.copy(array1),
+    	"surv_mean":np.copy(array1),
+    	"surv_sd":np.copy(array1),
+    	"repr_mean":np.copy(array1),
+    	"repr_sd":np.copy(array1),
+    	"density_surv":np.copy(array2),
+    	"density_repr":np.copy(array2),
     	"n1":np.zeros([m,chr_len]),
     	"s1":np.zeros([m,chr_len-window_size+1]),
-    	"fitness":copy(array1),
-    	"entropy":copy(array3),
-    	"surv_junk":copy(array3),
-    	"repr_junk":copy(array3),
-    	"fitness_junk":copy(array3)
+    	"fitness":np.copy(array1),
+    	"entropy":np.copy(array3),
+    	"surv_junk":np.copy(array3),
+    	"repr_junk":np.copy(array3),
+    	"fitness_junk":np.copy(array3)
         }
     return record
 
@@ -391,3 +389,15 @@ def run_output(n_run, population, record):
         pop_file.close()
         rec_file.close()
         print "done."
+
+def print_runtime(starttime, endtime):
+    runtime = endtime - starttime
+    days = runtime.days
+    hours = runtime.seconds/3600
+    minutes = runtime.seconds/60 - hours*60
+    seconds = runtime.seconds - minutes*60 - hours*3600
+    print "Total runtime :",
+    if days != 0: print "{d} days".format(d=days)+", ",
+    if hours != 0: print "{h} hours".format(h=hours)+", ",
+    if minutes != 0: print "{m} minutes".format(m=minutes)+", ",
+    print "{s} seconds".format(s=seconds)+".\n"

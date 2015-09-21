@@ -4,6 +4,12 @@ from random import sample
 import numpy as np
 import gs_functions as fn
 import argparse
+import time
+from datetime import datetime
+
+simstart = datetime.now()
+print "\nBeginning simulation at ",
+print time.strftime('%X %x', time.localtime())+".\n"
 
 ###################################
 ## PARSE ARGUMENTS AND CONFIGURE ##
@@ -35,12 +41,14 @@ gen_map = np.copy(c.gen_map)
 ####################
 
 for n_run in range(1, c.number_of_runs+1):
+    runstart = datetime.now()
+    print "\nBeginning run "+str(n_run)+" at",
+    print time.strftime('%X %x', time.localtime())+".\n"
 
     # # # # # # # # # # # # # # #
     # 1: INITIALISE POPULATION  #
     # # # # # # # # # # # # # # # 
     
-    print "\nBeginning run "+str(n_run)+".\n"
     np.random.shuffle(gen_map) # reshuffle genome every run
     record = fn.initialise_record(c.snapshot_stages, 
             c.number_of_stages, c.max_ls, c.n_base, gen_map, c.chr_len, 
@@ -112,9 +120,17 @@ for n_run in range(1, c.number_of_runs+1):
             print " individuals survived."
 
     ## RUN ENDED
-    print "\nEnd of run "+str(n_run)+". Final population: "+str(N)+".\n"
+    runend = datetime.now()
+    print "\nEnd of run "+str(n_run)+" at",
+    print time.strftime('%X %x', time.localtime())+". ",
+    print"Final population: "+str(N)+"."
+    fn.print_runtime(runstart, runend)
 
     ## WRITE POPULATION, RECORD TO FILE ##
-
     fn.run_output(n_run, population, record)
-print "\nSimulation complete. Exiting."
+
+simend = datetime.now()
+print "\nSimulation completed at ",
+print time.strftime('%X %x', time.localtime())+"."
+fn.print_runtime(simstart, simend)
+print "Exiting."
