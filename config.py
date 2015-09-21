@@ -51,5 +51,5 @@ d_range = np.linspace(death_bound[1], death_bound[0],2*n_base+1)
 # max to min death rate
 r_range = np.linspace(repr_bound[0],repr_bound[1],2*n_base+1) 
 # min to max repr rate
-snapshot_stages = int(np.around(np.linspace(0,number_of_stages-1,
-    number_of_snapshots),0)) # Stages to save detailed record
+snapshot_stages = np.around(np.linspace(0,number_of_stages-1,
+    number_of_snapshots),0) # Stages to save detailed record
