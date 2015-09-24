@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 ###############
 ## LIBRARIES ##
 ###############
@@ -149,7 +147,7 @@ def get_subpop(population, gen_map, min_age, max_age, offset, n_base,
     """Randomly select a subset of the population based on genotype."""
     subpop = np.empty(0,int)
     ages = population[:,0]
-    for age in range(min_age, min(max_age, max(ages))):
+    for age in range(min_age, min(max_age, max(ages)+1)):
         # Get indices of appropriate locus for that age:
         locus = np.nonzero(gen_map==(age+offset))[0][0]
         pos = np.arange(locus*n_base, (locus+1)*n_base)+1
@@ -169,7 +167,7 @@ def get_subpop(population, gen_map, min_age, max_age, offset, n_base,
 def generate_children(sexual, population, parents, chr_len, r_rate): 
     """Generate array of children through a/sexual reproduction."""
     if not sexual:
-	children = np.copy(population[parents])
+        children = np.copy(population[parents])
     else:
         # Must be even number of parents:
         if len(parents)%2 != 0: parents = parents[:-1]
@@ -237,7 +235,7 @@ def initialise_record(snapshot_stages, n_stages, max_ls, n_bases,
     array4 = np.zeros(n_stages)
     record = {
         "gen_map":gen_map,
-        "chr_len":chr_len,
+        "chr_len":np.array([chr_len]),
         "d_range":d_range,
         "r_range":r_range,
         "snapshot_stages":snapshot_stages,
@@ -245,8 +243,8 @@ def initialise_record(snapshot_stages, n_stages, max_ls, n_bases,
         "resources":np.copy(array4),
         "starvation_factor":np.copy(array4),
         "age_distribution":np.copy(array1),
-    	"surv_mean":np.copy(array1),
-    	"surv_sd":np.copy(array1),
+    	"death_mean":np.copy(array1),
+    	"death_sd":np.copy(array1),
     	"repr_mean":np.copy(array1),
     	"repr_sd":np.copy(array1),
     	"density_surv":np.copy(array2),
@@ -255,7 +253,7 @@ def initialise_record(snapshot_stages, n_stages, max_ls, n_bases,
     	"s1":np.zeros([m,chr_len-window_size+1]),
     	"fitness":np.copy(array1),
     	"entropy":np.copy(array3),
-    	"surv_junk":np.copy(array3),
+    	"death_junk":np.copy(array3),
     	"repr_junk":np.copy(array3),
     	"fitness_junk":np.copy(array3)
         }
@@ -291,10 +289,10 @@ def update_record(record, population, N, resources, x, gen_map, chr_len,
     density_surv = np.zeros((2*b+1,))
     density_repr = np.zeros((2*b+1,))
     # Mean death/repr rates by age:
-    surv_mean = np.zeros(max_ls)
+    death_mean = np.zeros(max_ls)
     repr_mean = np.zeros(max_ls)
     # Death/repr rate SD by age:
-    surv_sd = np.zeros(max_ls)
+    death_sd = np.zeros(max_ls)
     repr_sd = np.zeros(max_ls)
     # Loop over ages:
     for age in range(max(ages)):
@@ -307,10 +305,10 @@ def update_record(record, population, N, resources, x, gen_map, chr_len,
             surv_pop = pop[:,np.append(surv_pos, surv_pos+chr_len)]
             surv_gen = np.sum(surv_pop, axis=1)
             # Find death/reproduction rates:
-            surv_rates = 1-d_range[surv_gen]
+            death_rates = d_range[surv_gen]
             # Calculate statistics:
-            surv_mean[age] = np.mean(surv_rates)
-            surv_sd[age] = np.std(surv_rates)
+            death_mean[age] = np.mean(death_rates)
+            death_sd[age] = np.std(death_rates)
             density_surv += np.bincount(surv_gen, minlength=2*b+1)
             if age>=maturity:
                 # Same for reproduction if they're adults
@@ -323,8 +321,8 @@ def update_record(record, population, N, resources, x, gen_map, chr_len,
                 repr_sd[age] = np.std(repr_rates)
                 density_repr += np.bincount(repr_gen, minlength=2*b+1)
 	else:
-	    surv_mean[age] = 0
-	    surv_sd[age] = 0
+	    death_mean[age] = 0
+	    death_sd[age] = 0
 	    if age >= maturity:
 	        repr_mean[age] = 0
 		repr_sd[age] = 0
@@ -332,7 +330,7 @@ def update_record(record, population, N, resources, x, gen_map, chr_len,
     density_surv /= float(N)
     density_repr /= float(N)
     # Calculate per-age average genomic fitness
-    x_surv = np.cumprod(surv_mean)
+    x_surv = np.cumprod(death_mean)
     fitness = np.cumsum(x_surv * repr_mean)
 
     ## AGE-INVARIANT STATS ##
@@ -352,9 +350,9 @@ def update_record(record, population, N, resources, x, gen_map, chr_len,
     neut_pos = np.arange(neut_locus*b, (neut_locus+1)*b)+1
     neut_pop = population[:,np.append(neut_pos, neut_pos+chr_len)]
     neut_gen = np.sum(neut_pop, axis=1)
-    surv_junk = np.mean(1-d_range[neut_gen])
+    death_junk = np.mean(d_range[neut_gen])
     repr_junk = np.mean(r_range[neut_gen]) # Junk SDs?
-    fitness_junk = np.cumsum(np.cumprod(surv_junk) * repr_junk)
+    fitness_junk = np.cumsum(np.cumprod(death_junk) * repr_junk)
 
     ## APPEND RECORD OBJECT ##
     try:
@@ -363,8 +361,8 @@ def update_record(record, population, N, resources, x, gen_map, chr_len,
     except ValueError:
         print str(max(ages))
         raise ValueError
-    record["surv_mean"][n_snap] = surv_mean
-    record["surv_sd"][n_snap] = surv_sd
+    record["death_mean"][n_snap] = death_mean
+    record["death_sd"][n_snap] = death_sd
     record["repr_mean"][n_snap] = repr_mean
     record["repr_sd"][n_snap] = repr_sd
     record["density_surv"][n_snap] = density_surv
@@ -373,7 +371,7 @@ def update_record(record, population, N, resources, x, gen_map, chr_len,
     record["n1"][n_snap] = n1
     record["s1"][n_snap] = s1
     record["entropy"][n_snap] = entropy
-    record["surv_junk"][n_snap] = surv_junk
+    record["death_junk"][n_snap] = death_junk
     record["repr_junk"][n_snap] = repr_junk
     record["fitness_junk"][n_snap] = fitness_junk
 
@@ -403,3 +401,12 @@ def print_runtime(starttime, endtime):
     if hours != 0: print "{h} hours".format(h=hours)+", ",
     if minutes != 0: print "{m} minutes".format(m=minutes)+", ",
     print "{s} seconds".format(s=seconds)+".\n"
+
+def logprint(string, logfile, newline=True):
+    if newline:
+        print string
+        logfile.write(string+"\n")
+    else:
+        print string,
+        logfile.write(string)
+

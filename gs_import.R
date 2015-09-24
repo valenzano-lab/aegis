@@ -31,8 +31,8 @@ get_item_list = function(){
     resources = get_item("resources"),
     starvation_factor = get_item("starvation_factor"),
     age_distribution = get_item("age_distribution"),
-    surv_mean = get_item("surv_mean"),
-    surv_sd = get_item("surv_sd"),
+    death_mean = get_item("death_mean"),
+    death_sd = get_item("death_sd"),
     repr_mean = get_item("repr_mean"),
     repr_sd = get_item("repr_sd"),
     density_surv = get_item("density_surv"),
@@ -41,7 +41,7 @@ get_item_list = function(){
     s1 = get_item("s1"),
     fitness = get_item("fitness"),
     entropy = get_item("entropy"),
-    surv_junk = get_item("surv_junk"),
+    death_junk = get_item("death_junk"),
     repr_junk = get_item("repr_junk" ),
     fitness_junk = get_item("fitness_junk")
     )
@@ -63,16 +63,16 @@ import_data <- function(path, run=1){
 #    "resources" : Resource level
 #    "starvation_factor" : Value of x
 #    "age_distribution" : Proportion of population at each age
-#    "surv_mean" : Mean genetic survival probability at each age
-#    "surv_sd" : SD generic survival probability at each age
-#    "repr_mean" : Mean reproductive survival probability at each age
-#    "repr_sd" : Mean reproductive survival probability at each age
+#    "death_mean" : Mean genetic death probability at each age
+#    "death_sd" : SD generic death probability at each age
+#    "repr_mean" : Mean reproductive probability at each age
+#    "repr_sd" : Mean reproductive probability at each age
 #    "density_surv" : Distribution of number of 1's at survival loci
 #    "density_repr" : Distribution of number of 1's at reproductive loci
 #    "n1" : Average number of 1's at each position along the length of the chromosome
 #    "s1" : Sliding-window SD of number of 1's along chromosome
 #    "fitness" : Average population fitness as predicted from genotypes
 #    "entropy" : Shannon-Weaver entropy across entire population array
-#    "surv_junk" : Average survival probability as predicted from neutral locus
+#    "death_junk" : Average death probability as predicted from neutral locus
 #    "repr_junk"  : Average reproductive probability as predicted from neutral locus 
 #    "fitness_junk" : Average fitness as predicted from neutral locus

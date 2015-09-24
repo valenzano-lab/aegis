@@ -8,8 +8,7 @@ import time
 from datetime import datetime
 
 simstart = datetime.now()
-print "\nBeginning simulation at ",
-print time.strftime('%X %x', time.localtime())+".\n"
+simstart_print = time.strftime('%X %x', time.localtime())+".\n"
 
 ###################################
 ## PARSE ARGUMENTS AND CONFIGURE ##
@@ -32,6 +31,9 @@ parser.add_argument('-v', '--verbose', action="store_true",
 args = parser.parse_args()
 print args
 fn.get_dir(args.dir) # Change to simulation directory
+logfile = open("log.txt", "w")
+fn.logprint("\nBeginning simulation at "+simstart_print+".\n", logfile)
+
 c = fn.get_conf(args.c) # Import config file as "c".
 startpop = fn.get_startpop(args.s) # Get seed population, if any.
 gen_map = np.copy(c.gen_map)
