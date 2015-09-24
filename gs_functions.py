@@ -237,7 +237,7 @@ def initialise_record(snapshot_stages, n_stages, max_ls, n_bases,
         "chr_len":np.array([chr_len]),
         "d_range":d_range,
         "r_range":r_range,
-        "snapshot_stages":snapshot_stages,
+        "snapshot_stages":snapshot_stages+1,
         "population_size":np.copy(array4),
         "resources":np.copy(array4),
         "starvation_factor":np.copy(array4),
@@ -329,7 +329,7 @@ def update_record(record, population, N, resources, x, gen_map, chr_len,
     density_surv /= float(N)
     density_repr /= float(N)
     # Calculate per-age average genomic fitness
-    x_surv = np.cumprod(death_mean)
+    x_surv = np.cumprod(1-death_mean)
     fitness = np.cumsum(x_surv * repr_mean)
 
     ## AGE-INVARIANT STATS ##
@@ -351,7 +351,7 @@ def update_record(record, population, N, resources, x, gen_map, chr_len,
     neut_gen = np.sum(neut_pop, axis=1)
     death_junk = np.mean(d_range[neut_gen])
     repr_junk = np.mean(r_range[neut_gen]) # Junk SDs?
-    fitness_junk = np.cumsum(np.cumprod(death_junk) * repr_junk)
+    fitness_junk = np.cumsum(np.cumprod(1-death_junk) * repr_junk)
 
     ## APPEND RECORD OBJECT ##
     record["age_distribution"][n_snap] = np.bincount(ages, 
