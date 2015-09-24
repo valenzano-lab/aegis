@@ -34,9 +34,8 @@ def get_dir(dir_name):
             else:
                 q = raw_input("Invalid input. Create directory? (y/n) ")
     sys.path.append(os.getcwd())
-    print "Working directory: "+os.getcwd()
 
-def get_conf(file_name):
+def get_conf(file_name, logfile):
     """Import specified configuration file for simulation."""
     try:
         p = import_module(file_name)
@@ -48,13 +47,13 @@ def get_conf(file_name):
             exit("Aborting: no valid configuration file given.")
         else: 
             return get_conf(q)
-    print "Config file: "+ file_name +".py"
+    logprint("Config file: "+ file_name +".py", logfile)
     return p
 
-def get_startpop(seed_name):
+def get_startpop(seed_name, logfile):
     """Import any seed population (or return blank)."""
     if seed_name == "": 
-        print "Seed: None."
+        logprint("Seed: None.", logfile)
         return ""
     try:
         # Make sure includes extension
@@ -71,7 +70,7 @@ def get_startpop(seed_name):
             exit("Aborting: no valid seed file given.")
         else:
             return get_startpop(q)
-    print "Seed population file: " + seed_name
+    logprint("Seed population file: " + seed_name, logfile)
     return poparray
 
 ##############################
@@ -119,27 +118,27 @@ def make_individual(age_random, max_ls, maturity, variance, n_base,
     return np.concatenate(([age], chromosomes[0], chromosomes[1]))
 
 def make_population(start_pop, age_random, max_ls, maturity,  variance, 
-        n_base, chr_len, gen_map, s_dist, r_dist):
+        n_base, chr_len, gen_map, s_dist, r_dist, logfile):
     """ Generate starting population of given size and composition."""
-    print "Generating starting population...",
+    logprint("Generating starting population...", logfile, False)
     population = np.array([make_individual(age_random, max_ls, 
         maturity, variance, n_base, chr_len, gen_map, s_dist, 
         r_dist) for _ in range(start_pop)])
-    print "done."
+    logprint("done.", logfile)
     return population
 
 ######################
 ## UPDATE FUNCTIONS ##
 ######################
 
-def update_resources(res0, N, R, V, limit, verbose=False):
+def update_resources(res0, N, R, V, limit, logfile, verbose=False):
     """Implement consumption and regrowth of resources."""
     if verbose: print "Updating resources...",
     k = 1 if N>res0 else V
     res1 = int((res0-N)*k+R)
     res1 = min(max(res1, 0), limit)
     # Resources can't be negative or exceed limit.
-    if verbose: print "Done. "+str(res0)+" -> "+str(res1)
+    if verbose: logprint("Done. "+str(res0)+" -> "+str(res1), logfile)
     return res1
 
 def get_subpop(population, gen_map, min_age, max_age, offset, n_base,
@@ -162,7 +161,6 @@ def get_subpop(population, gen_map, min_age, max_age, offset, n_base,
         included = which[chance(inc_rates, len(inc_rates))]
         subpop = np.append(subpop, included)
     return subpop
-
 
 def generate_children(sexual, population, parents, chr_len, r_rate): 
     """Generate array of children through a/sexual reproduction."""
@@ -193,9 +191,9 @@ def generate_children(sexual, population, parents, chr_len, r_rate):
     return(children)
 
 def reproduction(population, maturity, max_ls, gen_map, n_base, chr_len, 
-        r_range, m_rate, r_rate, sexual=False, verbose=False):
+        r_range, m_rate, r_rate, logfile, sexual=False, verbose=False):
     """Select parents, generate children, mutate and add to population."""
-    if verbose: print "Calculating reproduction...",
+    if verbose: logprint("Calculating reproduction...", logfile, False)
     parents = get_subpop(population, gen_map, maturity, max_ls, 100, 
             n_base, chr_len, r_range) # Select parents
     children = generate_children(sexual, population, parents, chr_len,
@@ -206,19 +204,20 @@ def reproduction(population, maturity, max_ls, gen_map, n_base, chr_len,
     children[:,0] = 0 # Make newborn
     population=np.vstack([population,children]) # Add to population
     if verbose:
-        print "done. "+str(len(children))+" new individuals born."
+        logprint("done. ", logfile, False)
+        logprint(str(len(children))+" new individuals born.", logfile)
     return(population)
 
 def death(population, max_ls, gen_map, n_base, chr_len, d_range, 
-        starvation_factor, verbose=False):
+        starvation_factor, logfile, verbose=False):
     """Select survivors and kill rest of population."""
-    if verbose: print "Calculating death...",
+    if verbose: logprint("Calculating death...", logfile, False)
     survivors = get_subpop(population, gen_map, 0, max_ls, 0, n_base,
         chr_len, 1-(d_range*starvation_factor))
     new_population = population[survivors]
     if verbose:
         dead = len(population) - len(survivors)
-        print "done. "+str(dead)+" individuals died."
+        logprint("done. "+str(dead)+" individuals died.", logfile)
     return(new_population)
 
 ####################################
@@ -355,12 +354,8 @@ def update_record(record, population, N, resources, x, gen_map, chr_len,
     fitness_junk = np.cumsum(np.cumprod(death_junk) * repr_junk)
 
     ## APPEND RECORD OBJECT ##
-    try:
-        record["age_distribution"][n_snap] = np.bincount(ages, 
-            minlength = max_ls)/float(N)
-    except ValueError:
-        print str(max(ages))
-        raise ValueError
+    record["age_distribution"][n_snap] = np.bincount(ages, 
+        minlength = max_ls)/float(N)
     record["death_mean"][n_snap] = death_mean
     record["death_sd"][n_snap] = death_sd
     record["repr_mean"][n_snap] = repr_mean
@@ -377,9 +372,9 @@ def update_record(record, population, N, resources, x, gen_map, chr_len,
 
     return record
 
-def run_output(n_run, population, record):
+def run_output(n_run, population, record, logfile):
     """Save population and record objects as output files."""
-    print "Saving output files...", 
+    logprint("Saving output files...", logfile, False)
     pop_file = open("run_"+str(n_run)+"_pop.txt", "wb")
     rec_file = open("run_"+str(n_run)+"_rec.txt", "wb")
     try:
@@ -388,19 +383,22 @@ def run_output(n_run, population, record):
     finally:
         pop_file.close()
         rec_file.close()
-        print "done."
+        logprint("done.", logfile)
 
-def print_runtime(starttime, endtime):
+def print_runtime(starttime, endtime, logfile):
     runtime = endtime - starttime
     days = runtime.days
     hours = runtime.seconds/3600
     minutes = runtime.seconds/60 - hours*60
     seconds = runtime.seconds - minutes*60 - hours*3600
-    print "Total runtime :",
-    if days != 0: print "{d} days".format(d=days)+", ",
-    if hours != 0: print "{h} hours".format(h=hours)+", ",
-    if minutes != 0: print "{m} minutes".format(m=minutes)+", ",
-    print "{s} seconds".format(s=seconds)+".\n"
+    logprint("Total runtime :", logfile, False)
+    if days != 0: 
+        logprint("{d} days".format(d=days)+", ", logfile, False)
+    if hours != 0: 
+        logprint("{h} hours".format(h=hours)+", ", logfile, False)
+    if minutes != 0: 
+        logprint("{m} minutes".format(m=minutes)+", ", logfile, False)
+    logprint("{s} seconds".format(s=seconds)+".\n", logfile)
 
 def logprint(string, logfile, newline=True):
     if newline:
