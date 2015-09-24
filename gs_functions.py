@@ -191,7 +191,8 @@ def generate_children(sexual, population, parents, chr_len, r_rate):
     return(children)
 
 def reproduction(population, maturity, max_ls, gen_map, n_base, chr_len, 
-        r_range, m_rate, r_rate, logfile, sexual=False, verbose=False):
+        r_range, m_rate, m_ratio, r_rate, logfile, sexual=False, 
+        verbose=False):
     """Select parents, generate children, mutate and add to population."""
     if verbose: logprint("Calculating reproduction...", logfile, False)
     parents = get_subpop(population, gen_map, maturity, max_ls, 100, 
@@ -199,8 +200,8 @@ def reproduction(population, maturity, max_ls, gen_map, n_base, chr_len,
     children = generate_children(sexual, population, parents, chr_len,
             r_rate) # Generate children from parents
     # Mutate children:
-    children[children==0]=chance(m_rate,np.sum(children==0))
-    children[children==1]=1-chance(0.1*m_rate, np.sum(children==1))
+    children[children==1]=chance(m_rate,np.sum(children==1))
+    children[children==0]=1-chance(m_ratio*m_rate, np.sum(children==0))
     children[:,0] = 0 # Make newborn
     population=np.vstack([population,children]) # Add to population
     if verbose:

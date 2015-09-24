@@ -109,7 +109,7 @@ for n_run in range(1, c.number_of_runs+1):
         # Reproduction
         population = fn.reproduction(population, c.maturity, c.max_ls, 
                 gen_map, c.n_base, c.chr_len, c.r_range, c.m_rate, 
-                c.r_rate, log, c.sexual, full_report)
+                c.m_ratio, c.r_rate, log, c.sexual, full_report)
 
         # Death
         population = fn.death(population, c.max_ls, gen_map, c.n_base, 
