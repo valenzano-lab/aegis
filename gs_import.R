@@ -41,9 +41,9 @@ get_item_list = function(){
     s1 = get_item("s1"),
     fitness = get_item("fitness"),
     entropy = get_item("entropy"),
-    death_junk = get_item("death_junk"),
-    repr_junk = get_item("repr_junk" ),
-    fitness_junk = get_item("fitness_junk")
+    junk_death = get_item("junk_death"),
+    junk_repr = get_item("junk_repr" ),
+    junk_fitness = get_item("junk_fitness")
     )
   return(L)
 }
@@ -73,6 +73,6 @@ import_data <- function(path, run=1){
 #    "s1" : Sliding-window SD of number of 1's along chromosome
 #    "fitness" : Average population fitness as predicted from genotypes
 #    "entropy" : Shannon-Weaver entropy across entire population array
-#    "death_junk" : Average death probability as predicted from neutral locus
-#    "repr_junk"  : Average reproductive probability as predicted from neutral locus 
-#    "fitness_junk" : Average fitness as predicted from neutral locus
+#    "junk_death" : Average death probability as predicted from neutral locus
+#    "junk_repr"  : Average reproductive probability as predicted from neutral locus 
+#    "junk_fitness" : Average fitness as predicted from neutral locus

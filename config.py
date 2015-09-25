@@ -25,8 +25,8 @@ age_random = True # Random starting ages; else all start as new adults
 # chromosome in each individual (drawn from a truncated normal about 0.5) or 
 # set at a constant percentage value, separately for survival and reproductive 
 # loci:
-s_dist = "random" # "random" or PROPORTIONAL value (0.0-1.0) for S loci
-r_dist = "random" # "random" or PROPORTIONAL value (0.0-1.0) for R loci
+s_dist = 0.5 # "random" or PROPORTIONAL value (0.0-1.0) for S loci
+r_dist = 0.5 # "random" or PROPORTIONAL value (0.0-1.0) for R loci
 variance = 1.4 # Variance of parameter distribution, if random
 
 ## SIMULATION FUNDAMENTALS: CHANGE WITH CARE ##

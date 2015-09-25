@@ -37,6 +37,7 @@ fn.logprint("Working directory: "+os.getcwd(), log)
 c = fn.get_conf(args.c, log) # Import config file as "c".
 startpop = fn.get_startpop(args.s, log) # Get seed population, if any.
 gen_map = np.copy(c.gen_map)
+np.random.shuffle(gen_map)
 
 ####################
 ## RUN SIMULATION ##
@@ -52,7 +53,6 @@ for n_run in range(1, c.number_of_runs+1):
     # 1: INITIALISE POPULATION  #
     # # # # # # # # # # # # # # # 
     
-    np.random.shuffle(gen_map) # reshuffle genome every run
     record = fn.initialise_record(c.snapshot_stages, 
             c.number_of_stages, c.max_ls, c.n_base, gen_map, c.chr_len, 
             c.d_range, c.r_range, c.window_size)
@@ -88,8 +88,7 @@ for n_run in range(1, c.number_of_runs+1):
             if full_report: fn.logprint("Taking snapshot...",log,False)
             record = fn.update_record(record, population, N, resources, 
                     x, gen_map, c.chr_len, c.n_base, c.d_range, 
-                    c.r_range, c.maturity, c.max_ls, c.window_size, 
-                    n_stage, n_snap)
+                    c.r_range, c.maturity, c.max_ls, n_stage, n_snap)
             n_snap += 1
             if full_report: fn.logprint("done.",log)
         else:
@@ -131,7 +130,7 @@ for n_run in range(1, c.number_of_runs+1):
     fn.print_runtime(runstart, runend, log)
 
     ## WRITE POPULATION, RECORD TO FILE ##
-    fn.run_output(n_run, population, record, log)
+    fn.run_output(n_run, population, record, log, c.window_size)
 
 simend = datetime.now()
 simend_print = time.strftime('%X %x', time.localtime())+"."

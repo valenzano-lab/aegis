@@ -197,8 +197,11 @@ def reproduction(population, maturity, max_ls, gen_map, n_base, chr_len,
     if verbose: logprint("Calculating reproduction...", logfile, False)
     parents = get_subpop(population, gen_map, maturity, max_ls, 100, 
             n_base, chr_len, r_range) # Select parents
+#    N = len(population)
+#    parents = sample(range(N), int(N*(0.1))) 
     children = generate_children(sexual, population, parents, chr_len,
             r_rate) # Generate children from parents
+    children = children[children[:,0]!=max_ls]
     # Mutate children:
     children[children==1]=1-chance(m_rate,np.sum(children==1))
     children[children==0]=chance(m_ratio*m_rate, np.sum(children==0))
@@ -213,9 +216,12 @@ def death(population, max_ls, gen_map, n_base, chr_len, d_range,
         starvation_factor, logfile, verbose=False):
     """Select survivors and kill rest of population."""
     if verbose: logprint("Calculating death...", logfile, False)
+#    N = len(population)
+#    survivors = sample(range(N), int(N*(1-0.01*starvation_factor))) 
     survivors = get_subpop(population, gen_map, 0, max_ls, 0, n_base,
         chr_len, 1-(d_range*starvation_factor))
-    new_population = population[survivors]
+    new_population = np.copy(population[survivors])
+    new_population = new_population[new_population[:,0]!=max_ls]
     if verbose:
         dead = len(population) - len(survivors)
         logprint("done. "+str(dead)+" individuals died.", logfile)
@@ -253,9 +259,9 @@ def initialise_record(snapshot_stages, n_stages, max_ls, n_bases,
     	"s1":np.zeros([m,chr_len-window_size+1]),
     	"fitness":np.copy(array1),
     	"entropy":np.copy(array3),
-    	"death_junk":np.copy(array3),
-    	"repr_junk":np.copy(array3),
-    	"fitness_junk":np.copy(array3)
+    	"junk_death":np.copy(array3),
+    	"junk_repr":np.copy(array3),
+    	"junk_fitness":np.copy(array3)
         }
     return record
 
@@ -270,12 +276,6 @@ def x_bincount(array):
     """Auxiliary bincount function for update_record."""
     return np.bincount(array, minlength=3)
 
-def moving_average(a, n):
-    """Calculate moving average of an array along a sliding window."""
-    c = np.cumsum(a, dtype=float)
-    c[n:] = c[n:]-c[:-n]
-    return c[(n-1):]/n
-
 def rolling_window(a, window):
     """Efficiently compute a rolling window for a numpy array."""
     shape = a.shape[:-1] + (a.shape[-1] - window + 1, window)
@@ -283,8 +283,7 @@ def rolling_window(a, window):
     return np.lib.stride_tricks.as_strided(a, shape=shape, strides=strd)
 
 def update_record(record, population, N, resources, x, gen_map, chr_len, 
-        n_bases, d_range, r_range, maturity, max_ls, window_size, 
-        n_stage, n_snap):
+        n_bases, d_range, r_range, maturity, max_ls, n_stage, n_snap):
     """Record detailed population data at current stage."""
     record = quick_update(record, n_stage, N, resources, x)
     ages = population[:,0]
@@ -335,18 +334,12 @@ def update_record(record, population, N, resources, x, gen_map, chr_len,
     # Average densities over whole population
     density_surv /= float(N)
     density_repr /= float(N)
-    # Calculate per-age average genomic fitness
-    x_surv = np.cumprod(1-death_mean)
-    fitness = np.cumsum(x_surv * repr_mean)
 
     ## AGE-INVARIANT STATS ##
     # Frequency of 1's at each position on chromosome:
     # Average over array, then average at each position over chromosomes
     n1s = np.sum(population, 0)/float(N)
     n1 = (n1s[np.arange(chr_len)+1]+n1s[np.arange(chr_len)+chr_len+1])/2 
-    # Standard deviation of 1 frequency over sliding window
-    index = 1 if n_snap == 0 else 2
-    s1 = np.std(rolling_window(n1, window_size), index)
     # Shannon-Weaver entropy over entire genome population
     gen = population[:,1:]
     p1 = np.sum(gen)/float(np.size(gen))
@@ -356,9 +349,8 @@ def update_record(record, population, N, resources, x, gen_map, chr_len,
     neut_pos = np.arange(neut_locus*b, (neut_locus+1)*b)+1
     neut_pop = population[:,np.append(neut_pos, neut_pos+chr_len)]
     neut_gen = np.sum(neut_pop, axis=1)
-    death_junk = np.mean(d_range[neut_gen])
-    repr_junk = np.mean(r_range[neut_gen]) # Junk SDs?
-    fitness_junk = np.cumsum(np.cumprod(1-death_junk) * repr_junk)
+    junk_death = np.mean(d_range[neut_gen])
+    junk_repr = np.mean(r_range[neut_gen]) # Junk SDs?
 
     ## APPEND RECORD OBJECT ##
     record["age_distribution"][n_snap] = np.bincount(ages, 
@@ -369,18 +361,21 @@ def update_record(record, population, N, resources, x, gen_map, chr_len,
     record["repr_sd"][n_snap] = repr_sd
     record["density_surv"][n_snap] = density_surv
     record["density_repr"][n_snap] = density_repr
-    record["fitness"][n_snap] = fitness
     record["n1"][n_snap] = n1
-    record["s1"][n_snap] = s1
     record["entropy"][n_snap] = entropy
-    record["death_junk"][n_snap] = death_junk
-    record["repr_junk"][n_snap] = repr_junk
-    record["fitness_junk"][n_snap] = fitness_junk
+    record["junk_death"][n_snap] = junk_death
+    record["junk_repr"][n_snap] = junk_repr
 
     return record
 
-def run_output(n_run, population, record, logfile):
+def run_output(n_run, population, record, logfile, window_size):
     """Save population and record objects as output files."""
+    # Perform whole-array computations of fitness and rolling STD
+    record["s1"] = np.std(rolling_window(record["n1"], window_size),2)
+    x_surv = np.cumprod(1-record["death_mean"],1)
+    record["fitness"] = np.cumsum(x_surv * record["repr_mean"],1)
+    record["junk_fitness"] = (1-record["junk_death"])*record["junk_repr"]
+    # Save output files
     logprint("Saving output files...", logfile, False)
     pop_file = open("run_"+str(n_run)+"_pop.txt", "wb")
     rec_file = open("run_"+str(n_run)+"_rec.txt", "wb")
