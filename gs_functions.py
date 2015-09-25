@@ -345,7 +345,8 @@ def update_record(record, population, N, resources, x, gen_map, chr_len,
     n1s = np.sum(population, 0)/float(N)
     n1 = (n1s[np.arange(chr_len)+1]+n1s[np.arange(chr_len)+chr_len+1])/2 
     # Standard deviation of 1 frequency over sliding window
-    s1 = np.std(rolling_window(n1, window_size), 2)
+    index = 1 if n_snap == 0 else 2
+    s1 = np.std(rolling_window(n1, window_size), index)
     # Shannon-Weaver entropy over entire genome population
     gen = population[:,1:]
     p1 = np.sum(gen)/float(np.size(gen))
