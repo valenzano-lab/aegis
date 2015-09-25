@@ -276,6 +276,12 @@ def moving_average(a, n):
     c[n:] = c[n:]-c[:-n]
     return c[(n-1):]/n
 
+def rolling_window(a, window):
+    """Efficiently compute a rolling window for a numpy array."""
+    shape = a.shape[:-1] + (a.shape[-1] - window + 1, window)
+    strd = a.strides + (a.strides[-1],) # strides
+    return np.lib.stride_tricks.as_strided(a, shape=shape, strides=strd)
+
 def update_record(record, population, N, resources, x, gen_map, chr_len, 
         n_bases, d_range, r_range, maturity, max_ls, window_size, 
         n_stage, n_snap):
@@ -339,8 +345,7 @@ def update_record(record, population, N, resources, x, gen_map, chr_len,
     n1s = np.sum(population, 0)/float(N)
     n1 = (n1s[np.arange(chr_len)+1]+n1s[np.arange(chr_len)+chr_len+1])/2 
     # Standard deviation of 1 frequency over sliding window
-    w = window_size
-    s1 = np.sqrt(moving_average(n1**2, w)-moving_average(n1, w)**2)
+    s1 = np.std(rolling_window(n1, window_size), 2)
     # Shannon-Weaver entropy over entire genome population
     gen = population[:,1:]
     p1 = np.sum(gen)/float(np.size(gen))
