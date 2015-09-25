@@ -200,8 +200,8 @@ def reproduction(population, maturity, max_ls, gen_map, n_base, chr_len,
     children = generate_children(sexual, population, parents, chr_len,
             r_rate) # Generate children from parents
     # Mutate children:
-    children[children==1]=chance(m_rate,np.sum(children==1))
-    children[children==0]=1-chance(m_ratio*m_rate, np.sum(children==0))
+    children[children==1]=1-chance(m_rate,np.sum(children==1))
+    children[children==0]=chance(m_ratio*m_rate, np.sum(children==0))
     children[:,0] = 0 # Make newborn
     population=np.vstack([population,children]) # Add to population
     if verbose:
