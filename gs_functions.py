@@ -17,23 +17,12 @@ import cPickle
 
 def get_dir(dir_name):
     """Change to specified working directory and update PATH."""
-    sys.path.remove(os.getcwd())
     try:
+        sys.path.remove(os.getcwd())
         os.chdir(dir_name)
+        sys.path.append(os.getcwd())
     except OSError:
-        loop = True
-        q = raw_input(
-                "Given directory does not exist. Create it? (y/n) ")
-        while loop:
-            if q in ["yes", "y", "YES", "Y", "Yes"]:
-                os.mkdir(dir_name)
-                os.chdir(dir_name)
-                loop = False
-            elif q in ["no", "n", "NO", "N", "No", ""]:
-                exit("Aborting: no valid working directory given.")
-            else:
-                q = raw_input("Invalid input. Create directory? (y/n) ")
-    sys.path.append(os.getcwd())
+        exit("Error: Specified simulation directory does not exist.")
 
 def get_conf(file_name, logfile):
     """Import specified configuration file for simulation."""
@@ -164,4 +153,3 @@ def logprint(string, logfile, newline=True):
     else:
         print string,
         if logfile != "": logfile.write(string)
-
