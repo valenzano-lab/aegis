@@ -127,162 +127,16 @@ def update_resources(res0, N, R, V, limit, logfile, verbose=False):
 ## RECORDING AND OUTPUT FUNCTIONS ##
 ####################################
 
-def initialise_record(snapshot_stages, n_stages, max_ls, n_bases, 
-        gen_map, chr_len, d_range, r_range, window_size):
-    """ Create a new dictionary object for recording output data."""
-    m = len(snapshot_stages)
-    array1 = np.zeros([m,max_ls])
-    array2 = np.zeros([m,2*n_bases+1])
-    array3 = np.zeros(m)
-    array4 = np.zeros(n_stages)
-    record = {
-        "gen_map":gen_map,
-        "chr_len":np.array([chr_len]),
-        "d_range":d_range,
-        "r_range":r_range,
-        "snapshot_stages":snapshot_stages+1,
-        "population_size":np.copy(array4),
-        "resources":np.copy(array4),
-        "starvation_factor":np.copy(array4),
-        "age_distribution":np.copy(array1),
-    	"death_mean":np.copy(array1),
-    	"death_sd":np.copy(array1),
-    	"repr_mean":np.copy(array1),
-    	"repr_sd":np.copy(array1),
-    	"density_surv":np.copy(array2),
-    	"density_repr":np.copy(array2),
-    	"n1":np.zeros([m,chr_len]),
-    	"s1":np.zeros([m,chr_len-window_size+1]),
-    	"fitness":np.copy(array1),
-    	"entropy":np.copy(array3),
-    	"junk_death":np.copy(array3),
-    	"junk_repr":np.copy(array3),
-    	"junk_fitness":np.copy(array3)
-        }
-    return record
-
-def quick_update(record, n_stage, N, resources, x):
-    """Record only population size, resource and starvation data."""
-    record["population_size"][n_stage] = N
-    record["resources"][n_stage] = resources
-    record["starvation_factor"][n_stage] = x
-    return(record)
-
-def x_bincount(array):
-    """Auxiliary bincount function for update_record."""
-    return np.bincount(array, minlength=3)
-
-def rolling_window(a, window):
-    """Efficiently compute a rolling window for a numpy array."""
-    shape = a.shape[:-1] + (a.shape[-1] - window + 1, window)
-    strd = a.strides + (a.strides[-1],) # strides
-    return np.lib.stride_tricks.as_strided(a, shape=shape, strides=strd)
-
-def update_record(record, population, resources, x, gen_map, chr_len, 
-        n_bases, d_range, r_range, maturity, max_ls, n_stage, n_snap):
-    """Record detailed population data at current stage."""
-    N = population.N
-    ages = population.ages
-    genomes = population.genomes
-    record = quick_update(record, n_stage, N, resources, x)
-    b = n_bases # Binary units per locus
-
-    ## AGE-DEPENDENT STATS ##
-    # Genotype sum distributions:
-    density_surv = np.zeros((2*b+1,))
-    density_repr = np.zeros((2*b+1,))
-    # Mean death/repr rates by age:
-    death_mean = np.zeros(max_ls)
-    repr_mean = np.zeros(max_ls)
-    # Death/repr rate SD by age:
-    death_sd = np.zeros(max_ls)
-    repr_sd = np.zeros(max_ls)
-    # Loop over ages:
-    for age in range(max(ages)):
-        pop = genomes[ages==age]
-	if len(pop) > 0:
-            # Find loci and binary units:
-            try:
-                surv_locus = np.nonzero(gen_map==age)[0][0]
-            except:
-                print max(ages)
-            surv_pos = np.arange(surv_locus*b, (surv_locus+1)*b)
-            # Subset array to relevant columns and find genotypes:
-            surv_pop = pop[:,np.append(surv_pos, surv_pos+chr_len)]
-            surv_gen = np.sum(surv_pop, axis=1)
-            # Find death/reproduction rates:
-            death_rates = d_range[surv_gen]
-            # Calculate statistics:
-            death_mean[age] = np.mean(death_rates)
-            death_sd[age] = np.std(death_rates)
-            density_surv += np.bincount(surv_gen, minlength=2*b+1)
-            if age>=maturity:
-                # Same for reproduction if they're adults
-                repr_locus = np.nonzero(gen_map==(age+100))[0][0]
-                repr_pos = np.arange(repr_locus*b, (repr_locus+1)*b)
-                repr_pop = pop[:,np.append(repr_pos, repr_pos+chr_len)]
-                repr_gen = np.sum(repr_pop, axis=1)
-                repr_rates = r_range[repr_gen]
-                repr_mean[age] = np.mean(repr_rates)
-                repr_sd[age] = np.std(repr_rates)
-                density_repr += np.bincount(repr_gen, minlength=2*b+1)
-	else:
-	    death_mean[age] = 0
-	    death_sd[age] = 0
-	    if age >= maturity:
-	        repr_mean[age] = 0
-		repr_sd[age] = 0
-    # Average densities over whole genomes
-    density_surv /= float(N)
-    density_repr /= float(N)
-
-    ## AGE-INVARIANT STATS ##
-    # Frequency of 1's at each position on chromosome:
-    # Average over array, then average at each position over chromosomes
-    n1s = np.sum(genomes, 0)/float(N)
-    n1 = (n1s[np.arange(chr_len)]+n1s[np.arange(chr_len)+chr_len])/2 
-    # Shannon-Weaver entropy over entire genome genomes
-    gen = genomes[:,1:]
-    p1 = np.sum(gen)/float(np.size(gen))
-    entropy = scipy.stats.entropy(np.array([1-p1, p1]))
-    # Junk stats calculated from neutral locus
-    neut_locus = np.nonzero(gen_map==201)[0][0] 
-    neut_pos = np.arange(neut_locus*b, (neut_locus+1)*b)
-    neut_pop = genomes[:,np.append(neut_pos, neut_pos+chr_len)]
-    neut_gen = np.sum(neut_pop, axis=1)
-    junk_death = np.mean(d_range[neut_gen])
-    junk_repr = np.mean(r_range[neut_gen]) # Junk SDs?
-
-    ## APPEND RECORD OBJECT ##
-    record["age_distribution"][n_snap] = np.bincount(ages, 
-        minlength = max_ls)/float(N)
-    record["death_mean"][n_snap] = death_mean
-    record["death_sd"][n_snap] = death_sd
-    record["repr_mean"][n_snap] = repr_mean
-    record["repr_sd"][n_snap] = repr_sd
-    record["density_surv"][n_snap] = density_surv
-    record["density_repr"][n_snap] = density_repr
-    record["n1"][n_snap] = n1
-    record["entropy"][n_snap] = entropy
-    record["junk_death"][n_snap] = junk_death
-    record["junk_repr"][n_snap] = junk_repr
-
-    return record
-
 def run_output(n_run, population, record, logfile, window_size):
     """Save population and record objects as output files."""
-    # Perform whole-array computations of fitness and rolling STD
-    record["s1"] = np.std(rolling_window(record["n1"], window_size),2)
-    x_surv = np.cumprod(1-record["death_mean"],1)
-    record["fitness"] = np.cumsum(x_surv * record["repr_mean"],1)
-    record["junk_fitness"] = (1-record["junk_death"])*record["junk_repr"]
+    record.final_update(n_run, window_size)
     # Save output files
     logprint("Saving output files...", logfile, False)
     pop_file = open("run_"+str(n_run)+"_pop.txt", "wb")
     rec_file = open("run_"+str(n_run)+"_rec.txt", "wb")
     try:
         cPickle.dump(population, pop_file)
-        cPickle.dump(record, rec_file)
+        cPickle.dump(record.record, rec_file)
     finally:
         pop_file.close()
         rec_file.close()

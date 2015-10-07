@@ -3,7 +3,7 @@
 from random import sample
 import numpy as np
 import gs_functions as fn
-from gs_classes import Population
+from gs_classes import Population,Record
 import argparse,os,time
 from datetime import datetime
 
@@ -54,19 +54,20 @@ for n_run in range(1, c.number_of_runs+1):
     # 1: INITIALISE POPULATION  #
     # # # # # # # # # # # # # # # 
     
-    record = fn.initialise_record(c.snapshot_stages, 
-            c.number_of_stages, c.max_ls, c.n_base, gen_map, c.chr_len, 
-            c.d_range, c.r_range, c.window_size)
-    x = 1.0 # Initial starvation factor
-    resources = c.res_start
-    n_snap = 0 # number of previous snapshots
-
     ## Generate starting population (if no seed)
     if startpop != "": population = startpop
     else: 
         fn.logprint("Generating starting population...", log, False)
         population = Population(c.params, gen_map)
         fn.logprint("done.", log)
+
+    ## Initialise record
+    record = Record(population, c.snapshot_stages, 
+            c.number_of_stages, c.d_range, c.r_range, c.window_size)
+    n_snap = 0 # number of previous snapshots
+
+    x = 1.0 # Initial starvation factor
+    resources = c.res_start
 
     # # # # # # # # #
     # 2: STAGE LOOP #
@@ -87,13 +88,11 @@ for n_run in range(1, c.number_of_runs+1):
         # Record output variables
         if n_stage in c.snapshot_stages:
             if full_report: fn.logprint("Taking snapshot...",log,False)
-            record = fn.update_record(record, population, resources, 
-                    x, gen_map, c.chr_len, c.n_base, c.d_range, 
-                    c.r_range, c.maturity, c.max_ls, n_stage, n_snap)
+            record.update(population, resources, x, n_stage, n_snap)
             n_snap += 1
             if full_report: fn.logprint("done.",log)
         else:
-            fn.quick_update(record, n_stage, population.N, resources, x)
+            record.quick_update(n_stage, population.N, resources, x)
 
         population.increment_ages()
 
