@@ -25,9 +25,9 @@ age_random = True # Random starting ages; else all start as new adults
 # chromosome in each individual (drawn from a truncated normal about 0.5) or 
 # set at a constant percentage value, separately for survival and reproductive 
 # loci:
-s_dist = 0.5 # "random" or PROPORTIONAL value (0.0-1.0) for S loci
-r_dist = 0.5 # "random" or PROPORTIONAL value (0.0-1.0) for R loci
-variance = 1.4 # Variance of parameter distribution, if random
+s_dist = "random" # "random" or PROPORTIONAL value (0.0-1.0) for S loci
+r_dist = "random" # "random" or PROPORTIONAL value (0.0-1.0) for R loci
+sd = 0.2 # Standard deviation of parameter distribution, if random
 
 ## SIMULATION FUNDAMENTALS: CHANGE WITH CARE ##
 death_bound = [0.001, 0.02] # min and max death rates
@@ -41,7 +41,7 @@ n_base = 10 # Genome size (binary units per locus)
 death_inc = 3 # Per-stage death-rate increase under starvation
 window_size = 10 # Size of sliding window for recording p1 SD
 
-## DERIVED PARAMETERS ##
+## DERIVED PARAMETERS: DO NOT ALTER ##
 import numpy as np
 gen_map = np.asarray(range(0,max_ls)+range(maturity+100,
     max_ls+100)+[201])
@@ -53,3 +53,7 @@ r_range = np.linspace(repr_bound[0],repr_bound[1],2*n_base+1)
 # min to max repr rate
 snapshot_stages = np.around(np.linspace(0,number_of_stages-1,
     number_of_snapshots),0) # Stages to save detailed record
+params = {"sexual":sexual, "chr_len":chr_len, "n_base":n_base, 
+    "maturity":maturity, "max_ls":max_ls, "age_random":age_random,
+    "start_pop":start_pop, "sd":sd, "s_dist":s_dist, 
+    "r_dist":r_dist} # Dictionary for population initialisation

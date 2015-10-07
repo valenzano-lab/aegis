@@ -3,6 +3,7 @@
 from random import sample
 import numpy as np
 import gs_functions as fn
+from gs_classes import Population
 import argparse,os,time
 from datetime import datetime
 
@@ -61,9 +62,11 @@ for n_run in range(1, c.number_of_runs+1):
     n_snap = 0 # number of previous snapshots
 
     ## Generate starting population (if no seed)
-    population = startpop if startpop != "" else fn.make_population(
-            c.start_pop, c.age_random, c.max_ls, c.maturity, c.variance, 
-            c.n_base, c.chr_len, gen_map, c.s_dist, c.r_dist, log)
+    if startpop != "": population = startpop
+    else: 
+        fn.logprint("Generating starting population...", log, False)
+        population = Population(c.params, gen_map)
+        fn.logprint("done.", log)
 
     # # # # # # # # #
     # 2: STAGE LOOP #
@@ -71,62 +74,53 @@ for n_run in range(1, c.number_of_runs+1):
 
     fn.logprint("Beginning stage loop.", log)
     for n_stage in range(c.number_of_stages):
-
-        N = len(population)
         # Determine whether to print full stage information:
         full_report = n_stage%args.r == 0 and args.verbose
         # Print stage report:
-        if(N==0):
+        if(population.N==0):
             fn.logprint("\nPerished at stage "+str(n_stage+1)+".", log)
             break
         elif n_stage%args.r == 0:
             fn.logprint ("\nStage "+str(n_stage+1)+": ", log, False)
-            fn.logprint (str(N)+" individuals.", log)
+            fn.logprint (str(population.N)+" individuals.", log)
         
         # Record output variables
         if n_stage in c.snapshot_stages:
             if full_report: fn.logprint("Taking snapshot...",log,False)
-            record = fn.update_record(record, population, N, resources, 
+            record = fn.update_record(record, population, resources, 
                     x, gen_map, c.chr_len, c.n_base, c.d_range, 
                     c.r_range, c.maturity, c.max_ls, n_stage, n_snap)
             n_snap += 1
             if full_report: fn.logprint("done.",log)
         else:
-            fn.quick_update(record, n_stage, N, resources, x)
+            fn.quick_update(record, n_stage, population.N, resources, x)
 
-        population[:,0] += 1 # everyone gets 1 stage older
+        population.increment_ages()
 
         # Change in resources and starvation
         if c.res_var: # function of population
-            resources = fn.update_resources(resources, N, c.R, c.V, 
-                    c.res_limit, log, full_report)
+            resources = fn.update_resources(resources, population.N, c.R, 
+                    c.V, c.res_limit, log, full_report)
             x = x*c.death_inc if resources == 0 else 1.0
         else: # constant; death rate increases if population exceeds
             x = x*c.death_inc if N>resources else 1.0
         if full_report: fn.logprint("Starvation factor: "+str(x), log)
 
-        # Reproduction
-        population = fn.reproduction(population, c.maturity, c.max_ls, 
-                gen_map, c.n_base, c.chr_len, c.r_range, c.m_rate, 
-                c.m_ratio, c.r_rate, log, c.sexual, full_report)
+        # Reproduction & death
+        population.growth(c.r_range, c.r_rate, c.m_rate, c.m_ratio,
+                log, full_report)
 
-        # Death
-        population = fn.death(population, c.max_ls, gen_map, c.n_base, 
-                c.chr_len, c.d_range, x, log, full_report)
-
-        # Extrinsic death crisis:
+        population.death(c.d_range, x, log, full_report)
+        
         if n_stage in c.crisis_stages:
-            N = len(population)
-            n_survivors = int(N*c.crisis_sv)
-            population = population[sample(range(N), n_survivors)]
-            fn.logprint("Stage " + n_stage + ": Crisis! ", log, False)
-            fn.logprint(str(n.survivors)+" individuals survived.", log)
+            population.crisis(c.crisis_sv, n_stage, log)
 
     ## RUN ENDED
     runend = datetime.now()
     runend_print = time.strftime('%X %x', time.localtime())+". "
     fn.logprint("\nEnd of run "+str(n_run)+" at ", log, False)
-    fn.logprint(runend_print+"Final population: "+str(N)+".", log)
+    fn.logprint(runend_print+"Final population: "+str(population.N)+".", 
+            log)
     fn.print_runtime(runstart, runend, log)
 
     ## WRITE POPULATION, RECORD TO FILE ##

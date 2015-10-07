@@ -87,45 +87,27 @@ def chance(z,n=1):
 ## POPULATION GENERATION ##
 ###########################
 
-def make_chromosome(variance, n_base, chr_len, gen_map, s_dist, r_dist):
-    """ Returns chromosome array of specified length and composition."""
-    ### Returns a binary array of length n, with the proportion of 1's
-    ### determined by the initial distribution specified (random or
-    ### a constant percentage).
-    variance = max(0, variance) # No negative variance values.
-    sd = variance**0.5
-    p=scipy.stats.truncnorm(-0.5/sd, 0.5/sd, loc=0.5, scale=sd).rvs(1) 
-    # 0/1-truncated normal distribution with mean 0.5 and sd as given
-    chromosome = (rand.rvs(chr_len)<p)*1
-    # If survival and/or reproduction probability is not random, 
-    # replace appropriate loci in genome with new 1/0 distribution.
+def make_genome_array(start_pop, sd, n_base, chr_len, gen_map, 
+        s_dist, r_dist):
+    trunc = scipy.stats.truncnorm(-0.5/sd, 0.5/sd, loc=0.5, scale=sd)
+    p = trunc.rvs(start_pop*2)
+    genome_array = np.random.uniform(size=[start_pop, chr_len*2])
+    genome_array[:, :chr_len] = np.apply_along_axis(
+            lambda x: x<p[:start_pop], 0, genome_array[:, :chr_len])
+    genome_array[:, chr_len:] = np.apply_along_axis(
+            lambda x: x<p[start_pop:], 0, genome_array[:, chr_len:])
+    genome_array = genome_array.astype("bool")
     if s_dist != "random":
         s_loci = np.nonzero(gen_map<100)[0]
-        s_pos = [range(n_base) + x for x in s_loci*10]
-        chromosome[s_pos] = chance(s_dist, len(s_pos))
+        s_pos = np.array([range(n_base) + x for x in s_loci*10])
+        s_pos = np.append(s_pos, s_pos + chr_len)
+        genome_array[:, s_pos] = chance(s_dist, [start_pop, len(s_pos)])
     if r_dist != "random":
         r_loci = np.nonzero(np.logical_and(gen_map>100,gen_map<200))[0]
-        r_pos = [range(n_base) + x for x in r_loci*10]
-        chromosome[r_pos] = chance(r_dist, len(r_pos))
-    return list(chromosome)
-
-def make_individual(age_random, max_ls, maturity, variance, n_base, 
-        chr_len, gen_map, s_dist, r_dist):
-    """ Generate array for an individual, with age and 2 chromosomes."""
-    age = randint(0,max_ls-1) if age_random else (maturity-1)
-    chromosomes = [make_chromosome(variance, n_base, chr_len, gen_map, 
-            s_dist, r_dist) for _ in range(2)]
-    return np.concatenate(([age], chromosomes[0], chromosomes[1]))
-
-def make_population(start_pop, age_random, max_ls, maturity,  variance, 
-        n_base, chr_len, gen_map, s_dist, r_dist, logfile):
-    """ Generate starting population of given size and composition."""
-    logprint("Generating starting population...", logfile, False)
-    population = np.array([make_individual(age_random, max_ls, 
-        maturity, variance, n_base, chr_len, gen_map, s_dist, 
-        r_dist) for _ in range(start_pop)])
-    logprint("done.", logfile)
-    return population
+        r_pos = np.array([range(n_base) + x for x in r_loci*10])
+        r_pos = np.append(r_pos, r_pos + chr_len)
+        genome_array[:, r_pos] = chance(r_dist, [start_pop, len(r_pos)])
+    return genome_array.astype("int")
 
 ######################
 ## UPDATE FUNCTIONS ##
@@ -140,92 +122,6 @@ def update_resources(res0, N, R, V, limit, logfile, verbose=False):
     # Resources can't be negative or exceed limit.
     if verbose: logprint("Done. "+str(res0)+" -> "+str(res1), logfile)
     return res1
-
-def get_subpop(population, gen_map, min_age, max_age, offset, n_base,
-        chr_len, val_range):
-    """Randomly select a subset of the population based on genotype."""
-    subpop = np.empty(0,int)
-    ages = population[:,0]
-    for age in range(min_age, min(max_age, max(ages)+1)):
-        # Get indices of appropriate locus for that age:
-        locus = np.nonzero(gen_map==(age+offset))[0][0]
-        pos = np.arange(locus*n_base, (locus+1)*n_base)+1
-        # Get sub-population of correct age and subset genome to locus:
-        match = (ages == age)
-        which = np.nonzero(match)[0]
-        pop = population[match][:,np.append(pos, pos+chr_len)]
-        # Get sum of genotype for every individual:
-        gen = np.sum(pop, axis=1)
-        # Convert genotypes into inclusion probabilities:
-        inc_rates = val_range[gen]
-        included = which[chance(inc_rates, len(inc_rates))]
-        subpop = np.append(subpop, included)
-    return subpop
-
-def generate_children(sexual, population, parents, chr_len, r_rate): 
-    """Generate array of children through a/sexual reproduction."""
-    if not sexual:
-        children = np.copy(population[parents])
-    else:
-        # Must be even number of parents:
-        if len(parents)%2 != 0: parents = parents[:-1]
-        # Randomly assign mating partners:
-        np.random.shuffle(parents) 
-        # Recombination between chromosomes in each parent:
-        rr = np.copy(population[parents])
-        chr1 = np.arange(chr_len)+1
-        chr2 = chr1 + chr_len
-        for n in rr:
-            r_sites = sample(range(chr_len), int(chr_len*r_rate))
-            for r in r_sites:
-                swap = np.copy(n[chr1][r:])
-                n[chr1][r:] = np.copy(n[chr2][r:])
-                n[chr2][r:] = swap
-        # Generate children from randomly-combined parental chromatids
-        chr_choice = np.random.choice(["chr1","chr2"], len(rr))
-        chr_dict = {"chr1":chr1, "chr2":chr2}
-        for m in range(len(rr)/2):
-            rr[2*m][chr_dict[chr_choice[2*m]]] = \
-                    rr[2*m+1][chr_dict[chr_choice[2*m+1]]]
-        children = np.copy(rr[::2])
-    return(children)
-
-def reproduction(population, maturity, max_ls, gen_map, n_base, chr_len, 
-        r_range, m_rate, m_ratio, r_rate, logfile, sexual=False, 
-        verbose=False):
-    """Select parents, generate children, mutate and add to population."""
-    if verbose: logprint("Calculating reproduction...", logfile, False)
-    parents = get_subpop(population, gen_map, maturity, max_ls, 100, 
-            n_base, chr_len, r_range) # Select parents
-#    N = len(population)
-#    parents = sample(range(N), int(N*(0.1))) 
-    children = generate_children(sexual, population, parents, chr_len,
-            r_rate) # Generate children from parents
-    children = children[children[:,0]!=max_ls]
-    # Mutate children:
-    children[children==1]=1-chance(m_rate,np.sum(children==1))
-    children[children==0]=chance(m_ratio*m_rate, np.sum(children==0))
-    children[:,0] = 0 # Make newborn
-    population=np.vstack([population,children]) # Add to population
-    if verbose:
-        logprint("done. ", logfile, False)
-        logprint(str(len(children))+" new individuals born.", logfile)
-    return(population)
-
-def death(population, max_ls, gen_map, n_base, chr_len, d_range, 
-        starvation_factor, logfile, verbose=False):
-    """Select survivors and kill rest of population."""
-    if verbose: logprint("Calculating death...", logfile, False)
-#    N = len(population)
-#    survivors = sample(range(N), int(N*(1-0.01*starvation_factor))) 
-    survivors = get_subpop(population, gen_map, 0, max_ls, 0, n_base,
-        chr_len, 1-(d_range*starvation_factor))
-    new_population = np.copy(population[survivors])
-    new_population = new_population[new_population[:,0]!=max_ls]
-    if verbose:
-        dead = len(population) - len(survivors)
-        logprint("done. "+str(dead)+" individuals died.", logfile)
-    return(new_population)
 
 ####################################
 ## RECORDING AND OUTPUT FUNCTIONS ##
@@ -282,11 +178,13 @@ def rolling_window(a, window):
     strd = a.strides + (a.strides[-1],) # strides
     return np.lib.stride_tricks.as_strided(a, shape=shape, strides=strd)
 
-def update_record(record, population, N, resources, x, gen_map, chr_len, 
+def update_record(record, population, resources, x, gen_map, chr_len, 
         n_bases, d_range, r_range, maturity, max_ls, n_stage, n_snap):
     """Record detailed population data at current stage."""
+    N = population.N
+    ages = population.ages
+    genomes = population.genomes
     record = quick_update(record, n_stage, N, resources, x)
-    ages = population[:,0]
     b = n_bases # Binary units per locus
 
     ## AGE-DEPENDENT STATS ##
@@ -301,11 +199,14 @@ def update_record(record, population, N, resources, x, gen_map, chr_len,
     repr_sd = np.zeros(max_ls)
     # Loop over ages:
     for age in range(max(ages)):
-        pop = population[ages==age]
+        pop = genomes[ages==age]
 	if len(pop) > 0:
             # Find loci and binary units:
-            surv_locus = np.nonzero(gen_map==age)[0][0]
-            surv_pos = np.arange(surv_locus*b, (surv_locus+1)*b)+1
+            try:
+                surv_locus = np.nonzero(gen_map==age)[0][0]
+            except:
+                print max(ages)
+            surv_pos = np.arange(surv_locus*b, (surv_locus+1)*b)
             # Subset array to relevant columns and find genotypes:
             surv_pop = pop[:,np.append(surv_pos, surv_pos+chr_len)]
             surv_gen = np.sum(surv_pop, axis=1)
@@ -318,7 +219,7 @@ def update_record(record, population, N, resources, x, gen_map, chr_len,
             if age>=maturity:
                 # Same for reproduction if they're adults
                 repr_locus = np.nonzero(gen_map==(age+100))[0][0]
-                repr_pos = np.arange(repr_locus*b, (repr_locus+1)*b)+1
+                repr_pos = np.arange(repr_locus*b, (repr_locus+1)*b)
                 repr_pop = pop[:,np.append(repr_pos, repr_pos+chr_len)]
                 repr_gen = np.sum(repr_pop, axis=1)
                 repr_rates = r_range[repr_gen]
@@ -331,23 +232,23 @@ def update_record(record, population, N, resources, x, gen_map, chr_len,
 	    if age >= maturity:
 	        repr_mean[age] = 0
 		repr_sd[age] = 0
-    # Average densities over whole population
+    # Average densities over whole genomes
     density_surv /= float(N)
     density_repr /= float(N)
 
     ## AGE-INVARIANT STATS ##
     # Frequency of 1's at each position on chromosome:
     # Average over array, then average at each position over chromosomes
-    n1s = np.sum(population, 0)/float(N)
-    n1 = (n1s[np.arange(chr_len)+1]+n1s[np.arange(chr_len)+chr_len+1])/2 
-    # Shannon-Weaver entropy over entire genome population
-    gen = population[:,1:]
+    n1s = np.sum(genomes, 0)/float(N)
+    n1 = (n1s[np.arange(chr_len)]+n1s[np.arange(chr_len)+chr_len])/2 
+    # Shannon-Weaver entropy over entire genome genomes
+    gen = genomes[:,1:]
     p1 = np.sum(gen)/float(np.size(gen))
     entropy = scipy.stats.entropy(np.array([1-p1, p1]))
     # Junk stats calculated from neutral locus
     neut_locus = np.nonzero(gen_map==201)[0][0] 
-    neut_pos = np.arange(neut_locus*b, (neut_locus+1)*b)+1
-    neut_pop = population[:,np.append(neut_pos, neut_pos+chr_len)]
+    neut_pos = np.arange(neut_locus*b, (neut_locus+1)*b)
+    neut_pop = genomes[:,np.append(neut_pos, neut_pos+chr_len)]
     neut_gen = np.sum(neut_pop, axis=1)
     junk_death = np.mean(d_range[neut_gen])
     junk_repr = np.mean(r_range[neut_gen]) # Junk SDs?
@@ -405,8 +306,8 @@ def print_runtime(starttime, endtime, logfile):
 def logprint(string, logfile, newline=True):
     if newline:
         print string
-        logfile.write(string+"\n")
+        if logfile != "": logfile.write(string+"\n")
     else:
         print string,
-        logfile.write(string)
+        if logfile != "": logfile.write(string)
 
