@@ -1,6 +1,7 @@
 import gs_functions as fn
 import numpy as np
 import scipy.stats as st
+from random import sample
 
 class Population:
     """A simulated population with genomes and ages."""
@@ -145,17 +146,21 @@ class Population:
         through random assortment."""
         pop = self.clone()
         # Must be even number of parents:
-        if pop.N%2 != 0: pop = pop[:-1]
+        if pop.N%2 != 0: 
+            pop.genomes = pop.genomes[:-1]
+            pop.N -= 1
         # Randomly assign mating partners:
         pop.shuffle()
         # Randomly combine parental chromatids
+        chr1 = np.arange(self.chrlen)
+        chr2 = chr1 + self.chrlen
         chr_choice = np.random.choice(["chr1","chr2"], pop.N)
         chr_dict = {"chr1":chr1, "chr2":chr2}
         for m in range(pop.N/2):
             pop.genomes[2*m][chr_dict[chr_choice[2*m]]] = \
                 pop.genomes[2*m+1][chr_dict[chr_choice[2*m+1]]]
         # Generate child population
-        children = Population(pop.params, pop.gen_map, 
+        children = Population(pop.params(), pop.genmap, 
                 pop.ages[::2], pop.genomes[::2])
         return(children)
 
