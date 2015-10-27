@@ -21,13 +21,12 @@ res_limit = 5000 # Maximum resource value, if variable
 ## STARTING POPULATION PARAMETERS ##
 start_pop = 500 # Starting population size
 age_random = True # Random starting ages; else all start as new adults
-# Proportion of 1's and 0's in the genome can be randomly chosen for each 
-# chromosome in each individual (drawn from a truncated normal about 0.5) or 
-# set at a constant percentage value, separately for survival and reproductive 
-# loci:
-s_dist = "random" # "random" or PROPORTIONAL value (0.0-1.0) for S loci
-r_dist = "random" # "random" or PROPORTIONAL value (0.0-1.0) for R loci
-sd = 0.2 # Standard deviation of parameter distribution, if random
+# Proportions of 1's in initial genomes:
+g_dist = {
+        "s":0.5, # Survival
+        "r":0.5, # Reproduction
+        "n":0.5 # Neutral
+        }
 
 ## SIMULATION FUNDAMENTALS: CHANGE WITH CARE ##
 death_bound = [0.001, 0.02] # min and max death rates
@@ -55,5 +54,5 @@ snapshot_stages = np.around(np.linspace(0,number_of_stages-1,
     number_of_snapshots),0) # Stages to save detailed record
 params = {"sexual":sexual, "chr_len":chr_len, "n_base":n_base, 
     "maturity":maturity, "max_ls":max_ls, "age_random":age_random,
-    "start_pop":start_pop, "sd":sd, "s_dist":s_dist, 
-    "r_dist":r_dist} # Dictionary for population initialisation
+    "start_pop":start_pop, "g_dist":g_dist}
+    # Dictionary for population initialisation

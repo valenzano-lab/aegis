@@ -76,26 +76,20 @@ def chance(z,n=1):
 ## POPULATION GENERATION ##
 ###########################
 
-def make_genome_array(start_pop, sd, n_base, chr_len, gen_map, 
-        s_dist, r_dist):
-    trunc = scipy.stats.truncnorm(-0.5/sd, 0.5/sd, loc=0.5, scale=sd)
-    p = trunc.rvs(start_pop*2)
-    genome_array = np.random.uniform(size=[start_pop, chr_len*2])
-    genome_array[:, :chr_len] = np.apply_along_axis(
-            lambda x: x<p[:start_pop], 0, genome_array[:, :chr_len])
-    genome_array[:, chr_len:] = np.apply_along_axis(
-            lambda x: x<p[start_pop:], 0, genome_array[:, chr_len:])
-    genome_array = genome_array.astype("bool")
-    if s_dist != "random":
-        s_loci = np.nonzero(gen_map<100)[0]
-        s_pos = np.array([range(n_base) + x for x in s_loci*10])
-        s_pos = np.append(s_pos, s_pos + chr_len)
-        genome_array[:, s_pos] = chance(s_dist, [start_pop, len(s_pos)])
-    if r_dist != "random":
-        r_loci = np.nonzero(np.logical_and(gen_map>100,gen_map<200))[0]
-        r_pos = np.array([range(n_base) + x for x in r_loci*10])
-        r_pos = np.append(r_pos, r_pos + chr_len)
-        genome_array[:, r_pos] = chance(r_dist, [start_pop, len(r_pos)])
+def make_genome_array(start_pop, chr_len, gen_map, n_base, g_dist):
+    # Initialise genome array:
+    genome_array = np.zeros([start_pop,chr_len*2])
+    # Use genome map to determine probability distribution for each locus:
+    loci = {
+        "s":np.nonzero(gen_map<100)[0],
+        "r":np.nonzero(np.logical_and(gen_map>100,gen_map<200))[0],
+        "n":np.nonzero(gen_map==201)[0]
+        }
+    # Set genome array values according to given probabilities:
+    for k in loci.keys():
+        pos = np.array([range(n_base) + x for x in loci[k]*10])
+        pos = np.append(pos, pos + chr_len)
+        genome_array[:, pos] = chance(g_dist[k], [start_pop, len(pos)])
     return genome_array.astype("int")
 
 ######################

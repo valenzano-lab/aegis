@@ -23,9 +23,8 @@ class Population:
         # Determine genomes if not given
         if genomes == "":
             self.genomes = fn.make_genome_array(
-                    params["start_pop"], params["sd"], self.nbase, 
-                    self.chrlen, self.genmap, params["s_dist"], 
-                    params["r_dist"])
+                    params["start_pop"], self.chrlen, self.genmap,
+                    self.nbase, params["g_dist"])
         else: self.genomes = np.copy(genomes)
         self.N = len(self.ages)
         self.index = np.arange(self.N)
