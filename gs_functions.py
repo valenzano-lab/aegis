@@ -24,7 +24,7 @@ def get_dir(dir_name):
     except OSError:
         exit("Error: Specified simulation directory does not exist.")
 
-def get_conf(file_name, logfile):
+def get_conf(file_name):
     """Import specified configuration file for simulation."""
     try:
         p = import_module(file_name)
@@ -36,13 +36,13 @@ def get_conf(file_name, logfile):
             exit("Aborting: no valid configuration file given.")
         else: 
             return get_conf(q)
-    logprint("Config file: "+ file_name +".py", logfile)
+    logprint("Config file: "+ file_name +".py")
     return p
 
-def get_startpop(seed_name, logfile):
+def get_startpop(seed_name):
     """Import any seed population (or return blank)."""
     if seed_name == "": 
-        logprint("Seed: None.", logfile)
+        logprint("Seed: None.")
         return ""
     try:
         # Make sure includes extension
@@ -59,7 +59,7 @@ def get_startpop(seed_name, logfile):
             exit("Aborting: no valid seed file given.")
         else:
             return get_startpop(q)
-    logprint("Seed population file: " + seed_name, logfile)
+    logprint("Seed population file: " + seed_name)
     return poparray
 
 ##############################
@@ -96,25 +96,25 @@ def make_genome_array(start_pop, chr_len, gen_map, n_base, g_dist):
 ## UPDATE FUNCTIONS ##
 ######################
 
-def update_resources(res0, N, R, V, limit, logfile, verbose=False):
+def update_resources(res0, N, R, V, limit, verbose=False):
     """Implement consumption and regrowth of resources."""
     if verbose: print "Updating resources...",
     k = 1 if N>res0 else V
     res1 = int((res0-N)*k+R)
     res1 = min(max(res1, 0), limit)
     # Resources can't be negative or exceed limit.
-    if verbose: logprint("Done. "+str(res0)+" -> "+str(res1), logfile)
+    if verbose: logprint("Done. "+str(res0)+" -> "+str(res1))
     return res1
 
 ####################################
 ## RECORDING AND OUTPUT FUNCTIONS ##
 ####################################
 
-def run_output(n_run, population, record, logfile, window_size):
+def run_output(n_run, population, record, window_size):
     """Save population and record objects as output files."""
     record.final_update(n_run, window_size)
     # Save output files
-    logprint("Saving output files...", logfile, False)
+    logprint("Saving output files...", False)
     pop_file = open("run_"+str(n_run)+"_pop.txt", "wb")
     rec_file = open("run_"+str(n_run)+"_rec.txt", "wb")
     try:
@@ -123,27 +123,27 @@ def run_output(n_run, population, record, logfile, window_size):
     finally:
         pop_file.close()
         rec_file.close()
-        logprint("done.", logfile)
+        logprint("done.")
 
-def print_runtime(starttime, endtime, logfile):
+def print_runtime(starttime, endtime):
     runtime = endtime - starttime
     days = runtime.days
     hours = runtime.seconds/3600
     minutes = runtime.seconds/60 - hours*60
     seconds = runtime.seconds - minutes*60 - hours*3600
-    logprint("Total runtime :", logfile, False)
+    logprint("Total runtime :", False)
     if days != 0: 
-        logprint("{d} days".format(d=days)+", ", logfile, False)
+        logprint("{d} days".format(d=days)+", ", False)
     if hours != 0: 
-        logprint("{h} hours".format(h=hours)+", ", logfile, False)
+        logprint("{h} hours".format(h=hours)+", ", False)
     if minutes != 0: 
-        logprint("{m} minutes".format(m=minutes)+", ", logfile, False)
-    logprint("{s} seconds".format(s=seconds)+".\n", logfile)
+        logprint("{m} minutes".format(m=minutes)+", ", False)
+    logprint("{s} seconds".format(s=seconds)+".\n")
 
-def logprint(string, logfile, newline=True):
-    if newline:
-        print string
-        if logfile != "": logfile.write(string+"\n")
-    else:
-        print string,
-        if logfile != "": logfile.write(string)
+def logprint(string, newline=True, logfile="log.txt"):
+    print string if newline else string,
+    if logfile != "":
+        log = open(logfile, "a")
+	log.write(string)
+	if newline: log.write("\n")
+	log.close()

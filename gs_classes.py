@@ -88,10 +88,10 @@ class Population:
                 self.ages[subpop_indices], self.genomes[subpop_indices])
         return subpop
 
-    def growth(self, r_range, r_rate, m_rate, m_ratio, logfile, verbose):
+    def growth(self, r_range, r_rate, m_rate, m_ratio, verbose):
         """Generate new mutated children from selected parents."""
         if verbose: 
-            fn.logprint("Calculating reproduction...", logfile, False)
+            fn.logprint("Calculating reproduction...", False)
         parents = self.get_subpop(self.maturity, self.maxls, 100, r_range)
         if self.sex:
             parents.__recombine(r_rate)
@@ -102,30 +102,29 @@ class Population:
         self.addto(children)
         self.N = len(self.ages)
         if verbose:
-            fn.logprint("done. ", logfile, False)
-            fn.logprint(str(children.N)+" new individuals born.", 
-                    logfile)
+            fn.logprint("done. ", False)
+            fn.logprint(str(children.N)+" new individuals born.")
 
-    def death(self, d_range, starvation_factor, logfile, verbose):
+    def death(self, d_range, starvation_factor, verbose):
         """Select survivors and kill rest of population."""
-        if verbose: fn.logprint("Calculating death...", logfile, False)
+        if verbose: fn.logprint("Calculating death...", False)
         val_range = 1-(d_range*starvation_factor)
         survivors = self.get_subpop(0, self.maxls, 0, val_range)
         if verbose:
             dead = self.N - survivors.N
-            fn.logprint("done. "+str(dead)+" individuals died.", logfile)
+            fn.logprint("done. "+str(dead)+" individuals died.")
         self.ages = survivors.ages
         self.genomes = survivors.genomes
         self.N = len(self.ages)
 
-    def crisis(self, crisis_sv, n_stage, logfile):
+    def crisis(self, crisis_sv, n_stage):
         """Apply an extrinsic death crisis and subset population."""
         n_survivors = int(self.N*crisis_sv)
         which_survive = np.random.choice(self.index, n_survivors, False)
         self.ages = self.ages[which_survive]
         self.genomes = self.genomes[which_survive]
-        fn.fn.logprint("Stage " + n_stage + ": Crisis! ", logfile, False)
-        fn.fn.logprint(str(n_survivors)+" individuals survived.", logfile)
+        fn.fn.logprint("Stage " + n_stage + ": Crisis! ", False)
+        fn.fn.logprint(str(n_survivors)+" individuals survived.")
 
     # Private methods:
 

@@ -1,19 +1,7 @@
 #!/usr/bin/python
 
-from random import sample
-import numpy as np
-import gs_functions as fn
-from gs_classes import Population,Record
+# Define arguments and enable help
 import argparse,os,time
-from datetime import datetime
-
-simstart = datetime.now()
-simstart_print = time.strftime('%X %x', time.localtime())+".\n"
-
-###################################
-## PARSE ARGUMENTS AND CONFIGURE ##
-###################################
-
 parser = argparse.ArgumentParser(description='Run the genome ageing \
         simulation.')
 parser.add_argument('-s', metavar="<str>", default="",
@@ -27,16 +15,29 @@ parser.add_argument('-r', type=int, metavar="<int>", default=10,
 parser.add_argument('-v', '--verbose', action="store_true",
         help="display full information at each report stage \
                 (default: only starting population)")
-
 args = parser.parse_args()
 print args
-fn.get_dir(args.dir) # Change to simulation directory
-log = open("log.txt", "w")
-fn.logprint("\nBeginning simulation at "+simstart_print, log)
-fn.logprint("Working directory: "+os.getcwd(), log)
 
-c = fn.get_conf(args.c, log) # Import config file as "c".
-startpop = fn.get_startpop(args.s, log) # Get seed population, if any.
+# Import other libraries
+from random import sample
+import numpy as np
+import gs_functions as fn
+from gs_classes import Population,Record
+from datetime import datetime
+
+simstart = datetime.now()
+simstart_print = time.strftime('%X %x', time.localtime())+".\n"
+
+###################################
+## PARSE ARGUMENTS AND CONFIGURE ##
+###################################
+
+fn.get_dir(args.dir) # Change to simulation directory
+fn.logprint("\nBeginning simulation at "+simstart_print)
+fn.logprint("Working directory: "+os.getcwd())
+
+c = fn.get_conf(args.c) # Import config file as "c".
+startpop = fn.get_startpop(args.s) # Get seed population, if any.
 gen_map = np.copy(c.gen_map)
 np.random.shuffle(gen_map)
 
@@ -47,8 +48,8 @@ np.random.shuffle(gen_map)
 for n_run in range(1, c.number_of_runs+1):
     runstart = datetime.now()
     runstart_print = time.strftime('%X %x', time.localtime())+".\n"
-    fn.logprint("\nBeginning run "+str(n_run)+" at ", log, False)
-    fn.logprint(runstart_print, log)
+    fn.logprint("\nBeginning run "+str(n_run)+" at ", False)
+    fn.logprint(runstart_print)
 
     # # # # # # # # # # # # # # #
     # 1: INITIALISE POPULATION  #
@@ -57,9 +58,9 @@ for n_run in range(1, c.number_of_runs+1):
     ## Generate starting population (if no seed)
     if startpop != "": population = startpop
     else: 
-        fn.logprint("Generating starting population...", log, False)
+        fn.logprint("Generating starting population...", False)
         population = Population(c.params, gen_map)
-        fn.logprint("done.", log)
+        fn.logprint("done.")
 
     ## Initialise record
     record = Record(population, c.snapshot_stages, 
@@ -73,24 +74,24 @@ for n_run in range(1, c.number_of_runs+1):
     # 2: STAGE LOOP #
     # # # # # # # # # 
 
-    fn.logprint("Beginning stage loop.", log)
+    fn.logprint("Beginning stage loop.")
     for n_stage in range(c.number_of_stages):
         # Determine whether to print full stage information:
         full_report = n_stage%args.r == 0 and args.verbose
         # Print stage report:
         if(population.N==0):
-            fn.logprint("\nPerished at stage "+str(n_stage+1)+".", log)
+            fn.logprint("\nPerished at stage "+str(n_stage+1)+".")
             break
         elif n_stage%args.r == 0:
-            fn.logprint ("\nStage "+str(n_stage+1)+": ", log, False)
-            fn.logprint (str(population.N)+" individuals.", log)
+            fn.logprint ("\nStage "+str(n_stage+1)+": ", False)
+            fn.logprint (str(population.N)+" individuals.")
         
         # Record output variables
         if n_stage in c.snapshot_stages:
-            if full_report: fn.logprint("Taking snapshot...",log,False)
+            if full_report: fn.logprint("Taking snapshot...",False)
             record.update(population, resources, x, n_stage, n_snap)
             n_snap += 1
-            if full_report: fn.logprint("done.",log)
+            if full_report: fn.logprint("done.")
         else:
             record.quick_update(n_stage, population.N, resources, x)
 
@@ -99,34 +100,33 @@ for n_run in range(1, c.number_of_runs+1):
         # Change in resources and starvation
         if c.res_var: # function of population
             resources = fn.update_resources(resources, population.N, c.R, 
-                    c.V, c.res_limit, log, full_report)
+                    c.V, c.res_limit, full_report)
             x = x*c.death_inc if resources == 0 else 1.0
         else: # constant; death rate increases if population exceeds
-            x = x*c.death_inc if N>resources else 1.0
-        if full_report: fn.logprint("Starvation factor: "+str(x), log)
+            x = x*c.death_inc if population.N>resources else 1.0
+        if full_report: fn.logprint("Starvation factor: "+str(x))
 
         # Reproduction & death
         population.growth(c.r_range, c.r_rate, c.m_rate, c.m_ratio,
-                log, full_report)
+                full_report)
 
-        population.death(c.d_range, x, log, full_report)
+        population.death(c.d_range, x, full_report)
         
         if n_stage in c.crisis_stages:
-            population.crisis(c.crisis_sv, n_stage, log)
+            population.crisis(c.crisis_sv, n_stage)
 
     ## RUN ENDED
     runend = datetime.now()
     runend_print = time.strftime('%X %x', time.localtime())+". "
-    fn.logprint("\nEnd of run "+str(n_run)+" at ", log, False)
-    fn.logprint(runend_print+"Final population: "+str(population.N)+".", 
-            log)
-    fn.print_runtime(runstart, runend, log)
+    fn.logprint("\nEnd of run "+str(n_run)+" at ", False)
+    fn.logprint(runend_print+"Final population: "+str(population.N)+".")
+    fn.print_runtime(runstart, runend)
 
     ## WRITE POPULATION, RECORD TO FILE ##
-    fn.run_output(n_run, population, record, log, c.window_size)
+    fn.run_output(n_run, population, record, c.window_size)
 
 simend = datetime.now()
 simend_print = time.strftime('%X %x', time.localtime())+"."
-fn.logprint("\nSimulation completed at "+simend_print, log)
-fn.print_runtime(simstart, simend, log)
-fn.logprint("Exiting.", log)
+fn.logprint("\nSimulation completed at "+simend_print)
+fn.print_runtime(simstart, simend)
+fn.logprint("Exiting.")
