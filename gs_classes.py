@@ -42,7 +42,7 @@ class Population:
     def clone(self):
         """Generate a new, identical population object."""
         return Population(self.params(), self.genmap, 
-                self.ages, self.genomes)
+                np.copy(self.ages), np.copy(self.genomes))
 
     def increment_ages(self):
         """Age all individuals in population by one stage."""
@@ -133,12 +133,14 @@ class Population:
         in the population."""
         chr1 = np.arange(self.chrlen)
         chr2 = chr1 + self.chrlen
-        for g in self.genomes:
+        for n in range(len(self.genomes)):
+            g = self.genomes[n]
             r_sites = sample(range(self.chrlen),int(self.chrlen*r_rate))
+            r_sites.sort()
             for r in r_sites:
-                swap = np.copy(g[chr1][r:])
-                g[chr1][r:] = np.copy(g[chr2][r:])
-                g[chr2][r:] = swap
+                g = np.concatenate((g[chr1][:r], g[chr2][r:], 
+                    g[chr2][:r], g[chr1][r:]))
+            self.genomes[n] = g
 
     def __assortment(self):
         """Pair individuals into breeding pairs and generate children
@@ -165,12 +167,12 @@ class Population:
 
     def __mutate(self, m_rate, m_ratio):
         """Mutate genomes of population according to stated rates."""
-        is_0 = self.genomes==1
+        is_0 = self.genomes==0
         is_1 = np.invert(is_0)
         positive_mut = fn.chance(m_ratio*m_rate, np.sum(is_0))
         negative_mut = 1-fn.chance(m_rate,np.sum(is_1))
-        self.genomes[is_1] = negative_mut
         self.genomes[is_0] = positive_mut
+        self.genomes[is_1] = negative_mut
 
 class Record:
     """An enhanced dictionary object recording simulation data."""
