@@ -44,6 +44,7 @@ window_size = 10 # Size of sliding window for recording p1 SD
 import numpy as np
 gen_map = np.asarray(range(0,max_ls)+range(maturity+100,
     max_ls+100)+[201])
+if sexual: repr_bound[1] *= 2
 # Genome map: survival (0 to max), reproduction (maturity to max), neutral
 chr_len = len(gen_map)*n_base # Length of chromosome in binary units
 d_range = np.linspace(death_bound[1], death_bound[0],2*n_base+1) 
