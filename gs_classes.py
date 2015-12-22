@@ -135,8 +135,7 @@ class Population:
         chr2 = chr1 + self.chrlen
         for n in range(len(self.genomes)):
             g = self.genomes[n]
-            r_sites = sample(range(self.chrlen),int(self.chrlen*r_rate)) # note: chrlen*r_rate=const.
-            r_sites.sort()
+            r_sites = np.nonzero(fn.chance(r_rate, self.chrlen))[0] # change
             for r in r_sites:
                 g = np.concatenate((g[chr1][:r], g[chr2][r:],
                     g[chr2][:r], g[chr1][r:]))
@@ -148,8 +147,9 @@ class Population:
         pop = self.clone()
         # Must be even number of parents:
         if pop.N%2 != 0:
-            pop.genomes = pop.genomes[:-1]
-            pop.N -= 1 # note: said you wanted to rewrite this?
+            ix = sample(range(pop.N), 1) # change
+            np.delete(pop.genomes, ix, 0)
+            pop.N -= 1
         # Randomly assign mating partners:
         pop.shuffle()
         # Randomly combine parental chromatids
@@ -241,7 +241,7 @@ class Record:
         death_sd = np.zeros(p.maxls)
         repr_sd = np.zeros(p.maxls)
         # Loop over ages:
-        for age in range(p.maxls):
+        for age in range(p.maxls): # change
             pop = p.genomes[:]
             if len(pop) > 0:
                 # Find loci and binary units:
