@@ -7,7 +7,7 @@ class Population:
     """A simulated population with genomes and ages."""
 
     # Initialisation
-    def __init__(self, params, gen_map, ages="", genomes=""):
+    def __init__(self, params, gen_map, ages="", genomes=""): # note: no gender differentiation
         self.sex = params["sexual"]
         self.chrlen = params["chr_len"]
         self.nbase = params["n_base"]
@@ -17,7 +17,7 @@ class Population:
         # Determine ages if not given
         if ages == "" and params["age_random"]:
             self.ages = np.random.random_integers(0, self.maxls-1,
-                    params["start_pop"]) 
+                    params["start_pop"])
         elif ages == "":
             self.ages = np.repeat(self.maturity, params["start_pop"])
         else: self.ages = np.copy(ages)
@@ -29,7 +29,7 @@ class Population:
         else: self.genomes = np.copy(genomes)
         self.N = len(self.ages)
         self.index = np.arange(self.N)
-    
+
     # Minor methods
 
     def shuffle(self):
@@ -41,7 +41,7 @@ class Population:
 
     def clone(self):
         """Generate a new, identical population object."""
-        return Population(self.params(), self.genmap, 
+        return Population(self.params(), self.genmap,
                 np.copy(self.ages), np.copy(self.genomes))
 
     def increment_ages(self):
@@ -58,7 +58,7 @@ class Population:
                 "maturity":self.maturity
                 }
         return p_dict
-    
+
     def addto(self, pop):
         """Append the individuals from a second population to this one,
         keeping this one's parameters and genome map."""
@@ -84,13 +84,13 @@ class Population:
             inc_rates = val_range[gen]
             included = which[fn.chance(inc_rates, len(inc_rates))]
             subpop_indices = np.append(subpop_indices, included)
-        subpop = Population(self.params(), self.genmap, 
+        subpop = Population(self.params(), self.genmap,
                 self.ages[subpop_indices], self.genomes[subpop_indices])
         return subpop
 
     def growth(self, r_range, r_rate, m_rate, m_ratio, verbose):
         """Generate new mutated children from selected parents."""
-        if verbose: 
+        if verbose:
             fn.logprint("Calculating reproduction...", False)
         parents = self.get_subpop(self.maturity, self.maxls, 100, r_range)
         if self.sex:
@@ -135,10 +135,10 @@ class Population:
         chr2 = chr1 + self.chrlen
         for n in range(len(self.genomes)):
             g = self.genomes[n]
-            r_sites = sample(range(self.chrlen),int(self.chrlen*r_rate))
+            r_sites = sample(range(self.chrlen),int(self.chrlen*r_rate)) # note: chrlen*r_rate=const.
             r_sites.sort()
             for r in r_sites:
-                g = np.concatenate((g[chr1][:r], g[chr2][r:], 
+                g = np.concatenate((g[chr1][:r], g[chr2][r:],
                     g[chr2][:r], g[chr1][r:]))
             self.genomes[n] = g
 
@@ -147,9 +147,9 @@ class Population:
         through random assortment."""
         pop = self.clone()
         # Must be even number of parents:
-        if pop.N%2 != 0: 
+        if pop.N%2 != 0:
             pop.genomes = pop.genomes[:-1]
-            pop.N -= 1
+            pop.N -= 1 # note: said you wanted to rewrite this?
         # Randomly assign mating partners:
         pop.shuffle()
         # Randomly combine parental chromatids
@@ -161,7 +161,7 @@ class Population:
             pop.genomes[2*m][chr_dict[chr_choice[2*m]]] = \
                 pop.genomes[2*m+1][chr_dict[chr_choice[2*m+1]]]
         # Generate child population
-        children = Population(pop.params(), pop.genmap, 
+        children = Population(pop.params(), pop.genmap,
                 pop.ages[::2], pop.genomes[::2])
         return(children)
 
@@ -177,7 +177,7 @@ class Population:
 class Record:
     """An enhanced dictionary object recording simulation data."""
 
-    def __init__(self, population, snapshot_stages, n_stages, d_range, 
+    def __init__(self, population, snapshot_stages, n_stages, d_range,
             r_range, window_size):
         """ Create a new dictionary object for recording output data."""
         m = len(snapshot_stages)
@@ -226,7 +226,7 @@ class Record:
         self.record["starvation_factor"][n_stage] = starv_factor
 
     def update_agestats(self, population, n_snap):
-        """Record detailed per-age statistics of population at 
+        """Record detailed per-age statistics of population at
         current snapshot stage."""
         p = population
         b = p.nbase # Number of bits per locus
@@ -241,8 +241,8 @@ class Record:
         death_sd = np.zeros(p.maxls)
         repr_sd = np.zeros(p.maxls)
         # Loop over ages:
-        for age in range(max(p.ages)):
-            pop = p.genomes[p.ages==age]
+        for age in range(p.maxls):
+            pop = p.genomes[:]
             if len(pop) > 0:
                 # Find loci and binary units:
                 surv_locus = np.nonzero(p.genmap==age)[0][0]
@@ -260,19 +260,13 @@ class Record:
                     # Same for reproduction if they're adults
                     repr_locus = np.nonzero(p.genmap==(age+100))[0][0]
                     repr_pos = np.arange(repr_locus*b, (repr_locus+1)*b)
-                    repr_pop = pop[:,np.append(repr_pos, 
+                    repr_pop = pop[:,np.append(repr_pos,
                         repr_pos+p.chrlen)]
                     repr_gen = np.sum(repr_pop, axis=1)
                     repr_rates = self.record["r_range"][repr_gen]
                     repr_mean[age] = np.mean(repr_rates)
                     repr_sd[age] = np.std(repr_rates)
                     density_repr += np.bincount(repr_gen, minlength=2*b+1)
-            else: # If no individuals of that age, make everything 0.
-                death_mean[age] = 0
-                death_sd[age] = 0
-                if age >= p.maturity:
-                    repr_mean[age] = 0
-                    repr_sd[age] = 0
         # Average densities over whole genomes
         density_surv /= float(p.N)
         density_repr /= float(p.N)
@@ -287,7 +281,7 @@ class Record:
         self.record["density_repr"][n_snap] = density_repr
 
     def update_invstats(self, population, n_snap):
-        """Record detailed cross-population statistics at current 
+        """Record detailed cross-population statistics at current
         snapshot stage."""
         p = population
         # Frequency of 1's at each position on chromosome:
@@ -323,7 +317,7 @@ class Record:
         a = self.record["n1"]
         a_shape = a.shape[:-1] + (a.shape[-1] - window + 1, window)
         a_strd = a.strides + (a.strides[-1],) # strides
-        self.record["s1"] = np.lib.stride_tricks.as_strided(a, 
+        self.record["s1"] = np.lib.stride_tricks.as_strided(a,
                 shape=a_shape, strides=a_strd)
         x_surv = np.cumprod(1-self.record["death_mean"],1)
         self.record["fitness"] = np.cumsum(
