@@ -53,17 +53,17 @@ for n_run in range(1, c.number_of_runs+1):
 
     # # # # # # # # # # # # # # #
     # 1: INITIALISE POPULATION  #
-    # # # # # # # # # # # # # # # 
-    
+    # # # # # # # # # # # # # # #
+
     ## Generate starting population (if no seed)
     if startpop != "": population = startpop
-    else: 
+    else:
         fn.logprint("Generating starting population...", False)
         population = Population(c.params, gen_map)
         fn.logprint("done.")
 
     ## Initialise record
-    record = Record(population, c.snapshot_stages, 
+    record = Record(population, c.snapshot_stages,
             c.number_of_stages, c.d_range, c.r_range, c.window_size)
     n_snap = 0 # number of previous snapshots
 
@@ -72,7 +72,7 @@ for n_run in range(1, c.number_of_runs+1):
 
     # # # # # # # # #
     # 2: STAGE LOOP #
-    # # # # # # # # # 
+    # # # # # # # # #
 
     fn.logprint("Beginning stage loop.")
     for n_stage in range(c.number_of_stages):
@@ -85,7 +85,7 @@ for n_run in range(1, c.number_of_runs+1):
         elif n_stage%args.r == 0:
             fn.logprint ("\nStage "+str(n_stage+1)+": ", False)
             fn.logprint (str(population.N)+" individuals.")
-        
+
         # Record output variables
         if n_stage in c.snapshot_stages:
             if full_report: fn.logprint("Taking snapshot...",False)
@@ -93,13 +93,13 @@ for n_run in range(1, c.number_of_runs+1):
             n_snap += 1
             if full_report: fn.logprint("done.")
         else:
-            record.quick_update(n_stage, population.N, resources, x)
+            record.quick_update(n_stage, population, resources, x) # change
 
         population.increment_ages()
 
         # Change in resources and starvation
         if c.res_var: # function of population
-            resources = fn.update_resources(resources, population.N, c.R, 
+            resources = fn.update_resources(resources, population.N, c.R,
                     c.V, c.res_limit, full_report)
             x = x*c.death_inc if resources == 0 else 1.0
         else: # constant; death rate increases if population exceeds
@@ -111,7 +111,7 @@ for n_run in range(1, c.number_of_runs+1):
                 full_report)
 
         population.death(c.d_range, x, full_report)
-        
+
         if n_stage in c.crisis_stages:
             population.crisis(c.crisis_sv, n_stage)
 

@@ -200,8 +200,8 @@ class Record:
             "population_size":np.copy(array4),
             "resources":np.copy(array4),
             "starvation_factor":np.copy(array4),
+            "age_distribution":np.zeros([n_stages,population.maxls]), # change
             # Per-age data:
-            "age_distribution":np.copy(array1),
             "death_mean":np.copy(array1),
             "death_sd":np.copy(array1),
             "repr_mean":np.copy(array1),
@@ -219,11 +219,14 @@ class Record:
             "junk_fitness":np.copy(array3)
             }
 
-    def quick_update(self, n_stage, pop_size, resources, starv_factor):
+    def quick_update(self, n_stage, population, resources, starv_factor):
         """Record only population size, resource and starvation data."""
-        self.record["population_size"][n_stage] = pop_size
+        p = population
+        self.record["population_size"][n_stage] = p.N
         self.record["resources"][n_stage] = resources
         self.record["starvation_factor"][n_stage] = starv_factor
+        agedist = np.bincount(p.ages, minlength = p.maxls)/float(p.N) # change
+        self.record["age_distribution"][n_stage] = agedist
 
     def update_agestats(self, population, n_snap):
         """Record detailed per-age statistics of population at
@@ -271,8 +274,6 @@ class Record:
         density_surv /= float(p.N)
         density_repr /= float(p.N)
         # Update record
-        agedist = np.bincount(p.ages, minlength = p.maxls)/float(p.N)
-        self.record["age_distribution"][n_snap] = agedist
         self.record["death_mean"][n_snap] = death_mean
         self.record["death_sd"][n_snap] = death_sd
         self.record["repr_mean"][n_snap] = repr_mean
