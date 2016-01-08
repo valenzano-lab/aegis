@@ -308,7 +308,7 @@ class Record:
 
     def update(self, population, resources, starv_factor, stage, n_snap):
         """Record detailed population data at current snapshot stage."""
-        self.quick_update(stage, population.N, resources, starv_factor)
+        self.quick_update(stage, population, resources, starv_factor)
         self.update_agestats(population, n_snap)
         self.update_invstats(population, n_snap)
 
