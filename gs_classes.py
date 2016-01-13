@@ -148,7 +148,7 @@ class Population:
         # Must be even number of parents:
         if pop.N%2 != 0:
             ix = sample(range(pop.N), 1) # change
-            np.delete(pop.genomes, ix, 0)
+            pop.genomes = np.delete(pop.genomes, ix, 0)
             pop.N -= 1
         # Randomly assign mating partners:
         pop.shuffle()
