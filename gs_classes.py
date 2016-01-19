@@ -211,6 +211,7 @@ class Record:
             "density_surv":np.copy(array2),
             "density_repr":np.copy(array2),
             "n1":np.zeros([m,population.chrlen]),
+            "n1_std":np.zeros([m,population.chrlen]),
             "s1":np.zeros([m,population.chrlen-window_size+1]),
             # Simple per-snapshot data:
             "entropy":np.copy(array3),
@@ -271,6 +272,8 @@ class Record:
                     repr_sd[age] = np.std(repr_rates)
                     density_repr += np.bincount(repr_gen, minlength=2*b+1)
         # Average densities over whole genomes
+        global p1 # possible because update_agestats always preceeds update_invstats
+        p1 = (density_surv+density_repr) / (2*float(p.N))
         density_surv /= float(p.N)
         density_repr /= float(p.N)
         # Update record
@@ -285,14 +288,14 @@ class Record:
         """Record detailed cross-population statistics at current
         snapshot stage."""
         p = population
-        # Frequency of 1's at each position on chromosome:
-        # Average at each position, then between chromosomes
-        n1s = np.sum(p.genomes, 0)/float(p.N)
-        n1 = (n1s[np.arange(p.chrlen)]+n1s[np.arange(p.chrlen)+p.chrlen])
-        n1 /= 2
+        # Frequency of 1's at each position on chromosome and it's std:
+        n1s = (p.genomes[:, :p.chrlen] + p.genomes[:, p.chrlen:]) / 2.0
+        n1_std = np.std(n1s, axis=0)
+        n1 = np.mean(n1s, axis=0)
         # Shannon-Weaver entropy over entire genome genomes
-        p1 = np.sum(p.genomes)/float(p.genomes.size)
-        entropy = st.entropy(np.array([1-p1, p1]))
+        #p1 = np.sum(p.genomes)/float(p.genomes.size)
+        #entropy = st.entropy(np.array([1-p1, p1]))
+        entropy = st.entropy(p1)
         # Junk stats calculated from neutral locus
         neut_locus = np.nonzero(p.genmap==201)[0][0]
         neut_pos = np.arange(neut_locus*p.nbase, (neut_locus+1)*p.nbase)
@@ -302,6 +305,7 @@ class Record:
         junk_repr = np.mean(self.record["r_range"][neut_gen]) # Junk SDs?
         # Append record object
         self.record["n1"][n_snap] = n1
+        self.record["n1_std"][n_snap] = n1_std
         self.record["entropy"][n_snap] = entropy
         self.record["junk_death"][n_snap] = junk_death
         self.record["junk_repr"][n_snap] = junk_repr
