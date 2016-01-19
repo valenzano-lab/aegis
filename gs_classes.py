@@ -272,7 +272,7 @@ class Record:
                     repr_sd[age] = np.std(repr_rates)
                     density_repr += np.bincount(repr_gen, minlength=2*b+1)
         # Average densities over whole genomes
-        global p1 # possible because update_agestats always preceeds update_invstats
+        global p1 # possible because update_agestats always preceeds update_invstats # change
         p1 = (density_surv+density_repr) / (2*float(p.N))
         density_surv /= float(p.N)
         density_repr /= float(p.N)
@@ -293,9 +293,7 @@ class Record:
         n1_std = np.std(n1s, axis=0)
         n1 = np.mean(n1s, axis=0)
         # Shannon-Weaver entropy over entire genome genomes
-        #p1 = np.sum(p.genomes)/float(p.genomes.size)
-        #entropy = st.entropy(np.array([1-p1, p1]))
-        entropy = st.entropy(p1)
+        entropy = st.entropy(p1) # change
         # Junk stats calculated from neutral locus
         neut_locus = np.nonzero(p.genmap==201)[0][0]
         neut_pos = np.arange(neut_locus*p.nbase, (neut_locus+1)*p.nbase)
