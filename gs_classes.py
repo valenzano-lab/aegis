@@ -327,3 +327,16 @@ class Record:
                 x_surv*self.record["repr_mean"],1)
         self.record["junk_fitness"] = (
                 1-self.record["junk_death"])*self.record["junk_repr"]
+        self.record["actual_death_rate"] = self.actual_death_rate()
+
+    def actual_death_rate(self):
+        """Compute actual death rate for each age at each stage."""
+        print "test"
+        N_age = self.record["age_distribution"] *\
+                self.record["population_size"][:,None]
+        dividend = N_age[1:, 1:]
+        divisor = N_age[:-1, :-1]
+        divisor[divisor == 0] = 1 # avoid deviding with zero
+        death = 1-dividend/divisor
+        return np.append(death, np.ones([death.shape[0], 1]), axis=1)
+

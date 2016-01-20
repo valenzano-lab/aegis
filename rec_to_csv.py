@@ -14,8 +14,10 @@ if not os.path.exists("csv_output"):
     os.makedirs("csv_output")
 
 # compute actual death rate
+def actual_death_rate(age_array):
+
 age_dist = record["age_distribution"]
-N_age =  age_dist * np.tile(record["population_size"].reshape(age_dist.shape[0], 1), age_dist.shape[1])
+N_age = age_dist * np.tile(record["population_size"].reshape(age_dist.shape[0], 1), age_dist.shape[1])
 dividend = N_age[1:, 1:]
 divisor = N_age[:-1, :-1]
 divisor[divisor == 0] = 1 # avoid deviding with zero
