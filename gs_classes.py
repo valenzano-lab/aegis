@@ -7,7 +7,7 @@ class Population:
     """A simulated population with genomes and ages."""
 
     # Initialisation
-    def __init__(self, params, gen_map, ages="", genomes=""): # note: no gender differentiation
+    def __init__(self, params, gen_map, ages="", genomes=""):
         self.sex = params["sexual"]
         self.chrlen = params["chr_len"]
         self.nbase = params["n_base"]
@@ -135,7 +135,7 @@ class Population:
         chr2 = chr1 + self.chrlen
         for n in range(len(self.genomes)):
             g = self.genomes[n]
-            r_sites = np.nonzero(fn.chance(r_rate, self.chrlen))[0] # change
+            r_sites = np.nonzero(fn.chance(r_rate, self.chrlen))[0]
             for r in r_sites:
                 g = np.concatenate((g[chr1][:r], g[chr2][r:],
                     g[chr2][:r], g[chr1][r:]))
@@ -147,7 +147,7 @@ class Population:
         pop = self.clone()
         # Must be even number of parents:
         if pop.N%2 != 0:
-            ix = sample(range(pop.N), 1) # change
+            ix = sample(range(pop.N), 1)
             pop.genomes = np.delete(pop.genomes, ix, 0)
             pop.N -= 1
         # Randomly assign mating partners:
@@ -200,7 +200,7 @@ class Record:
             "population_size":np.copy(array4),
             "resources":np.copy(array4),
             "starvation_factor":np.copy(array4),
-            "age_distribution":np.zeros([n_stages,population.maxls]), # change
+            "age_distribution":np.zeros([n_stages,population.maxls]),
             # Per-age data:
             "death_mean":np.copy(array1),
             "death_sd":np.copy(array1),
@@ -221,12 +221,12 @@ class Record:
             }
 
     def quick_update(self, n_stage, population, resources, starv_factor):
-        """Record only population size, resource and starvation data."""
+        """Record only population size, age distribution, resource and starvation data."""
         p = population
         self.record["population_size"][n_stage] = p.N
         self.record["resources"][n_stage] = resources
         self.record["starvation_factor"][n_stage] = starv_factor
-        agedist = np.bincount(p.ages, minlength = p.maxls)/float(p.N) # change
+        agedist = np.bincount(p.ages, minlength = p.maxls) / float(p.N)
         self.record["age_distribution"][n_stage] = agedist
 
     def update_agestats(self, population, n_snap):
@@ -245,8 +245,8 @@ class Record:
         death_sd = np.zeros(p.maxls)
         repr_sd = np.zeros(p.maxls)
         # Loop over ages:
-        for age in range(p.maxls): # change
-            pop = p.genomes[:]
+        for age in range(p.maxls):
+            pop = p.genomes
             if len(pop) > 0:
                 # Find loci and binary units:
                 surv_locus = np.nonzero(p.genmap==age)[0][0]
@@ -272,8 +272,8 @@ class Record:
                     repr_sd[age] = np.std(repr_rates)
                     density_repr += np.bincount(repr_gen, minlength=2*b+1)
         # Average densities over whole genomes
-        global p1 # possible because update_agestats always preceeds update_invstats # change
-        p1 = (density_surv+density_repr) / (2*float(p.N))
+        #global p1 # possible because update_agestats always preceeds update_invstats # change
+        #p1 = (density_surv+density_repr) / (2*float(p.N))
         density_surv /= float(p.N)
         density_repr /= float(p.N)
         # Update record
@@ -284,6 +284,14 @@ class Record:
         self.record["density_surv"][n_snap] = density_surv
         self.record["density_repr"][n_snap] = density_repr
 
+    def update_shannon_weaver(self, population, n_snap):
+        p = population
+        b = p.nbase
+        d2 = 2*b+1
+        d1 = p.genomes.shape[0] * p.genomes.shape[1] / d2
+        density = np.bincount(np.sum(p.genomes.reshape(d1,d2), 1), minlength=d2)
+        self.record["entropy"][n_snap] = st.entropy(density)
+
     def update_invstats(self, population, n_snap):
         """Record detailed cross-population statistics at current
         snapshot stage."""
@@ -293,18 +301,18 @@ class Record:
         n1_std = np.std(n1s, axis=0)
         n1 = np.mean(n1s, axis=0)
         # Shannon-Weaver entropy over entire genome genomes
-        entropy = st.entropy(p1) # change
+        #entropy = st.entropy(p1) # change
         # Junk stats calculated from neutral locus
         neut_locus = np.nonzero(p.genmap==201)[0][0]
         neut_pos = np.arange(neut_locus*p.nbase, (neut_locus+1)*p.nbase)
         neut_pop = p.genomes[:,np.append(neut_pos, neut_pos+p.chrlen)]
         neut_gen = np.sum(neut_pop, axis=1)
         junk_death = np.mean(self.record["d_range"][neut_gen])
-        junk_repr = np.mean(self.record["r_range"][neut_gen]) # Junk SDs?
+        junk_repr = np.mean(self.record["r_range"][neut_gen])
         # Append record object
         self.record["n1"][n_snap] = n1
         self.record["n1_std"][n_snap] = n1_std
-        self.record["entropy"][n_snap] = entropy
+        #self.record["entropy"][n_snap] = entropy
         self.record["junk_death"][n_snap] = junk_death
         self.record["junk_repr"][n_snap] = junk_repr
 
@@ -331,12 +339,11 @@ class Record:
 
     def actual_death_rate(self):
         """Compute actual death rate for each age at each stage."""
-        print "test"
         N_age = self.record["age_distribution"] *\
                 self.record["population_size"][:,None]
         dividend = N_age[1:, 1:]
-        divisor = N_age[:-1, :-1]
-        divisor[divisor == 0] = 1 # avoid deviding with zero
-        death = 1-dividend/divisor
+        divisor = np.copy(N_age[:-1, :-1])
+        divisor[divisor == 0] = 1 # avoid division by zero
+        death = 1 - dividend / divisor
+        # value for last age is 1
         return np.append(death, np.ones([death.shape[0], 1]), axis=1)
-

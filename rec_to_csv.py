@@ -13,17 +13,6 @@ f.close()
 if not os.path.exists("csv_output"):
     os.makedirs("csv_output")
 
-# compute actual death rate
-def actual_death_rate(age_array):
-
-age_dist = record["age_distribution"]
-N_age = age_dist * np.tile(record["population_size"].reshape(age_dist.shape[0], 1), age_dist.shape[1])
-dividend = N_age[1:, 1:]
-divisor = N_age[:-1, :-1]
-divisor[divisor == 0] = 1 # avoid deviding with zero
-# death rate for last age is 1
-actual_death_rate = np.append((1 - dividend / divisor), np.ones((dividend.shape[0], 1)), axis=1)
-
 ### OUTPUT ###
 # shape = (16, 71) [per-age data]
     # transpose so that R reads rows-columns correctly
@@ -39,8 +28,7 @@ np.savetxt("csv_output/population_size.csv", record["population_size"], delimite
 np.savetxt("csv_output/starvation_factor.csv", record["starvation_factor"], delimiter=",")
 # output only snapshot stages
 np.savetxt("csv_output/age_distribution.csv", (record["age_distribution"][record["snapshot_stages"].astype(int)-1]).T, delimiter=",")
-#
-np.savetxt("csv_output/actual_death_rate.csv", actual_death_rate.T, delimiter=",")
+np.savetxt("csv_output/actual_death_rate.csv", record["actual_death_rate"].T, delimiter=",")
 
 # shape = (16, 21) [genotype data]
 np.savetxt("csv_output/density_surv.csv", record["density_surv"].T, delimiter=",")
@@ -64,7 +52,10 @@ def sort_n1(key="n1"):
     return n1_sort
 
 np.savetxt("csv_output/n1.csv", sort_n1("n1").T, delimiter=",")
-np.savetxt("csv_output/n1_sd.csv", sort_n1("n1_std").T, delimiter=",")
+np.savetxt("csv_output/n1_std.csv", sort_n1("n1_std").T, delimiter=",")
+s = sort_n1("n1_std").shape
+age_wise_n1_std = np.mean(sort_n1("n1_std").reshape((s[0], record["chr_len"]/10, 10)), 2)
+np.savetxt("csv_output/age_wise_n1_std.csv", age_wise_n1_std.T, delimiter=",")
 #np.savetxt("csv_output/s1.csv", record["s1"].T, delimiter=",") # rolling n1 sd
 
 # per-snapshot data
