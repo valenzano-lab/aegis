@@ -272,8 +272,6 @@ class Record:
                     repr_sd[age] = np.std(repr_rates)
                     density_repr += np.bincount(repr_gen, minlength=2*b+1)
         # Average densities over whole genomes
-        #global p1 # possible because update_agestats always preceeds update_invstats # change
-        #p1 = (density_surv+density_repr) / (2*float(p.N))
         density_surv /= float(p.N)
         density_repr /= float(p.N)
         # Update record
@@ -284,13 +282,41 @@ class Record:
         self.record["density_surv"][n_snap] = density_surv
         self.record["density_repr"][n_snap] = density_repr
 
-    def update_shannon_weaver(self, population, n_snap):
+    # Shannon-Weaver entropy over entire population genome
+    def update_shannon_weaver(self, population):
         p = population
         b = p.nbase
-        d2 = 2*b+1
-        d1 = p.genomes.shape[0] * p.genomes.shape[1] / d2
-        density = np.bincount(np.sum(p.genomes.reshape(d1,d2), 1), minlength=d2)
-        self.record["entropy"][n_snap] = st.entropy(density)
+        s1 = b
+        s0 = p.genomes[:, :p.chrlen].shape[0] * p.genomes[:, :p.chrlen].shape[1] \
+             / s1
+        var = np.hstack((p.genomes[:,:p.chrlen].reshape(s0,s1), \
+                         p.genomes[:,p.chrlen:].reshape(s0,s1)))
+        density = np.bincount(np.sum(var, axis=1), minlength = 2*b+1)
+        return st.entropy(density)
+
+    # Sort ages in ascending order (survival:0-71, reproduction: 16-71)
+    def sort_n1(self, arr):
+        b = self.record["n_bases"]
+        m = self.record["maturity"]
+        maxls = self.record["max_ls"]
+        count = 0
+        arr_sorted = np.zeros(arr.shape)
+        for i in self.record["gen_map"]:
+            if i<100: # survival
+                arr_sorted[range(i*b, (i+1)*b)] = arr[range(count, count+b)]
+            elif i==201: # neutral
+                arr_sorted[-b:] = arr[range(count, count+b)]
+            else: # reproduction
+                arr_sorted[range(maxls*b+(i-100-m)*b, maxls*b+(i+1-100-m)*b)] \
+                = arr[range(count, count+b)]
+            count += b
+        return arr_sorted
+
+    def age_wise_n1_std(self):
+        arr = self.record["n1_std"]
+        s = arr.shape
+        res = np.mean(arr.reshape((s[0], self.record["chr_len"]/10, 10)), 2)
+        return res
 
     def update_invstats(self, population, n_snap):
         """Record detailed cross-population statistics at current
@@ -300,8 +326,6 @@ class Record:
         n1s = (p.genomes[:, :p.chrlen] + p.genomes[:, p.chrlen:]) / 2.0
         n1_std = np.std(n1s, axis=0)
         n1 = np.mean(n1s, axis=0)
-        # Shannon-Weaver entropy over entire genome genomes
-        #entropy = st.entropy(p1) # change
         # Junk stats calculated from neutral locus
         neut_locus = np.nonzero(p.genmap==201)[0][0]
         neut_pos = np.arange(neut_locus*p.nbase, (neut_locus+1)*p.nbase)
@@ -310,9 +334,9 @@ class Record:
         junk_death = np.mean(self.record["d_range"][neut_gen])
         junk_repr = np.mean(self.record["r_range"][neut_gen])
         # Append record object
-        self.record["n1"][n_snap] = n1
-        self.record["n1_std"][n_snap] = n1_std
-        #self.record["entropy"][n_snap] = entropy
+        self.record["n1"][n_snap] = self.sort_n1(n1)
+        self.record["n1_std"][n_snap] = self.sort_n1(n1_std)
+        self.record["entropy"][n_snap] = self.update_shannon_weaver(population)
         self.record["junk_death"][n_snap] = junk_death
         self.record["junk_repr"][n_snap] = junk_repr
 
@@ -336,6 +360,7 @@ class Record:
         self.record["junk_fitness"] = (
                 1-self.record["junk_death"])*self.record["junk_repr"]
         self.record["actual_death_rate"] = self.actual_death_rate()
+        self.record["age_wise_n1_std"] = self.age_wise_n1_std()
 
     def actual_death_rate(self):
         """Compute actual death rate for each age at each stage."""
