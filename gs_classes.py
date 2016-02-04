@@ -312,10 +312,12 @@ class Record:
             count += b
         return arr_sorted
 
+    # n1_std averaged in slices of n_bases to represent ages instead of bits
     def age_wise_n1_std(self):
+        b = self.record["n_bases"]
         arr = self.record["n1_std"]
         s = arr.shape
-        res = np.mean(arr.reshape((s[0], self.record["chr_len"]/10, 10)), 2)
+        res = np.mean(arr.reshape((s[0], self.record["chr_len"]/b, b)), 2)
         return res
 
     def update_invstats(self, population, n_snap):
