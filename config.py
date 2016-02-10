@@ -4,7 +4,7 @@
 
 sexual = False # Sexual or asexual reproduction
 
-## RUNNING PARAMETERS ## 
+## RUNNING PARAMETERS ##
 number_of_runs = 1 # Total number of independent runs
 number_of_stages = 200 # Total number of stages per run
 crisis_stages = [] # Stages of extrinsic death crisis
@@ -37,7 +37,10 @@ m_ratio = 0.1 # Ratio of positive (0->1) to negative (1->0) mutations
 max_ls = 71 # Maximum lifespan; must be less than 100
 maturity = 16 # Age of sexual maturation
 n_base = 10 # Genome size (binary units per locus)
-death_inc = 3 # Per-stage death-rate increase under starvation
+surv_pen = True # Survival penalty under starvation
+repr_pen = False # Reproduction penalty under starvation
+death_inc = 3 # Per-stage death rate increase under starvation
+repr_dec = 3 # Per-stage reproduction rate decrease under starvation
 window_size = 10 # Size of sliding window for recording p1 SD
 
 ## DERIVED PARAMETERS: DO NOT ALTER ##
@@ -47,13 +50,13 @@ gen_map = np.asarray(range(0,max_ls)+range(maturity+100,
 if sexual: repr_bound[1] *= 2
 # Genome map: survival (0 to max), reproduction (maturity to max), neutral
 chr_len = len(gen_map)*n_base # Length of chromosome in binary units
-d_range = np.linspace(death_bound[1], death_bound[0],2*n_base+1) 
+d_range = np.linspace(death_bound[1], death_bound[0],2*n_base+1)
 # max to min death rate
-r_range = np.linspace(repr_bound[0],repr_bound[1],2*n_base+1) 
+r_range = np.linspace(repr_bound[0],repr_bound[1],2*n_base+1)
 # min to max repr rate
 snapshot_stages = np.around(np.linspace(0,number_of_stages-1,
     number_of_snapshots),0) # Stages to save detailed record
-params = {"sexual":sexual, "chr_len":chr_len, "n_base":n_base, 
+params = {"sexual":sexual, "chr_len":chr_len, "n_base":n_base,
     "maturity":maturity, "max_ls":max_ls, "age_random":age_random,
     "start_pop":start_pop, "g_dist":g_dist}
     # Dictionary for population initialisation

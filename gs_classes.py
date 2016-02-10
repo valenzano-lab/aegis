@@ -88,11 +88,11 @@ class Population:
                 self.ages[subpop_indices], self.genomes[subpop_indices])
         return subpop
 
-    def growth(self, r_range, r_rate, m_rate, m_ratio, verbose):
+    def growth(self, r_range, starvation_factor, r_rate,  m_rate, m_ratio, verbose):
         """Generate new mutated children from selected parents."""
         if verbose:
             fn.logprint("Calculating reproduction...", False)
-        parents = self.get_subpop(self.maturity, self.maxls, 100, r_range)
+        parents = self.get_subpop(self.maturity, self.maxls, 100, r_range/starvation_factor)
         if self.sex:
             parents.__recombine(r_rate)
             children = parents.__assortment()
@@ -199,7 +199,8 @@ class Record:
             # Per-stage data:
             "population_size":np.copy(array4),
             "resources":np.copy(array4),
-            "starvation_factor":np.copy(array4),
+            "surv_starvation_factor":np.copy(array4),
+            "repr_starvation_factor":np.copy(array4),
             "age_distribution":np.zeros([n_stages,population.maxls]),
             # Per-age data:
             "death_mean":np.copy(array1),
@@ -220,12 +221,13 @@ class Record:
             "junk_fitness":np.copy(array3)
             }
 
-    def quick_update(self, n_stage, population, resources, starv_factor):
+    def quick_update(self, n_stage, population, resources, surv_starv_factor, repr_starv_factor):
         """Record only population size, age distribution, resource and starvation data."""
         p = population
         self.record["population_size"][n_stage] = p.N
         self.record["resources"][n_stage] = resources
-        self.record["starvation_factor"][n_stage] = starv_factor
+        self.record["surv_starvation_factor"][n_stage] = surv_starv_factor
+        self.record["repr_starvation_factor"][n_stage] = repr_starv_factor
         agedist = np.bincount(p.ages, minlength = p.maxls) / float(p.N)
         self.record["age_distribution"][n_stage] = agedist
 
@@ -287,7 +289,7 @@ class Record:
         p = population
         b = p.nbase
         s1 = b
-        s0 = p.genomes[:, :p.chrlen].shape[0] * p.genomes[:, :p.chrlen].shape[1] \
+        s0 = p.genomes[:, :p.chrlen].shape[0] * p.genomes[:, :p.chrlen].shape[1]\
              / s1
         var = np.hstack((p.genomes[:,:p.chrlen].reshape(s0,s1), \
                          p.genomes[:,p.chrlen:].reshape(s0,s1)))
@@ -342,9 +344,9 @@ class Record:
         self.record["junk_death"][n_snap] = junk_death
         self.record["junk_repr"][n_snap] = junk_repr
 
-    def update(self, population, resources, starv_factor, stage, n_snap):
+    def update(self, population, resources, surv_starv_factor, repr_starv_factor, stage, n_snap):
         """Record detailed population data at current snapshot stage."""
-        self.quick_update(stage, population, resources, starv_factor)
+        self.quick_update(stage, population, resources, surv_starv_factor, repr_starv_factor)
         self.update_agestats(population, n_snap)
         self.update_invstats(population, n_snap)
 
