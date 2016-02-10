@@ -26,6 +26,9 @@ get_item = function(item_name){
 
 get_item_list = function(){
   L = list(
+    b = get_item("n_bases"),
+    m = get_item("maturity"),
+    maxls = get_item("max_ls"),
     gen_map = get_item("gen_map"),
     chr_len = get_item("chr_len"),
     d_range = get_item("d_range"),
@@ -44,7 +47,7 @@ get_item_list = function(){
     density_repr = get_item("density_repr"),
     n1 = get_item("n1"),
     n1_std = get_item("n1_std"),
-    #age_wise_n1_std = get_item("age_wise_n1_std"),
+    age_wise_n1_std = get_item("age_wise_n1_std"),
     s1 = get_item("s1"),
     fitness = get_item("fitness"),
     entropy = get_item("entropy"),
@@ -99,11 +102,11 @@ layout(matrix(1:2,2,1), 2, 1) # 2x1 figure
 plot(1-death_mean[[1]], ylim = c(0.98, 1), type="l", col=colors[1], xlab = "", ylab = "survival", main="Survival")
 for(i in 2:16)
   {lines(1-death_mean[[i]], col=colors[i])}
-abline(v=16) # maturation
+abline(v=L$m)
 lines(1-rep(L$junk_death[16],71), col="blue") # junk
 
 plot(death_sd[[16]], type="o", col="green", xlab = "age", ylab = "sd") # sd
-abline(v=16) # maturation
+abline(v=L$m) # maturation
 
 dev.off() # close device
 }
@@ -119,11 +122,11 @@ layout(matrix(1:2,2,1), 2, 1) # 2x1 figure
 plot(repr_mean[[1]], xlim = c(16, 70), ylim = c(min(L$r_range), max(L$r_range)), type="l", col=colors[1], xlab = "", ylab = "reproduction", main="Reproduction")
 for(i in 2:16)
   {lines(repr_mean[[i]], col=colors[i])}
-abline(v=16) # maturation
+abline(v=L$m)
 lines(rep(L$junk_repr[16],71), col="blue") # junk
 
 plot(repr_sd[[16]], xlim = c(16, 70), type="o", col="green", xlab = "age", ylab = "sd") # sd
-abline(v=16)
+abline(v=L$m)
 
 dev.off() # close device
 }
@@ -160,22 +163,22 @@ if(all){
   par(mar=c(1,1,1,1))
   layout(matrix(1:16,4,4), 1, 1) # 4x4 figure
   plot(n1[[1]], xlab="", ylab="",  ylim=c(0,1), pch=20)
-  abline(v=160, col="red")
-  abline(v=710, col="red")
+  abline(v=L$m * L$b, col="red")
+  abline(v=L$maxls * L$b, col="red")
   
   for(i in 2:16){
     plot(n1[[i]],xlab="", ylab="", ylim=c(0,1), pch=20)
-    abline(v=160, col="red")
-    abline(v=710, col="red")
+    abline(v=L$m * L$b, col="red")
+    abline(v=L$maxls * L$b, col="red")
   }
 } else{
   layout(matrix(1:2,2,1), 2, 1) # 2x1 figure
   plot(n1[[ix]], xlab="position", ylab="frequency", main="Frequency of 1's")
-  abline(v=160, col="red")
-  abline(v=710, col="red")
+  abline(v=L$m * L$b, col="red")
+  abline(v=L$maxls * L$b, col="red")
   plot(n1_std[[ix]], xlab="position", ylab="sd", type="l")
-  abline(v=160, col="red")
-  abline(v=710, col="red")
+  abline(v=L$m * L$b, col="red")
+  abline(v=L$maxls * L$b, col="red")
 }
 dev.off() # close device
 }
@@ -188,18 +191,18 @@ plot_age_wise_var <- function(dirpath=path, ix=16, all=FALSE){
     par(mar=c(1,1,1,1))
     layout(matrix(1:16,4,4), 1, 1) # 4x4 figure
     plot(age_wise_n1_std[[1]], xlab="", ylab="",  ylim=c(0,1), pch=20)
-    abline(v=16, col="red")
-    abline(v=71, col="red")
+    abline(v=L$m, col="red")
+    abline(v=L$maxls, col="red")
     
     for(i in 2:16){
       plot(age_wise_n1_std[[i]],xlab="", ylab="", ylim=c(0,1), pch=20)
-      abline(v=16, col="red")
-      abline(v=71, col="red")
+      abline(v=L$m, col="red")
+      abline(v=L$maxls, col="red")
     }
   } else{
     plot(age_wise_n1_std[[ix]], xlab="position", ylab="std", main="Age-wise genome variation")
-    abline(v=16, col="red")
-    abline(v=71, col="red")
+    abline(v=L$m, col="red")
+    abline(v=L$maxls, col="red")
   }
   dev.off()
 }
@@ -250,7 +253,7 @@ plot_all <- function(dirpath=path, ix=16, all=FALSE, s1=n_stages-101, s2=n_stage
   plot_pop_res(path)
   plot_age_distr(path)
   plot_frequency(path, ix, all)
-  #plot_age_wise_var(path, ix, all)
+  plot_age_wise_var(path, ix, all)
   plot_density(path, ix, all)
   plot_actual_death_rate(path, s1, s2)
   plot_entropy(path)
@@ -260,7 +263,7 @@ plot_all <- function(dirpath=path, ix=16, all=FALSE, s1=n_stages-101, s2=n_stage
 ### EXECUTE ###
 ###############
 
-path <- "/home/arian/repos/genome-simulation/sex-var-small"
+path <- "/home/arian/repos/genome-simulation/testrun/4-Feb-2015"
 L = import_data(path)
 
 # reshape data frames
@@ -274,7 +277,7 @@ density_surv = data.frame(t(L$density_surv))
 density_repr = data.frame(t(L$density_repr))
 n1 = data.frame(t(L$n1))
 n1_std = data.frame(t(L$n1_std))
-#age_wise_n1_std = data.frame(t(L$age_wise_n1_std))
+age_wise_n1_std = data.frame(t(L$age_wise_n1_std))
 #s1 =
 #fitness = data.frame(t(L$fitness))
 
