@@ -1,4 +1,11 @@
+#############
+### USAGE ###
+# Create a 'figures' directory in the simulation directory.
+# In the EXECUTE section assign the simulation dir path to variable 'path' and
+# call functions depending on what you want to plot.
+# Be sure to first execute 'reshape data frames' and 'plot values' blocks.
 ##############
+
 ### IMPORT ###
 ##############
 
@@ -36,7 +43,7 @@ get_item_list = function(){
     snapshot_stages = get_item("snapshot_stages"),
     population_size = get_item("population_size"),
     resources = get_item("resources"),
-    starvation_factor = get_item("starvation_factor"),
+    #starvation_factor = get_item("starvation_factor"),
     age_distribution = get_item("age_distribution"),
     death_mean = get_item("death_mean"),
     death_sd = get_item("death_sd"),
@@ -94,93 +101,93 @@ import_data <- function(path, run=1){
 # survival and standard deviation (2x1)
 # colors represent values for different stages with red being the most recent one, the blue
 # line represents junk values for the most recent stage, vertical line is maturation age
-# the green line represents sd
+# the green line represents standard deviation
 plot_survival <- function(dirpath=path){
-png(paste(dirpath, "/figures/surv.png", sep="")) # redirect output (device) to png file
+    png(paste(dirpath, "/figures/surv.png", sep="")) # redirect output (device) to png file
 
-layout(matrix(1:2,2,1), 2, 1) # 2x1 figure
-plot(1-death_mean[[1]], ylim = c(0.98, 1), type="l", col=colors[1], xlab = "", ylab = "survival", main="Survival")
-for(i in 2:16)
-  {lines(1-death_mean[[i]], col=colors[i])}
-abline(v=L$m)
-lines(1-rep(L$junk_death[16],71), col="blue") # junk
+    layout(matrix(1:2,2,1), 2, 1) # 2x1 figure
+    plot(1-death_mean[[1]], ylim = c(min(1-L$d_range), max(1-L$d_range)), type="l", col=colors[1], xlab = "", ylab = "survival", main="Survival")
+    for(i in 2:16)
+      {lines(1-death_mean[[i]], col=colors[i])}
+    abline(v=L$m)
+    lines(1-rep(L$junk_death[16],71), col="blue") # junk
 
-plot(death_sd[[16]], type="o", col="green", xlab = "age", ylab = "sd") # sd
-abline(v=L$m) # maturation
+    plot(death_sd[[16]], type="o", col="green", xlab = "age", ylab = "sd") # sd
+    abline(v=L$m) # maturation
 
-dev.off() # close device
+    dev.off() # close device
 }
 
 # reproduction and standard deviation (2x1)
 # colors represent values for different stages with red being the most recent one, the blue
 # line represents junk values for the most recent stage, vertical line is maturation age
-# the green line represents sd
+# the green line represents standard deviation
 plot_reproduction <- function(dirpath=path){
-png(paste(dirpath, "/figures/repr.png", sep="")) # redirect output (device) to png file
+    png(paste(dirpath, "/figures/repr.png", sep="")) # redirect output (device) to png file
 
-layout(matrix(1:2,2,1), 2, 1) # 2x1 figure
-plot(repr_mean[[1]], xlim = c(16, 70), ylim = c(min(L$r_range), max(L$r_range)), type="l", col=colors[1], xlab = "", ylab = "reproduction", main="Reproduction")
-for(i in 2:16)
-  {lines(repr_mean[[i]], col=colors[i])}
-abline(v=L$m)
-lines(rep(L$junk_repr[16],71), col="blue") # junk
+    layout(matrix(1:2,2,1), 2, 1) # 2x1 figure
+    plot(repr_mean[[1]], xlim = c(16, 70), ylim = c(min(L$r_range), max(L$r_range)), type="l", col=colors[1], xlab = "", ylab = "reproduction", main="Reproduction")
+    for(i in 2:16)
+      {lines(repr_mean[[i]], col=colors[i])}
+    abline(v=L$m)
+    lines(rep(L$junk_repr[16],71), col="blue") # junk
 
-plot(repr_sd[[16]], xlim = c(16, 70), type="o", col="green", xlab = "age", ylab = "sd") # sd
-abline(v=L$m)
+    plot(repr_sd[[16]], xlim = c(16, 70), type="o", col="green", xlab = "age", ylab = "sd") # sd
+    abline(v=L$m)
 
-dev.off() # close device
+    dev.off() # close device
 }
 
 # population (blue) and resources (red)
 plot_pop_res <- function(dirpath=path){
-png(paste(dirpath, "/figures/pop_res.png", sep="")) # redirect output (device) to png file
+    png(paste(dirpath, "/figures/pop_res.png", sep="")) # redirect output (device) to png file
 
-plot(L$resources, type="l", col="red", xlab="", ylab="", ylim=c(0,max(L$resources,L$population_size)), main="Population")
-lines(L$population_size, type="l", col="blue")
+    plot(L$resources, type="l", col="red", xlab="stage", ylab="N", ylim=c(0,max(L$resources,L$population_size)), main="pop (blue) and res (red)")
+    lines(L$population_size, type="l", col="blue")
 
-dev.off() # close device
+    dev.off() # close device
 }
 
 # age distribution
 # colors represent values for different stages with red being the most recent one
 plot_age_distr <- function(dirpath=path){
-png(paste(dirpath, "/figures/age_dist.png", sep="")) # redirect output (device) to png file
+    png(paste(dirpath, "/figures/age_dist.png", sep="")) # redirect output (device) to png file
 
-plot(age_distribution[[1]], type="l", col=colors[[1]], ylim=c(0, max(age_distribution)), xlab = "", ylab = "", main="Age distribution")
-for(i in 2:16)
-  {lines(age_distribution[[i]], col=colors[[i]])}
+    plot(age_distribution[[1]], type="l", col=colors[[1]], ylim=c(0, max(age_distribution)), xlab = "age", ylab = "", main="Age distribution")
+    for(i in 2:16)
+      {lines(age_distribution[[i]], col=colors[[i]])}
 
-dev.off() # close device
+    dev.off() # close device
 }
 
 # frequency of 1's
-# sorted by rec_to_csv.py
-# red lines represent maturation and where reproduction begins [order: survival, reproduction]
+# (n1 is already sorted in ascending order)
+# red lines mark maturation and where reproduction begins [order: survival, reproduction]
 plot_frequency <- function(dirpath=path, ix=16, all=FALSE){
-png(paste(dirpath, "/figures/n1.png", sep="")) # redirect output (device) to png file
+    png(paste(dirpath, "/figures/n1.png", sep="")) # redirect output (device) to png file
 
-if(all){
-  par(mar=c(1,1,1,1))
-  layout(matrix(1:16,4,4), 1, 1) # 4x4 figure
-  plot(n1[[1]], xlab="", ylab="",  ylim=c(0,1), pch=20)
-  abline(v=L$m * L$b, col="red")
-  abline(v=L$maxls * L$b, col="red")
-  
-  for(i in 2:16){
-    plot(n1[[i]],xlab="", ylab="", ylim=c(0,1), pch=20)
-    abline(v=L$m * L$b, col="red")
-    abline(v=L$maxls * L$b, col="red")
-  }
-} else{
-  layout(matrix(1:2,2,1), 2, 1) # 2x1 figure
-  plot(n1[[ix]], xlab="position", ylab="frequency", main="Frequency of 1's")
-  abline(v=L$m * L$b, col="red")
-  abline(v=L$maxls * L$b, col="red")
-  plot(n1_std[[ix]], xlab="position", ylab="sd", type="l")
-  abline(v=L$m * L$b, col="red")
-  abline(v=L$maxls * L$b, col="red")
-}
-dev.off() # close device
+    if(all){
+      par(mar=c(1,1,1,1))
+      layout(matrix(1:16,4,4), 1, 1) # 4x4 figure
+      plot(n1[[1]], xlab="", ylab="",  ylim=c(0,1), pch=20)
+      abline(v=L$m * L$b, col="red")
+      abline(v=L$maxls * L$b, col="red")
+      
+      for(i in 2:16){
+        plot(n1[[i]],xlab="", ylab="", ylim=c(0,1), pch=20)
+        abline(v=L$m * L$b, col="red")
+        abline(v=L$maxls * L$b, col="red")
+      }
+    } else{
+      layout(matrix(1:2,2,1), 2, 1) # 2x1 figure
+      plot(n1[[ix]], xlab="position", ylab="frequency", main="Frequency of 1's")
+      abline(v=L$m * L$b, col="red")
+      abline(v=L$maxls * L$b, col="red")
+      plot(n1_std[[ix]], xlab="position", ylab="sd", type="l")
+      abline(v=L$m * L$b, col="red")
+      abline(v=L$maxls * L$b, col="red")
+    }
+    dev.off() # close device
 }
 
 # age wise standard deviation od frequency of 1's
@@ -207,46 +214,45 @@ plot_age_wise_var <- function(dirpath=path, ix=16, all=FALSE){
   dev.off()
 }
 
-# density of genotypes (displayed age unspecific)
-# survival (green) and reproduction (red), first (up) and most recent stage (down)
+# density of genotypes (age unspecific)
+# survival (green) and reproduction (red)
 plot_density <- function(dirpath=path, ix=16, all=FALSE){
-png(paste(dirpath, "/figures/dens.png", sep="")) # redirect output (device) to png file
+    png(paste(dirpath, "/figures/dens.png", sep="")) # redirect output (device) to png file
 
-if(all){
-  layout(matrix(1:16,4,4), 1, 1) # 4x4 figure
-  plot(density_repr[[1]], type="l", col="red", xlab="", ylab="", ylim=c(0, max(density_repr, density_surv)))
-  lines(density_surv[[1]], col="green")
-  
-  for(i in 2:16){
-    plot(density_repr[[i]], type="l", col="red", xlab="", ylab="", ylim=c(0, max(density_repr, density_surv)))
-    lines(density_surv[[i]], col="green")
-  }
-} else{
-  plot(density_repr[[ix]], type="l", col="red", xlab="", ylab="density", ylim=c(0, max(density_repr[[ix]], density_surv[[ix]])), main="Genotype (non age-specific) density")
-  lines(density_surv[[ix]], col="green")
-}
-dev.off() # close device
+    if(all){
+      layout(matrix(1:16,4,4), 1, 1) # 4x4 figure
+      plot(density_repr[[1]], type="l", col="red", xlab="", ylab="", ylim=c(0, max(density_repr, density_surv)))
+      lines(density_surv[[1]], col="green")
+      
+      for(i in 2:16){
+        plot(density_repr[[i]], type="l", col="red", xlab="", ylab="", ylim=c(0, max(density_repr, density_surv)))
+        lines(density_surv[[i]], col="green")
+      }
+    } else{
+      plot(density_repr[[ix]], type="l", col="red", xlab="", ylab="density", ylim=c(0, max(density_repr[[ix]], density_surv[[ix]])), main="Genotype (non age-specific) density")
+      lines(density_surv[[ix]], col="green")
+    }
+    dev.off() # close device
 }
 
 # actual death rate (calculated from population_size * age_distribution)
 # averaged over s1:s2
 plot_actual_death_rate <- function(dirpath=path, s1, s2){
-png(paste(path, "/figures/actual_death_rate.png", sep="")) # redirect output (device) to png file
+    png(paste(path, "/figures/actual_death_rate.png", sep="")) # redirect output (device) to png file
 
-plot(rowMeans(cbind(actual_death_rate[c(s1:s2)])), ylab=expression(mu), main="Actual death rate")
-dev.off() # close device
+    plot(rowMeans(cbind(actual_death_rate[c(s1:s2)])),xlab="age", ylab=expression(mu), main="Actual death rate")
+    dev.off() # close device
 }
 
 # entropy
 plot_entropy <- function(dirpath=path){
-png(paste(dirpath, "/figures/entropy.png", sep="")) # redirect output (device) to png file
+    png(paste(dirpath, "/figures/entropy.png", sep="")) # redirect output (device) to png file
 
-plot(L$entropy, type="o", main="Entropy")
-
-dev.off() # close device
+    plot(L$entropy, type="o", main="Entropy")
+    dev.off() # close device
 }
 
-# all
+# plot all
 plot_all <- function(dirpath=path, ix=16, all=FALSE, s1=n_stages-101, s2=n_stages-1){
   plot_survival(path)
   plot_reproduction(path)
@@ -263,7 +269,7 @@ plot_all <- function(dirpath=path, ix=16, all=FALSE, s1=n_stages-101, s2=n_stage
 ### EXECUTE ###
 ###############
 
-path <- "/home/arian/repos/genome-simulation/testrun/4-Feb-2015"
+path <- "/home/arian/repos/genome-simulation/testruns/testrun-21-Apr"
 L = import_data(path)
 
 # reshape data frames
@@ -285,4 +291,4 @@ age_wise_n1_std = data.frame(t(L$age_wise_n1_std))
 colors <- rev(heat.colors(16)) # color palette
 n_stages <- length(L$population_size)
 
-plot_all()
+plot_all(path, ix=16, all=FALSE, s1=n_stages-101, s2=n_stages-1)

@@ -34,14 +34,14 @@ def get_conf(file_name):
                 "Enter correct config file name, or skip to abort: ")
         if q == "":
             exit("Aborting: no valid configuration file given.")
-        else: 
+        else:
             return get_conf(q)
     logprint("Config file: "+ file_name +".py")
     return p
 
 def get_startpop(seed_name):
     """Import any seed population (or return blank)."""
-    if seed_name == "": 
+    if seed_name == "":
         logprint("Seed: None.")
         return ""
     try:
@@ -69,7 +69,7 @@ def get_startpop(seed_name):
 rand = scipy.stats.uniform(0,1) # Uniform random number generator
 
 def chance(z,n=1):
-    """Generate array of independent booleans with P(True)=z."""
+    """Generate array of (n or shape n=(x,y)) independent booleans with P(True)=z."""
     return rand.rvs(n)<z
 
 ###########################
@@ -77,6 +77,11 @@ def chance(z,n=1):
 ###########################
 
 def make_genome_array(start_pop, chr_len, gen_map, n_base, g_dist):
+    """
+    Generate genomes for start_pop individuals with chromosome length of chr_len
+    bits and locus length of n_base bits. Set the genome array values (distribution
+    of 1's and 0's) according to gen_map and g_dist.
+    """
     # Initialise genome array:
     genome_array = np.zeros([start_pop,chr_len*2])
     # Use genome map to determine probability distribution for each locus:
@@ -97,7 +102,7 @@ def make_genome_array(start_pop, chr_len, gen_map, n_base, g_dist):
 ######################
 
 def update_resources(res0, N, R, V, limit, verbose=False):
-    """Implement consumption and regrowth of resources."""
+    """Implement consumption and regrowth of resources depending on population size."""
     if verbose: print "Updating resources...",
     k = 1 if N>res0 else V
     res1 = int((res0-N)*k+R)
@@ -132,15 +137,16 @@ def print_runtime(starttime, endtime):
     minutes = runtime.seconds/60 - hours*60
     seconds = runtime.seconds - minutes*60 - hours*3600
     logprint("Total runtime :", False)
-    if days != 0: 
+    if days != 0:
         logprint("{d} days".format(d=days)+", ", False)
-    if hours != 0: 
+    if hours != 0:
         logprint("{h} hours".format(h=hours)+", ", False)
-    if minutes != 0: 
+    if minutes != 0:
         logprint("{m} minutes".format(m=minutes)+", ", False)
     logprint("{s} seconds".format(s=seconds)+".\n")
 
 def logprint(string, newline=True, logfile="log.txt"):
+    """Print string to both stdout and lof file."""
     print string if newline else string,
     if logfile != "":
         log = open(logfile, "a")

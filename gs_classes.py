@@ -68,7 +68,7 @@ class Population:
     # Major methods:
 
     def get_subpop(self, min_age, max_age, offset, val_range):
-        """Randomly select a population subset based on genotype."""
+        """Select a population subset based on chance defined by genotype."""
         subpop_indices = np.empty(0,int)
         for age in range(min_age, min(max_age, max(self.ages)+1)):
             # Get indices of appropriate locus for that age:
@@ -88,14 +88,15 @@ class Population:
                 self.ages[subpop_indices], self.genomes[subpop_indices])
         return subpop
 
-    def growth(self, r_range, starvation_factor, r_rate,  m_rate, m_ratio, verbose):
+    def growth(self, r_range, penf, r_rate,  m_rate, m_ratio, verbose):
         """Generate new mutated children from selected parents."""
         if verbose:
             fn.logprint("Calculating reproduction...", False)
-        parents = self.get_subpop(self.maturity, self.maxls, 100, r_range/starvation_factor)
+        parents = self.get_subpop(self.maturity, self.maxls, 100, r_range/penf)
         if self.sex:
-            parents.__recombine(r_rate)
-            children = parents.__assortment()
+            if self.N > 1:
+                parents.__recombine(r_rate)
+                children = parents.__assortment()
         else: children = parents.clone()
         children.__mutate(m_rate, m_ratio)
         children.ages[:] = 0 # Make newborn
@@ -105,10 +106,10 @@ class Population:
             fn.logprint("done. ", False)
             fn.logprint(str(children.N)+" new individuals born.")
 
-    def death(self, d_range, starvation_factor, verbose):
+    def death(self, d_range, penf, verbose):
         """Select survivors and kill rest of population."""
         if verbose: fn.logprint("Calculating death...", False)
-        val_range = 1-(d_range*starvation_factor)
+        val_range = 1-(d_range*penf)
         survivors = self.get_subpop(0, self.maxls, 0, val_range)
         if verbose:
             dead = self.N - survivors.N
@@ -199,8 +200,8 @@ class Record:
             # Per-stage data:
             "population_size":np.copy(array4),
             "resources":np.copy(array4),
-            "surv_starvation_factor":np.copy(array4),
-            "repr_starvation_factor":np.copy(array4),
+            "surv_penf":np.copy(array4),
+            "repr_penf":np.copy(array4),
             "age_distribution":np.zeros([n_stages,population.maxls]),
             # Per-age data:
             "death_mean":np.copy(array1),
@@ -221,19 +222,20 @@ class Record:
             "junk_fitness":np.copy(array3)
             }
 
-    def quick_update(self, n_stage, population, resources, surv_starv_factor, repr_starv_factor):
-        """Record only population size, age distribution, resource and starvation data."""
+    def quick_update(self, n_stage, population, resources, surv_penf, repr_penf):
+        """Record only population size, age distribution, resource and penalty data."""
         p = population
         self.record["population_size"][n_stage] = p.N
         self.record["resources"][n_stage] = resources
-        self.record["surv_starvation_factor"][n_stage] = surv_starv_factor
-        self.record["repr_starvation_factor"][n_stage] = repr_starv_factor
+        self.record["surv_penf"][n_stage] = surv_penf
+        self.record["repr_penf"][n_stage] = repr_penf
         agedist = np.bincount(p.ages, minlength = p.maxls) / float(p.N)
         self.record["age_distribution"][n_stage] = agedist
 
     def update_agestats(self, population, n_snap):
         """Record detailed per-age statistics of population at
-        current snapshot stage."""
+        current snapshot stage: death rate, reproduction rate, genotype
+        density."""
         p = population
         b = p.nbase # Number of bits per locus
         # Initialise objects:
@@ -247,8 +249,8 @@ class Record:
         death_sd = np.zeros(p.maxls)
         repr_sd = np.zeros(p.maxls)
         # Loop over ages:
+        pop = p.genomes
         for age in range(p.maxls):
-            pop = p.genomes
             if len(pop) > 0:
                 # Find loci and binary units:
                 surv_locus = np.nonzero(p.genmap==age)[0][0]
@@ -273,9 +275,9 @@ class Record:
                     repr_mean[age] = np.mean(repr_rates)
                     repr_sd[age] = np.std(repr_rates)
                     density_repr += np.bincount(repr_gen, minlength=2*b+1)
-        # Average densities over whole genomes
-        density_surv /= float(p.N)
-        density_repr /= float(p.N)
+        # Average densities (there are total N*maxls genetic units)
+        density_surv /= float(p.N*p.maxls)
+        density_repr /= float(p.N*p.maxls)
         # Update record
         self.record["death_mean"][n_snap] = death_mean
         self.record["death_sd"][n_snap] = death_sd
@@ -284,8 +286,8 @@ class Record:
         self.record["density_surv"][n_snap] = density_surv
         self.record["density_repr"][n_snap] = density_repr
 
-    # Shannon-Weaver entropy over entire population genome
     def update_shannon_weaver(self, population):
+        """H = -sum(p_i*ln(p_i)), where p_i is the density of genotype i."""
         p = population
         b = p.nbase
         s1 = b
@@ -296,8 +298,8 @@ class Record:
         density = np.bincount(np.sum(var, axis=1), minlength = 2*b+1)
         return st.entropy(density)
 
-    # Sort ages in ascending order (survival:0-71, reproduction: 16-71)
     def sort_n1(self, arr):
+        """Sort array arr for ages in ascending order (survival:0-71, reproduction: 16-71)."""
         b = self.record["n_bases"]
         m = self.record["maturity"]
         maxls = self.record["max_ls"]
@@ -314,8 +316,8 @@ class Record:
             count += b
         return arr_sorted
 
-    # n1_std averaged in slices of n_bases to represent ages instead of bits
     def age_wise_n1_std(self):
+        """Average n1_std in slices of n_bases to represent ages instead of bits."""
         b = self.record["n_bases"]
         arr = self.record["n1_std"]
         s = arr.shape
@@ -324,10 +326,11 @@ class Record:
 
     def update_invstats(self, population, n_snap):
         """Record detailed cross-population statistics at current
-        snapshot stage."""
+        snapshot stage: distribution of 1's (n1), entropy, junk genome (not under
+        selection) values."""
         p = population
         # Frequency of 1's at each position on chromosome and it's std:
-        n1s = (p.genomes[:, :p.chrlen] + p.genomes[:, p.chrlen:]) / 2.0
+        n1s = np.vstack((p.genomes[:, :p.chrlen], p.genomes[:, p.chrlen:]))
         n1_std = np.std(n1s, axis=0)
         n1 = np.mean(n1s, axis=0)
         # Junk stats calculated from neutral locus
@@ -344,14 +347,14 @@ class Record:
         self.record["junk_death"][n_snap] = junk_death
         self.record["junk_repr"][n_snap] = junk_repr
 
-    def update(self, population, resources, surv_starv_factor, repr_starv_factor, stage, n_snap):
+    def update(self, population, resources, surv_penf, repr_penf, stage, n_snap):
         """Record detailed population data at current snapshot stage."""
-        self.quick_update(stage, population, resources, surv_starv_factor, repr_starv_factor)
+        self.quick_update(stage, population, resources, surv_penf, repr_penf)
         self.update_agestats(population, n_snap)
         self.update_invstats(population, n_snap)
 
     def final_update(self, n_run, window):
-        """After run completion, compute fitness and n1 std."""
+        """After run completion, compute fitness and s1 (rolling window std of n1)."""
         # Rolling standard deviation of #1's along genome:
         a = self.record["n1"]
         a_shape = a.shape[:-1] + (a.shape[-1] - window + 1, window)
