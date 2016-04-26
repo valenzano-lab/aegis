@@ -54,6 +54,7 @@ get_item_list = function(){
     density_repr = get_item("density_repr"),
     n1 = get_item("n1"),
     n1_std = get_item("n1_std"),
+    age_wise_n1 = get_item("age_wise_n1"),
     age_wise_n1_std = get_item("age_wise_n1_std"),
     s1 = get_item("s1"),
     fitness = get_item("fitness"),
@@ -190,26 +191,30 @@ plot_frequency <- function(dirpath=path, ix=16, all=FALSE){
     dev.off() # close device
 }
 
-# age wise standard deviation od frequency of 1's
+# age wise frequency of 1's
 plot_age_wise_var <- function(dirpath=path, ix=16, all=FALSE){
-  png(paste(dirpath, "/figures/age_wise_n1_std.png", sep="")) # redirect output (device) to png file
+    png(paste(dirpath, "/figures/age_wise_n1", sep="")) # redirect output (device) to png file
 
-  if(all){
-    par(mar=c(1,1,1,1))
-    layout(matrix(1:16,4,4), 1, 1) # 4x4 figure
-    plot(age_wise_n1_std[[1]], xlab="", ylab="",  ylim=c(0,1), pch=20)
-    abline(v=L$m, col="red")
-    abline(v=L$maxls, col="red")
-    
-    for(i in 2:16){
-      plot(age_wise_n1_std[[i]],xlab="", ylab="", ylim=c(0,1), pch=20)
-      abline(v=L$m, col="red")
-      abline(v=L$maxls, col="red")
-    }
-  } else{
-    plot(age_wise_n1_std[[ix]], xlab="position", ylab="std", main="Age-wise genome variation")
-    abline(v=L$m, col="red")
-    abline(v=L$maxls, col="red")
+    if(all){
+        par(mar=c(1,1,1,1))
+        layout(matrix(1:16,4,4), 1, 1) # 4x4 figure
+        plot(age_wise_n1[[1]], xlab="", ylab="",  ylim=c(0,1), pch=20)
+        abline(v=L$m, col="red")
+        abline(v=L$maxls, col="red")
+
+        for(i in 2:16){
+          plot(age_wise_n1[[i]],xlab="", ylab="", ylim=c(0,1), pch=20)
+          abline(v=L$m, col="red")
+          abline(v=L$maxls, col="red")
+        }
+    } else{
+        layout(matrix(1:2,2,1), 2, 1) # 2x1 figure
+        plot(age_wise_n1[[ix]], xlab="age", ylab="frequency", main="Age-wise frequency of 1's")
+        abline(v=L$m * L$b, col="red")
+        abline(v=L$maxls * L$b, col="red")
+        plot(age_wise_n1_std[[ix]], xlab="age", ylab="sd", type="0")
+        abline(v=L$m * L$b, col="red")
+        abline(v=L$maxls * L$b, col="red")
   }
   dev.off()
 }

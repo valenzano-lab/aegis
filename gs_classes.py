@@ -316,10 +316,10 @@ class Record:
             count += b
         return arr_sorted
 
-    def age_wise_n1_std(self):
-        """Average n1_std in slices of n_bases to represent ages instead of bits."""
+    def age_wise_n1(self, arr_str):
+        """Average n1 array, starting from value-per-bit, for it to be value-per-age. [arr_str = 'n1' or 'n1_std']"""
         b = self.record["n_bases"]
-        arr = self.record["n1_std"]
+        arr = self.record[arr_str] # already sorted
         s = arr.shape
         res = np.mean(arr.reshape((s[0], self.record["chr_len"]/b, b)), 2)
         return res
@@ -367,7 +367,8 @@ class Record:
         self.record["junk_fitness"] = (
                 1-self.record["junk_death"])*self.record["junk_repr"]
         self.record["actual_death_rate"] = self.actual_death_rate()
-        self.record["age_wise_n1_std"] = self.age_wise_n1_std()
+        self.record["age_wise_n1"] = self.age_wise_n1("n1")
+        self.record["age_wise_n1_std"] = self.age_wise_n1("n1_std")
 
     def actual_death_rate(self):
         """Compute actual death rate for each age at each stage."""
