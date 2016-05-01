@@ -6,6 +6,7 @@
 # Be sure to first execute 'reshape data frames' and 'plot values' blocks.
 ##############
 
+##############
 ### IMPORT ###
 ##############
 
@@ -145,6 +146,7 @@ plot_pop_res <- function(dirpath=path){
 
     plot(L$resources, type="l", col="red", xlab="stage", ylab="N", ylim=c(0,max(L$resources,L$population_size)), main="pop (blue) and res (red)")
     lines(L$population_size, type="l", col="blue")
+    lines(L$resources, type="l", col="red") ###
 
     dev.off() # close device
 }
@@ -171,21 +173,21 @@ plot_frequency <- function(dirpath=path, ix=16, all=FALSE){
       par(mar=c(1,1,1,1))
       layout(matrix(1:16,4,4), 1, 1) # 4x4 figure
       plot(n1[[1]], xlab="", ylab="",  ylim=c(0,1), pch=20)
-      abline(v=L$m * L$b, col="red")
+      abline(v=L$m * L$b)
       abline(v=L$maxls * L$b, col="red")
       
       for(i in 2:16){
         plot(n1[[i]],xlab="", ylab="", ylim=c(0,1), pch=20)
-        abline(v=L$m * L$b, col="red")
+        abline(v=L$m * L$b)
         abline(v=L$maxls * L$b, col="red")
       }
     } else{
       layout(matrix(1:2,2,1), 2, 1) # 2x1 figure
       plot(n1[[ix]], xlab="position", ylab="frequency", main="Frequency of 1's")
-      abline(v=L$m * L$b, col="red")
+      abline(v=L$m * L$b)
       abline(v=L$maxls * L$b, col="red")
       plot(n1_std[[ix]], xlab="position", ylab="sd", type="l")
-      abline(v=L$m * L$b, col="red")
+      abline(v=L$m * L$b)
       abline(v=L$maxls * L$b, col="red")
     }
     dev.off() # close device
@@ -199,22 +201,22 @@ plot_age_wise_var <- function(dirpath=path, ix=16, all=FALSE){
         par(mar=c(1,1,1,1))
         layout(matrix(1:16,4,4), 1, 1) # 4x4 figure
         plot(age_wise_n1[[1]], xlab="", ylab="",  ylim=c(0,1), pch=20)
-        abline(v=L$m, col="red")
+        abline(v=L$m)
         abline(v=L$maxls, col="red")
 
         for(i in 2:16){
           plot(age_wise_n1[[i]],xlab="", ylab="", ylim=c(0,1), pch=20)
-          abline(v=L$m, col="red")
+          abline(v=L$m)
           abline(v=L$maxls, col="red")
         }
     } else{
         layout(matrix(1:2,2,1), 2, 1) # 2x1 figure
         plot(age_wise_n1[[ix]], xlab="age", ylab="frequency", main="Age-wise frequency of 1's")
-        abline(v=L$m * L$b, col="red")
-        abline(v=L$maxls * L$b, col="red")
-        plot(age_wise_n1_std[[ix]], xlab="age", ylab="sd", type="0")
-        abline(v=L$m * L$b, col="red")
-        abline(v=L$maxls * L$b, col="red")
+        abline(v=L$m)
+        abline(v=L$maxls, col="red")
+        plot(age_wise_n1_std[[ix]], xlab="age", ylab="sd")
+        abline(v=L$m)
+        abline(v=L$maxls, col="red")
   }
   dev.off()
 }
@@ -226,15 +228,15 @@ plot_density <- function(dirpath=path, ix=16, all=FALSE){
 
     if(all){
       layout(matrix(1:16,4,4), 1, 1) # 4x4 figure
-      plot(density_repr[[1]], type="l", col="red", xlab="", ylab="", ylim=c(0, max(density_repr, density_surv)))
+      plot(density_repr[[1]], type="l", col="red", xlab="Genotype", ylab="", ylim=c(0, max(density_repr, density_surv)))
       lines(density_surv[[1]], col="green")
       
       for(i in 2:16){
-        plot(density_repr[[i]], type="l", col="red", xlab="", ylab="", ylim=c(0, max(density_repr, density_surv)))
+        plot(density_repr[[i]], type="l", col="red", xlab="Genotype", ylab="", ylim=c(0, max(density_repr, density_surv)))
         lines(density_surv[[i]], col="green")
       }
     } else{
-      plot(density_repr[[ix]], type="l", col="red", xlab="", ylab="density", ylim=c(0, max(density_repr[[ix]], density_surv[[ix]])), main="Genotype (non age-specific) density")
+      plot(density_repr[[ix]], type="l", col="red", xlab="Genotype", ylab="density", ylim=c(0, max(density_repr[[ix]], density_surv[[ix]])), main="Genotype (non age-specific) density")
       lines(density_surv[[ix]], col="green")
     }
     dev.off() # close device
@@ -274,7 +276,7 @@ plot_all <- function(dirpath=path, ix=16, all=FALSE, s1=n_stages-101, s2=n_stage
 ### EXECUTE ###
 ###############
 
-path <- "/home/arian/repos/genome-simulation/testruns/testrun-21-Apr"
+path <- ""
 L = import_data(path)
 
 # reshape data frames
@@ -288,6 +290,7 @@ density_surv = data.frame(t(L$density_surv))
 density_repr = data.frame(t(L$density_repr))
 n1 = data.frame(t(L$n1))
 n1_std = data.frame(t(L$n1_std))
+age_wise_n1 = data.frame(t(L$age_wise_n1))
 age_wise_n1_std = data.frame(t(L$age_wise_n1_std))
 #s1 =
 #fitness = data.frame(t(L$fitness))
