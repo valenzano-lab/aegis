@@ -94,7 +94,7 @@ class Population:
             fn.logprint("Calculating reproduction...", False)
         parents = self.get_subpop(self.maturity, self.maxls, 100, r_range/penf)
         if self.sex:
-            if self.N > 1:
+            if parents.N > 1:
                 parents.__recombine(r_rate)
                 children = parents.__assortment()
         else: children = parents.clone()
@@ -124,8 +124,9 @@ class Population:
         which_survive = np.random.choice(self.index, n_survivors, False)
         self.ages = self.ages[which_survive]
         self.genomes = self.genomes[which_survive]
-        fn.fn.logprint("Stage " + n_stage + ": Crisis! ", False)
-        fn.fn.logprint(str(n_survivors)+" individuals survived.")
+        self.N = len(self.ages)
+        fn.logprint("Stage " + n_stage + ": Crisis! ", False)
+        fn.logprint(str(n_survivors)+" individuals survived.")
 
     # Private methods:
 
@@ -277,7 +278,7 @@ class Record:
                     density_repr += np.bincount(repr_gen, minlength=2*b+1)
         # Average densities (there are total N*maxls genetic units)
         density_surv /= float(p.N*p.maxls)
-        density_repr /= float(p.N*p.maxls)
+        density_repr /= float(p.N*(p.maxls-p.maturity))
         # Update record
         self.record["death_mean"][n_snap] = death_mean
         self.record["death_sd"][n_snap] = death_sd
