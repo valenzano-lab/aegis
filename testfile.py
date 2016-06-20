@@ -144,23 +144,19 @@ def test_mga(gen_map, g_dist):
         print gen_map[loci[k]]
     assert test
 
-# population generation
-@pytest.fixture
-def conf(request):
-    return get_conf("config")
+# ------------------
+# RESOURCE UPDATING
+# ------------------
+def test_update_resources_bounded():
+    """Confirm that resources cannot exceed upper bound or go below
+    zero."""
+    assert update_resources(5000, 0, 1000, 2, 5000) == 5000 and\
+            update_resources(0, 5000, 1000, 2, 5000) == 0
 
-def test_make_genome_array(conf):
-    """Tests only whether genome array has the right shape based on values
-    defined in config.py file."""
-    assert make_genome_array(conf.start_pop,conf.chr_len,conf.gen_map,conf.n_base,conf.g_dist).shape == (conf.start_pop,conf.chr_len*2)
-
-# update functions
-@pytest.mark.parametrize("res0,N", [(1000,500),(4000,500),(0,1500)])
-def test_update_resources(res0,N):
-    """Test if update_resources return a value within the definition interval for
-    three possible scenarios: shortage [=0], abundance [>0], upper limit."""
-    ans = update_resources(res0,N,1000,1.6,5000)
-    assert (ans >= 0) and (ans <= 5000)
+def test_update_resources_unbounded():
+    """Test resource updating between bounds."""
+    assert update_resources(1000, 500, 1000, 2, 5000) == 2000 and\
+            update_resources(500, 1000, 1000, 2, 5000) == 500
 
 ### POPULATION
 
