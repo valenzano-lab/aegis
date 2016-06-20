@@ -240,7 +240,13 @@ def test_increment_ages(population):
     ages2 = population.ages
     assert (ages1+1 == ages2).all()
 
-# not testing params
+def test_params(population):
+    """Test that params returns (at least) the required information."""
+    pop = population
+    p = population.params()
+    assert len(p) >= 5 and p["sexual"] == pop.sex and \
+            p["chr_len"] == pop.chrlen and p["n_base"] == pop.nbase and \
+            p["max_ls"] == pop.maxls and p["maturity"] == pop.maturity
 
 def test_addto(population):
     """Test if a population is successfully appended to the receiver population,
@@ -254,16 +260,6 @@ def test_addto(population):
 # Major methods
 
 @pytest.fixture
-def population0(request, conf):
-    """Create population with genomes filled with zeroes."""
-    conf.params["start_pop"] = 500
-    conf.params["age_random"] = False
-    conf.params["sexual"] = False
-    pop = Population(conf.params, conf.genmap)
-    pop.genomes = np.zeros(pop.genomes.shape).astype(int)
-    return pop
-
-@pytest.fixture
 def population1(request, conf):
     """Create population with genomes filled with ones."""
     conf.params["start_pop"] = 500
@@ -273,35 +269,48 @@ def population1(request, conf):
     pop.genomes = np.ones(pop.genomes.shape).astype(int)
     return pop
 
+@pytest.mark.parametrize("p", [0, 0.3, 0.8, 1])
 @pytest.mark.parametrize("min_age,offset",[(0,0),(16,100)])
-def test_get_subpop_none(population0,min_age,offset):
-    """Test if none of the individuals pass if chance is 0."""
-    assert population0.get_subpop(min_age,70,offset,np.linspace(0,1,21)).N == 0
+def test_get_subpop(conf, p, min_age, offset):
+    """Test if the probability of passing is close to that indicated
+    by the genome."""
+    conf.params["start_pop"] = 500
+    conf.params["age_random"] = False
+    conf.params["sexual"] = False
+    pop = Population(conf.params, conf.genmap)
+    pop.genomes = chance(p, pop.genomes.shape).astype(int)
+    spop = pop.get_subpop(min_age, pop.maxls, offset,
+            np.linspace(0,1,21))
+    assert abs(spop.N/float(pop.N) - p)*(1-min_age/pop.maxls) < 0.1
+    # TODO: Add test for locus-specificity (e.g. only reprodv loci)
 
-@pytest.mark.parametrize("min_age,offset",[(0,0),(16,100)])
-def test_get_subpop_all(population1,min_age,offset):
-    """Test if all of the individuals pass if chance is 1."""
-    assert population1.get_subpop(min_age,70,offset,np.linspace(0,1,21)).N == \
-            population1.N
+@pytest.mark.parametrize("p", [0, 0.3, 0.8, 1])
+@pytest.mark.parametrize("x", [1.0, 3.0, 9.0])
+def test_death(conf, p, x):
+    """Test if self.death() correctly inverts death probabilities
+    and incorporates starvation factor to get survivor probabilities
+    and survivor array."""
+    conf.params["start_pop"] = 500
+    conf.params["age_random"] = False
+    conf.params["sexual"] = False
+    pop = Population(conf.params, conf.genmap)
+    pop.genomes = chance(p, pop.genomes.shape).astype(int)
+    spop = pop.clone()
+    spop.death(np.linspace(1,0,21), x, False)
+    pmod = max(0, min(1, (1-x*(1-p))))
+    assert abs(spop.N/float(pop.N) - pmod) < 0.1
+    # TODO: Increase precision after simulation is more optimised
 
-def test_death_none(population1,conf):
-    """Test if none of the individuals die if chance is 0."""
-    pop = population1.clone()
-    pop.death(np.linspace(1,0,21), 1, False)
-    assert pop.N == population1.N
-
-def test_death_all(population0,conf):
-    """Test if all of the individuals die if chance is 1."""
-    pop = population0.clone()
-    pop.death(np.linspace(1,0,21), 1, False)
-    assert pop.N == 0
-
-@pytest.mark.parametrize("crisis_sv,result",[(0,0),(1,start_pop)])
-def test_crisis(population,crisis_sv,result):
-    """Test if all-none survive when crisis factor is 0-1."""
+@pytest.mark.parametrize("p", [0, 0.3, 0.8, 1])
+def test_crisis(population,p):
+    """Test whether extrinsic death crisis removes the expected
+    fraction of the population."""
     pop = population.clone()
-    pop.crisis(crisis_sv, "0")
-    assert pop.N == result
+    pop.crisis(p, "0")
+    assert abs(pop.N - p*population.N) < 0.1
+
+# TODO: Add test that an object is a valid population, use instead
+# of ad-hoc (or absent) tests in various places
 
 # Private methods
 
