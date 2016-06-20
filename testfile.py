@@ -15,9 +15,14 @@ subprocess.call(["python", "genome_simulation.py", "."])
 os.rename("run_1_pop.txt", "test_pop.txt")
 os.rename("run_1_rec.txt", "test_rec.txt")
 
-### FREE FUNCTIONS
+#########################
+### 1: FREE FUNCTIONS ###
+#########################
 
-# Configuration
+# --------------
+# CONFIGURATION
+# --------------
+
 def test_get_dir_good():
     """Verify that get_dir functions correctly when given (a) the current
     directory, (b) the parent directory, (c) the root directory."""
@@ -57,7 +62,7 @@ def test_get_conf_good():
     exp = ['R', 'V', '__builtins__', '__doc__', '__file__', '__name__', 
             '__package__', 'age_random', 'chr_len', 'crisis_stages', 
             'crisis_sv', 'd_range', 'death_bound', 'death_inc', 'g_dist',
-            'gen_map', 'm_rate', 'm_ratio', 'maturity', 'max_ls', 
+            'genmap', 'm_rate', 'm_ratio', 'maturity', 'max_ls', 
             'n_base', 'np', 'number_of_runs', 'number_of_snapshots', 
             'number_of_stages', 'params', 'r_range', 'r_rate', 
             'repr_bound', 'repr_dec', 'repr_pen', 'res_limit', 
@@ -86,9 +91,9 @@ def test_get_startpop_bad():
     with pytest.raises(IOError) as e_info:
         get_startpop(ranstr)
 
-# ------------------------
+# -------------------------
 # RANDOM NUMBER GENERATION
-# ------------------------
+# -------------------------
 
 @pytest.mark.parametrize("arg1, arg2", [(0,1), (1,1)])
 def test_chance_degenerate(arg1, arg2):
@@ -119,18 +124,18 @@ random.shuffle(genmap_shuffled)
     {"s":random.random(), "r":random.random(), "n":random.random()},
     {"s":0.5, "r":0.5, "n":0.5},
     {"s":0.1, "r":0.9, "n":0.4}])
-@pytest.mark.parametrize("gen_map", [genmap_simple, genmap_shuffled])
-def test_mga(gen_map, g_dist):
+@pytest.mark.parametrize("genmap", [genmap_simple, genmap_shuffled])
+def test_mga(genmap, g_dist):
     """Test that genome array is of the correct size and that 
     the loci are distributed equally for small dummy parameters."""
     loci = {
-        "s":np.nonzero(gen_map<100)[0],
-        "r":np.nonzero(np.logical_and(gen_map>=100,gen_map<200))[0],
-        "n":np.nonzero(gen_map>=200)[0]
+        "s":np.nonzero(genmap<100)[0],
+        "r":np.nonzero(np.logical_and(genmap>=100,genmap<200))[0],
+        "n":np.nonzero(genmap>=200)[0]
         }
     n = 5000
     chr_len = 500
-    ga = make_genome_array(n, chr_len, gen_map, 10, g_dist)
+    ga = make_genome_array(n, chr_len, genmap, 10, g_dist)
     test = ga.shape == (n, 2*chr_len)
     condensed = np.mean(ga, 0)
     condensed = np.array([np.mean(condensed[x*10:(x*10+9)]) for x in range(chr_len/5)])
@@ -141,12 +146,13 @@ def test_mga(gen_map, g_dist):
         tstat = abs(np.mean(ga[:,pos])-g_dist[k])
         test = test and tstat < 0.01
         print k, tstat
-        print gen_map[loci[k]]
+        print genmap[loci[k]]
     assert test
 
 # ------------------
 # RESOURCE UPDATING
 # ------------------
+
 def test_update_resources_bounded():
     """Confirm that resources cannot exceed upper bound or go below
     zero."""
@@ -158,12 +164,15 @@ def test_update_resources_unbounded():
     assert update_resources(1000, 500, 1000, 2, 5000) == 2000 and\
             update_resources(500, 1000, 1000, 2, 5000) == 500
 
-### POPULATION
+###########################
+### 2: POPULATION CLASS ###
+###########################
 
 @pytest.fixture
 def conf(request):
-    """Get configuration file from cwd."""
     return get_conf("config")
+def pop(request):
+    return get_startpop("test_pop")
 
 start_pop = get_conf("config").params["start_pop"]
 
@@ -173,21 +182,36 @@ def population(request, conf):
     conf.params["start_pop"] = 500
     conf.params["age_random"] = False
     conf.params["sexual"] = False
-    return Population(conf.params, conf.gen_map)
+    return Population(conf.params, conf.genmap)
 
-def test__init__(conf, population):
+def test__init__(conf):
     """Test if parameters are equal in initialized population and config file."""
+    conf.params["start_pop"] = 2000
+    conf.params["age_random"] = False
+    pop1 = Population(conf.params, conf.genmap)
+    conf.params["age_random"] = True
+    pop2 = Population(conf.params, conf.genmap)
+    print np.mean(pop2.ages)
+    print abs(np.mean(pop2.ages)-pop2.maxls/2)
     assert \
-    population.sex == conf.params["sexual"] and \
-    population.chrlen == conf.params["chr_len"] and \
-    population.nbase == conf.params["n_base"] and \
-    population.maxls == conf.params["max_ls"] and \
-    population.maturity == conf.params["maturity"] and \
-    population.N == conf.params["start_pop"]
-    # population.genmap == conf.genmap
+    pop1.sex == pop2.sex == conf.params["sexual"] and \
+    pop1.chrlen == pop2.chrlen == conf.params["chr_len"] and \
+    pop1.nbase == pop2.nbase == conf.params["n_base"] and \
+    pop1.maxls == pop2.maxls == conf.params["max_ls"] and \
+    pop1.maturity == pop2.maturity == conf.params["maturity"] and \
+    pop1.N == pop2.N == conf.params["start_pop"] and\
+    (pop1.index == np.arange(conf.params["start_pop"])).all() and\
+    (pop2.index == np.arange(conf.params["start_pop"])).all() and\
+    (pop1.genmap == conf.genmap).all() and\
+    (pop2.genmap == conf.genmap).all() and\
+    (pop1.ages == pop1.maturity).all() and\
+    not (pop2.ages == pop2.maturity).all() and\
+    abs(np.mean(pop2.ages)-pop2.maxls/2) < 1
     # make_genome_array is tested separately
 
-# Minor methods
+#---------------
+# MINOR METHODS
+#---------------
 
 def test_shuffle(population):
     """Test if all ages, therefore individuals, present before the shuffle are
@@ -235,7 +259,7 @@ def population0(request, conf):
     conf.params["start_pop"] = 500
     conf.params["age_random"] = False
     conf.params["sexual"] = False
-    pop = Population(conf.params, conf.gen_map)
+    pop = Population(conf.params, conf.genmap)
     pop.genomes = np.zeros(pop.genomes.shape).astype(int)
     return pop
 
@@ -245,7 +269,7 @@ def population1(request, conf):
     conf.params["start_pop"] = 500
     conf.params["age_random"] = False
     conf.params["sexual"] = False
-    pop = Population(conf.params, conf.gen_map)
+    pop = Population(conf.params, conf.genmap)
     pop.genomes = np.ones(pop.genomes.shape).astype(int)
     return pop
 
@@ -318,7 +342,7 @@ def parents(conf):
     params["sexual"] = True
     params["age_random"] = False
     params["start_pop"] = 2
-    return Population(params, conf.gen_map)
+    return Population(params, conf.genmap)
 
 def test_assortment(parents):
     """Test if assortment of two adults is done properly by comparing the
@@ -362,7 +386,7 @@ def test_growth(conf,sexvar,m):
     params["age_random"] = False
     params["start_pop"] = 100
 
-    pop1 = Population(params,conf.gen_map)
+    pop1 = Population(params,conf.genmap)
     pop1.genomes = np.ones(pop1.genomes.shape).astype(int)
     pop2 = pop1.clone()
     pop2.growth(np.linspace(0,1,21),1,0,0,1,False)
@@ -402,11 +426,11 @@ def test_update_shannon_weaver(record,population1):
 
 def test_sort_n1(record):
     """Test if sort_n1 correctly sorts an artificially created genome array."""
-    genmap = record.record["gen_map"]
+    genmap = record.record["genmap"]
 
     ix = np.arange(len(genmap))
     np.random.shuffle(ix)
-    record.record["gen_map"] = genmap[ix]
+    record.record["genmap"] = genmap[ix]
 
     genome_foo = np.tile(ix.reshape((len(ix),1)),10)
     genome_foo = genome_foo.reshape((1,len(genome_foo)*10))[0]
@@ -417,7 +441,7 @@ def test_sort_n1(record):
 
 def test_age_wise_n1(record):
     """Test if ten conecutive array items are correctly averaged."""
-    genmap = record.record["gen_map"]
+    genmap = record.record["genmap"]
     ix = np.arange(len(genmap))
     mask = np.tile(np.arange(len(genmap)).reshape((len(ix),1)),10)
     mask = mask.reshape((1,len(mask)*10))[0]

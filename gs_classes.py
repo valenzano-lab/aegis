@@ -7,13 +7,13 @@ class Population:
     """A simulated population with genomes and ages."""
 
     # Initialisation
-    def __init__(self, params, gen_map, ages="", genomes=""):
+    def __init__(self, params, genmap, ages="", genomes=""):
         self.sex = params["sexual"]
         self.chrlen = params["chr_len"]
         self.nbase = params["n_base"]
         self.maxls = params["max_ls"]
         self.maturity = params["maturity"]
-        self.genmap = gen_map
+        self.genmap = genmap
         # Determine ages if not given
         if ages == "" and params["age_random"]:
             self.ages = np.random.random_integers(0, self.maxls-1,
@@ -189,7 +189,7 @@ class Record:
         array4 = np.zeros(n_stages)
         self.record = {
             # Population parameters:
-            "gen_map":population.genmap,
+            "genmap":population.genmap,
             "chr_len":np.array([population.chrlen]),
             "n_bases":np.array([population.nbase]),
             "max_ls":np.array([population.maxls]),
@@ -306,7 +306,7 @@ class Record:
         maxls = self.record["max_ls"]
         count = 0
         arr_sorted = np.zeros(arr.shape)
-        for i in self.record["gen_map"]:
+        for i in self.record["genmap"]:
             if i<100: # survival
                 arr_sorted[range(i*b, (i+1)*b)] = arr[range(count, count+b)]
             elif i==201: # neutral

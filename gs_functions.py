@@ -76,19 +76,19 @@ def chance(z,n=1):
 ## POPULATION GENERATION ##
 ###########################
 
-def make_genome_array(start_pop, chr_len, gen_map, n_base, g_dist):
+def make_genome_array(start_pop, chr_len, genmap, n_base, g_dist):
     """
     Generate genomes for start_pop individuals with chromosome length of chr_len
     bits and locus length of n_base bits. Set the genome array values (distribution
-    of 1's and 0's) according to gen_map and g_dist.
+    of 1's and 0's) according to genmap and g_dist.
     """
     # Initialise genome array:
     genome_array = np.zeros([start_pop,chr_len*2])
     # Use genome map to determine probability distribution for each locus:
     loci = {
-        "s":np.nonzero(gen_map<100)[0],
-        "r":np.nonzero(np.logical_and(gen_map>=100,gen_map<200))[0],
-        "n":np.nonzero(gen_map>=200)[0]
+        "s":np.nonzero(genmap<100)[0],
+        "r":np.nonzero(np.logical_and(genmap>=100,genmap<200))[0],
+        "n":np.nonzero(genmap>=200)[0]
         }
     # Set genome array values according to given probabilities:
     for k in loci.keys():
