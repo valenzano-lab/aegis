@@ -87,8 +87,8 @@ def make_genome_array(start_pop, chr_len, gen_map, n_base, g_dist):
     # Use genome map to determine probability distribution for each locus:
     loci = {
         "s":np.nonzero(gen_map<100)[0],
-        "r":np.nonzero(np.logical_and(gen_map>100,gen_map<200))[0],
-        "n":np.nonzero(gen_map==201)[0]
+        "r":np.nonzero(np.logical_and(gen_map>=100,gen_map<200))[0],
+        "n":np.nonzero(gen_map>=200)[0]
         }
     # Set genome array values according to given probabilities:
     for k in loci.keys():

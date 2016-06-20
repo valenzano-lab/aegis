@@ -96,6 +96,7 @@ def test_chance_degenerate(arg1, arg2):
     ans = chance(arg1, arg2).astype(int)
     assert ans == arg1 or (ans > arg1-0.001 and ans < arg1+0.001)
 
+@pytest.mark.skipif(skipslow, reason="Skipping slow tests.")
 @pytest.mark.parametrize("p", [0.2, 0.5, 0.8])
 def test_chance(p):
     """Test that the shape of the output is correct and that the mean
@@ -104,6 +105,44 @@ def test_chance(p):
     s = c.shape
     assert c.shape == (10000,10000) and c.dtype == "bool" and \
             abs(p-np.mean(c)) < 0.001
+
+# ------------------------
+# GENOME ARRAY GENERATION
+# ------------------------
+
+genmap_simple = np.append(np.arange(25), 
+        np.append(np.arange(24)+100, 201))
+genmap_shuffled = np.copy(genmap_simple)
+random.shuffle(genmap_shuffled)
+
+@pytest.mark.parametrize("g_dist", [
+    {"s":random.random(), "r":random.random(), "n":random.random()},
+    {"s":0.5, "r":0.5, "n":0.5},
+    {"s":0.1, "r":0.9, "n":0.4}])
+@pytest.mark.parametrize("gen_map", [genmap_simple, genmap_shuffled])
+def test_mga(gen_map, g_dist):
+    """Test that genome array is of the correct size and that 
+    the loci are distributed equally for small dummy parameters."""
+    loci = {
+        "s":np.nonzero(gen_map<100)[0],
+        "r":np.nonzero(np.logical_and(gen_map>=100,gen_map<200))[0],
+        "n":np.nonzero(gen_map>=200)[0]
+        }
+    n = 5000
+    chr_len = 500
+    ga = make_genome_array(n, chr_len, gen_map, 10, g_dist)
+    test = ga.shape == (n, 2*chr_len)
+    condensed = np.mean(ga, 0)
+    condensed = np.array([np.mean(condensed[x*10:(x*10+9)]) for x in range(chr_len/5)])
+    print condensed
+    for k in loci.keys():
+        pos = np.array([range(10) + x for x in loci[k]*10])
+        pos = np.append(pos, pos + chr_len)
+        tstat = abs(np.mean(ga[:,pos])-g_dist[k])
+        test = test and tstat < 0.01
+        print k, tstat
+        print gen_map[loci[k]]
+    assert test
 
 # population generation
 @pytest.fixture
