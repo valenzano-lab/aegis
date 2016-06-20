@@ -86,13 +86,24 @@ def test_get_startpop_bad():
     with pytest.raises(IOError) as e_info:
         get_startpop(ranstr)
 
-# random number generation
-@pytest.mark.parametrize("arg1, arg2", [(0,1), (1,1), (0.5,(1000,1000))])
-def test_chance(arg1, arg2):
-    """Tests wether P=1 returns True, P=0 returns 0 and if the deviation for
-    the values between boundries is less than 0.1%."""
-    ans = np.mean(chance(arg1, arg2).astype(int))
+# ------------------------
+# RANDOM NUMBER GENERATION
+# ------------------------
+
+@pytest.mark.parametrize("arg1, arg2", [(0,1), (1,1)])
+def test_chance_degenerate(arg1, arg2):
+    """Tests wether p=1 returns True/1 and p=0 returns False/0."""
+    ans = chance(arg1, arg2).astype(int)
     assert ans == arg1 or (ans > arg1-0.001 and ans < arg1+0.001)
+
+@pytest.mark.parametrize("p", [0.2, 0.5, 0.8])
+def test_chance(p):
+    """Test that the shape of the output is correct and that the mean
+    over many trials is close to the expected value."""
+    c = chance(p, (10000,10000))
+    s = c.shape
+    assert c.shape == (10000,10000) and c.dtype == "bool" and \
+            abs(p-np.mean(c)) < 0.001
 
 # population generation
 @pytest.fixture

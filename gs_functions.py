@@ -20,7 +20,7 @@ def get_dir(dir_name):
     try:
         sys.path.remove(os.getcwd())
         os.chdir(dir_name)
-        sys.path.append(os.getcwd())
+        sys.path = [os.getcwd()] + sys.path
     except OSError:
         exit("Error: Specified simulation directory does not exist.")
 
