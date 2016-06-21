@@ -97,10 +97,14 @@ class Population:
             if parents.N > 1:
                 parents.__recombine(r_rate)
                 children = parents.__assortment()
-        else: children = parents.clone()
-        children.__mutate(m_rate, m_ratio)
-        children.ages[:] = 0 # Make newborn
-        self.addto(children)
+		children.__mutate(m_rate, m_ratio) # change
+		children.ages[:] = 0 # Make newborn
+		self.addto(children)
+        else: 
+	    children = parents.clone()
+            children.__mutate(m_rate, m_ratio)
+            children.ages[:] = 0 # Make newborn
+            self.addto(children)
         self.N = len(self.ages)
         if verbose:
             fn.logprint("done. ", False)
