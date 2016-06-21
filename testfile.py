@@ -367,17 +367,13 @@ def test_assortment(parents):
     (children == np.append(parent1[chrlen:], parent2[chrlen:])).all() or \
     (children == np.append(parent2[chrlen:], parent1[chrlen:])).all()
 
-def test_mutate_none(population):
-    """Test if genome stays same when mutation rate is zero."""
+@pytest.mark.parametrize("mrate", [0, 0.3, 0.8, 1]) 
+def test_mutate(population, mrate):
+    """Test that, in the absence of a +/- bias, the appropriate
+    proportion of the genome is mutated."""
     genomes = np.copy(population.genomes)
-    population._Population__mutate(0,1)
-    assert (genomes == population.genomes).all()
-
-def test_mutate_all(population):
-    """Test if genome is inverted when mutation rate is one."""
-    genomes = np.copy(population.genomes)
-    population._Population__mutate(1,1)
-    assert (1-genomes == population.genomes).all()
+    population._Population__mutate(mrate,1)
+    assert abs((1-np.mean(genomes == population.genomes))-mrate) < 0.01
 
 ###
 @pytest.mark.parametrize("sexvar,m",[(True,2),(False,1)])
