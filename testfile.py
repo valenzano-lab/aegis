@@ -184,7 +184,7 @@ def population(request, conf):
     conf.params["sexual"] = False
     return Population(conf.params, conf.genmap)
 
-def test__init__(conf):
+def test_init_population(conf):
     """Test if parameters are equal in initialized population and config file."""
     conf.params["start_pop"] = 2000
     conf.params["age_random"] = False
@@ -257,17 +257,9 @@ def test_addto(population):
     assert (pop2.ages == np.tile(pop1.ages,2)).all() and \
             (pop2.genomes == np.tile(pop1.genomes,(2,1))).all()
 
-# Major methods
-
-@pytest.fixture
-def population1(request, conf):
-    """Create population with genomes filled with ones."""
-    conf.params["start_pop"] = 500
-    conf.params["age_random"] = False
-    conf.params["sexual"] = False
-    pop = Population(conf.params, conf.genmap)
-    pop.genomes = np.ones(pop.genomes.shape).astype(int)
-    return pop
+#-------
+# DEATH
+#-------
 
 @pytest.mark.parametrize("p", [0, 0.3, 0.8, 1])
 @pytest.mark.parametrize("min_age,offset",[(0,0),(16,100)])
@@ -312,9 +304,9 @@ def test_crisis(population,p):
 # TODO: Add test that an object is a valid population, use instead
 # of ad-hoc (or absent) tests in various places
 
-# ----------------
-# PRIVATE METHODS - recombination, assortment, mutation
-#-----------------
+# -------------
+# REPRODUCTION
+#--------------
 
 def test_recombine_none(population):
     """Test if genome stays same if recombination chance is zero."""
@@ -391,9 +383,6 @@ def test_mutate_biased(population, mratio):
     assert abs((1-np.mean(g0[is1] == g1[is1]))-mrate) < t and\
         abs((1-np.mean(g0[is0] == g1[is0]))-mrate*mratio) < t 
 
-# -------
-# GROWTH
-
 @pytest.mark.parametrize("sexvar",[True, False])
 @pytest.mark.parametrize("m",[0.0, 0.3, 0.8, 1.0])
 def test_growth(conf,sexvar,m):
@@ -414,9 +403,48 @@ def test_growth(conf,sexvar,m):
     exp_growth = m/x
     assert abs(exp_growth-obs_growth)<0.05
 
-### RECORD
+#######################
+### 3: RECORD CLASS ###
+#######################
 
-# not testing init
+@pytest.fixture
+def population1(request, conf):
+    """Create population with genomes filled with ones."""
+    conf.params["start_pop"] = 500
+    conf.params["age_random"] = False
+    conf.params["sexual"] = False
+    pop = Population(conf.params, conf.genmap)
+    pop.genomes = np.ones(pop.genomes.shape).astype(int)
+    return pop
+
+### RECORD
+def test_init_record(population1, conf):
+    r = Record(population1, np.array([10]), 100, np.linspace(0,1,21), 
+            np.linspace(0,1,21),100).record
+    def sameshape(keys,ref):
+        """Test whether all listed record arrays have identical shape."""
+        return np.all([r[x].shape == ref for x in keys])
+    assert len(r.keys()) == 27 and\
+            (r["genmap"] == population1.genmap).all() and\
+            (r["chr_len"] == np.array([population1.chrlen])).all() and\
+            (r["n_bases"] == np.array([population1.nbase])).all() and\
+            (r["max_ls"] == np.array([population1.maxls])).all() and\
+            (r["maturity"] == np.array([population1.maturity])).all() and\
+            (r["d_range"] == np.linspace(0,1,21)).all() and\
+            (r["d_range"] == r["r_range"]).all() and\
+            (r["snapshot_stages"] == np.array([11])).all() and\
+            sameshape(["death_mean", "death_sd", "repr_mean", "repr_sd",
+                "fitness"], (1,population1.maxls)) and\
+            sameshape(["density_surv", "density_repr"],
+                (1,2*population1.nbase+1)) and\
+            sameshape(["entropy","junk_death","junk_repr",
+                "junk_fitness"], (1,)) and\
+            sameshape(["population_size", "resources", "surv_penf", 
+                "repr_penf"], (100,)) and\
+            sameshape(["age_distribution"],(100,population1.maxls)) and\
+            sameshape(["n1", "n1_std"], (1,population1.chrlen)) and\
+            sameshape(["s1"], (1, population1.chrlen - 99))
+
 
 # not testing quick_update
 
