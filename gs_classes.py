@@ -93,10 +93,9 @@ class Population:
         if verbose:
             fn.logprint("Calculating reproduction...", False)
         parents = self.get_subpop(self.maturity, self.maxls, 100, r_range/penf)
-        if self.sex:
-            if parents.N > 1:
-                parents.__recombine(r_rate)
-                children = parents.__assortment()
+        if self.sex and parents.N > 1:
+            parents.__recombine(r_rate)
+            children = parents.__assortment()
         else: children = parents.clone()
         children.__mutate(m_rate, m_ratio)
         children.ages[:] = 0 # Make newborn
@@ -133,15 +132,16 @@ class Population:
     def __recombine(self, r_rate):
         """Recombine between the two chromosomes of each individual
         in the population."""
-        chr1 = np.arange(self.chrlen)
-        chr2 = chr1 + self.chrlen
-        for n in range(len(self.genomes)):
-            g = self.genomes[n]
-            r_sites = np.nonzero(fn.chance(r_rate, self.chrlen))[0]
-            for r in r_sites:
-                g = np.concatenate((g[chr1][:r], g[chr2][r:],
-                    g[chr2][:r], g[chr1][r:]))
-            self.genomes[n] = g
+        if r_rate > 0:
+            chr1 = np.arange(self.chrlen)
+            chr2 = chr1 + self.chrlen
+            for n in range(len(self.genomes)):
+                g = self.genomes[n]
+                r_sites = np.nonzero(fn.chance(r_rate, self.chrlen))[0]
+                for r in r_sites:
+                    g = np.concatenate((g[chr1][:r], g[chr2][r:],
+                        g[chr2][:r], g[chr1][r:]))
+                self.genomes[n] = g
 
     def __assortment(self):
         """Pair individuals into breeding pairs and generate children
@@ -169,12 +169,13 @@ class Population:
 
     def __mutate(self, m_rate, m_ratio):
         """Mutate genomes of population according to stated rates."""
-        is_0 = self.genomes==0
-        is_1 = np.invert(is_0)
-        positive_mut = fn.chance(m_ratio*m_rate, np.sum(is_0))
-        negative_mut = 1-fn.chance(m_rate,np.sum(is_1))
-        self.genomes[is_0] = positive_mut
-        self.genomes[is_1] = negative_mut
+        if m_rate > 0:
+            is_0 = self.genomes==0
+            is_1 = np.invert(is_0)
+            positive_mut = fn.chance(m_ratio*m_rate, np.sum(is_0))
+            negative_mut = 1-fn.chance(m_rate,np.sum(is_1))
+            self.genomes[is_0] = positive_mut
+            self.genomes[is_1] = negative_mut
 
 class Record:
     """An enhanced dictionary object recording simulation data."""

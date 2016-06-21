@@ -2,7 +2,7 @@
 
 from gs_classes import *
 from gs_functions import *
-import pytest, random, string, subprocess
+import pytest, random, string, subprocess, math
 
 # skipif marker variable
 skipslow = True
@@ -312,7 +312,9 @@ def test_crisis(population,p):
 # TODO: Add test that an object is a valid population, use instead
 # of ad-hoc (or absent) tests in various places
 
-# Private methods
+# ----------------
+# PRIVATE METHODS - recombination, assortment, mutation
+#-----------------
 
 def test_recombine_none(population):
     """Test if genome stays same if recombination chance is zero."""
@@ -368,30 +370,49 @@ def test_assortment(parents):
     (children == np.append(parent2[chrlen:], parent1[chrlen:])).all()
 
 @pytest.mark.parametrize("mrate", [0, 0.3, 0.8, 1]) 
-def test_mutate(population, mrate):
+def test_mutate_unbiased(population, mrate):
     """Test that, in the absence of a +/- bias, the appropriate
     proportion of the genome is mutated."""
     genomes = np.copy(population.genomes)
     population._Population__mutate(mrate,1)
     assert abs((1-np.mean(genomes == population.genomes))-mrate) < 0.01
 
-###
-@pytest.mark.parametrize("sexvar,m",[(True,2),(False,1)])
+@pytest.mark.parametrize("mratio", [0, 0.1, 0.5, 1])
+def test_mutate_biased(population, mratio):
+    """Test that the bias between positive and negative mutations is
+    implemented correctly."""
+    t = 0.01 # Tolerance
+    mrate = 0.5 
+    g0 = np.copy(population.genomes)
+    population._Population__mutate(mrate,mratio)
+    g1 = population.genomes
+    is1 = (g0==1)
+    is0 = np.logical_not(is1)
+    assert abs((1-np.mean(g0[is1] == g1[is1]))-mrate) < t and\
+        abs((1-np.mean(g0[is0] == g1[is0]))-mrate*mratio) < t 
+
+# -------
+# GROWTH
+
+@pytest.mark.parametrize("sexvar",[True, False])
+@pytest.mark.parametrize("m",[0.0, 0.3, 0.8, 1.0])
 def test_growth(conf,sexvar,m):
-    """Test if growth returns adequate number of children when all individuals
-    are adults and all reproduce; under sexual and asexual condition."""
+    """Test number of children produced for all-adult population
+    for sexual and asexual conditions."""
+    # Make and grow population
+    n = 1000
     params = conf.params.copy()
     params["sexual"] = sexvar
     params["age_random"] = False
-    params["start_pop"] = 100
-
-    pop1 = Population(params,conf.genmap)
-    pop1.genomes = np.ones(pop1.genomes.shape).astype(int)
-    pop2 = pop1.clone()
-    pop2.growth(np.linspace(0,1,21),1,0,0,1,False)
-
-    assert \
-    pop1.N == len(np.nonzero(pop2.ages == 0)[0]) * m
+    params["start_pop"] = n
+    pop = Population(params,conf.genmap)
+    pop.genomes = chance(m, pop.genomes.shape).astype(int)
+    pop.growth(np.linspace(0,1,21),1,0,0,1,False)
+    # Calculate proportional observed and expected growth
+    x = 2 if sexvar else 1
+    obs_growth = (pop.N - n)/float(n)
+    exp_growth = m/x
+    assert abs(exp_growth-obs_growth)<0.05
 
 ### RECORD
 
