@@ -133,7 +133,7 @@ def test_mga(genmap, g_dist):
         "r":np.nonzero(np.logical_and(genmap>=100,genmap<200))[0],
         "n":np.nonzero(genmap>=200)[0]
         }
-    n = 5000
+    n = 1000
     chr_len = 500
     ga = make_genome_array(n, chr_len, genmap, 10, g_dist)
     test = ga.shape == (n, 2*chr_len)
@@ -144,7 +144,7 @@ def test_mga(genmap, g_dist):
         pos = np.array([range(10) + x for x in loci[k]*10])
         pos = np.append(pos, pos + chr_len)
         tstat = abs(np.mean(ga[:,pos])-g_dist[k])
-        test = test and tstat < 0.01
+        test = test and tstat < 0.05
         print k, tstat
         print genmap[loci[k]]
     assert test
