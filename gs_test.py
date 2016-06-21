@@ -5,15 +5,15 @@ from gs_functions import *
 import pytest, random, string, subprocess, math
 
 # skipif marker variable
-skipslow = True
+skipslow = False
 
 # Begin by running a dummy simulation and saving the output
 scriptdir = os.path.split(os.path.realpath(__file__))[0]
 print scriptdir
 os.chdir(scriptdir)
 subprocess.call(["python", "genome_simulation.py", "."])
-os.rename("run_1_pop.txt", "test_pop.txt")
-os.rename("run_1_rec.txt", "test_rec.txt")
+os.rename("run_1_pop.txt", "sample_pop.txt")
+os.rename("run_1_rec.txt", "sample_rec.txt")
 
 #########################
 ### 1: FREE FUNCTIONS ###
@@ -22,74 +22,81 @@ os.rename("run_1_rec.txt", "test_rec.txt")
 # --------------
 # CONFIGURATION
 # --------------
-
-def test_get_dir_good():
-    """Verify that get_dir functions correctly when given (a) the current
-    directory, (b) the parent directory, (c) the root directory."""
-    old_dir = os.getcwd()
-    old_path = sys.path[:]
-    get_dir(old_dir)
-    same_dir = os.getcwd()
-    same_path = sys.path[:]
-    test = (same_dir == old_dir and same_path == old_path)
-    if old_dir != "/":
-        get_dir("..")
-        par_dir = os.getcwd()
-        par_path = sys.path[:]
-        exp_path = [par_dir] + [x for x in old_path if x != old_dir]
-        test = (test and par_dir == os.path.split(old_dir)[0])
-        test = (test and par_path == exp_path)
-        if par_dir != "/":
-            get_dir("/")
-            root_dir = os.getcwd()
-            root_path = sys.path[:]
-            exp_path = ["/"] + [x for x in par_path if x != par_dir]
-            test = (test and root_dir == "/" and root_path == exp_path)
+class TestConfig:
+    """Test that the initial simulation configuration is performed i
+    correctly."""
+    def test_get_dir_good(self):
+        """Verify that get_dir functions correctly when given (a) the 
+        current directory, (b) the parent directory, (c) the root 
+        directory."""
+        old_dir = os.getcwd()
+        old_path = sys.path[:]
         get_dir(old_dir)
-    assert test
+        same_dir = os.getcwd()
+        same_path = sys.path[:]
+        test = (same_dir == old_dir and same_path == old_path)
+        if old_dir != "/":
+            get_dir("..")
+            par_dir = os.getcwd()
+            par_path = sys.path[:]
+            exp_path = [par_dir] + [x for x in old_path if x != old_dir]
+            test = (test and par_dir == os.path.split(old_dir)[0])
+            test = (test and par_path == exp_path)
+            if par_dir != "/":
+                get_dir("/")
+                root_dir = os.getcwd()
+                root_path = sys.path[:]
+                exp_path = ["/"] + [x for x in par_path if x != par_dir]
+                test = (test and root_dir=="/" and root_path==exp_path)
+            get_dir(old_dir)
+        assert test
 
-def test_get_dir_bad():
-    """Verify that get_dir throws an error when the target directory does
-    not exist."""
-    ranstr = ''.join(random.choice(string.ascii_lowercase) for _ in range(50))
-    with pytest.raises(SystemExit) as e_info:
-        get_dir(ranstr)
+    def test_get_dir_bad(self):
+        """Verify that get_dir throws an error when the target directory 
+        does not exist."""
+        ranstr = ''.join(random.choice(string.ascii_lowercase) for _ in range(50))
+        with pytest.raises(SystemExit) as e_info:
+            get_dir(ranstr)
 
-def test_get_conf_good():
-    """Test that get_conf on the config template file returns a valid 
-    object of the expected composition."""
-    p = get_conf("config")
-    exp = ['R', 'V', '__builtins__', '__doc__', '__file__', '__name__', 
-            '__package__', 'age_random', 'chr_len', 'crisis_stages', 
-            'crisis_sv', 'd_range', 'death_bound', 'death_inc', 'g_dist',
-            'genmap', 'm_rate', 'm_ratio', 'maturity', 'max_ls', 
-            'n_base', 'np', 'number_of_runs', 'number_of_snapshots', 
-            'number_of_stages', 'params', 'r_range', 'r_rate', 
-            'repr_bound', 'repr_dec', 'repr_pen', 'res_limit', 
-            'res_start', 'res_var', 'sexual', 'snapshot_stages', 
-            'start_pop', 'surv_pen', 'window_size']
-    assert sorted(p.__dict__.keys()) == exp
+    def test_get_conf_good(self):
+        """Test that get_conf on the config template file returns a valid
+        object of the expected composition."""
+        p = get_conf("config")
+        exp = ['R', 'V', '__builtins__', '__doc__', '__file__', 
+                '__name__', '__package__', 'age_random', 'chr_len',
+                'crisis_stages', 'crisis_sv', 'd_range', 'death_bound', 
+                'death_inc', 'g_dist', 'genmap', 'm_rate', 'm_ratio', 
+                'maturity', 'max_ls', 'n_base', 'np', 'number_of_runs', 
+                'number_of_snapshots', 'number_of_stages', 'params', 
+                'r_range', 'r_rate', 'repr_bound', 'repr_dec', 
+                'repr_pen', 'res_limit', 'res_start', 'res_var', 
+                'sexual', 'snapshot_stages', 'start_pop', 'surv_pen', 
+                'window_size']
+        assert sorted(p.__dict__.keys()) == exp
 
-def test_get_conf_bad():
-    """Verify that get_dir throws an error when the target file does
-    not exist."""
-    ranstr = ''.join(random.choice(string.ascii_lowercase) for _ in range(50))
-    with pytest.raises(IOError) as e_info:
-        get_conf(ranstr)
+    def test_get_conf_bad(self):
+        """Verify that get_dir throws an error when the target file does
+        not exist."""
+        ranstr = ''.join(random.choice(string.ascii_lowercase)\
+                for _ in range(50))
+        with pytest.raises(IOError) as e_info:
+            get_conf(ranstr)
 
-def test_get_startpop_good():
-    """Test that a blank seed returns a blank string and a valid seed
-    returns a population array of the correct file."""
-    c = get_conf("config")
-    p = get_startpop("test_pop")
-    assert get_startpop("") == "" and p.genomes.shape == (p.N, 2*p.chrlen)
+    def test_get_startpop_good(self):
+        """Test that a blank seed returns a blank string and a valid seed
+        returns a population array of the correct file."""
+        c = get_conf("config")
+        p = get_startpop("sample_pop")
+        assert get_startpop("") == "" and\
+                p.genomes.shape == (p.N, 2*p.chrlen)
 
-def test_get_startpop_bad():
-    """Verify that get_dir throws an error when the target file does
-    not exist."""
-    ranstr = ''.join(random.choice(string.ascii_lowercase) for _ in range(50))
-    with pytest.raises(IOError) as e_info:
-        get_startpop(ranstr)
+    def test_get_startpop_bad(self):
+        """Verify that get_dir throws an error when the target file does
+        not exist."""
+        ranstr = ''.join(random.choice(string.ascii_lowercase)\
+                for _ in range(50))
+        with pytest.raises(IOError) as e_info:
+            get_startpop(ranstr)
 
 # -------------------------
 # RANDOM NUMBER GENERATION
@@ -106,10 +113,11 @@ def test_chance_degenerate(arg1, arg2):
 def test_chance(p):
     """Test that the shape of the output is correct and that the mean
     over many trials is close to the expected value."""
-    c = chance(p, (10000,10000))
+    shape=(1000,1000)
+    c = chance(p, shape)
     s = c.shape
-    assert c.shape == (10000,10000) and c.dtype == "bool" and \
-            abs(p-np.mean(c)) < 0.001
+    assert c.shape == shape and c.dtype == "bool" and \
+            abs(p-np.mean(c)) < 0.01
 
 # ------------------------
 # GENOME ARRAY GENERATION
@@ -172,7 +180,7 @@ def test_update_resources_unbounded():
 def conf(request):
     return get_conf("config")
 def pop(request):
-    return get_startpop("test_pop")
+    return get_startpop("sample_pop")
 
 start_pop = get_conf("config").params["start_pop"]
 
@@ -316,7 +324,7 @@ def test_recombine_none(population):
 
 
 @pytest.mark.skipif(skipslow, reason="Skipping slow tests.")
-def test_recombine_all(population):
+def test_recombine_all(conf):
     """Test if resulting genomee is equal to recombine_zig_zag, when
     recombination chance is one."""
     def recombine_zig_zag(pop):
@@ -328,9 +336,11 @@ def test_recombine_all(population):
         g[:,:pop.chrlen:2] = g[:,pop.chrlen::2]
         g[:,pop.chrlen::2] = h
         return g
-    pop = population.clone()
+    conf.params["start_pop"] = 10
+    pop = Population(conf.params, conf.genmap)
+    zz = recombine_zig_zag(pop)
     pop._Population__recombine(1)
-    assert (pop.genomes == recombine_zig_zag(population)).all()
+    assert (pop.genomes == zz).all()
 
 @pytest.fixture
 def parents(conf):
