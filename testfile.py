@@ -314,32 +314,26 @@ def test_crisis(population,p):
 
 # Private methods
 
-def recombine_zig_zag(pop):
-    """Recombine the genome like so:
-    before: a1-a2-a3-a4-b1-b2-b3-b4
-    after:  b1-a2-b3-a4-a1-b2-a3-b4."""
-    g = np.copy(pop.genomes)
-
-    gr1 = np.vstack((g[:,pop.chrlen],g[:,1])).T
-    for i in range(3,pop.chrlen,2):
-        gr1 = np.hstack((gr1, np.vstack((g[:,i+pop.chrlen-1],g[:,i])).T))
-
-    gr2 = np.vstack((g[:,0],g[:,pop.chrlen+1])).T
-    for i in range(2,pop.chrlen-1,2):
-        gr2 = np.hstack((gr2, np.vstack((g[:,i],g[:,i+pop.chrlen+1])).T))
-
-    return np.hstack((gr1,gr2))
-
 def test_recombine_none(population):
     """Test if genome stays same if recombination chance is zero."""
     pop = population.clone()
     pop._Population__recombine(0)
     assert (pop.genomes == population.genomes).all()
 
+
 @pytest.mark.skipif(skipslow, reason="Skipping slow tests.")
 def test_recombine_all(population):
     """Test if resulting genomee is equal to recombine_zig_zag, when
     recombination chance is one."""
+    def recombine_zig_zag(pop):
+        """Recombine the genome like so:
+        before: a1-a2-a3-a4-b1-b2-b3-b4
+        after:  b1-a2-b3-a4-a1-b2-a3-b4."""
+        g = pop.genomes.copy()
+        h = np.copy(g[:,:pop.chrlen:2])
+        g[:,:pop.chrlen:2] = g[:,pop.chrlen::2]
+        g[:,pop.chrlen::2] = h
+        return g
     pop = population.clone()
     pop._Population__recombine(1)
     assert (pop.genomes == recombine_zig_zag(population)).all()
