@@ -6,7 +6,7 @@ import pytest
 import numpy
 
 # skipif marker variable
-skipslow = True
+skipslow = False
 
 ### POPULATION
 
@@ -113,13 +113,13 @@ def test_get_subpop_all(population1,min_age,offset):
 def test_death_none(population1,conf):
     """Test if none of the individuals die if chance is 0."""
     pop = population1.clone()
-    pop.death(conf.d_range, 1, False)
+    pop.death(np.linspace(1,0,21), 1, False)
     assert pop.N == population1.N
 
 def test_death_all(population0,conf):
     """Test if all of the individuals die if chance is 1."""
     pop = population0.clone()
-    pop.death(conf.d_range, 1, False)
+    pop.death(np.linspace(1,0,21), 1, False)
     assert pop.N == 0
 
 @pytest.mark.parametrize("crisis_sv,result",[(0,0),(1,start_pop)])
@@ -239,10 +239,10 @@ def test_update_agestats(record,population1):
     record.update_agestats(pop,0)
     r = record.record
     assert \
-    (r["death_mean"][0] == np.tile(r["d_range"][-1],r["max_ls"])).all() and \
-    (r["death_sd"][0] == np.zeros(r["max_ls"])).all() and \
-    (r["repr_mean"][0] == np.append(np.zeros(r["maturity"]),np.tile(r["r_range"][-1],r["max_ls"]-r["maturity"]))).all() and \
-    (r["repr_sd"][0] == np.zeros(r["max_ls"])).all() and \
+    np.isclose(r["death_mean"][0], np.tile(r["d_range"][-1],r["max_ls"])).all() and \
+    np.isclose(r["death_sd"][0], np.zeros(r["max_ls"])).all() and \
+    np.isclose(r["repr_mean"][0], np.append(np.zeros(r["maturity"]),np.tile(r["r_range"][-1],r["max_ls"]-r["maturity"]))).all() and \
+    np.isclose(r["repr_sd"][0], np.zeros(r["max_ls"])).all() and \
     r["density_surv"][0][-1] == 1 and \
     r["density_repr"][0][-1] == 1
 
@@ -284,8 +284,8 @@ def test_update_invstats(record,population1):
     (r["n1"][0] == np.ones(r["chr_len"])).all() and \
     (r["n1_std"][0] == np.zeros(r["chr_len"])).all() and \
     r["entropy"][0] == -0 and \
-    r["junk_death"][0] == r["d_range"][-1] and \
-    r["junk_repr"][0] == r["r_range"][-1]
+    np.isclose(r["junk_death"][0], r["d_range"][-1]) and \
+    np.isclose(r["junk_repr"][0], r["r_range"][-1])
 
 # not testing final_update
 

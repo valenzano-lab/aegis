@@ -105,7 +105,7 @@ def update_resources(res0, N, R, V, limit, verbose=False):
     """Implement consumption and regrowth of resources depending on population size."""
     if verbose: print "Updating resources...",
     k = 1 if N>res0 else V
-    res1 = int((res0-N)*k+R)
+    res1 = int((res0-N)*k+R) # This means individuals can consume future resources?
     res1 = min(max(res1, 0), limit)
     # Resources can't be negative or exceed limit.
     if verbose: logprint("Done. "+str(res0)+" -> "+str(res1))
