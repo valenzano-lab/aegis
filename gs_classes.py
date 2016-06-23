@@ -305,8 +305,10 @@ class Record:
         # Get density distribution of each genotype (from 0 to 20 1's).
         return st.entropy(density)
 
-    def sort_n1(self, arr):
-        """Sort array arr for ages in ascending order (survival:0-71, reproduction: 16-71)."""
+    def sort_by_age(self, arr):
+        """Sort array in ascending order by age (survival:0-71, 
+        reproduction: 16-71, neutral). Array must have same number of
+        columns as genome array."""
         b = self.record["n_bases"]
         m = self.record["maturity"]
         maxls = self.record["max_ls"]
@@ -315,21 +317,13 @@ class Record:
         for i in self.record["genmap"]:
             if i<100: # survival
                 arr_sorted[range(i*b, (i+1)*b)] = arr[range(count, count+b)]
-            elif i==201: # neutral
+            elif i>=200: # neutral
                 arr_sorted[-b:] = arr[range(count, count+b)]
             else: # reproduction
                 arr_sorted[range(maxls*b+(i-100-m)*b, maxls*b+(i+1-100-m)*b)] \
                 = arr[range(count, count+b)]
             count += b
         return arr_sorted
-
-    def age_wise_n1(self, arr_str):
-        """Average n1 array, starting from value-per-bit, for it to be value-per-age. [arr_str = 'n1' or 'n1_std']"""
-        b = self.record["n_bases"]
-        arr = self.record[arr_str] # already sorted
-        s = arr.shape
-        res = np.mean(arr.reshape((s[0], self.record["chr_len"]/b, b)), 2)
-        return res
 
     def update_invstats(self, population, n_snap):
         """Record detailed cross-population statistics at current
@@ -339,7 +333,7 @@ class Record:
         # Frequency of 1's at each position on chromosome and it's std:
         n1s = np.vstack((p.genomes[:, :p.chrlen], p.genomes[:, p.chrlen:]))
         n1_std = np.std(n1s, axis=0)
-        n1 = np.mean(n1s, axis=0)
+        n1 = np.mean(n1s, axis=0) # Mean number of 1's per chromosome bit
         # Junk stats calculated from neutral locus
         neut_locus = np.nonzero(p.genmap==201)[0][0]
         neut_pos = np.arange(neut_locus*p.nbase, (neut_locus+1)*p.nbase)
@@ -348,8 +342,8 @@ class Record:
         junk_death = np.mean(self.record["d_range"][neut_gen])
         junk_repr = np.mean(self.record["r_range"][neut_gen])
         # Append record object
-        self.record["n1"][n_snap] = self.sort_n1(n1)
-        self.record["n1_std"][n_snap] = self.sort_n1(n1_std)
+        self.record["n1"][n_snap] = self.sort_by_age(n1)
+        self.record["n1_std"][n_snap] = self.sort_by_age(n1_std)
         self.record["entropy"][n_snap] = self.update_shannon_weaver(population)
         self.record["junk_death"][n_snap] = junk_death
         self.record["junk_repr"][n_snap] = junk_repr
@@ -360,6 +354,13 @@ class Record:
         self.update_agestats(population, n_snap)
         self.update_invstats(population, n_snap)
 
+    def age_wise_n1(self, arr_str):
+        """Average n1 array, starting from value-per-bit, for it to be value-per-age. [arr_str = 'n1' or 'n1_std']"""
+        b = self.record["n_bases"]
+        arr = self.record[arr_str] # already sorted
+        s = arr.shape
+        res = np.mean(arr.reshape((s[0], self.record["chr_len"]/b, b)), 2)
+        return res
     def final_update(self, n_run, window):
         """After run completion, compute fitness and s1 (rolling window std of n1)."""
         # Rolling standard deviation of #1's along genome:

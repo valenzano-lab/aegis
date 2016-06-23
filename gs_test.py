@@ -485,47 +485,50 @@ class TestRecordUpdate:
         r["density_surv"][0][-1] == 1 and \
         r["density_repr"][0][-1] == 1
 
-def test_update_shannon_weaver_degenerate(record,pop1):
-    """Test if equals zero when all set members are of same type."""
-    assert record.update_shannon_weaver(pop1) == -0
-def test_update_shannon_weaver(record,spop,conf):
-    """Test that shannon weaver entropy is computed correctly for
-    a newly-initialised population."""
-    precision = 0.01
-    b = spop.nbase
-    props = np.array([spop.maxls, spop.maxls-spop.maturity, 1])\
-            /float(len(spop.genmap)) # Expected proportion of genome
-            # in survival loci, reproductive loci, etc.
-    print props
-    probs = np.array([conf.g_dist[x] for x in ["s", "r", "n"]])
-            # Probability of a 1 for each locus type
-    print probs
-    dists = np.array(
-            [[comb(2*b, x)*p**x*(1-p)**(2*b-x) for x in np.arange(2*b)+1]\
-                    for p in probs])
-            # Binomial distribution values for 0-20 zeros for each
-    print dists
-    exp = np.sum((dists.T * props).T,0) 
-        # expected proportions of loci with each number of 1's over
-        # entire genome
-    exp_entropy = st.entropy(exp)
-    obs_entropy = record.update_shannon_weaver(spop)
-    assert abs(exp_entropy - obs_entropy) < precision
+    def test_update_shannon_weaver_degenerate(self,record,pop1):
+        """Test if equals zero when all set members are of same type."""
+        assert record.update_shannon_weaver(pop1) == -0
 
-#def test_sort_n1(record):
-#    """Test if sort_n1 correctly sorts an artificially created genome array."""
-#    genmap = record.record["genmap"]
+    def test_update_shannon_weaver(self,record,spop,conf):
+        """Test that shannon weaver entropy is computed correctly for
+        a newly-initialised population."""
+        precision = 0.01
+        b = spop.nbase
+        props = np.array([spop.maxls, spop.maxls-spop.maturity, 1])\
+                /float(len(spop.genmap)) # Expected proportion of genome
+                # in survival loci, reproductive loci, etc.
+        print props
+        probs = np.array([conf.g_dist[x] for x in ["s", "r", "n"]])
+                # Probability of a 1 for each locus type
+        print probs
+        dists = np.array(
+                [[comb(2*b, x)*p**x*(1-p)**(2*b-x) for x in np.arange(2*b)+1]\
+                        for p in probs])
+                # Binomial distribution values for 0-20 zeros for each
+        print dists
+        exp = np.sum((dists.T * props).T,0) 
+            # expected proportions of loci with each number of 1's over
+            # entire genome
+        exp_entropy = st.entropy(exp)
+        obs_entropy = record.update_shannon_weaver(spop)
+        assert abs(exp_entropy - obs_entropy) < precision
+
+#    def test_sort_by_age(self, record):
+#        """Test if sort_by_age correctly sorts an artificial genome 
+#        array."""
+#        genmap = record.record["genmap"]
+#        # Randomly reshuffle genmap
+#        ix = np.arange(len(genmap))
+#        np.random.shuffle(ix)
+#        record.record["genmap"] = genmap[ix]
 #
-#    ix = np.arange(len(genmap))
-#    np.random.shuffle(ix)
-#    record.record["genmap"] = genmap[ix]
+#        genome = np.tile(ix.reshape((len(ix),1)),10) 
+#            # Make into a col vector
+#        genome = genome.reshape((1,len(genome)*10))[0]
+#        mask = np.tile(np.arange(len(genmap)).reshape((len(ix),1)),10)
+#        mask = mask.reshape((1,len(mask)*10))[0]
 #
-#    genome_foo = np.tile(ix.reshape((len(ix),1)),10)
-#    genome_foo = genome_foo.reshape((1,len(genome_foo)*10))[0]
-#    mask = np.tile(np.arange(len(genmap)).reshape((len(ix),1)),10)
-#    mask = mask.reshape((1,len(mask)*10))[0]
-#
-#    assert (record.sort_n1(genome_foo) == mask).all()
+#        assert (record.sort_by_age(genome) == mask).all()
 
 def test_age_wise_n1(record):
     """Test if ten conecutive array items are correctly averaged."""
