@@ -5,7 +5,7 @@
 
 from gs_classes import *
 from gs_functions import *
-import pytest, random, string, subprocess, math
+import pytest, random, string, subprocess, math, copy
 from scipy.misc import comb
 
 # Begin by running a dummy simulation and saving the output
@@ -530,6 +530,31 @@ class TestRecordUpdate:
         mask = mask.reshape((1,len(mask)*b))[0]
         assert (record.sort_by_age(genome).astype(int) == mask).all()
 
+    def test_update_invstats(self,record,pop1):
+        """Test if update_invstats properly calculates genomestats for 
+        pop1 (genomes filled with ones)."""
+        record.update_invstats(pop1,0)
+        r = record.record
+        assert (r["n1"][0] == np.ones(r["chr_len"])).all()
+        assert (r["n1_std"][0] == np.zeros(r["chr_len"])).all()
+        assert r["entropy"][0] == -0
+        assert np.isclose(r["junk_death"][0], r["d_range"][-1])
+        assert np.isclose(r["junk_repr"][0], r["r_range"][-1])
+
+    def test_update(self,record,pop1):
+        """Test that update properly chains quick_update,
+        update_agestats and update_invstats."""
+        record1 = copy.deepcopy(record)
+        record.update(pop1, 100, 1, 1, 0, 0)
+        record1.quick_update(0, pop1, 100, 1, 1)
+        record1.update_agestats(pop1, 0)
+        record1.update_invstats(pop1, 0)
+        r = record.record
+        r1 = record1.record
+        for k in r.keys():
+            assert (np.array(r[k]) == np.array(r1[k])).all()
+
+
 def test_age_wise_n1(record):
     """Test if ten conecutive array items are correctly averaged."""
     genmap = record.record["genmap"]
@@ -538,20 +563,6 @@ def test_age_wise_n1(record):
     mask = mask.reshape((1,len(mask)*10))[0]
     record.record["mask"] = np.array([mask])
     assert (record.age_wise_n1("mask") == ix).all()
-
-def test_update_invstats(record,pop1):
-    """Test if update_invstats properly calculates genomestats for pop1
-    (genomes filled with ones)."""
-    pop = pop1.clone()
-    record.update_invstats(pop,0)
-    r = record.record
-    assert \
-    (r["n1"][0] == np.ones(r["chr_len"])).all() and \
-    (r["n1_std"][0] == np.zeros(r["chr_len"])).all() and \
-    r["entropy"][0] == -0 and \
-    np.isclose(r["junk_death"][0], r["d_range"][-1]) and \
-    np.isclose(r["junk_repr"][0], r["r_range"][-1])
-
 # not testing final_update
 
 def test_actual_death_rate(record):
