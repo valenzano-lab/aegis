@@ -24,9 +24,12 @@ import numpy as np
 import gs_functions as fn
 from gs_classes import Population,Record
 from datetime import datetime
+import cProfile, pstats, StringIO
+pr = cProfile.Profile()
 
 simstart = datetime.now()
 simstart_print = time.strftime('%X %x', time.localtime())+".\n"
+pr.enable() # start profiling
 
 ###################################
 ## PARSE ARGUMENTS AND CONFIGURE ##
@@ -134,3 +137,6 @@ simend_print = time.strftime('%X %x', time.localtime())+"."
 fn.logprint("\nSimulation completed at "+simend_print)
 fn.print_runtime(simstart, simend)
 fn.logprint("Exiting.")
+
+pr.create_stats()
+pr.dump_stats('gs_stats')
