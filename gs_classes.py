@@ -361,6 +361,7 @@ class Record:
         s = arr.shape
         res = np.mean(arr.reshape((s[0], self.record["chr_len"]/b, b)), 2)
         return res
+
     def final_update(self, n_run, window):
         """After run completion, compute fitness and s1 (rolling window std of n1)."""
         # Rolling standard deviation of #1's along genome:

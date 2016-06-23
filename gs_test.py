@@ -1,7 +1,7 @@
-# TODO: 
+# TODO:
+# - test_final_update
 # - Fix imports
-# - Move all tests into modules
-# - Fix fixtures
+# - output function tests
 
 from gs_classes import *
 from gs_functions import *
@@ -554,23 +554,30 @@ class TestRecordUpdate:
         for k in r.keys():
             assert (np.array(r[k]) == np.array(r1[k])).all()
 
-
-def test_age_wise_n1(record):
-    """Test if ten conecutive array items are correctly averaged."""
-    genmap = record.record["genmap"]
-    ix = np.arange(len(genmap))
-    mask = np.tile(np.arange(len(genmap)).reshape((len(ix),1)),10)
-    mask = mask.reshape((1,len(mask)*10))[0]
-    record.record["mask"] = np.array([mask])
-    assert (record.age_wise_n1("mask") == ix).all()
+class TestRecordFinal:
+    def test_age_wise_n1(self,record):
+        """Test if ten consecutive array items are correctly averaged."""
+        genmap = record.record["genmap"]
+        ix = np.arange(len(genmap))
+        mask = np.tile(np.arange(len(genmap)).reshape((len(ix),1)),10)
+        mask = mask.reshape((1,len(mask)*10))[0]
+        record.record["mask"] = np.array([mask])
+        assert (record.age_wise_n1("mask") == ix).all()
 # not testing final_update
 
-def test_actual_death_rate(record):
-    """Test if actual_death_rate returns expected results for artificial data."""
-    r = record.record
-    maxls = r["max_ls"]
-    r["age_distribution"] = np.array([np.tile(4/282.0,maxls),np.tile(2/142.0,maxls),np.tile(1/71.0,maxls)])
-    r["population_size"] = np.array([282,142,71])
+    def test_actual_death_rate(self, record):
+        """Test if actual_death_rate returns expected results for 
+        artificial data."""
+        r = record.record
+        maxls = r["max_ls"][0]
+        r["age_distribution"] = np.tile(1/float(maxls), (3, maxls))
+        r["population_size"] = np.array([maxls*4,maxls*2,maxls])
+        print r["age_distribution"]
+        print r["population_size"]
+        adr = record.actual_death_rate()
+        print adr
+        assert (adr[:,:-1] == 0.5).all()
+        assert (adr[:,-1] == 1).all()
 
-    assert (record.actual_death_rate()[:,:-1] == np.tile(0.5,maxls-1)).all() and\
-            (record.actual_death_rate()[:,-1] == [1]).all()
+    # def test_final_update
+    # tricky...
