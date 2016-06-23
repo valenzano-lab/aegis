@@ -20,7 +20,7 @@ res_limit = 5000 # Maximum resource value, if variable
 
 ## STARTING POPULATION PARAMETERS ##
 start_pop = 500 # Starting population size
-age_random = True # Random starting ages; else all start as new adults
+age_random = False # Random starting ages; else all start as new adults
 # Proportions of 1's in initial genomes:
 g_dist = {
         "s":0.5, # Survival

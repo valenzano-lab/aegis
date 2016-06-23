@@ -68,9 +68,9 @@ def get_startpop(seed_name):
 
 rand = scipy.stats.uniform(0,1) # Uniform random number generator
 
-def chance(z,n=1):
+def chance(p,n=1):
     """Generate array of (n or shape n=(x,y)) independent booleans with P(True)=z."""
-    return rand.rvs(n)<z
+    return rand.rvs(n)<p
 
 ###########################
 ## POPULATION GENERATION ##
