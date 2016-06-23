@@ -77,7 +77,7 @@ class Population:
             # Subset to correct age and required locus:
             match = (self.ages == age)
             which = np.nonzero(match)[0]
-            pop = self.genomes[match][:,np.append(pos, pos+self.chrlen)]
+            pop = self.genomes[which][:,np.append(pos, pos+self.chrlen)]
             # Get sum of genotype for every individual:
             gen = np.sum(pop, axis=1)
             # Convert genotypes into inclusion probabilities:
@@ -100,7 +100,7 @@ class Population:
 		children.__mutate(m_rate, m_ratio) # change
 		children.ages[:] = 0 # Make newborn
 		self.addto(children)
-        else: 
+        else:
 	    children = parents.clone()
             children.__mutate(m_rate, m_ratio)
             children.ages[:] = 0 # Make newborn
