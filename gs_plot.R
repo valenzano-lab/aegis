@@ -73,6 +73,8 @@ import_data <- function(path, run=1){
 }
 
 ### FULL LIST OF RECORD ITEMS ###
+#    "n_bases" : number of bases making up one genetic unit
+#    "maturity" : age at which sexual maturity is reached
 #    "gen_map" : genome map for the run
 #    "chr_len" : length of each chromosome in bits
 #    "d_range" : range of possible death probabilities, from max to min
@@ -84,11 +86,15 @@ import_data <- function(path, run=1){
 #    "age_distribution" : Proportion of population at each age
 #    "death_mean" : Mean genetic death probability at each age
 #    "death_sd" : SD generic death probability at each age
+#    "actual_death_rate" : per-age stage-to-stage fraction of survivors
 #    "repr_mean" : Mean reproductive probability at each age
 #    "repr_sd" : Mean reproductive probability at each age
 #    "density_surv" : Distribution of number of 1's at survival loci
 #    "density_repr" : Distribution of number of 1's at reproductive loci
 #    "n1" : Average number of 1's at each position along the length of the chromosome
+#    "n1_std" : n1 standard deviation
+#    "age_wise_n1" : n1 averaged in intervals of n_bases
+#    "age_wise_n1_std" : age_wise_n1 standard deviation
 #    "s1" : Sliding-window SD of number of 1's along chromosome
 #    "fitness" : Average population fitness as predicted from genotypes
 #    "entropy" : Shannon-Weaver entropy across entire population array
@@ -183,7 +189,7 @@ plot_frequency <- function(dirpath=path, ix=16, all=FALSE){
       }
     } else{
       layout(matrix(1:2,2,1), 2, 1) # 2x1 figure
-      plot(n1[[ix]], xlab="position", ylab="frequency", main="Frequency of 1's")
+      plot(n1[[ix]], xlab="position", ylab="frequency", main="Frequency of 1's", ylim=c(0,1))
       abline(v=L$m * L$b)
       abline(v=L$maxls * L$b, col="red")
       plot(n1_std[[ix]], xlab="position", ylab="sd", type="l")
@@ -195,7 +201,7 @@ plot_frequency <- function(dirpath=path, ix=16, all=FALSE){
 
 # age wise frequency of 1's
 plot_age_wise_var <- function(dirpath=path, ix=16, all=FALSE){
-    png(paste(dirpath, "/figures/age_wise_n1", sep="")) # redirect output (device) to png file
+    png(paste(dirpath, "/figures/age_wise_n1.png", sep="")) # redirect output (device) to png file
 
     if(all){
         par(mar=c(1,1,1,1))
@@ -211,7 +217,7 @@ plot_age_wise_var <- function(dirpath=path, ix=16, all=FALSE){
         }
     } else{
         layout(matrix(1:2,2,1), 2, 1) # 2x1 figure
-        plot(age_wise_n1[[ix]], xlab="age", ylab="frequency", main="Age-wise frequency of 1's")
+        plot(age_wise_n1[[ix]], xlab="age", ylab="frequency", main="Age-wise frequency of 1's", ylim=c(0,1))
         abline(v=L$m)
         abline(v=L$maxls, col="red")
         plot(age_wise_n1_std[[ix]], xlab="age", ylab="sd")
