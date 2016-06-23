@@ -39,7 +39,7 @@ fn.logprint("Working directory: "+os.getcwd())
 c = fn.get_conf(args.c) # Import config file as "c".
 startpop = fn.get_startpop(args.s) # Get seed population, if any.
 gen_map = np.copy(c.gen_map)
-np.random.shuffle(gen_map)
+np.random.shuffle(gen_map) # Randomize order of genetic units.
 
 ####################
 ## RUN SIMULATION ##
@@ -67,7 +67,8 @@ for n_run in range(1, c.number_of_runs+1):
             c.number_of_stages, c.d_range, c.r_range, c.window_size)
     n_snap = 0 # number of previous snapshots
 
-    x = 1.0 # Initial starvation factor
+    surv_penf = 1.0 # Neutral survival penalty factor (increases under starvation)
+    repr_penf = 1.0 # Neutral reproduction penalty factor (same as above)
     resources = c.res_start
 
     # # # # # # # # #
@@ -89,28 +90,31 @@ for n_run in range(1, c.number_of_runs+1):
         # Record output variables
         if n_stage in c.snapshot_stages:
             if full_report: fn.logprint("Taking snapshot...",False)
-            record.update(population, resources, x, n_stage, n_snap)
+            record.update(population, resources, surv_penf, repr_penf, n_stage, n_snap)
             n_snap += 1
             if full_report: fn.logprint("done.")
         else:
-            record.quick_update(n_stage, population, resources, x) # change
+            record.quick_update(n_stage, population, resources, surv_penf, repr_penf)
 
         population.increment_ages()
 
-        # Change in resources and starvation
-        if c.res_var: # function of population
+        # Change in resources and penalty under starvation
+        if c.res_var: # variable; function of population size
             resources = fn.update_resources(resources, population.N, c.R,
                     c.V, c.res_limit, full_report)
-            x = x*c.death_inc if resources == 0 else 1.0
-        else: # constant; death rate increases if population exceeds
-            x = x*c.death_inc if population.N>resources else 1.0
-        if full_report: fn.logprint("Starvation factor: "+str(x))
+            surv_penf = surv_penf*c.death_inc if c.surv_pen and resources == 0 else 1.0
+            repr_penf = repr_penf*c.repr_dec if c.repr_pen and resources == 0 else 1.0
+        else: # constant; penalty increases if population exceeds resources
+            surv_penf = surv_penf*c.death_inc if c.surv_pen and population.N>resources else 1.0
+            repr_penf = repr_penf*c.repr_dec if c.repr_pen and population.N>resources else 1.0
+        if full_report: fn.logprint("Survival starvation factor: "+str(surv_penf)+"\n"+\
+                                    "Reproduction starvation factor"+str(repr_penf))
 
         # Reproduction & death
-        population.growth(c.r_range, c.r_rate, c.m_rate, c.m_ratio,
+        population.growth(c.r_range, repr_penf, c.r_rate, c.m_rate, c.m_ratio,
                 full_report)
 
-        population.death(c.d_range, x, full_report)
+        population.death(c.d_range, surv_penf, full_report)
 
         if n_stage in c.crisis_stages:
             population.crisis(c.crisis_sv, n_stage)
