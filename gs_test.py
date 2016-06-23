@@ -6,6 +6,7 @@
 from gs_classes import *
 from gs_functions import *
 import pytest, random, string, subprocess, math
+from scipy.misc import comb
 
 # Begin by running a dummy simulation and saving the output
 scriptdir = os.path.split(os.path.realpath(__file__))[0]
@@ -39,6 +40,17 @@ def parents(request, conf):
     params["age_random"] = False
     params["start_pop"] = 2
     return Population(params, conf.genmap)
+@pytest.fixture(scope="session")
+def pop1(request, spop):
+    """Create population with genomes filled with ones."""
+    pop = spop.clone()
+    pop.genomes = np.ones(pop.genomes.shape).astype(int)
+    return pop
+@pytest.fixture
+def record(request,pop1,conf):
+    """Create a record from pop1 as defined in configuration file."""
+    return Record(pop1, np.array([10]), 100, np.linspace(0,1,21), 
+                np.linspace(0,1,21),100)
 
 #########################
 ### 1: FREE FUNCTIONS ###
@@ -193,33 +205,34 @@ class TestUpdateResources:
 ###########################
 ### 2: POPULATION CLASS ###
 ###########################
+
 class TestPopInit:
     """Test initialisation of a population object."""
-    def test_init_population(self, conf):
+    def test_init_population(self, record, conf):
         """Test that population parameters are correct for random and
         nonrandom ages."""
         precision = 1
         conf.params["start_pop"] = 2000
         conf.params["age_random"] = False
-        pop1 = Population(conf.params, conf.genmap)
+        pop_a = Population(conf.params, conf.genmap)
         conf.params["age_random"] = True
-        pop2 = Population(conf.params, conf.genmap)
-        print np.mean(pop2.ages)
-        print abs(np.mean(pop2.ages)-pop2.maxls/2)
+        pop_b = Population(conf.params, conf.genmap)
+        print np.mean(pop_b.ages)
+        print abs(np.mean(pop_b.ages)-pop_b.maxls/2)
         assert \
-            pop1.sex == pop2.sex == conf.params["sexual"] and \
-            pop1.chrlen == pop2.chrlen == conf.params["chr_len"] and \
-            pop1.nbase == pop2.nbase == conf.params["n_base"] and \
-            pop1.maxls == pop2.maxls == conf.params["max_ls"] and \
-            pop1.maturity==pop2.maturity == conf.params["maturity"] and \
-            pop1.N == pop2.N == conf.params["start_pop"] and\
-            (pop1.index==np.arange(conf.params["start_pop"])).all() and\
-            (pop2.index==np.arange(conf.params["start_pop"])).all() and\
-            (pop1.genmap == conf.genmap).all() and\
-            (pop2.genmap == conf.genmap).all() and\
-            (pop1.ages == pop1.maturity).all() and\
-            not (pop2.ages == pop2.maturity).all() and\
-            abs(np.mean(pop2.ages)-pop2.maxls/2) < precision
+            pop_a.sex == pop_b.sex == conf.params["sexual"] and \
+            pop_a.chrlen == pop_b.chrlen == conf.params["chr_len"] and \
+            pop_a.nbase == pop_b.nbase == conf.params["n_base"] and \
+            pop_a.maxls == pop_b.maxls == conf.params["max_ls"] and \
+            pop_a.maturity==pop_b.maturity == conf.params["maturity"] and \
+            pop_a.N == pop_b.N == conf.params["start_pop"] and\
+            (pop_a.index==np.arange(conf.params["start_pop"])).all() and\
+            (pop_b.index==np.arange(conf.params["start_pop"])).all() and\
+            (pop_a.genmap == conf.genmap).all() and\
+            (pop_b.genmap == conf.genmap).all() and\
+            (pop_a.ages == pop_a.maturity).all() and\
+            not (pop_b.ages == pop_b.maturity).all() and\
+            abs(np.mean(pop_b.ages)-pop_b.maxls/2) < precision
             # make_genome_array is tested separately
 
 class TestMinorMethods:
@@ -268,11 +281,11 @@ class TestMinorMethods:
         """Test if a population is successfully appended to the receiver
         population, which remains unchanged, by appending a population to
         itself."""
-        pop1 = spop.clone()
-        pop2 = spop.clone()
-        pop2.addto(pop1)
-        assert (pop2.ages == np.tile(pop1.ages,2)).all() and \
-                (pop2.genomes == np.tile(pop1.genomes,(2,1))).all()
+        pop_a = spop.clone()
+        pop_b = spop.clone()
+        pop_b.addto(pop_a)
+        assert (pop_b.ages == np.tile(pop_a.ages,2)).all() and \
+                (pop_b.genomes == np.tile(pop_a.genomes,(2,1))).all()
 
 class TestDeathCrisis:
     """Test functioning of get_subpop, death and crisis methods."""
@@ -412,70 +425,92 @@ class TestReproduction:
 ### 3: RECORD CLASS ###
 #######################
 
-@pytest.fixture
-def population1(request, conf):
-    """Create population with genomes filled with ones."""
-    conf.params["start_pop"] = 500
-    conf.params["age_random"] = False
-    conf.params["sexual"] = False
-    pop = Population(conf.params, conf.genmap)
-    pop.genomes = np.ones(pop.genomes.shape).astype(int)
-    return pop
-
 ### RECORD
-def test_init_record(population1, conf):
-    r = Record(population1, np.array([10]), 100, np.linspace(0,1,21), 
-            np.linspace(0,1,21),100).record
-    def sameshape(keys,ref):
-        """Test whether all listed record arrays have identical shape."""
-        return np.all([r[x].shape == ref for x in keys])
-    assert len(r.keys()) == 27 and\
-            (r["genmap"] == population1.genmap).all() and\
-            (r["chr_len"] == np.array([population1.chrlen])).all() and\
-            (r["n_bases"] == np.array([population1.nbase])).all() and\
-            (r["max_ls"] == np.array([population1.maxls])).all() and\
-            (r["maturity"] == np.array([population1.maturity])).all() and\
-            (r["d_range"] == np.linspace(0,1,21)).all() and\
-            (r["d_range"] == r["r_range"]).all() and\
-            (r["snapshot_stages"] == np.array([11])).all() and\
-            sameshape(["death_mean", "death_sd", "repr_mean", "repr_sd",
-                "fitness"], (1,population1.maxls)) and\
-            sameshape(["density_surv", "density_repr"],
-                (1,2*population1.nbase+1)) and\
-            sameshape(["entropy","junk_death","junk_repr",
-                "junk_fitness"], (1,)) and\
-            sameshape(["population_size", "resources", "surv_penf", 
-                "repr_penf"], (100,)) and\
-            sameshape(["age_distribution"],(100,population1.maxls)) and\
-            sameshape(["n1", "n1_std"], (1,population1.chrlen)) and\
-            sameshape(["s1"], (1, population1.chrlen - 99))
+class TestRecordInit:
+    """Test the initiation of a new Record object."""
+    def test_init_record(self, record, pop1):
+        r = record.record
+        def sameshape(keys,ref):
+            """Test whether all listed record arrays have identical 
+            shape."""
+            return np.all([r[x].shape == ref for x in keys])
+        assert (r["genmap"] == pop1.genmap).all() and\
+                (r["chr_len"] == np.array([pop1.chrlen])).all() and\
+                (r["n_bases"] == np.array([pop1.nbase])).all() and\
+                (r["max_ls"] == np.array([pop1.maxls])).all() and\
+                (r["maturity"] == np.array([pop1.maturity])).all() and\
+                (r["d_range"] == np.linspace(0,1,21)).all() and\
+                (r["d_range"] == r["r_range"]).all() and\
+                (r["snapshot_stages"] == np.array([11])).all() and\
+                sameshape(["death_mean", "death_sd", "repr_mean", 
+                    "repr_sd", "fitness"], (1,pop1.maxls)) and\
+                sameshape(["density_surv", "density_repr"],
+                    (1,2*pop1.nbase+1)) and\
+                sameshape(["entropy","junk_death","junk_repr",
+                    "junk_fitness"], (1,)) and\
+                sameshape(["population_size", "resources", "surv_penf", 
+                    "repr_penf"], (100,)) and\
+                sameshape(["age_distribution"],(100,pop1.maxls)) and\
+                sameshape(["n1", "n1_std"], (1,pop1.chrlen)) and\
+                sameshape(["s1"], (1, pop1.chrlen - 99))
 
+class TestRecordUpdate:
+    """Test stage-by-stage updating of a Record object."""
 
-# not testing quick_update
+    def test_quick_update(self, record, pop1):
+        """Test that every-stage update function records correctly."""
+        record.quick_update(0, pop1, 100, 1, 1)
+        r = record.record
+        agedist=np.bincount(pop1.ages,minlength=pop1.maxls)/float(pop1.N)
+        assert r["population_size"][0] == pop1.N
+        assert r["resources"][0] == 100
+        assert r["surv_penf"][0] == 1
+        assert r["repr_penf"][0] == 1
+        assert (r["age_distribution"][0] == agedist).all()
 
-@pytest.fixture # scope="session"
-def record(request,spop,conf):
-    """Create a record as defined in configuration file."""
-    return Record(spop,conf.snapshot_stages, conf.number_of_stages,
-            conf.d_range, conf.r_range, conf.window_size)
+    def test_update_agestats(self,record,pop1):
+        """Test if update_agestats properly calculates agestats for pop1
+        (genomes filled with ones)."""
+        record.update_agestats(pop1,0)
+        r = record.record
+        assert \
+        np.isclose(r["death_mean"][0],
+                np.tile(r["d_range"][-1],r["max_ls"])).all() and \
+        np.isclose(r["death_sd"][0], np.zeros(r["max_ls"])).all() and \
+        np.isclose(r["repr_mean"][0], 
+                np.append(np.zeros(r["maturity"]),
+                    np.tile(r["r_range"][-1],
+                        r["max_ls"]-r["maturity"]))).all() and \
+        np.isclose(r["repr_sd"][0], np.zeros(r["max_ls"])).all() and \
+        r["density_surv"][0][-1] == 1 and \
+        r["density_repr"][0][-1] == 1
 
-def test_update_agestats(record,population1):
-    """Test if update_agestats properly calculates agestats for population1
-    (genomes filled with ones)."""
-    pop = population1.clone()
-    record.update_agestats(pop,0)
-    r = record.record
-    assert \
-    np.isclose(r["death_mean"][0], np.tile(r["d_range"][-1],r["max_ls"])).all() and \
-    np.isclose(r["death_sd"][0], np.zeros(r["max_ls"])).all() and \
-    np.isclose(r["repr_mean"][0], np.append(np.zeros(r["maturity"]),np.tile(r["r_range"][-1],r["max_ls"]-r["maturity"]))).all() and \
-    np.isclose(r["repr_sd"][0], np.zeros(r["max_ls"])).all() and \
-    r["density_surv"][0][-1] == 1 and \
-    r["density_repr"][0][-1] == 1
-
-def test_update_shannon_weaver(record,population1):
+def test_update_shannon_weaver_degenerate(record,pop1):
     """Test if equals zero when all set members are of same type."""
-    assert record.update_shannon_weaver(population1) == -0
+    assert record.update_shannon_weaver(pop1) == -0
+def test_update_shannon_weaver(record,spop,conf):
+    """Test that shannon weaver entropy is computed correctly for
+    a newly-initialised population."""
+    precision = 0.01
+    b = spop.nbase
+    props = np.array([spop.maxls, spop.maxls-spop.maturity, 1])\
+            /float(len(spop.genmap)) # Expected proportion of genome
+            # in survival loci, reproductive loci, etc.
+    print props
+    probs = np.array([conf.g_dist[x] for x in ["s", "r", "n"]])
+            # Probability of a 1 for each locus type
+    print probs
+    dists = np.array(
+            [[comb(2*b, x)*p**x*(1-p)**(2*b-x) for x in np.arange(2*b)+1]\
+                    for p in probs])
+            # Binomial distribution values for 0-20 zeros for each
+    print dists
+    exp = np.sum((dists.T * props).T,0) 
+        # expected proportions of loci with each number of 1's over
+        # entire genome
+    exp_entropy = st.entropy(exp)
+    obs_entropy = record.update_shannon_weaver(spop)
+    assert abs(exp_entropy - obs_entropy) < precision
 
 #def test_sort_n1(record):
 #    """Test if sort_n1 correctly sorts an artificially created genome array."""
@@ -501,10 +536,10 @@ def test_age_wise_n1(record):
     record.record["mask"] = np.array([mask])
     assert (record.age_wise_n1("mask") == ix).all()
 
-def test_update_invstats(record,population1):
-    """Test if update_invstats properly calculates genomestats for population1
+def test_update_invstats(record,pop1):
+    """Test if update_invstats properly calculates genomestats for pop1
     (genomes filled with ones)."""
-    pop = population1.clone()
+    pop = pop1.clone()
     record.update_invstats(pop,0)
     r = record.record
     assert \

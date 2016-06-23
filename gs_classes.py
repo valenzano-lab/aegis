@@ -2,6 +2,7 @@ import gs_functions as fn
 import numpy as np
 import scipy.stats as st
 from random import sample
+from operator import mul
 
 class Population:
     """A simulated population with genomes and ages."""
@@ -289,15 +290,19 @@ class Record:
         self.record["density_repr"][n_snap] = density_repr
 
     def update_shannon_weaver(self, population):
-        """H = -sum(p_i*ln(p_i)), where p_i is the density of genotype i."""
+        """H =-sum(p_i*ln(p_i)), where p_i is the density of genotype i."""
         p = population
         b = p.nbase
         s1 = b
-        s0 = p.genomes[:, :p.chrlen].shape[0] * p.genomes[:, :p.chrlen].shape[1]\
-             / s1
+        s0 = reduce(mul, p.genomes[:,:p.chrlen].shape) / s1
+        # s0 gives the total number of loci in each chromosome across
+        # all individuals
         var = np.hstack((p.genomes[:,:p.chrlen].reshape(s0,s1), \
                          p.genomes[:,p.chrlen:].reshape(s0,s1)))
+        # Horizontally stack matching loci from paired chromosomes 
+        # to get (nbase * 2) x (# loci over whole population) array
         density = np.bincount(np.sum(var, axis=1), minlength = 2*b+1)
+        # Get density distribution of each genotype (from 0 to 20 1's).
         return st.entropy(density)
 
     def sort_n1(self, arr):
