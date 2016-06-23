@@ -306,9 +306,9 @@ class Record:
         return st.entropy(density)
 
     def sort_by_age(self, arr):
-        """Sort array in ascending order by age (survival:0-71, 
+        """Sort a one-row array in ascending order by age (survival:0-71, 
         reproduction: 16-71, neutral). Array must have same number of
-        columns as genome array."""
+        element as genome array has columns."""
         b = self.record["n_bases"]
         m = self.record["maturity"]
         maxls = self.record["max_ls"]

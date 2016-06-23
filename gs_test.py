@@ -513,22 +513,22 @@ class TestRecordUpdate:
         obs_entropy = record.update_shannon_weaver(spop)
         assert abs(exp_entropy - obs_entropy) < precision
 
-#    def test_sort_by_age(self, record):
-#        """Test if sort_by_age correctly sorts an artificial genome 
-#        array."""
-#        genmap = record.record["genmap"]
-#        # Randomly reshuffle genmap
-#        ix = np.arange(len(genmap))
-#        np.random.shuffle(ix)
-#        record.record["genmap"] = genmap[ix]
-#
-#        genome = np.tile(ix.reshape((len(ix),1)),10) 
-#            # Make into a col vector
-#        genome = genome.reshape((1,len(genome)*10))[0]
-#        mask = np.tile(np.arange(len(genmap)).reshape((len(ix),1)),10)
-#        mask = mask.reshape((1,len(mask)*10))[0]
-#
-#        assert (record.sort_by_age(genome) == mask).all()
+    def test_sort_by_age(self, record):
+        """Test if sort_by_age correctly sorts an artificial genome 
+        array."""
+        genmap = np.sort(record.record["genmap"])
+        ix = np.arange(len(genmap))
+            # Randomly reshuffle genmap
+        np.random.shuffle(ix)
+        record.record["genmap"] = genmap[ix]
+        b = record.record["n_bases"]
+        genome = np.tile(ix.reshape((len(ix),1)),b)
+            # Make into a col vector
+        genome = genome.reshape((1,len(genome)*b))[0]
+            # Flatten col vector to get one element per genome bit
+        mask = np.tile(np.arange(len(genmap)).reshape((len(ix),1)),b)
+        mask = mask.reshape((1,len(mask)*b))[0]
+        assert (record.sort_by_age(genome).astype(int) == mask).all()
 
 def test_age_wise_n1(record):
     """Test if ten conecutive array items are correctly averaged."""
