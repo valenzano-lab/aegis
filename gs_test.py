@@ -26,7 +26,7 @@ def ran_str(request):
 @pytest.fixture(scope="session")
 def conf(request):
     """Create a default configuration object."""
-    return get_conf("config")
+    return get_conf("config_test")
 @pytest.fixture(scope="session")
 def spop(request):
     """Create a sample population from the default configuration."""
