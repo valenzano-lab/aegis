@@ -75,17 +75,16 @@ class TestConfig:
             par_dir = os.getcwd()
             par_path = sys.path[:]
             exp_path = [par_dir] + [x for x in old_path if x != old_dir]
-            assert par_dir == os.path.split(old_dir)[0])
-            assert par_path == exp_path)
+            assert par_dir == os.path.split(old_dir)[0]
+            assert par_path == exp_path
             if par_dir != "/":
                 fn.get_dir("/")
                 root_dir = os.getcwd()
                 root_path = sys.path[:]
                 exp_path = ["/"] + [x for x in par_path if x != par_dir]
                 assert root_dir=="/"
-                assert root_path==exp_path)
+                assert root_path==exp_path
             fn.get_dir(old_dir)
-        assert test
 
     def test_get_dir_bad(self, ran_str):
         """Verify that fn.get_dir throws an error when the target directory 
@@ -186,7 +185,6 @@ class TestGenomeArray:
             pos = np.append(pos, pos + chr_len)
             tstat = abs(np.mean(ga[:,pos])-g_dist[k])
             assert tstat < precision
-        assert test
 
 class TestUpdateResources:
     """Confirm that resources are updated correctly in the variable-
