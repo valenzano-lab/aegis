@@ -1,9 +1,11 @@
 # TODO:
 # - Fix imports
 
-from gs_classes import *
-from gs_functions import *
-import pytest, random, string, subprocess, math, copy
+import gs_functions as fn
+import gs_classes as cl
+import pytest, random, string, subprocess, math, copy, os, sys
+import numpy as np
+import scipy.stats as st
 from scipy.misc import comb
 
 # Begin by running a dummy simulation and saving the output
@@ -26,11 +28,11 @@ def ran_str(request):
 @pytest.fixture(scope="session")
 def conf(request):
     """Create a default configuration object."""
-    return get_conf("config_test")
+    return fn.get_conf("config_test")
 @pytest.fixture(scope="session")
 def spop(request):
     """Create a sample population from the default configuration."""
-    return get_startpop("sample_pop")
+    return fn.get_startpop("sample_pop")
 @pytest.fixture
 def parents(request, conf):
     """Returns population of two sexual adults."""
@@ -38,7 +40,7 @@ def parents(request, conf):
     params["sexual"] = True
     params["age_random"] = False
     params["start_pop"] = 2
-    return Population(params, conf.genmap)
+    return cl.Population(params, conf.genmap)
 @pytest.fixture(scope="session")
 def pop1(request, spop):
     """Create population with genomes filled with ones."""
@@ -48,8 +50,8 @@ def pop1(request, spop):
 @pytest.fixture
 def record(request,pop1,conf):
     """Create a record from pop1 as defined in configuration file."""
-    return Record(pop1, conf.snapshot_stages, 100, np.linspace(1,0,21), 
-                np.linspace(0,1,21),100)
+    return cl.Record(pop1, conf.snapshot_stages, 100, 
+            np.linspace(1,0,21), np.linspace(0,1,21),100)
 
 #########################
 ### 1: FREE FUNCTIONS ###
@@ -60,38 +62,38 @@ class TestConfig:
     correctly."""
 
     def test_get_dir_good(self):
-        """Verify that get_dir functions correctly when given (a) the
+        """Verify that fn.get_dir functions correctly when given (a) the
         current directory, (b) the parent directory, (c) the root
         directory."""
         old_dir = os.getcwd()
         old_path = sys.path[:]
-        get_dir(old_dir)
+        fn.get_dir(old_dir)
         same_dir = os.getcwd()
         same_path = sys.path[:]
         test = (same_dir == old_dir and same_path == old_path)
         if old_dir != "/":
-            get_dir("..")
+            fn.get_dir("..")
             par_dir = os.getcwd()
             par_path = sys.path[:]
             exp_path = [par_dir] + [x for x in old_path if x != old_dir]
             test = (test and par_dir == os.path.split(old_dir)[0])
             test = (test and par_path == exp_path)
             if par_dir != "/":
-                get_dir("/")
+                fn.get_dir("/")
                 root_dir = os.getcwd()
                 root_path = sys.path[:]
                 exp_path = ["/"] + [x for x in par_path if x != par_dir]
                 test = (test and root_dir=="/" and root_path==exp_path)
-            get_dir(old_dir)
+            fn.get_dir(old_dir)
         assert test
 
     def test_get_dir_bad(self, ran_str):
-        """Verify that get_dir throws an error when the target directory 
+        """Verify that fn.get_dir throws an error when the target directory 
         does not exist."""
-        with pytest.raises(SystemExit) as e_info: get_dir(ran_str)
+        with pytest.raises(SystemExit) as e_info: fn.get_dir(ran_str)
 
     def test_get_conf_good(self, conf):
-        """Test that get_conf on the config template file returns a valid
+        """Test that fn.get_conf on the config template file returns a valid
         object of the expected composition."""
         def alltype(keys,typ):
             """Test whether all listed config items are of the 
@@ -112,20 +114,20 @@ class TestConfig:
                 "snapshot_stages"], np.ndarray)
 
     def test_get_conf_bad(self, ran_str):
-        """Verify that get_dir throws an error when the target file does
-        not exist."""
-        with pytest.raises(IOError) as e_info: get_conf(ran_str)
+        """Verify that fn.get_dir throws an error when the target file 
+        does not exist."""
+        with pytest.raises(IOError) as e_info: fn.get_conf(ran_str)
 
     def test_get_startpop_good(self, conf, spop):
         """Test that a blank seed returns a blank string and a valid seed
         returns a population array of the correct size."""
-        assert get_startpop("") == "" and\
+        assert fn.get_startpop("") == "" and\
                 spop.genomes.shape == (spop.N, 2*spop.chrlen)
 
     def test_get_startpop_bad(self, ran_str):
-        """Verify that get_dir throws an error when the target file does
-        not exist."""
-        with pytest.raises(IOError) as e_info: get_startpop(ran_str)
+        """Verify that fn.get_startpop throws an error when the target 
+        file does not exist."""
+        with pytest.raises(IOError) as e_info: fn.get_startpop(ran_str)
 
 # -------------------------
 # RANDOM NUMBER GENERATION
@@ -138,7 +140,7 @@ class TestChance:
     def test_chance_degenerate(self, p):
         """Tests wether p=1 returns True/1 and p=0 returns False/0."""
         shape=(1000,1000)
-        assert (chance(p, shape).astype(int) == p).all()
+        assert (fn.chance(p, shape).astype(int) == p).all()
 
     @pytest.mark.parametrize("p", [0.2, 0.5, 0.8])
     def test_chance(self, p):
@@ -146,7 +148,7 @@ class TestChance:
         """Test that the shape of the output is correct and that the mean
         over many trials is close to the expected value."""
         shape=(1000,1000)
-        c = chance(p, shape)
+        c = fn.chance(p, shape)
         s = c.shape
         assert c.shape == shape and c.dtype == "bool" and \
                 abs(p-np.mean(c)) < precision
@@ -174,7 +176,7 @@ class TestGenomeArray:
             }
         n = 1000
         chr_len = 500
-        ga = make_genome_array(n, chr_len, genmap, 10, g_dist)
+        ga = fn.make_genome_array(n, chr_len, genmap, 10, g_dist)
         test = ga.shape == (n, 2*chr_len)
         condensed = np.mean(ga, 0)
         condensed = np.array([np.mean(condensed[x*10:(x*10+9)]) \
@@ -193,13 +195,13 @@ class TestUpdateResources:
     def test_update_resources_bounded(self):
         """Confirm that resources cannot exceed upper bound or go below
         zero."""
-        assert update_resources(5000, 0, 1000, 2, 5000) == 5000 and\
-                update_resources(0, 5000, 1000, 2, 5000) == 0
+        assert fn.update_resources(5000, 0, 1000, 2, 5000) == 5000 and\
+                fn.update_resources(0, 5000, 1000, 2, 5000) == 0
     
     def test_update_resources_unbounded(self):
         """Test resource updating between bounds."""
-        assert update_resources(1000, 500, 1000, 2, 5000) == 2000 and\
-                update_resources(500, 1000, 1000, 2, 5000) == 500
+        assert fn.update_resources(1000, 500, 1000, 2, 5000) == 2000 and\
+                fn.update_resources(500, 1000, 1000, 2, 5000) == 500
 
 ###########################
 ### 2: POPULATION CLASS ###
@@ -213,9 +215,9 @@ class TestPopInit:
         precision = 1
         conf.params["start_pop"] = 2000
         conf.params["age_random"] = False
-        pop_a = Population(conf.params, conf.genmap)
+        pop_a = cl.Population(conf.params, conf.genmap)
         conf.params["age_random"] = True
-        pop_b = Population(conf.params, conf.genmap)
+        pop_b = cl.Population(conf.params, conf.genmap)
         print np.mean(pop_b.ages)
         print abs(np.mean(pop_b.ages)-pop_b.maxls/2)
         assert \
@@ -296,7 +298,7 @@ class TestDeathCrisis:
         """Test if the probability of passing is close to that indicated
         by the genome (when all loci have the same distribution)."""
         pop = spop.clone()
-        pop.genomes = chance(p, pop.genomes.shape).astype(int)
+        pop.genomes = fn.chance(p, pop.genomes.shape).astype(int)
         pop2 = pop.get_subpop(min_age, pop.maxls, offset,
                 np.linspace(0,1,21))
         assert abs(pop2.N/float(pop.N) - p)*(1-min_age/pop.maxls) < \
@@ -315,7 +317,7 @@ class TestDeathCrisis:
         surv_pos = np.array([range(b) + x for x in surv_loci*b])
         surv_pos = np.append(surv_pos, surv_pos + pop.chrlen)
         pop.genomes[:, surv_pos] =\
-                chance(p, pop.genomes[:, surv_pos].shape).astype(int)
+                fn.chance(p, pop.genomes[:, surv_pos].shape).astype(int)
         # (specifically modify survival loci only)
         pop2 = pop.clone()
         pop2.death(np.linspace(1,0,21), x, False)
@@ -336,14 +338,14 @@ class TestReproduction:
     """Test methods associated with population reproduction (sexual
     and asexual."""
     def test_recombine_none(self, spop):
-        """Test if genome stays same if recombination chance is zero."""
+        """Test if genome stays same if recombination fn.chance is zero."""
         pop = spop.clone()
         pop._Population__recombine(0)
         assert (pop.genomes == spop.genomes).all()
 
     def test_recombine_all(self, conf):
         """Test if resulting genomee is equal to recombine_zig_zag when
-        recombination chance is one."""
+        recombination fn.chance is one."""
         def recombine_zig_zag(pop):
             """Recombine the genome like so:
             before: a1-a2-a3-a4-b1-b2-b3-b4
@@ -354,7 +356,7 @@ class TestReproduction:
             g[:,pop.chrlen::2] = h
             return g
         conf.params["start_pop"] = 10
-        pop = Population(conf.params, conf.genmap)
+        pop = cl.Population(conf.params, conf.genmap)
         zz = recombine_zig_zag(pop)
         pop._Population__recombine(1)
         assert (pop.genomes == zz).all()
@@ -411,8 +413,8 @@ class TestReproduction:
         params["sexual"] = sexvar
         params["age_random"] = False
         params["start_pop"] = n
-        pop = Population(params,conf.genmap)
-        pop.genomes = chance(m, pop.genomes.shape).astype(int)
+        pop = cl.Population(params,conf.genmap)
+        pop.genomes = fn.chance(m, pop.genomes.shape).astype(int)
         pop.growth(np.linspace(0,1,21),1,0,0,1,False)
         # Calculate proportional observed and expected growth
         x = 2 if sexvar else 1
