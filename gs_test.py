@@ -49,7 +49,7 @@ def pop1(request, spop):
 @pytest.fixture
 def record(request,pop1,conf):
     """Create a record from pop1 as defined in configuration file."""
-    return Record(pop1, np.array([10]), 100, np.linspace(0,1,21), 
+    return Record(pop1, conf.snapshot_stages, 100, np.linspace(1,0,21), 
                 np.linspace(0,1,21),100)
 
 #########################
@@ -428,31 +428,32 @@ class TestReproduction:
 ### RECORD
 class TestRecordInit:
     """Test the initiation of a new Record object."""
-    def test_init_record(self, record, pop1):
+    def test_init_record(self, record, conf, pop1):
         r = record.record
+        n = len(r["snapshot_stages"])
         def sameshape(keys,ref):
             """Test whether all listed record arrays have identical 
             shape."""
             return np.all([r[x].shape == ref for x in keys])
-        assert (r["genmap"] == pop1.genmap).all() and\
-                (r["chr_len"] == np.array([pop1.chrlen])).all() and\
-                (r["n_bases"] == np.array([pop1.nbase])).all() and\
-                (r["max_ls"] == np.array([pop1.maxls])).all() and\
-                (r["maturity"] == np.array([pop1.maturity])).all() and\
-                (r["d_range"] == np.linspace(0,1,21)).all() and\
-                (r["d_range"] == r["r_range"]).all() and\
-                (r["snapshot_stages"] == np.array([11])).all() and\
-                sameshape(["death_mean", "death_sd", "repr_mean", 
-                    "repr_sd", "fitness"], (1,pop1.maxls)) and\
-                sameshape(["density_surv", "density_repr"],
-                    (1,2*pop1.nbase+1)) and\
-                sameshape(["entropy","junk_death","junk_repr",
-                    "junk_fitness"], (1,)) and\
-                sameshape(["population_size", "resources", "surv_penf", 
-                    "repr_penf"], (100,)) and\
-                sameshape(["age_distribution"],(100,pop1.maxls)) and\
-                sameshape(["n1", "n1_std"], (1,pop1.chrlen)) and\
-                sameshape(["s1"], (1, pop1.chrlen - 99))
+        assert (r["genmap"] == pop1.genmap).all()
+        assert (r["chr_len"] == np.array([pop1.chrlen])).all()
+        assert (r["n_bases"] == np.array([pop1.nbase])).all()
+        assert (r["max_ls"] == np.array([pop1.maxls])).all()
+        assert (r["maturity"] == np.array([pop1.maturity])).all()
+        assert (r["d_range"] == np.linspace(1,0,21)).all()
+        assert (r["r_range"] == np.linspace(0,1,21)).all()
+        assert (r["snapshot_stages"] == conf.snapshot_stages + 1).all()
+        assert sameshape(["death_mean", "death_sd", "repr_mean",
+                    "repr_sd", "fitness"], (n,pop1.maxls))
+        assert sameshape(["density_surv", "density_repr"],
+                    (n,2*pop1.nbase+1))
+        assert sameshape(["entropy","junk_death","junk_repr",
+                    "junk_fitness"], (n,))
+        assert sameshape(["population_size", "resources", "surv_penf",
+                    "repr_penf"], (100,))
+        assert sameshape(["age_distribution"],(100,pop1.maxls))
+        assert sameshape(["n1", "n1_std"], (n,pop1.chrlen))
+        assert sameshape(["s1"], (n, pop1.chrlen - 99))
 
 class TestRecordUpdate:
     """Test stage-by-stage updating of a Record object."""
@@ -527,8 +528,7 @@ class TestRecordUpdate:
         genome = genome.reshape((1,len(genome)*b))[0]
             # Flatten col vector to get one element per genome bit
         mask = np.tile(np.arange(len(genmap)).reshape((len(ix),1)),b)
-        mask = mask.reshape((1,len(mask)*b))[0]
-        assert (record.sort_by_age(genome).astype(int) == mask).all()
+
 
     def test_update_invstats(self,record,pop1):
         """Test if update_invstats properly calculates genomestats for 
@@ -579,5 +579,24 @@ class TestRecordFinal:
         assert (adr[:,:-1] == 0.5).all()
         assert (adr[:,-1] == 1).all()
 
-    # def test_final_update
-    # tricky...
+    def test_final_update(self, pop1, record):
+        s = len(record.record["snapshot_stages"])
+        for n in range(s):
+            record.update(pop1, 100, 1, 1, 0, n)
+        for m in range(100):
+            record.quick_update(m, pop1, 100, 1, 1)
+        record.update(pop1, 100, 1, 1, 0, 0)
+        record.final_update(0, 100)
+        r = record.record
+        # Predicted fitness array:
+        pf = np.arange(r["max_ls"], dtype=float)-r["maturity"]+1
+        pf[pf<0]=0
+        # Predicted actual death rate:
+        pad = np.append(np.ones(r["maturity"]-1), np.array([1-pop1.N]))
+        pad = np.append(pad, np.ones(r["max_ls"] - len(pad)))
+        assert (r["fitness"] == np.tile(pf, (s,1))).all()
+        assert (r["age_wise_n1"] == 1).all()
+        assert (r["age_wise_n1_std"] == 0).all()
+        assert (r["junk_fitness"] == 1).all()
+        assert (r["actual_death_rate"] == pad).all()
+        assert (r["s1"] == 0).all()

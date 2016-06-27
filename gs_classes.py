@@ -362,23 +362,6 @@ class Record:
         res = np.mean(arr.reshape((s[0], self.record["chr_len"]/b, b)), 2)
         return res
 
-    def final_update(self, n_run, window):
-        """After run completion, compute fitness and s1 (rolling window std of n1)."""
-        # Rolling standard deviation of #1's along genome:
-        a = self.record["n1"]
-        a_shape = a.shape[:-1] + (a.shape[-1] - window + 1, window)
-        a_strd = a.strides + (a.strides[-1],) # strides
-        self.record["s1"] = np.lib.stride_tricks.as_strided(a,
-                shape=a_shape, strides=a_strd)
-        x_surv = np.cumprod(1-self.record["death_mean"],1)
-        self.record["fitness"] = np.cumsum(
-                x_surv*self.record["repr_mean"],1)
-        self.record["junk_fitness"] = (
-                1-self.record["junk_death"])*self.record["junk_repr"]
-        self.record["actual_death_rate"] = self.actual_death_rate()
-        self.record["age_wise_n1"] = self.age_wise_n1("n1")
-        self.record["age_wise_n1_std"] = self.age_wise_n1("n1_std")
-
     def actual_death_rate(self):
         """Compute actual death rate for each age at each stage."""
         N_age = self.record["age_distribution"] *\
@@ -389,3 +372,21 @@ class Record:
         death = 1 - dividend / divisor
         # value for last age is 1
         return np.append(death, np.ones([death.shape[0], 1]), axis=1)
+
+    def final_update(self, n_run, window):
+        """After run completion, compute fitness and s1 (rolling window std of n1)."""
+        # Rolling standard deviation of #1's along genome:
+        a = self.record["n1"]
+        a_shape = a.shape[:-1] + (a.shape[-1] - window + 1, window)
+        a_strd = a.strides + (a.strides[-1],) # strides
+        self.record["s1"] = np.std(
+                np.lib.stride_tricks.as_strided(a, shape=a_shape, strides=a_strd), 2)
+        x_surv = np.cumprod(1-self.record["death_mean"],1)
+        self.record["fitness"] = np.cumsum(
+                x_surv*self.record["repr_mean"],1)
+        self.record["junk_fitness"] = (
+                1-self.record["junk_death"])*self.record["junk_repr"]
+        self.record["actual_death_rate"] = self.actual_death_rate()
+        self.record["age_wise_n1"] = self.age_wise_n1("n1")
+        self.record["age_wise_n1_std"] = self.age_wise_n1("n1_std")
+
