@@ -9,6 +9,7 @@ import pytest, random, string, subprocess, math, copy
 from scipy.misc import comb
 
 # Begin by running a dummy simulation and saving the output
+# Also functions as test of output functions
 scriptdir = os.path.split(os.path.realpath(__file__))[0]
 os.chdir(scriptdir)
 subprocess.call(["python", "genome_simulation.py", "."])
