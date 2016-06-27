@@ -1,3 +1,4 @@
+import pyximport; pyximport.install()
 import gs_functions as fn
 import gs_classes as cl
 import pytest, random, string, subprocess, math, copy, os, sys

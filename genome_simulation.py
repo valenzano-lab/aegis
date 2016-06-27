@@ -19,6 +19,7 @@ args = parser.parse_args()
 print args
 
 # Import other libraries
+import pyximport; pyximport.install()
 from random import sample
 import numpy as np
 import gs_functions as fn
