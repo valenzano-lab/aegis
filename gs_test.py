@@ -1,7 +1,5 @@
 # TODO:
-# - test_final_update
 # - Fix imports
-# - output function tests
 
 from gs_classes import *
 from gs_functions import *
@@ -601,3 +599,9 @@ class TestRecordFinal:
         assert (r["junk_fitness"] == 1).all()
         assert (r["actual_death_rate"] == pad).all()
         assert (r["s1"] == 0).all()
+
+def test_post_cleanup():
+    """Kill tempfiles made for test. Not really a test at all."""
+    os.remove("sample_pop.txt")
+    os.remove("sample_rec.txt")
+    os.remove("log.txt")
