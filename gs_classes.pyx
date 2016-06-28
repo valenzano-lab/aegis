@@ -75,8 +75,8 @@ cdef class Population:
                 genomes = fn.make_genome_array(
                         params["start_pop"], self.chrlen, self.genmap,
                         self.nbase, params["g_dist"])
-        self.ages = np.copy(ages)
-        self.genomes = np.copy(genomes)
+        self.ages = ages[:]
+        self.genomes = genomes[:]
         self.N = len(self.ages)
         self.index = np.arange(self.N)
 
@@ -109,11 +109,13 @@ cdef class Population:
                 }
         return p_dict
 
-    def addto(self, pop):
+    cpdef addto(self, object pop):
         """Append the individuals from a second population to this one,
         keeping this one's parameters and genome map."""
-        self.ages = np.append(self.ages, pop.ages)
-        self.genomes = np.vstack([self.genomes, pop.genomes])
+        self.ages = np.concatenate((self.ages, pop.ages), 0)
+        self.genomes = np.concatenate((self.genomes, pop.genomes), 0)
+        self.N = len(self.ages)
+        # As it stands cythonising this doesn't make much difference
 
     # Major methods:
 
@@ -131,8 +133,8 @@ cdef class Population:
         genomes, ages = self.genomes[cond], self.ages[cond]
         N,g = len(ages), len(self.genmap)
         # Get locus sums for each individual and pick which loci to use
-        gen = np.sum(np.reshape(genomes, (N, g*2, self.nbase)), 2)
-        loci = np.nonzero(self.genmap - offset - np.vstack(ages) == 0)[1]
+        gen = np.einsum('ijk->ij', np.reshape(genomes, (N, g*2, self.nbase)))
+        loci = np.nonzero(self.genmap - offset - ages[:,np.newaxis] == 0)[1]
         # Convert locus sums into membership probabilities
         add = np.cumsum(np.append(0, np.tile(g, N-1))) 
         index = gen.take(loci + add) + gen.take(loci + g + add)
@@ -416,7 +418,7 @@ class Record:
         selection) values."""
         p = population
         # Frequency of 1's at each position on chromosome and it's std:
-        n1s = np.vstack((p.genomes[:, :p.chrlen], p.genomes[:, p.chrlen:]))
+        n1s = np.append(p.genomes[:, :p.chrlen], p.genomes[:, p.chrlen:], 0)
         n1_std = np.std(n1s, axis=0)
         n1 = np.mean(n1s, axis=0) # Mean number of 1's per chromosome bit
         # Junk stats calculated from neutral locus
