@@ -12,6 +12,8 @@ parser.add_argument('-c', metavar='<str>', default="config",
 parser.add_argument('dir', help="path to simulation directory")
 parser.add_argument('-r', type=int, metavar="<int>", default=10,
         help="report information every <int> stages (default: 10)")
+parser.add_argument('-P', '--profile', action="store_true",
+        help="profile genome simulation with cProfile")
 parser.add_argument('-v', '--verbose', action="store_true",
         help="display full information at each report stage \
                 (default: only starting population)")
@@ -25,9 +27,13 @@ import numpy as np
 import gs_functions as fn
 from gs_classes import Population,Record
 from datetime import datetime
+if args.profile:
+    import cProfile, pstats, StringIO
+    pr = cProfile.Profile()
 
 simstart = datetime.now()
 simstart_print = time.strftime('%X %x', time.localtime())+".\n"
+if args.profile: pr.enable() # start profiling
 
 ###################################
 ## PARSE ARGUMENTS AND CONFIGURE ##
@@ -135,3 +141,6 @@ simend_print = time.strftime('%X %x', time.localtime())+"."
 fn.logprint("\nSimulation completed at "+simend_print)
 fn.print_runtime(simstart, simend)
 fn.logprint("Exiting.")
+if args.profile:
+    pr.create_stats()
+    pr.dump_stats('timestats.txt')

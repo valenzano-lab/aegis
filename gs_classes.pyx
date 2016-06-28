@@ -1,3 +1,4 @@
+# cython: profile=True
 # Modules
 import gs_functions as fn
 import numpy as np
