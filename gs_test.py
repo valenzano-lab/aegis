@@ -308,7 +308,7 @@ class TestDeathCrisis:
         assert abs(pop2.N/float(pop.N) - p)*(1-min_age/pop.maxls) < \
                 precision
 
-    @pytest.mark.parametrize("p", [0, 0.3, 0.8, 1])
+    @pytest.mark.parametrize("p", [0.0, 0.3, 0.8, 1.0])
     @pytest.mark.parametrize("x", [1.0, 3.0, 9.0])
     def test_death(self, spop, p, x):
         """Test if self.death() correctly inverts death probabilities
@@ -318,12 +318,13 @@ class TestDeathCrisis:
         pop = spop.clone()
         b = pop.nbase
         surv_loci = np.nonzero(spop.genmap<100)[0]
-        surv_pos = np.array([range(b) + x for x in surv_loci*b])
+        surv_pos = np.array([range(b) + y for y in surv_loci*b])
         surv_pos = np.append(surv_pos, surv_pos + pop.chrlen)
         pop.genomes[:, surv_pos] =\
                 fn.chance(p, pop.genomes[:, surv_pos].shape).astype(int)
         # (specifically modify survival loci only)
         pop2 = pop.clone()
+        print pop2.genomes[:, surv_pos] 
         pop2.death(np.linspace(1,0,21), x, False)
         pmod = max(0, min(1, (1-x*(1-p))))
         assert abs(pop2.N/float(pop.N) - pmod) < precision
