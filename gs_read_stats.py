@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 # reads the gs_stats file that was output by genome_simulation.py in the
 # simulation directory
 
