@@ -16,30 +16,66 @@ ctypedef np.int_t NPINT_t
 ctypedef np.float_t NPFLOAT_t
 ctypedef np.uint8_t NPBOOL_t
 
-class Population:
-    """A simulated population with genomes and ages."""
+class Outpop:
+    """Pickle-able output form of Population class."""
+    def __init__(self, pop):
+        self.sex = pop.sex
+        self.nbase = pop.nbase
+        self.chrlen = pop.chrlen
+        self.maxls = pop.maxls
+        self.maturity = pop.maturity
+        self.genmap = pop.genmap
+        self.ages = pop.ages
+        self.genomes = pop.genomes
+        self.N = pop.N
+        self.index = pop.index
 
+    def params(self):
+        """Get population-intrinsic parameters from Population object."""
+        p_dict = {
+                "sexual":self.sex,
+                "chr_len":self.chrlen,
+                "n_base":self.nbase,
+                "max_ls":self.maxls,
+                "maturity":self.maturity
+                }
+        return p_dict
+
+    def toPop(self):
+        """Make cythonised Population object from this object."""
+        return Population(self.params(), self.genmap, self.ages, 
+                self.genomes)
+
+cdef class Population:
+    """A simulated population with genomes and ages."""
+    cdef public np.ndarray genmap, ages, genomes, index
+    cdef public int sex, chrlen, nbase, maxls, maturity, N
     # Initialisation
-    def __init__(self, params, genmap, ages="", genomes=""):
-        self.sex = params["sexual"]
-        self.chrlen = params["chr_len"]
+    def __init__(self, dict params, np.ndarray[NPINT_t, ndim=1] genmap, 
+            np.ndarray[NPINT_t, ndim=1] ages, 
+            np.ndarray[NPINT_t, ndim=2] genomes):
+        self.sex = params["sexual"] * 1
         self.nbase = params["n_base"]
+        self.chrlen = params["chr_len"]
         self.maxls = params["max_ls"]
         self.maturity = params["maturity"]
         self.genmap = genmap
-        # Determine ages if not given
-        if ages == "" and params["age_random"]:
-            self.ages = np.random.random_integers(0, self.maxls-1,
-                    params["start_pop"])
-        elif ages == "":
-            self.ages = np.repeat(self.maturity, params["start_pop"])
-        else: self.ages = np.copy(ages)
-        # Determine genomes if not given
-        if genomes == "":
-            self.genomes = fn.make_genome_array(
-                    params["start_pop"], self.chrlen, self.genmap,
-                    self.nbase, params["g_dist"])
-        else: self.genomes = np.copy(genomes)
+        # Determine ages and genomes if not given
+        cdef np.ndarray[NPINT_t, ndim=1] testage = np.array([-1])
+        cdef np.ndarray[NPINT_t, ndim=2] testgen = np.array([[-1],[-1]])
+        if params.has_key("start_pop"):
+            if np.shape(ages) == np.shape(testage) and \
+                    (ages == testage).all():
+                ages = np.random.random_integers(0, self.maxls-1,
+                        params["start_pop"]) if params["age_random"]\
+                        else np.repeat(self.maturity,params["start_pop"])
+            if np.shape(genomes) == np.shape(testgen) and \
+                    (genomes == testgen).all():
+                genomes = fn.make_genome_array(
+                        params["start_pop"], self.chrlen, self.genmap,
+                        self.nbase, params["g_dist"])
+        self.ages = np.copy(ages)
+        self.genomes = np.copy(genomes)
         self.N = len(self.ages)
         self.index = np.arange(self.N)
 
@@ -80,36 +116,30 @@ class Population:
 
     # Major methods:
 
-    def get_subpop(object self, int min_age, int max_age, int offset, 
+    cpdef get_subpop(self, int min_age, int max_age, int offset,
             np.ndarray[NPFLOAT_t, ndim=1] val_range):
         """Select a population subset based on chance defined by genotype."""
         cdef:
-            np.ndarray[NPINT_t, ndim=2] genomes = self.genomes
-            np.ndarray[NPINT_t, ndim=1] ages = self.ages
-            np.ndarray[NPINT_t, ndim=1] genmap = self.genmap
-            int b = self.nbase
-            int c = self.chrlen
-            int o = offset
             np.ndarray[NPINT_t, ndim=1] subpop_indices = np.empty(0,int)
             int age, locus
             np.ndarray[NPINT_t, ndim=1] pos, inc, which
             np.ndarray[NPFLOAT_t, ndim=1] inc_rates
             np.ndarray[NPINT_t, ndim=2] pop
-        for age in range(min_age, min(max_age, np.max(ages)+1)):
+        for age in range(min_age, min(max_age, np.max(self.ages)+1)):
             # Get indices of appropriate locus for that age:
-            locus = np.ndarray.nonzero(genmap==(age+o))[0][0]
+            locus = np.ndarray.nonzero(self.genmap==(age+offset))[0][0]
                 # NB: Will only return FIRST locus for that age
-            pos = np.arange(locus*b, (locus+1)*b, dtype=int)
+            pos = np.arange(locus*self.nbase, (locus+1)*self.nbase)
             # Subset to correct age and required locus:
-            which = np.nonzero(ages == age)[0]
-            pop = genomes[which][:,np.append(pos, pos+c)]
+            which = np.nonzero(self.ages == age)[0]
+            pop = self.genomes[which][:,np.append(pos, pos+self.chrlen)]
             # Get sum of genotypes for every individual and
             # convert into inclusion probabilities::
             inc_rates = val_range[np.sum(pop, axis=1)]
             inc = which[fn.chance(inc_rates, len(inc_rates))]
             subpop_indices = np.append(subpop_indices, inc)
-        subpop = Population(self.params(), genmap,
-                ages[subpop_indices], genomes[subpop_indices])
+        subpop = Population(self.params(), self.genmap,
+                self.ages[subpop_indices], self.genomes[subpop_indices])
         return subpop
 
     def growth(self, r_range, penf, r_rate,  m_rate, m_ratio, verbose):
@@ -118,10 +148,10 @@ class Population:
             fn.logprint("Calculating reproduction...", False)
         parents = self.get_subpop(self.maturity, self.maxls, 100, r_range/penf)
         if self.sex and parents.N > 1:
-            parents.__recombine(r_rate)
-            children = parents.__assortment()
+            parents.recombine(r_rate)
+            children = parents.assortment()
         else: children = parents.clone()
-        children.__mutate(m_rate, m_ratio)
+        children.mutate(m_rate, m_ratio)
         children.ages[:] = 0 # Make newborn
         self.addto(children)
         self.N = len(self.ages)
@@ -153,27 +183,24 @@ class Population:
 
     # Private methods:
 
-    def __recombine(self, r_rate):
+    cpdef recombine(self, int r_rate):
         """Recombine between the two chromosomes of each individual
         in the population."""
         cdef:
-            float rr = r_rate
             int n, r
-            np.ndarray[NPINT_t, ndim=2] genomes = self.genomes
             np.ndarray[NPINT_t, ndim=1] chr1, chr2, r_sites, g
-        if (rr > 0):
+        if (r_rate > 0):
             chr1 = np.arange(self.chrlen)
             chr2 = chr1 + self.chrlen
-            for n in range(len(genomes)):
-                g = genomes[n]
-                r_sites = np.nonzero(fn.chance(rr, self.chrlen))[0]
+            for n in range(self.N):
+                g = self.genomes[n]
+                r_sites = np.nonzero(fn.chance(r_rate, self.chrlen))[0]
                 for r in r_sites:
                     g = np.concatenate((g[chr1][:r], g[chr2][r:],
                         g[chr2][:r], g[chr1][r:]))
-                genomes[n] = g
-            self.genomes = genomes
+                self.genomes[n] = g
 
-    def __assortment(self):
+    def assortment(self):
         """Pair individuals into breeding pairs and generate children
         through random assortment."""
         pop = self.clone()
@@ -197,22 +224,18 @@ class Population:
                 pop.ages[::2], pop.genomes[::2])
         return(children)
 
-    def __mutate(self, m_rate, m_ratio):
+    cpdef mutate(self, float m_rate, float m_ratio):
         """Mutate genomes of population according to stated rates."""
         cdef:
-            float mre = m_rate
-            float mro = m_ratio
-            np.ndarray[NPINT_t, ndim=2] genomes = self.genomes
             np.ndarray[NPBOOL_t, ndim=2,cast=True] is_0, is_1
             np.ndarray[NPINT_t, ndim=1] positive_mut, negative_mut
-        if mre > 0:
+        if m_rate > 0:
             is_0 = self.genomes==0
             is_1 = np.invert(is_0)
-            positive_mut = fn.chance(mre*mro, np.sum(is_0)).astype(int)
-            negative_mut = 1-fn.chance(mre, np.sum(is_1))
-            genomes[is_0] = positive_mut
-            genomes[is_1] = negative_mut
-            self.genomes = genomes
+            positive_mut = fn.chance(m_rate*m_ratio, np.sum(is_0)).astype(int)
+            negative_mut = 1-fn.chance(m_rate, np.sum(is_1))
+            self.genomes[is_0] = positive_mut
+            self.genomes[is_1] = negative_mut
 
 class Record:
     """An enhanced dictionary object recording simulation data."""

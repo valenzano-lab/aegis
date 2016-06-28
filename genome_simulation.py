@@ -25,7 +25,7 @@ import pyximport; pyximport.install()
 from random import sample
 import numpy as np
 import gs_functions as fn
-from gs_classes import Population,Record
+from gs_classes import Population,Record,Outpop
 from datetime import datetime
 if args.profile:
     import cProfile, pstats, StringIO
@@ -63,10 +63,11 @@ for n_run in range(1, c.number_of_runs+1):
     # # # # # # # # # # # # # # #
 
     ## Generate starting population (if no seed)
-    if startpop != "": population = startpop
+    if startpop != "": population = startpop.toPop()
     else:
         fn.logprint("Generating starting population...", False)
-        population = Population(c.params, genmap)
+        population = Population(c.params, genmap, np.array([-1]),
+                np.array([[-1],[-1]]))
         fn.logprint("done.")
 
     ## Initialise record
@@ -134,7 +135,7 @@ for n_run in range(1, c.number_of_runs+1):
     fn.print_runtime(runstart, runend)
 
     ## WRITE POPULATION, RECORD TO FILE ##
-    fn.run_output(n_run, population, record, c.window_size)
+    fn.run_output(n_run, Outpop(population), record, c.window_size)
 
 simend = datetime.now()
 simend_print = time.strftime('%X %x', time.localtime())+"."

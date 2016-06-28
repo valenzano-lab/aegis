@@ -2,14 +2,11 @@
 ## LIBRARIES ##
 ###############
 
-import scipy.stats
+import scipy.stats, datetime, os, sys
 import numpy as np
 from random import randint,sample
-import datetime
-import os
 from importlib import import_module
-import sys
-import cPickle
+import cPickle as pickle
 
 #############################
 ## CONFIGURATION FUNCTIONS ##
@@ -50,7 +47,7 @@ def get_startpop(seed_name):
         if seed_split[-1] != "txt":
             seed_name = seed_name + ".txt"
         popfile = open(seed_name, "rb")
-        poparray = cPickle.load(popfile) # Import population array
+        poparray = pickle.load(popfile) # Import population array
     except IOError:
         print "No such seed file: " + seed_name
         q = raw_input(
@@ -124,8 +121,8 @@ def run_output(n_run, population, record, window_size):
     pop_file = open("run_"+str(n_run)+"_pop.txt", "wb")
     rec_file = open("run_"+str(n_run)+"_rec.txt", "wb")
     try:
-        cPickle.dump(population, pop_file)
-        cPickle.dump(record.record, rec_file)
+        pickle.dump(population, pop_file)
+        pickle.dump(record.record, rec_file)
     finally:
         pop_file.close()
         rec_file.close()

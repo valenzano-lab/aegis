@@ -30,7 +30,9 @@ def conf(request):
 @pytest.fixture(scope="session")
 def spop(request):
     """Create a sample population from the default configuration."""
-    return fn.get_startpop("sample_pop")
+    impt = fn.get_startpop("sample_pop")
+    print impt.ages.shape
+    return impt.toPop()
 @pytest.fixture
 def parents(request, conf):
     """Returns population of two sexual adults."""
@@ -38,7 +40,8 @@ def parents(request, conf):
     params["sexual"] = True
     params["age_random"] = False
     params["start_pop"] = 2
-    return cl.Population(params, conf.genmap)
+    return cl.Population(params, conf.genmap, np.array([-1]),
+            np.array([[-1],[-1]]))
 @pytest.fixture(scope="session")
 def pop1(request, spop):
     """Create population with genomes filled with ones."""
@@ -122,6 +125,8 @@ class TestConfig:
         """Test that a blank seed returns a blank string and a valid seed
         returns a population array of the correct size."""
         assert fn.get_startpop("") == ""
+        print spop.ages
+        print spop.N
         assert spop.genomes.shape == (spop.N, 2*spop.chrlen)
 
     def test_get_startpop_bad(self, ran_str):
@@ -214,9 +219,11 @@ class TestPopInit:
         precision = 1
         conf.params["start_pop"] = 2000
         conf.params["age_random"] = False
-        pop_a = cl.Population(conf.params, conf.genmap)
+        pop_a = cl.Population(conf.params, conf.genmap, np.array([-1]),
+            np.array([[-1],[-1]]))
         conf.params["age_random"] = True
-        pop_b = cl.Population(conf.params, conf.genmap)
+        pop_b = cl.Population(conf.params, conf.genmap, np.array([-1]),
+            np.array([[-1],[-1]]))
         print np.mean(pop_b.ages)
         print abs(np.mean(pop_b.ages)-pop_b.maxls/2)
         assert pop_a.sex == pop_b.sex == conf.params["sexual"]
@@ -336,7 +343,7 @@ class TestReproduction:
     def test_recombine_none(self, spop):
         """Test if genome stays same if recombination fn.chance is zero."""
         pop = spop.clone()
-        pop._Population__recombine(0)
+        pop.recombine(0)
         assert (pop.genomes == spop.genomes).all()
 
     def test_recombine_all(self, conf):
@@ -352,9 +359,10 @@ class TestReproduction:
             g[:,pop.chrlen::2] = h
             return g
         conf.params["start_pop"] = 10
-        pop = cl.Population(conf.params, conf.genmap)
+        pop = cl.Population(conf.params, conf.genmap, np.array([-1]),
+            np.array([[-1],[-1]]))
         zz = recombine_zig_zag(pop)
-        pop._Population__recombine(1)
+        pop.recombine(1)
         assert (pop.genomes == zz).all()
 
     def test_assortment(self, parents):
@@ -364,7 +372,7 @@ class TestReproduction:
         parent1 = np.copy(parents.genomes[0])
         parent2 = np.copy(parents.genomes[1])
         c = parents.chrlen
-        children = parents._Population__assortment().genomes
+        children = parents.assortment().genomes
         assert \
         (children == np.append(parent1[:c], parent2[:c])).all() or\
         (children == np.append(parent2[:c], parent1[:c])).all() or\
@@ -380,7 +388,7 @@ class TestReproduction:
         """Test that, in the absence of a +/- bias, the appropriate
         proportion of the genome is mutated."""
         genomes = np.copy(spop.genomes)
-        spop._Population__mutate(mrate,1)
+        spop.mutate(mrate,1)
         assert abs((1-np.mean(genomes == spop.genomes))-mrate) < 0.01
 
     @pytest.mark.parametrize("mratio", [0, 0.1, 0.5, 1])
@@ -390,7 +398,7 @@ class TestReproduction:
         t = 0.01 # Tolerance
         mrate = 0.5 
         g0 = np.copy(spop.genomes)
-        spop._Population__mutate(mrate,mratio)
+        spop.mutate(mrate,mratio)
         g1 = spop.genomes
         is1 = (g0==1)
         is0 = np.logical_not(is1)
@@ -409,7 +417,8 @@ class TestReproduction:
         params["sexual"] = sexvar
         params["age_random"] = False
         params["start_pop"] = n
-        pop = cl.Population(params,conf.genmap)
+        pop = cl.Population(params, conf.genmap, np.array([-1]),
+            np.array([[-1],[-1]]))
         pop.genomes = fn.chance(m, pop.genomes.shape).astype(int)
         pop.growth(np.linspace(0,1,21),1,0,0,1,False)
         # Calculate proportional observed and expected growth
