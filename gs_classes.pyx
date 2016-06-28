@@ -80,41 +80,36 @@ class Population:
 
     # Major methods:
 
-    def get_subpop(self, min_age, max_age, offset, val_range):
+    def get_subpop(self, int min_age, int max_age, int offset, 
+            np.ndarray[NPFLOAT_t, ndim=1] val_range):
         """Select a population subset based on chance defined by genotype."""
         cdef:
-            np.ndarray[NPINT_t, ndim=2] genomes = self.genomes
-            np.ndarray[NPINT_t, ndim=1] ages = self.ages
-            np.ndarray[NPINT_t, ndim=1] genmap = self.genmap
-            int a1 = min_age
-            int a2 = min(max_age, np.max(ages)+1)
-            int b = self.nbase
-            int c = self.chrlen
-            int o = offset
-            np.ndarray[NPFLOAT_t, ndim=1] vr = val_range
+            np.ndarray[NPINT_t, ndim=2] self.genomes
+            np.ndarray[NPINT_t, ndim=1] self.ages, self.genmap
+            int self.nbase, self.chrlen
             np.ndarray[NPINT_t, ndim=1] subpop_indices = np.empty(0,int)
             int age, locus
             np.ndarray[NPINT_t, ndim=1] pos, gen, included
-            np.ndarray[NPBOOL_t, ndim=1,cast=True] match
+            np.ndarray[NPBOOL_t, ndim=1, cast=True] match
             np.ndarray[NPFLOAT_t, ndim=1] inc_rates
             np.ndarray[NPINT_t, ndim=2] pop
-        for age in range(a1, a2):
+        for age in range(min_age, min(max_age, np.max(ages)+1)):
             # Get indices of appropriate locus for that age:
-            locus = np.ndarray.nonzero(genmap==(age+o))[0][0]
+            locus = np.ndarray.nonzero(self.genmap==(age+offset))[0][0]
                 # NB: Will only return FIRST locus for that age
-            pos = np.arange(locus*b, (locus+1)*b, dtype=int)
+            pos = np.arange(locus*b, (locus+1)*self.nbase)
             # Subset to correct age and required locus:
             match = (ages == age)
             which = np.nonzero(match)[0]
-            pop = genomes[which][:,np.append(pos, pos+c)]
+            pop = self.genomes[which][:,np.append(pos, pos+self.chrlen)]
             # Get sum of genotype for every individual:
-            gen = np.sum(pop, axis=1, dtype=int)
+            gen = np.sum(pop, axis=1)
             # Convert genotypes into inclusion probabilities:
-            inc_rates = vr[gen]
+            inc_rates = val_range[gen]
             included = which[fn.chance(inc_rates, len(inc_rates))]
             subpop_indices = np.append(subpop_indices, included)
-        subpop = Population(self.params(), genmap,
-                ages[subpop_indices], genomes[subpop_indices])
+        subpop = Population(self.params(), self.genmap,
+                self.ages[subpop_indices], self.genomes[subpop_indices])
         return subpop
 
     def growth(self, r_range, penf, r_rate,  m_rate, m_ratio, verbose):
