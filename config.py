@@ -6,7 +6,7 @@ sexual = False # Sexual or asexual reproduction
 
 ## RUNNING PARAMETERS ##
 number_of_runs = 1 # Total number of independent runs
-number_of_stages = 200 # Total number of stages per run
+number_of_stages = 0 # Total number of stages per run
 crisis_stages = [] # Stages of extrinsic death crisis
 crisis_sv = 0.05 # Fraction of crisis survivors (if applicable)
 number_of_snapshots = 16 # Number of stages at which to store output data
@@ -20,7 +20,7 @@ res_limit = 5000 # Maximum resource value, if variable
 
 ## STARTING POPULATION PARAMETERS ##
 start_pop = 500 # Starting population size
-age_random = True # Random starting ages; else all start as new adults
+age_random = False # Random starting ages; else all start as new adults
 # Proportions of 1's in initial genomes:
 g_dist = {
         "s":0.5, # Survival
@@ -45,11 +45,11 @@ window_size = 10 # Size of sliding window for recording p1 SD
 
 ## DERIVED PARAMETERS: DO NOT ALTER ##
 import numpy as np
-gen_map = np.asarray(range(0,max_ls)+range(maturity+100,
+genmap = np.asarray(range(0,max_ls)+range(maturity+100,
     max_ls+100)+[201])
 if sexual: repr_bound[1] *= 2
 # Genome map: survival (0 to max), reproduction (maturity to max), neutral
-chr_len = len(gen_map)*n_base # Length of chromosome in binary units
+chr_len = len(genmap)*n_base # Length of chromosome in binary units
 d_range = np.linspace(death_bound[1], death_bound[0],2*n_base+1)
 # max to min death rate
 r_range = np.linspace(repr_bound[0],repr_bound[1],2*n_base+1)

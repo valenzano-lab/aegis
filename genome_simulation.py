@@ -41,8 +41,8 @@ fn.logprint("Working directory: "+os.getcwd())
 
 c = fn.get_conf(args.c) # Import config file as "c".
 startpop = fn.get_startpop(args.s) # Get seed population, if any.
-gen_map = np.copy(c.gen_map)
-np.random.shuffle(gen_map) # Randomize order of genetic units.
+genmap = np.copy(c.genmap)
+np.random.shuffle(genmap) # Randomize order of genetic units.
 
 ####################
 ## RUN SIMULATION ##
@@ -62,7 +62,7 @@ for n_run in range(1, c.number_of_runs+1):
     if startpop != "": population = startpop
     else:
         fn.logprint("Generating starting population...", False)
-        population = Population(c.params, gen_map)
+        population = Population(c.params, genmap)
         fn.logprint("done.")
 
     ## Initialise record

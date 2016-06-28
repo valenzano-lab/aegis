@@ -20,7 +20,7 @@ def get_dir(dir_name):
     try:
         sys.path.remove(os.getcwd())
         os.chdir(dir_name)
-        sys.path.append(os.getcwd())
+        sys.path = [os.getcwd()] + sys.path
     except OSError:
         exit("Error: Specified simulation directory does not exist.")
 
@@ -68,27 +68,27 @@ def get_startpop(seed_name):
 
 rand = scipy.stats.uniform(0,1) # Uniform random number generator
 
-def chance(z,n=1):
+def chance(p,n=1):
     """Generate array of (n or shape n=(x,y)) independent booleans with P(True)=z."""
-    return rand.rvs(n)<z
+    return rand.rvs(n)<p
 
 ###########################
 ## POPULATION GENERATION ##
 ###########################
 
-def make_genome_array(start_pop, chr_len, gen_map, n_base, g_dist):
+def make_genome_array(start_pop, chr_len, genmap, n_base, g_dist):
     """
     Generate genomes for start_pop individuals with chromosome length of chr_len
     bits and locus length of n_base bits. Set the genome array values (distribution
-    of 1's and 0's) according to gen_map and g_dist.
+    of 1's and 0's) according to genmap and g_dist.
     """
     # Initialise genome array:
     genome_array = np.zeros([start_pop,chr_len*2])
     # Use genome map to determine probability distribution for each locus:
     loci = {
-        "s":np.nonzero(gen_map<100)[0],
-        "r":np.nonzero(np.logical_and(gen_map>100,gen_map<200))[0],
-        "n":np.nonzero(gen_map==201)[0]
+        "s":np.nonzero(genmap<100)[0],
+        "r":np.nonzero(np.logical_and(genmap>=100,genmap<200))[0],
+        "n":np.nonzero(genmap>=200)[0]
         }
     # Set genome array values according to given probabilities:
     for k in loci.keys():
@@ -102,7 +102,8 @@ def make_genome_array(start_pop, chr_len, gen_map, n_base, g_dist):
 ######################
 
 def update_resources(res0, N, R, V, limit, verbose=False):
-    """Implement consumption and regrowth of resources depending on population size."""
+    """Implement consumption and regrowth of resources depending on 
+    population size (under the variable-resource condition)."""
     if verbose: print "Updating resources...",
     k = 1 if N>res0 else V
     res1 = int((res0-N)*k+R) # This means individuals can consume future resources?

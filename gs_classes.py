@@ -2,18 +2,19 @@ import gs_functions as fn
 import numpy as np
 import scipy.stats as st
 from random import sample
+from operator import mul
 
 class Population:
     """A simulated population with genomes and ages."""
 
     # Initialisation
-    def __init__(self, params, gen_map, ages="", genomes=""):
+    def __init__(self, params, genmap, ages="", genomes=""):
         self.sex = params["sexual"]
         self.chrlen = params["chr_len"]
         self.nbase = params["n_base"]
         self.maxls = params["max_ls"]
         self.maturity = params["maturity"]
-        self.genmap = gen_map
+        self.genmap = genmap
         # Determine ages if not given
         if ages == "" and params["age_random"]:
             self.ages = np.random.random_integers(0, self.maxls-1,
@@ -93,18 +94,13 @@ class Population:
         if verbose:
             fn.logprint("Calculating reproduction...", False)
         parents = self.get_subpop(self.maturity, self.maxls, 100, r_range/penf)
-        if self.sex:
-            if parents.N > 1:
-                parents.__recombine(r_rate)
-                children = parents.__assortment()
-		children.__mutate(m_rate, m_ratio) # change
-		children.ages[:] = 0 # Make newborn
-		self.addto(children)
-        else:
-	    children = parents.clone()
-            children.__mutate(m_rate, m_ratio)
-            children.ages[:] = 0 # Make newborn
-            self.addto(children)
+        if self.sex and parents.N > 1:
+            parents.__recombine(r_rate)
+            children = parents.__assortment()
+        else: children = parents.clone()
+        children.__mutate(m_rate, m_ratio)
+        children.ages[:] = 0 # Make newborn
+        self.addto(children)
         self.N = len(self.ages)
         if verbose:
             fn.logprint("done. ", False)
@@ -137,15 +133,16 @@ class Population:
     def __recombine(self, r_rate):
         """Recombine between the two chromosomes of each individual
         in the population."""
-        chr1 = np.arange(self.chrlen)
-        chr2 = chr1 + self.chrlen
-        for n in range(len(self.genomes)):
-            g = self.genomes[n]
-            r_sites = np.nonzero(fn.chance(r_rate, self.chrlen))[0]
-            for r in r_sites:
-                g = np.concatenate((g[chr1][:r], g[chr2][r:],
-                    g[chr2][:r], g[chr1][r:]))
-            self.genomes[n] = g
+        if r_rate > 0:
+            chr1 = np.arange(self.chrlen)
+            chr2 = chr1 + self.chrlen
+            for n in range(len(self.genomes)):
+                g = self.genomes[n]
+                r_sites = np.nonzero(fn.chance(r_rate, self.chrlen))[0]
+                for r in r_sites:
+                    g = np.concatenate((g[chr1][:r], g[chr2][r:],
+                        g[chr2][:r], g[chr1][r:]))
+                self.genomes[n] = g
 
     def __assortment(self):
         """Pair individuals into breeding pairs and generate children
@@ -173,12 +170,13 @@ class Population:
 
     def __mutate(self, m_rate, m_ratio):
         """Mutate genomes of population according to stated rates."""
-        is_0 = self.genomes==0
-        is_1 = np.invert(is_0)
-        positive_mut = fn.chance(m_ratio*m_rate, np.sum(is_0))
-        negative_mut = 1-fn.chance(m_rate,np.sum(is_1))
-        self.genomes[is_0] = positive_mut
-        self.genomes[is_1] = negative_mut
+        if m_rate > 0:
+            is_0 = self.genomes==0
+            is_1 = np.invert(is_0)
+            positive_mut = fn.chance(m_ratio*m_rate, np.sum(is_0))
+            negative_mut = 1-fn.chance(m_rate,np.sum(is_1))
+            self.genomes[is_0] = positive_mut
+            self.genomes[is_1] = negative_mut
 
 class Record:
     """An enhanced dictionary object recording simulation data."""
@@ -193,7 +191,7 @@ class Record:
         array4 = np.zeros(n_stages)
         self.record = {
             # Population parameters:
-            "gen_map":population.genmap,
+            "genmap":population.genmap,
             "chr_len":np.array([population.chrlen]),
             "n_bases":np.array([population.nbase]),
             "max_ls":np.array([population.maxls]),
@@ -292,42 +290,40 @@ class Record:
         self.record["density_repr"][n_snap] = density_repr
 
     def update_shannon_weaver(self, population):
-        """H = -sum(p_i*ln(p_i)), where p_i is the density of genotype i."""
+        """H =-sum(p_i*ln(p_i)), where p_i is the density of genotype i."""
         p = population
         b = p.nbase
         s1 = b
-        s0 = p.genomes[:, :p.chrlen].shape[0] * p.genomes[:, :p.chrlen].shape[1]\
-             / s1
+        s0 = reduce(mul, p.genomes[:,:p.chrlen].shape) / s1
+        # s0 gives the total number of loci in each chromosome across
+        # all individuals
         var = np.hstack((p.genomes[:,:p.chrlen].reshape(s0,s1), \
                          p.genomes[:,p.chrlen:].reshape(s0,s1)))
+        # Horizontally stack matching loci from paired chromosomes 
+        # to get (nbase * 2) x (# loci over whole population) array
         density = np.bincount(np.sum(var, axis=1), minlength = 2*b+1)
+        # Get density distribution of each genotype (from 0 to 20 1's).
         return st.entropy(density)
 
-    def sort_n1(self, arr):
-        """Sort array arr for ages in ascending order (survival:0-71, reproduction: 16-71)."""
+    def sort_by_age(self, arr):
+        """Sort a one-row array in ascending order by age (survival:0-71, 
+        reproduction: 16-71, neutral). Array must have same number of
+        element as genome array has columns."""
         b = self.record["n_bases"]
         m = self.record["maturity"]
         maxls = self.record["max_ls"]
         count = 0
         arr_sorted = np.zeros(arr.shape)
-        for i in self.record["gen_map"]:
+        for i in self.record["genmap"]:
             if i<100: # survival
                 arr_sorted[range(i*b, (i+1)*b)] = arr[range(count, count+b)]
-            elif i==201: # neutral
+            elif i>=200: # neutral
                 arr_sorted[-b:] = arr[range(count, count+b)]
             else: # reproduction
                 arr_sorted[range(maxls*b+(i-100-m)*b, maxls*b+(i+1-100-m)*b)] \
                 = arr[range(count, count+b)]
             count += b
         return arr_sorted
-
-    def age_wise_n1(self, arr_str):
-        """Average n1 array, starting from value-per-bit, for it to be value-per-age. [arr_str = 'n1' or 'n1_std']"""
-        b = self.record["n_bases"]
-        arr = self.record[arr_str] # already sorted
-        s = arr.shape
-        res = np.mean(arr.reshape((s[0], self.record["chr_len"]/b, b)), 2)
-        return res
 
     def update_invstats(self, population, n_snap):
         """Record detailed cross-population statistics at current
@@ -337,7 +333,7 @@ class Record:
         # Frequency of 1's at each position on chromosome and it's std:
         n1s = np.vstack((p.genomes[:, :p.chrlen], p.genomes[:, p.chrlen:]))
         n1_std = np.std(n1s, axis=0)
-        n1 = np.mean(n1s, axis=0)
+        n1 = np.mean(n1s, axis=0) # Mean number of 1's per chromosome bit
         # Junk stats calculated from neutral locus
         neut_locus = np.nonzero(p.genmap==201)[0][0]
         neut_pos = np.arange(neut_locus*p.nbase, (neut_locus+1)*p.nbase)
@@ -346,8 +342,8 @@ class Record:
         junk_death = np.mean(self.record["d_range"][neut_gen])
         junk_repr = np.mean(self.record["r_range"][neut_gen])
         # Append record object
-        self.record["n1"][n_snap] = self.sort_n1(n1)
-        self.record["n1_std"][n_snap] = self.sort_n1(n1_std)
+        self.record["n1"][n_snap] = self.sort_by_age(n1)
+        self.record["n1_std"][n_snap] = self.sort_by_age(n1_std)
         self.record["entropy"][n_snap] = self.update_shannon_weaver(population)
         self.record["junk_death"][n_snap] = junk_death
         self.record["junk_repr"][n_snap] = junk_repr
@@ -358,22 +354,13 @@ class Record:
         self.update_agestats(population, n_snap)
         self.update_invstats(population, n_snap)
 
-    def final_update(self, n_run, window):
-        """After run completion, compute fitness and s1 (rolling window std of n1)."""
-        # Rolling standard deviation of #1's along genome:
-        a = self.record["n1"]
-        a_shape = a.shape[:-1] + (a.shape[-1] - window + 1, window)
-        a_strd = a.strides + (a.strides[-1],) # strides
-        self.record["s1"] = np.lib.stride_tricks.as_strided(a,
-                shape=a_shape, strides=a_strd)
-        x_surv = np.cumprod(1-self.record["death_mean"],1)
-        self.record["fitness"] = np.cumsum(
-                x_surv*self.record["repr_mean"],1)
-        self.record["junk_fitness"] = (
-                1-self.record["junk_death"])*self.record["junk_repr"]
-        self.record["actual_death_rate"] = self.actual_death_rate()
-        self.record["age_wise_n1"] = self.age_wise_n1("n1")
-        self.record["age_wise_n1_std"] = self.age_wise_n1("n1_std")
+    def age_wise_n1(self, arr_str):
+        """Average n1 array, starting from value-per-bit, for it to be value-per-age. [arr_str = 'n1' or 'n1_std']"""
+        b = self.record["n_bases"]
+        arr = self.record[arr_str] # already sorted
+        s = arr.shape
+        res = np.mean(arr.reshape((s[0], self.record["chr_len"]/b, b)), 2)
+        return res
 
     def actual_death_rate(self):
         """Compute actual death rate for each age at each stage."""
@@ -385,3 +372,21 @@ class Record:
         death = 1 - dividend / divisor
         # value for last age is 1
         return np.append(death, np.ones([death.shape[0], 1]), axis=1)
+
+    def final_update(self, n_run, window):
+        """After run completion, compute fitness and s1 (rolling window std of n1)."""
+        # Rolling standard deviation of #1's along genome:
+        a = self.record["n1"]
+        a_shape = a.shape[:-1] + (a.shape[-1] - window + 1, window)
+        a_strd = a.strides + (a.strides[-1],) # strides
+        self.record["s1"] = np.std(
+                np.lib.stride_tricks.as_strided(a, shape=a_shape, strides=a_strd), 2)
+        x_surv = np.cumprod(1-self.record["death_mean"],1)
+        self.record["fitness"] = np.cumsum(
+                x_surv*self.record["repr_mean"],1)
+        self.record["junk_fitness"] = (
+                1-self.record["junk_death"])*self.record["junk_repr"]
+        self.record["actual_death_rate"] = self.actual_death_rate()
+        self.record["age_wise_n1"] = self.age_wise_n1("n1")
+        self.record["age_wise_n1_std"] = self.age_wise_n1("n1_std")
+
