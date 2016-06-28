@@ -6,6 +6,7 @@ cimport numpy as np
 import scipy.stats as st
 from random import sample
 from operator import mul
+import sys
 
 # Cython data types for numpy
 NPINT = np.int # Integer arrays
@@ -115,6 +116,35 @@ cdef class Population:
         self.genomes = np.vstack([self.genomes, pop.genomes])
 
     # Major methods:
+
+    cpdef get_subpop_new(self, int min_age, int max_age, int offset,
+            np.ndarray[NPFLOAT_t, ndim=1] val_range):
+        """Select a population subset based on chance defined by genotype."""
+        cdef:
+            np.ndarray[NPINT_t, ndim=1] subpop_indices = np.empty(0,int)
+            int age, locus
+            np.ndarray[NPINT_t, ndim=1] pos, inc, which
+            np.ndarray[NPFLOAT_t, ndim=1] inc_rates
+            np.ndarray[NPINT_t, ndim=2] pop
+        gen = np.sum(np.reshape(
+            self.genomes[np.ages < min_age and np.ages <= max_age],
+            (self.N, len(self.genmap), self.nbase)), 2)
+        for age in range(min_age, min(max_age, np.max(self.ages)+1)):
+            # Get indices of appropriate locus for that age:
+            locus = np.ndarray.nonzero(self.genmap==(age+offset))[0][0]
+                # NB: Will only return FIRST locus for that age
+            pos = np.arange(locus*self.nbase, (locus+1)*self.nbase)
+            # Subset to correct age and required locus:
+            which = np.nonzero(self.ages == age)[0]
+            pop = self.genomes[which][:,np.append(pos, pos+self.chrlen)]
+            # Get sum of genotypes for every individual and
+            # convert into inclusion probabilities::
+            inc_rates = val_range[np.sum(pop, axis=1)]
+            inc = which[fn.chance(inc_rates, len(inc_rates))]
+            subpop_indices = np.append(subpop_indices, inc)
+        subpop = Population(self.params(), self.genmap,
+                self.ages[subpop_indices], self.genomes[subpop_indices])
+        return subpop
 
     cpdef get_subpop(self, int min_age, int max_age, int offset,
             np.ndarray[NPFLOAT_t, ndim=1] val_range):
