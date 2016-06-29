@@ -157,7 +157,9 @@ cdef class Population:
             np.ndarray[NPFLOAT_t, ndim=1] inc_rates
             np.ndarray[NPINT_t, ndim=3] genloc, pop
         g = len(self.genmap)
+        inc_rates = np.zeros(self.N)
         genloc = np.reshape(self.genomes, (self.N, g*2, self.nbase))
+        # Get inclusion probabilities age-wise:
         for age in range(min_age, min(max_age, np.max(self.ages)+1)):
             # Get indices of appropriate locus for that age:
             locus = np.ndarray.nonzero(self.genmap==(age+offset))[0][0]
@@ -165,13 +167,11 @@ cdef class Population:
             # Subset to correct age and required locus:
             which = np.nonzero(self.ages == age)[0]
             pop = genloc[which][:,[locus, locus+g]]
-            inc_rates = val_range[np.einsum("ijk->i", pop)]
-            # Get sum of genotypes for every individual and
-            # convert into inclusion probabilities::
-            inc = which[fn.chance(inc_rates, len(inc_rates))]
-            subpop_indices = np.append(subpop_indices, inc)
+            # Determine inclusion rates
+            inc_rates[which] = val_range[np.einsum("ijk->i", pop)]
+        inc = fn.chance(inc_rates, self.N)
         subpop = Population(self.params(), self.genmap,
-                self.ages[subpop_indices], self.genomes[subpop_indices])
+                self.ages[inc], self.genomes[inc])
         return subpop
 
     def growth(self, r_range, penf, r_rate,  m_rate, m_ratio, verbose):
