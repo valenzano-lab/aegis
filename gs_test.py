@@ -27,12 +27,13 @@ def ran_str(request):
 def conf(request):
     """Create a default configuration object."""
     return fn.get_conf("config_test")
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="session", params=["import"])
 def spop(request):
     """Create a sample population from the default configuration."""
-    impt = fn.get_startpop("sample_pop")
-    print impt.ages.shape
-    return impt.toPop()
+    if request.param == "import":
+        impt = fn.get_startpop("sample_pop")
+        print impt.ages.shape
+        return impt.toPop()
 @pytest.fixture
 def parents(request, conf):
     """Returns population of two sexual adults."""
@@ -296,17 +297,29 @@ class TestDeathCrisis:
     """Test functioning of get_subpop, death and crisis methods."""
 
     @pytest.mark.parametrize("p", [0, 0.3, 0.8, 1])
-    @pytest.mark.parametrize("min_age,offset",[(0,0),(16,100)])
-    def test_get_subpop(self, spop, p, min_age, offset):
+    @pytest.mark.parametrize("adults_only,offset",[(False,0),(True,100)])
+    def test_get_subpop(self, spop, p, adults_only, offset):
         precision = 0.1
         """Test if the probability of passing is close to that indicated
         by the genome (when all loci have the same distribution)."""
         pop = spop.clone()
+        min_age = pop.maturity if adults_only else 0
         pop.genomes = fn.chance(p, pop.genomes.shape).astype(int)
         subpop = pop.get_subpop(min_age, pop.maxls, offset,
                 np.linspace(0,1,21))
         assert abs(np.sum(subpop)/float(pop.N) - p)*(1-min_age/pop.maxls) < \
                 precision
+
+    @pytest.mark.parametrize("offset",[0, 100])
+    def test_get_subpop_extreme_values(self, spop, offset):
+        """Test that get_subpop correctly handles (i.e. ignores)
+        individuals outside specified age range."""
+        pop = spop.clone()
+        pop.ages = np.random.choice([pop.maturity-1, pop.maxls],
+                pop.N)
+        subpop = pop.get_subpop(pop.maturity, pop.maxls, offset,
+                np.linspace(0,1,21))
+        assert np.sum(subpop) == 0
 
     @pytest.mark.parametrize("p", [0.0, 0.3, 0.8, 1.0])
     @pytest.mark.parametrize("x", [1.0, 3.0, 9.0])
