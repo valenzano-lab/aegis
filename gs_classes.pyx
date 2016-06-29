@@ -439,7 +439,7 @@ class Record:
         n1_std = np.std(n1s, axis=0)
         n1 = np.mean(n1s, axis=0) # Mean number of 1's per chromosome bit
         # Junk stats calculated from neutral locus
-        neut_locus = np.nonzero(p.genmap==201)[0][0]
+        neut_locus = np.nonzero(p.genmap==200)[0][0]
         neut_pos = np.arange(neut_locus*p.nbase, (neut_locus+1)*p.nbase)
         neut_pop = p.genomes[:,np.append(neut_pos, neut_pos+p.chrlen)]
         neut_gen = np.sum(neut_pop, axis=1)

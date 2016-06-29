@@ -21,10 +21,37 @@ def get_dir(dir_name):
     except OSError:
         exit("Error: Specified simulation directory does not exist.")
 
+def gen_conf(c):
+    """Generate derived configuration parameters from simple ones and
+    add to configuration object."""
+    c.g_dist = {
+            "s":c.g_dist_s, # Survival
+            "r":c.g_dist_r, # Reproduction
+            "n":c.g_dist_n # Neutral
+            }
+    # Genome map: survival (0 to max), reproduction (maturity to max), neutral
+    c.genmap = np.asarray(range(0,c.max_ls)+range(c.maturity+100,
+        c.max_ls+100)+range(200, 200+c.n_neutral))
+    if c.sexual: c.repr_bound[1] *= 2
+    c.chr_len = len(c.genmap) * c.n_base # Length of chromosome in binary units
+    c.d_range = np.linspace(c.death_bound[1], c.death_bound[0],
+            2*c.n_base+1) # max to min death rate
+    c.r_range = np.linspace(c.repr_bound[0],c.repr_bound[1],
+            2*c.n_base+1) # min to max repr rate
+    if type(c.number_of_snapshots) is float:
+        c.number_of_snapshots = int(c.number_of_snapshots * c.number_of_stages)
+    c.snapshot_stages = np.around(np.linspace(0,c.number_of_stages-1,
+            c.number_of_snapshots),0) 
+    c.params = {"sexual":c.sexual, "chr_len":c.chr_len, "n_base":c.n_base,
+        "maturity":c.maturity, "max_ls":c.max_ls, "age_random":c.age_random,
+        "start_pop":c.start_pop, "g_dist":c.g_dist}
+    # Dictionary for population initialisation
+    return(c)
+
 def get_conf(file_name):
     """Import specified configuration file for simulation."""
     try:
-        p = import_module(file_name)
+        p = gen_conf(import_module(file_name))
     except ImportError:
         print "No such file in simulation directory: " + file_name
         q = raw_input(

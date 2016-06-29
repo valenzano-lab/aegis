@@ -554,6 +554,7 @@ class TestRecordUpdate:
         pop1 (genomes filled with ones)."""
         record.update_invstats(pop1,0)
         r = record.record
+        print np.sum(r["n1"][0] == np.ones(r["chr_len"]))
         assert (r["n1"][0] == np.ones(r["chr_len"])).all()
         assert (r["n1_std"][0] == np.zeros(r["chr_len"])).all()
         assert r["entropy"][0] == -0

@@ -1,5 +1,5 @@
 ################################################
-## GENOME SIMULATION v.1.5 CONFIGURATION FILE ##
+## GENOME SIMULATION v.2.1 CONFIGURATION FILE ##
 ################################################
 
 sexual = False # Sexual or asexual reproduction
@@ -9,7 +9,10 @@ number_of_runs = 1 # Total number of independent runs
 number_of_stages = 0 # Total number of stages per run
 crisis_stages = [] # Stages of extrinsic death crisis
 crisis_sv = 0.05 # Fraction of crisis survivors (if applicable)
-number_of_snapshots = 16 # Number of stages at which to store output data
+number_of_snapshots = 16 # Number of stages at which to store output data;
+                         # if integer, will take that many snapshots
+                         # evenly distributed throughout stages; if float,
+                         # will take a snapshot at that proportion of stages
 
 ## RESOURCE PARAMETERS ##
 res_start = 0 # Starting resource value
@@ -21,12 +24,9 @@ res_limit = 5000 # Maximum resource value, if variable
 ## STARTING POPULATION PARAMETERS ##
 start_pop = 500 # Starting population size
 age_random = False # Random starting ages; else all start as new adults
-# Proportions of 1's in initial genomes:
-g_dist = {
-        "s":0.5, # Survival
-        "r":0.5, # Reproduction
-        "n":0.5 # Neutral
-        }
+g_dist_s = 0.5 # Propoprtion of 1's in survival loci of initial genomes
+g_dist_r = 0.5 #                       reproductive loci
+g_dist_n = 0.5 #                       neutral loci
 
 ## SIMULATION FUNDAMENTALS: CHANGE WITH CARE ##
 death_bound = [0.001, 0.02] # min and max death rates
@@ -36,27 +36,11 @@ m_rate = 0.001 # mutation rate
 m_ratio = 0.1 # Ratio of positive (0->1) to negative (1->0) mutations
 max_ls = 71 # Maximum lifespan; must be less than 100
 maturity = 16 # Age of sexual maturation
+n_neutral = 1 # Number of neutral loci in genome
 n_base = 10 # Genome size (binary units per locus)
 surv_pen = True # Survival penalty under starvation
 repr_pen = False # Reproduction penalty under starvation
 death_inc = 3 # Per-stage death rate increase under starvation
 repr_dec = 3 # Per-stage reproduction rate decrease under starvation
-window_size = 10 # Size of sliding window for recording p1 SD
-
-## DERIVED PARAMETERS: DO NOT ALTER ##
-import numpy as np
-genmap = np.asarray(range(0,max_ls)+range(maturity+100,
-    max_ls+100)+[201])
-if sexual: repr_bound[1] *= 2
-# Genome map: survival (0 to max), reproduction (maturity to max), neutral
-chr_len = len(genmap)*n_base # Length of chromosome in binary units
-d_range = np.linspace(death_bound[1], death_bound[0],2*n_base+1)
-# max to min death rate
-r_range = np.linspace(repr_bound[0],repr_bound[1],2*n_base+1)
-# min to max repr rate
-snapshot_stages = np.around(np.linspace(0,number_of_stages-1,
-    number_of_snapshots),0) # Stages to save detailed record
-params = {"sexual":sexual, "chr_len":chr_len, "n_base":n_base,
-    "maturity":maturity, "max_ls":max_ls, "age_random":age_random,
-    "start_pop":start_pop, "g_dist":g_dist}
-    # Dictionary for population initialisation
+window_size = 10 # Size of sliding window for recording standard deviation of locus
+                 # genotypes along genomes.
