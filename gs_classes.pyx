@@ -1,4 +1,7 @@
 # cython: profile=True
+# cython: boundscheck=False
+# cython: wraparound=False
+
 # Modules
 import gs_functions as fn
 import numpy as np
@@ -7,7 +10,6 @@ import scipy.stats as st
 from random import sample
 from operator import mul
 import sys
-from cython.parallel import parallel, prange
 
 # Cython data types for numpy
 NPINT = np.int # Integer arrays
@@ -171,15 +173,19 @@ cdef class Population:
             # Determine inclusion rates
             inc_rates[which] = val_range[np.einsum("ijk->i", pop)]
         inc = fn.chance(inc_rates, self.N)
-        subpop = Population(self.params(), self.genmap,
-                self.ages[inc], self.genomes[inc])
-        return subpop
+        return inc
 
-    def growth(self, r_range, penf, r_rate,  m_rate, m_ratio, verbose):
+    cpdef growth(self, np.ndarray[NPFLOAT_t, ndim=1] r_range, float penf, 
+            float r_rate, float m_rate, float m_ratio, int verbose):
         """Generate new mutated children from selected parents."""
         if verbose:
             fn.logprint("Calculating reproduction...", False)
-        parents = self.get_subpop(self.maturity, self.maxls, 100, r_range/penf)
+        cdef:
+            np.ndarray[NPBOOL_t, ndim=1,cast=True] which_parents
+            object parents, children
+        which_parents = self.get_subpop(self.maturity, self.maxls, 100, r_range/penf)
+        parents = Population(self.params(), self.genmap,
+                self.ages[which_parents], self.genomes[which_parents])
         if self.sex and parents.N > 1:
             parents.recombine(r_rate)
             children = parents.assortment()
@@ -192,17 +198,23 @@ cdef class Population:
             fn.logprint("done. ", False)
             fn.logprint(str(children.N)+" new individuals born.")
 
-    def death(self, d_range, penf, verbose):
+    cpdef death(self, np.ndarray[NPFLOAT_t, ndim=1] d_range, float penf, 
+            int verbose):
         """Select survivors and kill rest of population."""
         if verbose: fn.logprint("Calculating death...", False)
+        cdef:
+            np.ndarray[NPFLOAT_t, ndim=1] val_range
+            np.ndarray[NPBOOL_t, ndim=1,cast=True] survivors
+            int new_N, dead
         val_range = np.maximum(1-(d_range*penf),0)
         survivors = self.get_subpop(0, self.maxls, 0, val_range)
+        new_N = np.sum(survivors)
         if verbose:
-            dead = self.N - survivors.N
+            dead = self.N - new_N
             fn.logprint("done. "+str(dead)+" individuals died.")
-        self.ages = survivors.ages
-        self.genomes = survivors.genomes
-        self.N = len(self.ages)
+        self.ages = self.ages[survivors]
+        self.genomes = self.genomes[survivors]
+        self.N = new_N
 
     def crisis(self, crisis_sv, n_stage):
         """Apply an extrinsic death crisis and subset population."""
@@ -410,7 +422,7 @@ class Record:
             if i<100: # survival
                 arr_sorted[range(i*b, (i+1)*b)] = arr[range(count, count+b)]
             elif i>=200: # neutral
-                arr_sorted[-b:] = arr[range(count, count+b)]
+                arr_sorted[len(arr_sorted)-b:] = arr[range(count, count+b)]
             else: # reproduction
                 arr_sorted[range(maxls*b+(i-100-m)*b, maxls*b+(i+1-100-m)*b)] \
                 = arr[range(count, count+b)]
@@ -469,8 +481,9 @@ class Record:
         """After run completion, compute fitness and s1 (rolling window std of n1)."""
         # Rolling standard deviation of #1's along genome:
         a = self.record["n1"]
-        a_shape = a.shape[:-1] + (a.shape[-1] - window + 1, window)
-        a_strd = a.strides + (a.strides[-1],) # strides
+        d,s = a.ndim-1, len(a.strides)-1
+        a_shape = a.shape[:d] + (a.shape[d] - window + 1, window)
+        a_strd = a.strides + (a.strides[s],) # strides
         self.record["s1"] = np.std(
                 np.lib.stride_tricks.as_strided(a, shape=a_shape, strides=a_strd), 2)
         x_surv = np.cumprod(1-self.record["death_mean"],1)

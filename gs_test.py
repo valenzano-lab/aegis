@@ -303,9 +303,9 @@ class TestDeathCrisis:
         by the genome (when all loci have the same distribution)."""
         pop = spop.clone()
         pop.genomes = fn.chance(p, pop.genomes.shape).astype(int)
-        pop2 = pop.get_subpop(min_age, pop.maxls, offset,
+        subpop = pop.get_subpop(min_age, pop.maxls, offset,
                 np.linspace(0,1,21))
-        assert abs(pop2.N/float(pop.N) - p)*(1-min_age/pop.maxls) < \
+        assert abs(np.sum(subpop)/float(pop.N) - p)*(1-min_age/pop.maxls) < \
                 precision
 
     @pytest.mark.parametrize("p", [0.0, 0.3, 0.8, 1.0])
