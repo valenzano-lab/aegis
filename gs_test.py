@@ -236,8 +236,6 @@ class TestPopInit:
         assert (pop_b.index==np.arange(conf.params["start_pop"])).all()
         assert (pop_a.genmap == conf.genmap).all()
         assert (pop_b.genmap == conf.genmap).all()
-        assert (pop_a.gargsort == np.argsort(pop_a.genmap)).all()
-        assert (pop_b.gargsort == np.argsort(pop_b.genmap)).all()
         assert (pop_a.ages == pop_a.maturity).all()
         assert not (pop_b.ages == pop_b.maturity).all()
         assert abs(np.mean(pop_b.ages)-pop_b.maxls/2) < precision
@@ -283,7 +281,6 @@ class TestMinorMethods:
         assert p["n_base"] == spop.nbase
         assert p["max_ls"] == spop.maxls
         assert p["maturity"] == spop.maturity
-        assert (p["gargsort"] == spop.gargsort).all()
 
     def test_addto(self, spop):
         """Test if a population is successfully appended to the receiver

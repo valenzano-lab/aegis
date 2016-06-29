@@ -50,7 +50,7 @@ class Outpop:
 
 cdef class Population:
     """A simulated population with genomes and ages."""
-    cdef public np.ndarray genmap, ages, genomes, index, gargsort
+    cdef public np.ndarray genmap, ages, genomes, index
     cdef public int sex, chrlen, nbase, maxls, maturity, N
     # Initialisation
     def __init__(self, dict params, np.ndarray[NPINT_t, ndim=1] genmap, 
@@ -62,8 +62,6 @@ cdef class Population:
         self.maxls = params["max_ls"]
         self.maturity = params["maturity"]
         self.genmap = genmap
-        self.gargsort = params["gargsort"] if params.has_key("gargsort")\
-                else np.argsort(genmap)
         # Determine ages and genomes if not given
         cdef np.ndarray[NPINT_t, ndim=1] testage = np.array([-1])
         cdef np.ndarray[NPINT_t, ndim=2] testgen = np.array([[-1],[-1]])
@@ -108,8 +106,7 @@ cdef class Population:
                 "chr_len":self.chrlen,
                 "n_base":self.nbase,
                 "max_ls":self.maxls,
-                "maturity":self.maturity,
-                "gargsort":self.gargsort
+                "maturity":self.maturity
                 }
         return p_dict
 
