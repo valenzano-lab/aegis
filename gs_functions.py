@@ -116,7 +116,7 @@ def make_genome_array(start_pop, chr_len, genmap, n_base, g_dist):
         }
     # Set genome array values according to given probabilities:
     for k in loci.keys():
-        pos = np.array([range(n_base) + x for x in loci[k]*10])
+        pos = np.array([range(n_base) + x for x in loci[k]*n_base])
         pos = np.append(pos, pos + chr_len)
         genome_array[:, pos] = chance(g_dist[k], [start_pop, len(pos)])
     return genome_array.astype("int")

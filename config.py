@@ -24,9 +24,9 @@ res_limit = 5000 # Maximum resource value, if variable
 ## STARTING POPULATION PARAMETERS ##
 start_pop = 500 # Starting population size
 age_random = False # Random starting ages; else all start as new adults
-g_dist_s = 0.5 # Propoprtion of 1's in survival loci of initial genomes
-g_dist_r = 0.5 #                       reproductive loci
-g_dist_n = 0.5 #                       neutral loci
+g_dist_s = 0.3 # Propoprtion of 1's in survival loci of initial genomes
+g_dist_r = 0.8 #                       reproductive loci
+g_dist_n = 0.2 #                       neutral loci
 
 ## SIMULATION FUNDAMENTALS: CHANGE WITH CARE ##
 death_bound = [0.001, 0.02] # min and max death rates

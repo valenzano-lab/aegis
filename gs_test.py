@@ -6,35 +6,50 @@ import numpy as np
 import scipy.stats as st
 from scipy.misc import comb
 
-# Begin by running a dummy simulation and saving the output
-# Also functions as test of output functions
-scriptdir = os.path.split(os.path.realpath(__file__))[0]
-os.chdir(scriptdir)
-subprocess.call(["python", "genome_simulation.py", "."])
-os.rename("run_1_pop.txt", "sample_pop.txt")
-os.rename("run_1_rec.txt", "sample_rec.txt")
-
 ####################
 ### 0: FIXTURES  ###
 ####################
 
-@pytest.fixture(scope="module")
+@pytest.fixture()
 def ran_str(request):
     """Generate a random lowercase ascii string."""
     return \
         ''.join(random.choice(string.ascii_lowercase) for _ in range(50))
-@pytest.fixture(scope="session")
+@pytest.fixture(params=["import", "random", "random"])
 def conf(request):
     """Create a default configuration object."""
-    return fn.get_conf("config_test")
-@pytest.fixture(scope="session", params=["import"])
-def spop(request):
-    """Create a sample population from the default configuration."""
+    c = fn.get_conf("config_test")
+    c.number_of_stages = 100
     if request.param == "import":
-        impt = fn.get_startpop("sample_pop")
-        print impt.ages.shape
-        return impt.toPop()
-@pytest.fixture
+        return c
+    elif request.param == "random":
+        # Randomise fundamental parameters
+        c.g_dist_s, c.g_dist_r, c.g_dist_n  = np.random.uniform(size=3)
+        db_low, rb_low = np.random.uniform(size=2)
+        db_high = db_low + random.uniform(0, 1-db_low)
+        rb_high = rb_low + random.uniform(0, 1-rb_low)
+        c.death_bound,c.repr_bound = [db_low, db_high],[rb_low, rb_high]
+        c.r_rate, c.m_rate, c.m_ratio = np.random.uniform(size=3)
+        c.max_ls = random.randint(20, 99)
+        c.maturity = random.randint(5, c.max_ls-1)
+        #c.n_neutral = random.randint(1, 100)
+        c.n_base = random.randint(5, 25)
+        c.surv_pen = random.choice([True, False])
+        c.repr_pen = random.choice([True, False])
+        c.death_inc = random.randint(1, 10)
+        c.repr_dec = random.randint(1, 10)
+        gm_len = c.max_ls + (c.max_ls - c.maturity) + c.n_neutral
+        c.window_size = random.randint(1, gm_len*c.n_base)
+        c = fn.gen_conf(c)
+    return c
+
+@pytest.fixture()
+def spop(request, conf):
+    """Create a sample population from the default configuration."""
+    return cl.Population(conf.params, conf.genmap, np.array([-1]),
+            np.array([[-1],[-1]]))
+
+@pytest.fixture()
 def parents(request, conf):
     """Returns population of two sexual adults."""
     params = conf.params.copy()
@@ -43,17 +58,32 @@ def parents(request, conf):
     params["start_pop"] = 2
     return cl.Population(params, conf.genmap, np.array([-1]),
             np.array([[-1],[-1]]))
-@pytest.fixture(scope="session")
+@pytest.fixture()
 def pop1(request, spop):
     """Create population with genomes filled with ones."""
     pop = spop.clone()
     pop.genomes = np.ones(pop.genomes.shape).astype(int)
     return pop
-@pytest.fixture
+@pytest.fixture()
 def record(request,pop1,conf):
     """Create a record from pop1 as defined in configuration file."""
-    return cl.Record(pop1, conf.snapshot_stages, 100, 
-            np.linspace(1,0,21), np.linspace(0,1,21),100)
+    spaces = 2 * pop1.nbase + 1
+    return cl.Record(pop1, conf.snapshot_stages, conf.number_of_stages, 
+            np.linspace(1,0,spaces), np.linspace(0,1,spaces),
+            conf.window_size)
+
+####################
+### 0: DUMMY RUN ###
+####################
+
+def test_sim_run():
+    # Begin by running a dummy simulation and saving the output
+    # Also functions as test of output functions
+    scriptdir = os.path.split(os.path.realpath(__file__))[0]
+    os.chdir(scriptdir)
+    subprocess.call(["python", "genome_simulation.py", "."])
+    os.rename("run_1_pop.txt", "sample_pop.txt")
+    os.rename("run_1_rec.txt", "sample_rec.txt")
 
 #########################
 ### 1: FREE FUNCTIONS ###
@@ -96,13 +126,14 @@ class TestConfig:
         does not exist."""
         with pytest.raises(SystemExit) as e_info: fn.get_dir(ran_str)
 
-    def test_get_conf_good(self, conf):
+    def test_get_conf_good(self):
         """Test that fn.get_conf on the config template file returns a valid
         object of the expected composition."""
+        c = fn.get_conf("config_test")
         def alltype(keys,typ):
             """Test whether all listed config items are of the 
             specified type."""
-            return np.all([type(conf.__dict__[x]) is typ for x in keys])
+            return np.all([type(c.__dict__[x]) is typ for x in keys])
         assert alltype(["number_of_runs", "number_of_stages",
             "number_of_snapshots", "res_start", "R", "res_limit",
             "start_pop", "max_ls", "maturity", "n_base",
@@ -122,13 +153,12 @@ class TestConfig:
         does not exist."""
         with pytest.raises(IOError) as e_info: fn.get_conf(ran_str)
 
-    def test_get_startpop_good(self, conf, spop):
+    def test_get_startpop_good(self):
         """Test that a blank seed returns a blank string and a valid seed
         returns a population array of the correct size."""
         assert fn.get_startpop("") == ""
-        print spop.ages
-        print spop.N
-        assert spop.genomes.shape == (spop.N, 2*spop.chrlen)
+        p = fn.get_startpop("sample_pop.txt")
+        assert p.genomes.shape == (p.N, 2*p.chrlen)
 
     def test_get_startpop_bad(self, ran_str):
         """Verify that fn.get_startpop throws an error when the target 
@@ -162,35 +192,36 @@ class TestChance:
 class TestGenomeArray:
     """Test that new genome arrays are generated correctly."""
     genmap_simple = np.append(np.arange(25), 
-            np.append(np.arange(24)+100, 201))
+            np.append(np.arange(24)+100, 200))
     genmap_shuffled = np.copy(genmap_simple)
     random.shuffle(genmap_shuffled)
 
-    @pytest.mark.parametrize("g_dist", [
+    @pytest.mark.parametrize("gd", [
         {"s":random.random(), "r":random.random(), "n":random.random()},
         {"s":0.5, "r":0.5, "n":0.5},
         {"s":0.1, "r":0.9, "n":0.4}])
-    @pytest.mark.parametrize("genmap", [genmap_simple, genmap_shuffled])
-    def test_make_genome_array(self, genmap, g_dist):
+    @pytest.mark.parametrize("gm", [genmap_simple, genmap_shuffled])
+    def test_make_genome_array(self, gm, gd):
         """Test that genome array is of the correct size and that
         the loci are distributed correctly."""
         precision = 0.05
         loci = {
-            "s":np.nonzero(genmap<100)[0],
-            "r":np.nonzero(np.logical_and(genmap>=100,genmap<200))[0],
-            "n":np.nonzero(genmap>=200)[0]
+            "s":np.nonzero(gm<100)[0],
+            "r":np.nonzero(np.logical_and(gm>=100,gm<200))[0],
+            "n":np.nonzero(gm>=200)[0]
             }
         n = 1000
+        b = 10
         chr_len = 500
-        ga = fn.make_genome_array(n, chr_len, genmap, 10, g_dist)
+        ga = fn.make_genome_array(n, chr_len, gm, b, gd)
         assert ga.shape == (n, 2*chr_len)
         condensed = np.mean(ga, 0)
-        condensed = np.array([np.mean(condensed[x*10:(x*10+9)]) \
+        condensed = np.array([np.mean(condensed[x*b:(x*b+b-1)]) \
                 for x in range(chr_len/5)])
         for k in loci.keys():
-            pos = np.array([range(10) + x for x in loci[k]*10])
+            pos = np.array([range(b) + x for x in loci[k]*b])
             pos = np.append(pos, pos + chr_len)
-            tstat = abs(np.mean(ga[:,pos])-g_dist[k])
+            tstat = abs(np.mean(ga[:,pos])-gd[k])
             assert tstat < precision
 
 class TestUpdateResources:
@@ -306,7 +337,7 @@ class TestDeathCrisis:
         min_age = pop.maturity if adults_only else 0
         pop.genomes = fn.chance(p, pop.genomes.shape).astype(int)
         subpop = pop.get_subpop(min_age, pop.maxls, offset,
-                np.linspace(0,1,21))
+                np.linspace(0,1,2*pop.nbase + 1))
         assert abs(np.sum(subpop)/float(pop.N) - p)*(1-min_age/pop.maxls) < \
                 precision
 
@@ -318,7 +349,7 @@ class TestDeathCrisis:
         pop.ages = np.random.choice([pop.maturity-1, pop.maxls],
                 pop.N)
         subpop = pop.get_subpop(pop.maturity, pop.maxls, offset,
-                np.linspace(0,1,21))
+                np.linspace(0,1,2*pop.nbase + 1))
         assert np.sum(subpop) == 0
 
     @pytest.mark.parametrize("p", [0.0, 0.3, 0.8, 1.0])
@@ -327,7 +358,7 @@ class TestDeathCrisis:
         """Test if self.death() correctly inverts death probabilities
         and incorporates starvation factor to get survivor probabilities
         and survivor array."""
-        precision = 0.1
+        precision = 0.15
         pop = spop.clone()
         b = pop.nbase
         surv_loci = np.nonzero(spop.genmap<100)[0]
@@ -338,7 +369,7 @@ class TestDeathCrisis:
         # (specifically modify survival loci only)
         pop2 = pop.clone()
         print pop2.genomes[:, surv_pos] 
-        pop2.death(np.linspace(1,0,21), x, False)
+        pop2.death(np.linspace(1,0,2*pop2.nbase+1), x, False)
         pmod = max(0, min(1, (1-x*(1-p))))
         assert abs(pop2.N/float(pop.N) - pmod) < precision
 
@@ -425,8 +456,8 @@ class TestReproduction:
         """Test number of children produced for all-adult population
         for sexual and asexual conditions."""
         # Make and grow population
-        precision = 0.05
-        n = 1000
+        precision = 0.1
+        n = 500
         params = conf.params.copy()
         params["sexual"] = sexvar
         params["age_random"] = False
@@ -434,7 +465,7 @@ class TestReproduction:
         pop = cl.Population(params, conf.genmap, np.array([-1]),
             np.array([[-1],[-1]]))
         pop.genomes = fn.chance(m, pop.genomes.shape).astype(int)
-        pop.growth(np.linspace(0,1,21),1,0,0,1,False)
+        pop.growth(np.linspace(0,1,2*pop.nbase+1),1,0,0,1,False)
         # Calculate proportional observed and expected growth
         x = 2 if sexvar else 1
         obs_growth = (pop.N - n)/float(n)
@@ -450,7 +481,9 @@ class TestRecordInit:
     """Test the initiation of a new Record object."""
     def test_init_record(self, record, conf, pop1):
         r = record.record
-        n = len(r["snapshot_stages"])
+        n = conf.number_of_snapshots
+        m = conf.number_of_stages
+        w = conf.window_size
         def sameshape(keys,ref):
             """Test whether all listed record arrays have identical 
             shape."""
@@ -460,8 +493,8 @@ class TestRecordInit:
         assert (r["n_bases"] == np.array([pop1.nbase])).all()
         assert (r["max_ls"] == np.array([pop1.maxls])).all()
         assert (r["maturity"] == np.array([pop1.maturity])).all()
-        assert (r["d_range"] == np.linspace(1,0,21)).all()
-        assert (r["r_range"] == np.linspace(0,1,21)).all()
+        assert (r["d_range"] == np.linspace(1,0,2*pop1.nbase+1)).all()
+        assert (r["r_range"] == np.linspace(0,1,2*pop1.nbase+1)).all()
         assert (r["snapshot_stages"] == conf.snapshot_stages + 1).all()
         assert sameshape(["death_mean", "death_sd", "repr_mean",
                     "repr_sd", "fitness"], (n,pop1.maxls))
@@ -470,10 +503,10 @@ class TestRecordInit:
         assert sameshape(["entropy","junk_death","junk_repr",
                     "junk_fitness"], (n,))
         assert sameshape(["population_size", "resources", "surv_penf",
-                    "repr_penf"], (100,))
-        assert sameshape(["age_distribution"],(100,pop1.maxls))
+                    "repr_penf"], (m,))
+        assert sameshape(["age_distribution"],(m,pop1.maxls))
         assert sameshape(["n1", "n1_std"], (n,pop1.chrlen))
-        assert sameshape(["s1"], (n, pop1.chrlen - 99))
+        assert sameshape(["s1"], (n, pop1.chrlen - w + 1))
 
 class TestRecordUpdate:
     """Test stage-by-stage updating of a Record object."""
@@ -512,23 +545,28 @@ class TestRecordUpdate:
     def test_update_shannon_weaver(self,record,spop,conf):
         """Test that shannon weaver entropy is computed correctly for
         a newly-initialised population."""
-        precision = 0.01
+        precision = 0.015
         b = spop.nbase
-        props = np.array([spop.maxls, spop.maxls-spop.maturity, 1])\
+        print spop.nbase, len(spop.genmap), conf.n_neutral
+        print spop.params()
+
+        props = np.array([spop.maxls, spop.maxls-spop.maturity, conf.n_neutral])\
                 /float(len(spop.genmap)) # Expected proportion of genome
                 # in survival loci, reproductive loci, etc.
         print props
+        print "Sum of props = ", sum(props)
         probs = np.array([conf.g_dist[x] for x in ["s", "r", "n"]])
                 # Probability of a 1 for each locus type
         print probs
         dists = np.array(
-                [[comb(2*b, x)*p**x*(1-p)**(2*b-x) for x in np.arange(2*b)+1]\
+                [[comb(2*b, x)*p**x*(1-p)**(2*b-x) for x in np.arange(2*b+1)]\
                         for p in probs])
-                # Binomial distribution values for 0-20 zeros for each
-        print dists
-        exp = np.sum((dists.T * props).T,0) 
+                # Binomial distribution values for 0 to 2*b zeros for each
+        print "Sum, shape of dists = ", np.sum(dists,1), dists.shape
+        exp = np.sum(dists * props[:,np.newaxis], 0) 
             # expected proportions of loci with each number of 1's over
             # entire genome
+        print exp
         exp_entropy = st.entropy(exp)
         obs_entropy = record.update_shannon_weaver(spop)
         assert abs(exp_entropy - obs_entropy) < precision
@@ -578,10 +616,12 @@ class TestRecordFinal:
     def test_age_wise_n1(self,record):
         """Test if ten consecutive array items are correctly averaged."""
         genmap = record.record["genmap"]
+        b = record.record["n_bases"]
         ix = np.arange(len(genmap))
-        mask = np.tile(np.arange(len(genmap)).reshape((len(ix),1)),10)
-        mask = mask.reshape((1,len(mask)*10))[0]
+        mask = np.tile(np.arange(len(genmap)).reshape((len(ix),1)),b)
+        mask = mask.reshape((1,len(mask)*b))[0]
         record.record["mask"] = np.array([mask])
+        print mask.shape
         assert (record.age_wise_n1("mask") == ix).all()
 
     def test_actual_death_rate(self, record):
@@ -598,14 +638,15 @@ class TestRecordFinal:
         assert (adr[:,:-1] == 0.5).all()
         assert (adr[:,-1] == 1).all()
 
-    def test_final_update(self, pop1, record):
-        s = len(record.record["snapshot_stages"])
+    def test_final_update(self, pop1, record, conf):
+        s = conf.number_of_snapshots
+        t = conf.number_of_stages
         for n in range(s):
             record.update(pop1, 100, 1, 1, 0, n)
-        for m in range(100):
+        for m in range(t):
             record.quick_update(m, pop1, 100, 1, 1)
         record.update(pop1, 100, 1, 1, 0, 0)
-        record.final_update(0, 100)
+        record.final_update(0, conf.window_size)
         r = record.record
         # Predicted fitness array:
         pf = np.arange(r["max_ls"], dtype=float)-r["maturity"]+1
