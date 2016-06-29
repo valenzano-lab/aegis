@@ -7,6 +7,7 @@ import scipy.stats as st
 from random import sample
 from operator import mul
 import sys
+from cython.parallel import parallel, prange
 
 # Cython data types for numpy
 NPINT = np.int # Integer arrays
@@ -49,7 +50,7 @@ class Outpop:
 
 cdef class Population:
     """A simulated population with genomes and ages."""
-    cdef public np.ndarray genmap, ages, genomes, index
+    cdef public np.ndarray genmap, ages, genomes, index, gargsort
     cdef public int sex, chrlen, nbase, maxls, maturity, N
     # Initialisation
     def __init__(self, dict params, np.ndarray[NPINT_t, ndim=1] genmap, 
@@ -61,6 +62,8 @@ cdef class Population:
         self.maxls = params["max_ls"]
         self.maturity = params["maturity"]
         self.genmap = genmap
+        self.gargsort = params["gargsort"] if params.has_key("gargsort")\
+                else np.argsort(genmap)
         # Determine ages and genomes if not given
         cdef np.ndarray[NPINT_t, ndim=1] testage = np.array([-1])
         cdef np.ndarray[NPINT_t, ndim=2] testgen = np.array([[-1],[-1]])
@@ -105,7 +108,8 @@ cdef class Population:
                 "chr_len":self.chrlen,
                 "n_base":self.nbase,
                 "max_ls":self.maxls,
-                "maturity":self.maturity
+                "maturity":self.maturity,
+                "gargsort":self.gargsort
                 }
         return p_dict
 
@@ -126,6 +130,7 @@ cdef class Population:
             np.ndarray[NPINT_t, ndim=1] loci, add, index, ages
             np.ndarray[NPFLOAT_t, ndim=1] probs
             np.ndarray[NPINT_t, ndim=2] genomes, gen
+            np.ndarray[NPINT_t, ndim=3] genloc
             np.ndarray[NPBOOL_t, ndim=1,cast=True] inc, cond
             int a, N, g
         # first remove old and juvenile individuals
@@ -133,6 +138,7 @@ cdef class Population:
         genomes, ages = self.genomes[cond], self.ages[cond]
         N,g = len(ages), len(self.genmap)
         # Get locus sums for each individual and pick which loci to use
+        genloc = np.reshape(genomes, (N, g*2, self.nbase))
         gen = np.einsum('ijk->ij', np.reshape(genomes, (N, g*2, self.nbase)))
         loci = np.nonzero(self.genmap - offset - ages[:,np.newaxis] == 0)[1]
         # Convert locus sums into membership probabilities
@@ -149,21 +155,22 @@ cdef class Population:
         """Select a population subset based on chance defined by genotype."""
         cdef:
             np.ndarray[NPINT_t, ndim=1] subpop_indices = np.empty(0,int)
-            int age, locus
+            int age, locus, g
             np.ndarray[NPINT_t, ndim=1] pos, inc, which
             np.ndarray[NPFLOAT_t, ndim=1] inc_rates
-            np.ndarray[NPINT_t, ndim=2] pop
+            np.ndarray[NPINT_t, ndim=3] genloc, pop
+        g = len(self.genmap)
+        genloc = np.reshape(self.genomes, (self.N, g*2, self.nbase))
         for age in range(min_age, min(max_age, np.max(self.ages)+1)):
             # Get indices of appropriate locus for that age:
             locus = np.ndarray.nonzero(self.genmap==(age+offset))[0][0]
                 # NB: Will only return FIRST locus for that age
-            pos = np.arange(locus*self.nbase, (locus+1)*self.nbase)
             # Subset to correct age and required locus:
             which = np.nonzero(self.ages == age)[0]
-            pop = self.genomes[which][:,np.append(pos, pos+self.chrlen)]
+            pop = genloc[which][:,[locus, locus+g]]
+            inc_rates = val_range[np.einsum("ijk->i", pop)]
             # Get sum of genotypes for every individual and
             # convert into inclusion probabilities::
-            inc_rates = val_range[np.sum(pop, axis=1)]
             inc = which[fn.chance(inc_rates, len(inc_rates))]
             subpop_indices = np.append(subpop_indices, inc)
         subpop = Population(self.params(), self.genmap,
@@ -190,7 +197,7 @@ cdef class Population:
     def death(self, d_range, penf, verbose):
         """Select survivors and kill rest of population."""
         if verbose: fn.logprint("Calculating death...", False)
-        val_range = 1-(d_range*penf)
+        val_range = np.maximum(1-(d_range*penf),0)
         survivors = self.get_subpop(0, self.maxls, 0, val_range)
         if verbose:
             dead = self.N - survivors.N
