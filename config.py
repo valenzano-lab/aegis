@@ -6,7 +6,7 @@ sexual = False # Sexual or asexual reproduction
 
 ## RUNNING PARAMETERS ##
 number_of_runs = 1 # Total number of independent runs
-number_of_stages = 0 # Total number of stages per run
+number_of_stages = 10 # Total number of stages per run
 crisis_stages = [] # Stages of extrinsic death crisis
 crisis_sv = 0.05 # Fraction of crisis survivors (if applicable)
 number_of_snapshots = 16 # Number of stages at which to store output data;

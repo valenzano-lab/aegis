@@ -76,7 +76,7 @@ def record(request,pop1,conf):
 ### 0: DUMMY RUN ###
 ####################
 
-def test_sim_run():
+def test_sim_run_0():
     # Begin by running a dummy simulation and saving the output
     # Also functions as test of output functions
     scriptdir = os.path.split(os.path.realpath(__file__))[0]
