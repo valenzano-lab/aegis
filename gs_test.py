@@ -60,9 +60,10 @@ def parents(request, conf):
             np.array([[-1],[-1]]))
 @pytest.fixture()
 def pop1(request, spop):
-    """Create population with genomes filled with ones."""
+    """Create population of young adults with genomes filled with ones."""
     pop = spop.clone()
     pop.genomes = np.ones(pop.genomes.shape).astype(int)
+    pop.ages = np.tile(pop.maturity, pop.N)
     return pop
 @pytest.fixture()
 def record(request,pop1,conf):
@@ -471,6 +472,16 @@ class TestReproduction:
         obs_growth = (pop.N - n)/float(n)
         exp_growth = m/x
         assert abs(exp_growth-obs_growth) < precision
+
+    @pytest.mark.parametrize("nparents",[1, 3, 5])
+    def test_growth_smallpop(self, pop1, nparents):
+        """Test that odd numbers of sexual parents are dropped and that a
+        sexual parent population of size 1 doesn't reproduce."""
+        parents = cl.Population(pop1.params(), pop1.genmap, 
+                pop1.ages[:nparents],pop1.genomes[:nparents])
+        parents.sex = True
+        parents.growth(np.linspace(0,1,2*parents.nbase+1),1,0,0,1,False)
+        assert parents.N == (nparents + (nparents-1)/2)
 
 #######################
 ### 3: RECORD CLASS ###

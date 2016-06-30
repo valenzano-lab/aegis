@@ -186,9 +186,12 @@ cdef class Population:
         which_parents = self.get_subpop(self.maturity, self.maxls, 100, r_range/penf)
         parents = Population(self.params(), self.genmap,
                 self.ages[which_parents], self.genomes[which_parents])
-        if self.sex and parents.N > 1:
-            parents.recombine(r_rate)
-            children = parents.assortment()
+        if self.sex:
+            if parents.N == 1:
+                return # No children if only one parent
+            else:
+                parents.recombine(r_rate)
+                children = parents.assortment()
         else: children = parents.clone()
         children.mutate(m_rate, m_ratio)
         children.ages[:] = 0 # Make newborn
