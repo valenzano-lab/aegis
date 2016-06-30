@@ -149,6 +149,36 @@ class TestConfig:
         assert alltype(["genmap", "d_range", "r_range", 
                 "snapshot_stages"], np.ndarray)
 
+    @pytest.mark.parametrize("sexvar,nsnap", [(True, 10), (False, 0.1)])
+    def test_gen_conf(self, conf, sexvar, nsnap):
+        """Test that gen_conf correctly generates derived simulation params."""
+        c = fn.get_conf("config_test")
+        c.sexual = sexvar
+        crb1 = c.repr_bound[1]
+        d = fn.gen_conf(conf)
+        assert d.g_dist["s"] == c.g_dist_s
+        assert d.g_dist["r"] == c.g_dist_r
+        assert d.g_dist["n"] == c.g_dist_n
+        assert len(c.genmap) == c.max_ls + (c.max_ls-c.maturity) + c.n_neutral
+        assert d.chr_len == len(c.genmap) * c.n_base
+        assert d.repr_bound[1]/crb1 == 2 if sexvar else 1
+        assert (d.d_range == np.linspace(c.death_bound[1], c.death_bound[0],
+                2*c.n_base+1)).all()
+        assert (d.r_range == np.linspace(c.repr_bound[0], c.repr_bound[1],
+                2*c.n_base+1)).all()
+        assert len(d.snapshot_stages) == c.number_of_snapshots if \
+                type(nsnap) is int else int(nsnap * c.number_of_stages)
+        assert np.all(d.snapshot_stages == np.around(
+            np.linspace(0, c.number_of_stages-1, d.number_of_snapshots), 0))
+        assert d.params["sexual"] == sexvar
+        assert d.params["chr_len"] == d.chr_len
+        assert d.params["n_base"] == c.n_base
+        assert d.params["maturity"] == c.maturity
+        assert d.params["max_ls"] == c.max_ls
+        assert d.params["age_random"] == c.age_random
+        assert d.params["start_pop"] == c.start_pop
+        assert d.params["g_dist"] == d.g_dist
+
     def test_get_conf_bad(self, ran_str):
         """Verify that fn.get_dir throws an error when the target file 
         does not exist."""
