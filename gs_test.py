@@ -60,9 +60,10 @@ def parents(request, conf):
             np.array([[-1],[-1]]))
 @pytest.fixture()
 def pop1(request, spop):
-    """Create population with genomes filled with ones."""
+    """Create population of young adults with genomes filled with ones."""
     pop = spop.clone()
     pop.genomes = np.ones(pop.genomes.shape).astype(int)
+    pop.ages = np.tile(pop.maturity, pop.N)
     return pop
 @pytest.fixture()
 def record(request,pop1,conf):
@@ -147,6 +148,36 @@ class TestConfig:
         assert alltype(["g_dist", "params"], dict)
         assert alltype(["genmap", "d_range", "r_range", 
                 "snapshot_stages"], np.ndarray)
+
+    @pytest.mark.parametrize("sexvar,nsnap", [(True, 10), (False, 0.1)])
+    def test_gen_conf(self, conf, sexvar, nsnap):
+        """Test that gen_conf correctly generates derived simulation params."""
+        c = fn.get_conf("config_test")
+        c.sexual = sexvar
+        crb1 = c.repr_bound[1]
+        d = fn.gen_conf(conf)
+        assert d.g_dist["s"] == c.g_dist_s
+        assert d.g_dist["r"] == c.g_dist_r
+        assert d.g_dist["n"] == c.g_dist_n
+        assert len(c.genmap) == c.max_ls + (c.max_ls-c.maturity) + c.n_neutral
+        assert d.chr_len == len(c.genmap) * c.n_base
+        assert d.repr_bound[1]/crb1 == 2 if sexvar else 1
+        assert (d.d_range == np.linspace(c.death_bound[1], c.death_bound[0],
+                2*c.n_base+1)).all()
+        assert (d.r_range == np.linspace(c.repr_bound[0], c.repr_bound[1],
+                2*c.n_base+1)).all()
+        assert len(d.snapshot_stages) == c.number_of_snapshots if \
+                type(nsnap) is int else int(nsnap * c.number_of_stages)
+        assert np.all(d.snapshot_stages == np.around(
+            np.linspace(0, c.number_of_stages-1, d.number_of_snapshots), 0))
+        assert d.params["sexual"] == sexvar
+        assert d.params["chr_len"] == d.chr_len
+        assert d.params["n_base"] == c.n_base
+        assert d.params["maturity"] == c.maturity
+        assert d.params["max_ls"] == c.max_ls
+        assert d.params["age_random"] == c.age_random
+        assert d.params["start_pop"] == c.start_pop
+        assert d.params["g_dist"] == d.g_dist
 
     def test_get_conf_bad(self, ran_str):
         """Verify that fn.get_dir throws an error when the target file 
@@ -248,7 +279,7 @@ class TestPopInit:
     def test_init_population(self, record, conf):
         """Test that population parameters are correct for random and
         nonrandom ages."""
-        precision = 1
+        precision = 1.1
         conf.params["start_pop"] = 2000
         conf.params["age_random"] = False
         pop_a = cl.Population(conf.params, conf.genmap, np.array([-1]),
@@ -334,8 +365,13 @@ class TestDeathCrisis:
         """Test if the probability of passing is close to that indicated
         by the genome (when all loci have the same distribution)."""
         pop = spop.clone()
+        loci = np.nonzero(
+                np.logical_and(pop.genmap >= offset, pop.genmap < offset + 100)
+                )[0]
+        pos = np.array([range(pop.nbase) + y for y in loci*pop.nbase])
+        pos = np.append(pos, pos + pop.chrlen)
         min_age = pop.maturity if adults_only else 0
-        pop.genomes = fn.chance(p, pop.genomes.shape).astype(int)
+        pop.genomes[:,pos] = fn.chance(p, pop.genomes[:,pos].shape).astype(int)
         subpop = pop.get_subpop(min_age, pop.maxls, offset,
                 np.linspace(0,1,2*pop.nbase + 1))
         assert abs(np.sum(subpop)/float(pop.N) - p)*(1-min_age/pop.maxls) < \
@@ -372,6 +408,20 @@ class TestDeathCrisis:
         pop2.death(np.linspace(1,0,2*pop2.nbase+1), x, False)
         pmod = max(0, min(1, (1-x*(1-p))))
         assert abs(pop2.N/float(pop.N) - pmod) < precision
+
+    def test_death_extreme_starvation(self, spop):
+        """Confirm that death() handles extreme starvation factors correctly
+        (limits at 0 and 1)."""
+        pop0 = spop.clone()
+        pop1 = spop.clone()
+        pop2 = spop.clone()
+        drange = np.linspace(1, 0.001, 2*spop.nbase+1)
+        pop0.death(drange, 1e10, False)
+        pop1.death(drange, -1e10, False)
+        pop2.death(drange, 1e-10, False)
+        assert pop0.N == 0
+        assert pop1.N == spop.N
+        assert pop2.N == spop.N
 
     @pytest.mark.parametrize("p", [0, 0.3, 0.8, 1])
     def test_crisis(self, spop,p):
@@ -471,6 +521,34 @@ class TestReproduction:
         obs_growth = (pop.N - n)/float(n)
         exp_growth = m/x
         assert abs(exp_growth-obs_growth) < precision
+
+    @pytest.mark.parametrize("nparents",[1, 3, 5])
+    def test_growth_smallpop(self, pop1, nparents):
+        """Test that odd numbers of sexual parents are dropped and that a
+        sexual parent population of size 1 doesn't reproduce."""
+        parents = cl.Population(pop1.params(), pop1.genmap, 
+                pop1.ages[:nparents],pop1.genomes[:nparents])
+        parents.sex = True
+        parents.growth(np.linspace(0,1,2*parents.nbase+1),1,0,0,1,False)
+        assert parents.N == (nparents + (nparents-1)/2)
+
+    @pytest.mark.parametrize("sexvar",[True, False])
+    def test_growth_extreme_starvation(self, spop, sexvar):
+        """Confirm that growth() handles extreme starvation factors correctly
+        (limits at 0 and 1)."""
+        pop0 = spop.clone()
+        pop1 = spop.clone()
+        pop2 = spop.clone()
+        pop0.ages = pop1.ages = pop2.ages = np.tile(spop.maturity, spop.N)
+        pop0.sex = pop1.sex = pop2.sex = sexvar
+        exp_N = math.floor(1.5*spop.N) if sexvar else (2*spop.N)
+        rrange = np.linspace(0.001, 1 , 2*spop.nbase+1)
+        pop0.growth(rrange, 1e10, 0, 0, 1, False)
+        pop1.growth(rrange, -1e10, 0, 0, 1, False)
+        pop2.growth(rrange, 1e-10, 0, 0, 1, False)
+        assert pop0.N == spop.N
+        assert pop1.N == spop.N
+        assert pop2.N == exp_N
 
 #######################
 ### 3: RECORD CLASS ###
