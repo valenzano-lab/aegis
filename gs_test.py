@@ -374,6 +374,20 @@ class TestDeathCrisis:
         pmod = max(0, min(1, (1-x*(1-p))))
         assert abs(pop2.N/float(pop.N) - pmod) < precision
 
+    def test_death_extreme_starvation(self, spop):
+        """Confirm that death() handles extreme starvation factors correctly
+        (limits at 0 and 1)."""
+        pop0 = spop.clone()
+        pop1 = spop.clone()
+        pop2 = spop.clone()
+        drange = np.linspace(1, 0.001, 2*spop.nbase+1)
+        pop0.death(drange, 1e10, False)
+        pop1.death(drange, -1e10, False)
+        pop2.death(drange, 1e-10, False)
+        assert pop0.N == 0
+        assert pop1.N == spop.N
+        assert pop2.N == spop.N
+
     @pytest.mark.parametrize("p", [0, 0.3, 0.8, 1])
     def test_crisis(self, spop,p):
         """Test whether extrinsic death crisis removes the expected
@@ -482,6 +496,24 @@ class TestReproduction:
         parents.sex = True
         parents.growth(np.linspace(0,1,2*parents.nbase+1),1,0,0,1,False)
         assert parents.N == (nparents + (nparents-1)/2)
+
+    @pytest.mark.parametrize("sexvar",[True, False])
+    def test_growth_extreme_starvation(self, spop, sexvar):
+        """Confirm that growth() handles extreme starvation factors correctly
+        (limits at 0 and 1)."""
+        pop0 = spop.clone()
+        pop1 = spop.clone()
+        pop2 = spop.clone()
+        pop0.ages = pop1.ages = pop2.ages = np.tile(spop.maturity, spop.N)
+        pop0.sex = pop1.sex = pop2.sex = sexvar
+        exp_N = math.floor(1.5*spop.N) if sexvar else (2*spop.N)
+        rrange = np.linspace(0.001, 1 , 2*spop.nbase+1)
+        pop0.growth(rrange, 1e10, 0, 0, 1, False)
+        pop1.growth(rrange, -1e10, 0, 0, 1, False)
+        pop2.growth(rrange, 1e-10, 0, 0, 1, False)
+        assert pop0.N == spop.N
+        assert pop1.N == spop.N
+        assert pop2.N == exp_N
 
 #######################
 ### 3: RECORD CLASS ###
