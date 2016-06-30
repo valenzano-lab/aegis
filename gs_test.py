@@ -80,11 +80,12 @@ def record(request,pop1,conf):
 def test_sim_run_0():
     # Begin by running a dummy simulation and saving the output
     # Also functions as test of output functions
-    scriptdir = os.path.split(os.path.realpath(__file__))[0]
-    os.chdir(scriptdir)
-    subprocess.call(["python", "genome_simulation.py", "."])
-    os.rename("run_1_pop.txt", "sample_pop.txt")
-    os.rename("run_1_rec.txt", "sample_rec.txt")
+    with pytest.warns(Warning) as e_info:
+        scriptdir = os.path.split(os.path.realpath(__file__))[0]
+        os.chdir(scriptdir)
+        subprocess.call(["python", "genome_simulation.py", "."])
+        os.rename("run_1_pop.txt", "sample_pop.txt")
+        os.rename("run_1_rec.txt", "sample_rec.txt")
 
 #########################
 ### 1: FREE FUNCTIONS ###
