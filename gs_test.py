@@ -279,7 +279,7 @@ class TestPopInit:
     def test_init_population(self, record, conf):
         """Test that population parameters are correct for random and
         nonrandom ages."""
-        precision = 1
+        precision = 1.1
         conf.params["start_pop"] = 2000
         conf.params["age_random"] = False
         pop_a = cl.Population(conf.params, conf.genmap, np.array([-1]),
@@ -365,8 +365,13 @@ class TestDeathCrisis:
         """Test if the probability of passing is close to that indicated
         by the genome (when all loci have the same distribution)."""
         pop = spop.clone()
+        loci = np.nonzero(
+                np.logical_and(pop.genmap >= offset, pop.genmap < offset + 100)
+                )[0]
+        pos = np.array([range(pop.nbase) + y for y in loci*pop.nbase])
+        pos = np.append(pos, pos + pop.chrlen)
         min_age = pop.maturity if adults_only else 0
-        pop.genomes = fn.chance(p, pop.genomes.shape).astype(int)
+        pop.genomes[:,pos] = fn.chance(p, pop.genomes[:,pos].shape).astype(int)
         subpop = pop.get_subpop(min_age, pop.maxls, offset,
                 np.linspace(0,1,2*pop.nbase + 1))
         assert abs(np.sum(subpop)/float(pop.N) - p)*(1-min_age/pop.maxls) < \
