@@ -1,3 +1,5 @@
+# TODO: Test seeding
+
 import pyximport; pyximport.install()
 from gs_core import Simulation, Run, Population, Record, chance
 import pytest, random, string, subprocess, math, copy, os, sys
@@ -5,10 +7,10 @@ import numpy as np
 import scipy.stats as st
 from scipy.misc import comb
 
-runChanceTests=True
-runPopulationTests=True
-runRecordTests=True
-runRunTests=False
+runChanceTests=False
+runPopulationTests=False
+runRecordTests=False
+runRunTests=True
 runSimulationTests=False
 
 ####################
@@ -80,6 +82,11 @@ def record(request,pop1,conf):
     return Record(pop1, conf.snapshot_stages, conf.number_of_stages, 
             np.linspace(1,0,spaces), np.linspace(0,1,spaces),
             conf.window_size)
+
+@pytest.fixture
+def run(request,conf):
+    """Create an unseeded run object from configuration."""
+    return Run(conf, "", 100, False)
 
 ####################
 ### 0: DUMMY RUN ###
@@ -772,3 +779,106 @@ def test_post_cleanup():
     os.remove("sample_pop.txt")
     os.remove("sample_rec.txt")
     os.remove("log.txt")
+
+@pytest.mark.skipif(not runRunTests, 
+        reason="Not running Run class tests.")
+class TestRunClass:
+
+    @pytest.mark.parametrize("report_n, verbose", 
+            [(random.randint(1, 100), True), (random.randint(1, 100), False)])
+    def test_init_run(self, conf, report_n, verbose):
+        run1 = Run(conf, "", report_n, verbose)
+        assert run1.log == ""
+        assert run1.n_snap == run1.n_stage == 0
+        assert run1.surv_penf == run1.repr_penf == 1.0
+        assert run1.resources == conf.res_start
+        assert len(run1.genmap) == len(conf.genmap)
+        assert not (run1.genmap == conf.genmap).all()
+        assert run1.report_n == report_n
+        assert run1.verbose == verbose
+        assert run1.dieoff == run1.complete == False
+        assert (run1.record.record["genmap"] == run1.genmap).all()
+        # Quick test of correct genmap transition from run -> pop -> record;
+        # Population and Record initiation tested more thoroughly elsewhere
+
+    def test_update_resources(self, run):
+        """Test resource updating between bounds and confirm resources
+        cannot go outside them."""
+        run1 = copy.copy(run)
+        # Constant resources
+        run1.conf.res_var = False
+        old_res = run1.resources
+        run1.update_resources()
+        assert run1.resources == old_res
+        # Variable resources
+        run1.conf.res_var = True
+        run1.conf.V, run1.conf.R, run1.conf.res_limit = 2, 1000, 5000
+        run1.resources, run1.population.N = 5000, 0
+        run1.update_resources()
+        assert run1.resources == 5000
+        run1.resources, run1.population.N = 0, 5000
+        run1.update_resources()
+        assert run1.resources == 0
+        run1.resources, run1.population.N = 1000, 500
+        run1.update_resources()
+        assert run1.resources == 2000
+        run1.resources, run1.population.N = 500, 1000
+        run1.update_resources()
+        assert run1.resources == 500
+
+    def test_starving(self, run):
+        """Test run enters starvation state under correct conditions for
+        constant and variable resources."""
+        run1 = copy.copy(run)
+        # Constant resources
+        run1.conf.res_var = False
+        run1.resources, run1.population.N = 5000, 4999
+        assert not run1.starving()
+        run1.resources, run1.population.N = 4999, 5000
+        assert run1.starving()
+        # Variable resources
+        run1.conf.res_var = True
+        run1.resources = 1
+        assert not run1.starving()
+        run1.resources = 0
+        assert run1.starving()
+
+    @pytest.mark.parametrize("spen", [True, False])
+    @pytest.mark.parametrize("rpen", [True, False])
+    def test_update_starvation_factors(self, run, spen, rpen):
+        """Test that starvation factors update correctly under various 
+        conditions."""
+        run1 = copy.copy(run)
+        run1.conf.surv_pen, run1.conf.repr_pen = spen, rpen
+        # Expected changes
+        ec_s = run1.conf.death_inc if spen else 1.0
+        ec_r = run1.conf.repr_dec  if rpen else 1.0
+        # 1: Under non-starvation, factors stay at 1.0
+        run1.conf.res_var, run1.resources = True, 1
+        run1.update_starvation_factors()
+        assert run1.surv_penf == run1.repr_penf == 1.0
+        # 2: Under starvation, factors increase
+        run1.resources = 0
+        run1.update_starvation_factors()
+        assert run1.surv_penf == ec_s
+        assert run1.repr_penf == ec_r
+        # 3: Successive starvation compounds factors exponentially
+        run1.update_starvation_factors()
+        assert run1.surv_penf == ec_s**2
+        assert run1.repr_penf == ec_r**2
+        # 4: After starvation ends factors reset to 1.0
+        run1.resources = 1
+        run1.update_starvation_factors()
+        assert run1.surv_penf == run1.repr_penf == 1.0
+
+    def test_logprint(self, run, ran_str):
+        """Test logging (and especially newline) functionality."""
+        run1 = copy.copy(run)
+        run1.log = ""
+        run1.logprint(ran_str)
+        assert run1.log == ran_str + "\n"
+        run1.log = ""
+        run1.logprint(ran_str, False)
+        run1.logprint(ran_str)
+        assert run1.log == ran_str + ran_str + "\n"
+

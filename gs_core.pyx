@@ -494,7 +494,6 @@ class Run:
     def __init__(self, config, startpop, report_n, verbose):
         self.log = ""
         self.conf = config
-        self.nsnap = 0
         self.surv_penf = 1.0
         self.repr_penf = 1.0
         self.resources = self.conf.res_start
@@ -514,7 +513,6 @@ class Run:
         self.complete = False
         self.report_n = report_n
         self.verbose = verbose
-        self.start_time = datetime.datetime.now()
 
     def update_resources(self):
         if self.conf.res_var: # Else do nothing
@@ -522,17 +520,17 @@ class Run:
             new_res = int((self.resources-self.population.N)*k + self.conf.R)
             self.resources = min(max(new_res, 0), self.conf.res_limit)
 
-    def update_starvation_factors(self):
-        if self.starving():
-            self.surv_penf *= self.conf.death_inc
-            self.repr_penf *= self.conf.repr_dec
-        else: self.surv_penf = self.repr_penf = 1.0
-
     def starving(self):
         if self.conf.res_var:
             return self.resources == 0
         else:
             return self.population.N > self.resources
+
+    def update_starvation_factors(self):
+        if self.starving():
+            self.surv_penf *= self.conf.death_inc if self.conf.surv_pen else 1
+            self.repr_penf *= self.conf.repr_dec if self.conf.repr_pen else 1
+        else: self.surv_penf = self.repr_penf = 1.0
 
     def execute_stage(self):
         if self.n_stage % self.report_n ==0:
