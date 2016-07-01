@@ -181,6 +181,7 @@ cdef class Population:
         cdef:
             np.ndarray[NPBOOL_t, ndim=1,cast=True] which_parents
             object parents, children
+        if self.N == 0: return # Insulate from empty population
         r_range = np.clip(var_range / penf, 0, 1) # Limit to real probabilities
         which_parents = self.get_subpop(self.maturity, self.maxls, 100, 
                 r_range/penf)
@@ -204,6 +205,7 @@ cdef class Population:
             np.ndarray[NPFLOAT_t, ndim=1] val_range
             np.ndarray[NPBOOL_t, ndim=1,cast=True] survivors
             int new_N, dead
+        if self.N == 0: return # Insulate from empty population
         val_range = np.clip(1-(d_range*penf),0,1) # Limit to real probabilities
         survivors = self.get_subpop(0, self.maxls, 0, val_range)
         self.ages = self.ages[survivors]
@@ -212,6 +214,7 @@ cdef class Population:
 
     def crisis(self, crisis_sv):
         """Apply an extrinsic death crisis and subset population."""
+        if self.N == 0: return # Insulate from empty population
         n_survivors = int(self.N*crisis_sv)
         which_survive = np.random.choice(self.index, n_survivors, False)
         self.ages = self.ages[which_survive]
@@ -515,24 +518,29 @@ class Run:
         self.verbose = verbose
 
     def update_resources(self):
+        """If resources are variable, update them based on current 
+        population."""
         if self.conf.res_var: # Else do nothing
             k = 1 if self.population.N > self.resources else self.conf.V
             new_res = int((self.resources-self.population.N)*k + self.conf.R)
             self.resources = min(max(new_res, 0), self.conf.res_limit)
 
     def starving(self):
+        """Determine whether population is starving based on resource level."""
         if self.conf.res_var:
             return self.resources == 0
         else:
             return self.population.N > self.resources
 
     def update_starvation_factors(self):
+        """Update starvation factors under starvation."""
         if self.starving():
             self.surv_penf *= self.conf.death_inc if self.conf.surv_pen else 1
             self.repr_penf *= self.conf.repr_dec if self.conf.repr_pen else 1
         else: self.surv_penf = self.repr_penf = 1.0
 
     def execute_stage(self):
+        """Perform one stage of a simulation run and test for completion."""
         if self.n_stage % self.report_n ==0:
             self.logprint("Stage "+str(self.n_stage)+":", False)
             self.logprint(str(self.population.N) + " individuals.")
@@ -695,6 +703,8 @@ class Simulation:
         self.log += string + "\n" if newline else string
 
     def print_runtime(self, starttime, endtime):
+        """Convert two datetime.now() outputs into a time difference 
+        in human-readable units and print the result."""
         runtime = endtime - starttime
         days = runtime.days
         hours = runtime.seconds/3600

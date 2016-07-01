@@ -882,3 +882,7 @@ class TestRunClass:
         run1.logprint(ran_str)
         assert run1.log == ran_str + ran_str + "\n"
 
+    @pytest.mark.xfail(reason="Not implemented yet.")
+    def test_execute_stage(self):
+        "INCOMPLETE"
+        assert 1 == 0
