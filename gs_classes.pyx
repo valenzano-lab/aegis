@@ -319,6 +319,8 @@ class Record:
             "death_sd":np.copy(array1),
             "repr_mean":np.copy(array1),
             "repr_sd":np.copy(array1),
+            "product_fitness":np.copy(array1),
+            "junk_product_fitness":np.copy(array1),
             "age_wise_fitness_contribution":np.copy(array1),
             "junk_age_wise_fitness_contribution":np.copy(array1),
             # Genotype data:
@@ -498,6 +500,7 @@ class Record:
         nr = self.record["repr_mean"]
         vr = self.record["r_range"]
         nr = 1.0/(max(vr)-min(vr))*(nr-max(vr))+1
+        self.record["product_fitness"] = ns*nr
         self.record["age_wise_fitness_contribution"] = np.cumprod(ns,1)*nr
         self.record["fitness"] = np.sum(self.record["age_wise_fitness_contribution"],1)
         jns = (1-self.record["junk_death"])
@@ -507,6 +510,7 @@ class Record:
         jnr = 1.0/(max(vr)-min(vr))*(jnr-max(vr))+1
         jnr = np.tile(jnr.reshape(jnr.shape[0],1),self.record["max_ls"])
         jnr[:,:self.record["maturity"]] = 0
+        self.record["junk_product_fitness"] = jns*jnr
         self.record["junk_age_wise_fitness_contribution"] = np.cumprod(jns,1)*jnr
         self.record["actual_death_rate"] = self.actual_death_rate()
         self.record["age_wise_n1"] = self.age_wise_n1("n1")

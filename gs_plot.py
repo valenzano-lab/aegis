@@ -66,11 +66,12 @@ tick_size = 7
 #    "age_wise_n1" : n1 averaged in intervals of n_bases
 #    "age_wise_n1_std" : age_wise_n1 standard deviation
 #    "s1" : Sliding-window SD of number of 1's along chromosome
-#    "fitness" : Average population fitness as predicted from genotypes
 #    "entropy" : Shannon-Weaver entropy across entire population array
 #    "junk_death" : Average death probability as predicted from neutral locus
 #    "junk_repr"  : Average reproductive probability as predicted from neutral locus
-#    "fitness" : Average population fitness as predicted from genotypes
+#    "fitness" : Average population fitness as defined in our article
+#    "product_fitness" : fitness calculated as s_i*r_i
+#    "junk_product_fitness" : fitness calculated as js_i*jr_i
 #    "age_wise_fitness_contribution" : summands of fitness
 #    "junk_age_wise_fitness_contribution" : summands of junk_fitness
 
@@ -353,18 +354,50 @@ def fitness(out=args.out):
     plt.savefig(out+"/figures/fitness.png")
     plt.close()
 
-# age wise fitness contribution
+# product fitness
 # All determines wether all snapshot stages are plotted on a 4x4 figure
 # or just the last is plotted with the recording junk values
-def age_wise_fitness_contribution(out=args.out, All=args.All):
-    mv = (L["maturity"], L["maturity"]) # maturity vertical
-
+def product_fitness(out=args.out, All=args.All):
     if All:
         fig, ax = plt.subplots(4,4,sharex="col",sharey="row")
         ix = zip((0,0,0,0,1,1,1,1,2,2,2,2,3,3,3,3),(0,1,2,3,0,1,2,3,0,1,2,3,0,1,2,3),range(L["num_plots"])) # index for 4x4 subplots
 
         for i,j,k in ix:
-            ax[i,j].plot(np.log(L["age_wise_fitness_contribution"][k][L["maturity"]:]))
+            ax[i,j].plot(L["product_fitness"][k])
+            ax[i,j].set_xlim((L["maturity"],L["maxls"]-1))
+            ax[i,j].yaxis.set_major_locator(ticker.MaxNLocator(5)) # set tick number to 5
+            ax[i,j].tick_params(axis="both",labelsize=7)
+        fig.text(0.01,0.52,"$prod \\ F_{age}$",rotation="horizontal",fontsize=12)
+        fig.text(0.48,0.03,"age",rotation="horizontal",fontsize=12)
+        fig.suptitle("Product fitness")
+
+    else:
+        fig, ax = plt.subplots()
+
+        l1 = ax.plot(L["product_fitness"][-1])
+        l2 = ax.plot(L["junk_product_fitness"][-1], "g-")
+        ax.set_xlim((L["maturity"],L["maxls"]-1))
+
+        blue_proxy = mpatches.Patch(color="blue", label="product $F_{age})$")
+        green_proxy = mpatches.Patch(color="green", label="junk product $F_{age}$")
+        ax.legend(handles=[blue_proxy,green_proxy],loc="upper right",prop={"size":7})
+        ax.set_ylabel("product $F_{age}$", rotation="horizontal")
+        ax.set_xlabel("age")
+        plt.title("Product fitness")
+
+    plt.savefig(out+"/figures/product_fitness.png")
+    plt.close()
+
+# age wise fitness contribution
+# All determines wether all snapshot stages are plotted on a 4x4 figure
+# or just the last is plotted with the recording junk values
+def age_wise_fitness_contribution(out=args.out, All=args.All):
+    if All:
+        fig, ax = plt.subplots(4,4,sharex="col",sharey="row")
+        ix = zip((0,0,0,0,1,1,1,1,2,2,2,2,3,3,3,3),(0,1,2,3,0,1,2,3,0,1,2,3,0,1,2,3),range(L["num_plots"])) # index for 4x4 subplots
+
+        for i,j,k in ix:
+            ax[i,j].plot(np.log(L["age_wise_fitness_contribution"][k]))
             ax[i,j].set_xlim((L["maturity"],L["maxls"]-1))
             ax[i,j].yaxis.set_major_locator(ticker.MaxNLocator(5)) # set tick number to 5
             ax[i,j].tick_params(axis="both",labelsize=7)
@@ -375,9 +408,8 @@ def age_wise_fitness_contribution(out=args.out, All=args.All):
     else:
         fig, ax = plt.subplots()
 
-        l1 = ax.plot(np.log(L["age_wise_fitness_contribution"][-1][L["maturity"]:]))
-        l2 = ax.plot(np.log(L["junk_age_wise_fitness_contribution"][-1][L["maturity"]:]), "g-")
-        #ax.xaxis.set_ticks([0,mv[0],L["maxls"]-1])
+        l1 = ax.plot(np.log(L["age_wise_fitness_contribution"][-1]))
+        l2 = ax.plot(np.log(L["junk_age_wise_fitness_contribution"][-1]), "g-")
         ax.set_xlim((L["maturity"],L["maxls"]-1))
 
         blue_proxy = mpatches.Patch(color="blue", label="$log(F_{age})$")
@@ -404,6 +436,7 @@ def plot_all(out=args.out, All=args.All, pr_s1=0, pr_s2=L["n_stages"], d_s1=L["n
     observed_death_rate(out=out, s1=d_s1, s2=d_s2)
     shannon_diversity(out=out)
     fitness(out=out)
+    product_fitness(out=out, All=All)
     age_wise_fitness_contribution(out=out, All=All)
 
 ###############
