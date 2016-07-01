@@ -69,7 +69,7 @@ def pop1(request, spop):
 def record(request,pop1,conf):
     """Create a record from pop1 as defined in configuration file."""
     spaces = 2 * pop1.nbase + 1
-    return cl.Record(pop1, conf.snapshot_stages, conf.number_of_stages, 
+    return cl.Record(pop1, conf.snapshot_stages, conf.number_of_stages,
             np.linspace(1,0,spaces), np.linspace(0,1,spaces),
             conf.window_size)
 
@@ -123,7 +123,7 @@ class TestConfig:
             fn.get_dir(old_dir)
 
     def test_get_dir_bad(self, ran_str):
-        """Verify that fn.get_dir throws an error when the target directory 
+        """Verify that fn.get_dir throws an error when the target directory
         does not exist."""
         with pytest.raises(SystemExit) as e_info: fn.get_dir(ran_str)
 
@@ -132,7 +132,7 @@ class TestConfig:
         object of the expected composition."""
         c = fn.get_conf("config_test")
         def alltype(keys,typ):
-            """Test whether all listed config items are of the 
+            """Test whether all listed config items are of the
             specified type."""
             return np.all([type(c.__dict__[x]) is typ for x in keys])
         assert alltype(["number_of_runs", "number_of_stages",
@@ -146,7 +146,7 @@ class TestConfig:
         assert alltype(["death_bound", "repr_bound", "crisis_stages"],
                     list)
         assert alltype(["g_dist", "params"], dict)
-        assert alltype(["genmap", "d_range", "r_range", 
+        assert alltype(["genmap", "d_range", "r_range",
                 "snapshot_stages"], np.ndarray)
 
     @pytest.mark.parametrize("sexvar,nsnap", [(True, 10), (False, 0.1)])
@@ -180,7 +180,7 @@ class TestConfig:
         assert d.params["g_dist"] == d.g_dist
 
     def test_get_conf_bad(self, ran_str):
-        """Verify that fn.get_dir throws an error when the target file 
+        """Verify that fn.get_dir throws an error when the target file
         does not exist."""
         with pytest.raises(IOError) as e_info: fn.get_conf(ran_str)
 
@@ -192,7 +192,7 @@ class TestConfig:
         assert p.genomes.shape == (p.N, 2*p.chrlen)
 
     def test_get_startpop_bad(self, ran_str):
-        """Verify that fn.get_startpop throws an error when the target 
+        """Verify that fn.get_startpop throws an error when the target
         file does not exist."""
         with pytest.raises(IOError) as e_info: fn.get_startpop(ran_str)
 
@@ -222,7 +222,7 @@ class TestChance:
 
 class TestGenomeArray:
     """Test that new genome arrays are generated correctly."""
-    genmap_simple = np.append(np.arange(25), 
+    genmap_simple = np.append(np.arange(25),
             np.append(np.arange(24)+100, 200))
     genmap_shuffled = np.copy(genmap_simple)
     random.shuffle(genmap_shuffled)
@@ -264,7 +264,7 @@ class TestUpdateResources:
         zero."""
         assert fn.update_resources(5000, 0, 1000, 2, 5000) == 5000
         assert fn.update_resources(0, 5000, 1000, 2, 5000) == 0
-    
+
     def test_update_resources_unbounded(self):
         """Test resource updating between bounds."""
         assert fn.update_resources(1000, 500, 1000, 2, 5000) == 2000
@@ -308,7 +308,7 @@ class TestMinorMethods:
     """Test whether population minor methods (not death or reproduction)
     work correctly."""
     def test_shuffle(self, spop):
-        """Test if all ages, therefore individuals, present before the 
+        """Test if all ages, therefore individuals, present before the
         shuffle are also present after it."""
         spop2 = spop.clone() # clone tested separately
         spop2.shuffle()
@@ -320,7 +320,7 @@ class TestMinorMethods:
         assert (spop.ages == spop2.ages).all()
 
     def test_clone(self, spop):
-        """Test if cloned population is identical to parent population, 
+        """Test if cloned population is identical to parent population,
         by comparing params, ages, genomes."""
         spop2 = spop.clone()
         assert spop.params() == spop2.params()
@@ -336,7 +336,7 @@ class TestMinorMethods:
         assert (ages1+1 == ages2).all()
 
     def test_params(self, spop):
-        """Test that params returns (at least) the 
+        """Test that params returns (at least) the
         required information."""
         p = spop.params()
         assert len(p) >= 5 and p["sexual"] == spop.sex
@@ -404,7 +404,7 @@ class TestDeathCrisis:
                 fn.chance(p, pop.genomes[:, surv_pos].shape).astype(int)
         # (specifically modify survival loci only)
         pop2 = pop.clone()
-        print pop2.genomes[:, surv_pos] 
+        print pop2.genomes[:, surv_pos]
         pop2.death(np.linspace(1,0,2*pop2.nbase+1), x, False)
         pmod = max(0, min(1, (1-x*(1-p))))
         assert abs(pop2.N/float(pop.N) - pmod) < precision
@@ -461,9 +461,9 @@ class TestReproduction:
         assert (pop.genomes == zz).all()
 
     def test_assortment(self, parents):
-        """Test if assortment of two adults is done properly by 
-        comparing the function result with one of the expected 
-        results.""" 
+        """Test if assortment of two adults is done properly by
+        comparing the function result with one of the expected
+        results."""
         parent1 = np.copy(parents.genomes[0])
         parent2 = np.copy(parents.genomes[1])
         c = parents.chrlen
@@ -478,7 +478,7 @@ class TestReproduction:
         (children == np.append(parent1[c:], parent2[c:])).all() or\
         (children == np.append(parent2[c:], parent1[c:])).all()
 
-    @pytest.mark.parametrize("mrate", [0, 0.3, 0.8, 1]) 
+    @pytest.mark.parametrize("mrate", [0, 0.3, 0.8, 1])
     def test_mutate_unbiased(self, spop, mrate):
         """Test that, in the absence of a +/- bias, the appropriate
         proportion of the genome is mutated."""
@@ -491,14 +491,14 @@ class TestReproduction:
         """Test that the bias between positive and negative mutations is
         implemented correctly."""
         t = 0.01 # Tolerance
-        mrate = 0.5 
+        mrate = 0.5
         g0 = np.copy(spop.genomes)
         spop.mutate(mrate,mratio)
         g1 = spop.genomes
         is1 = (g0==1)
         is0 = np.logical_not(is1)
         assert abs((1-np.mean(g0[is1] == g1[is1]))-mrate) < t
-        assert abs((1-np.mean(g0[is0] == g1[is0]))-mrate*mratio) < t 
+        assert abs((1-np.mean(g0[is0] == g1[is0]))-mrate*mratio) < t
 
     @pytest.mark.parametrize("sexvar",[True, False])
     @pytest.mark.parametrize("m",[0.0, 0.3, 0.8, 1.0])
@@ -526,7 +526,7 @@ class TestReproduction:
     def test_growth_smallpop(self, pop1, nparents):
         """Test that odd numbers of sexual parents are dropped and that a
         sexual parent population of size 1 doesn't reproduce."""
-        parents = cl.Population(pop1.params(), pop1.genmap, 
+        parents = cl.Population(pop1.params(), pop1.genmap,
                 pop1.ages[:nparents],pop1.genomes[:nparents])
         parents.sex = True
         parents.growth(np.linspace(0,1,2*parents.nbase+1),1,0,0,1,False)
@@ -563,7 +563,7 @@ class TestRecordInit:
         m = conf.number_of_stages
         w = conf.window_size
         def sameshape(keys,ref):
-            """Test whether all listed record arrays have identical 
+            """Test whether all listed record arrays have identical
             shape."""
             return np.all([r[x].shape == ref for x in keys])
         assert (r["genmap"] == pop1.genmap).all()
@@ -575,11 +575,12 @@ class TestRecordInit:
         assert (r["r_range"] == np.linspace(0,1,2*pop1.nbase+1)).all()
         assert (r["snapshot_stages"] == conf.snapshot_stages + 1).all()
         assert sameshape(["death_mean", "death_sd", "repr_mean",
-                    "repr_sd", "fitness"], (n,pop1.maxls))
+                    "repr_sd", "age_wise_fitness_contribution",
+                    "junk_age_wise_fitness_contribution"], (n,pop1.maxls))
         assert sameshape(["density_surv", "density_repr"],
                     (n,2*pop1.nbase+1))
         assert sameshape(["entropy","junk_death","junk_repr",
-                    "junk_fitness"], (n,))
+                    "fitness"], (n,))
         assert sameshape(["population_size", "resources", "surv_penf",
                     "repr_penf"], (m,))
         assert sameshape(["age_distribution"],(m,pop1.maxls))
@@ -608,7 +609,7 @@ class TestRecordUpdate:
         assert  np.isclose(r["death_mean"][0],
                 np.tile(r["d_range"][-1],r["max_ls"])).all()
         assert np.isclose(r["death_sd"][0], np.zeros(r["max_ls"])).all()
-        assert np.isclose(r["repr_mean"][0], 
+        assert np.isclose(r["repr_mean"][0],
                 np.append(np.zeros(r["maturity"]),
                     np.tile(r["r_range"][-1],
                         r["max_ls"]-r["maturity"]))).all()
@@ -641,7 +642,7 @@ class TestRecordUpdate:
                         for p in probs])
                 # Binomial distribution values for 0 to 2*b zeros for each
         print "Sum, shape of dists = ", np.sum(dists,1), dists.shape
-        exp = np.sum(dists * props[:,np.newaxis], 0) 
+        exp = np.sum(dists * props[:,np.newaxis], 0)
             # expected proportions of loci with each number of 1's over
             # entire genome
         print exp
@@ -650,7 +651,7 @@ class TestRecordUpdate:
         assert abs(exp_entropy - obs_entropy) < precision
 
     def test_sort_by_age(self, record):
-        """Test if sort_by_age correctly sorts an artificial genome 
+        """Test if sort_by_age correctly sorts an artificial genome
         array."""
         genmap = np.sort(record.record["genmap"])
         ix = np.arange(len(genmap))
@@ -666,7 +667,7 @@ class TestRecordUpdate:
 
 
     def test_update_invstats(self,record,pop1):
-        """Test if update_invstats properly calculates genomestats for 
+        """Test if update_invstats properly calculates genomestats for
         pop1 (genomes filled with ones)."""
         record.update_invstats(pop1,0)
         r = record.record
@@ -703,7 +704,7 @@ class TestRecordFinal:
         assert (record.age_wise_n1("mask") == ix).all()
 
     def test_actual_death_rate(self, record):
-        """Test if actual_death_rate returns expected results for 
+        """Test if actual_death_rate returns expected results for
         artificial data."""
         r = record.record
         maxls = r["max_ls"][0]
@@ -726,16 +727,16 @@ class TestRecordFinal:
         record.update(pop1, 100, 1, 1, 0, 0)
         record.final_update(0, conf.window_size)
         r = record.record
-        # Predicted fitness array:
-        pf = np.arange(r["max_ls"], dtype=float)-r["maturity"]+1
-        pf[pf<0]=0
+        # Predicted age_wise_fitness_contribution array:
+        pf = np.append(np.zeros((s,r["maturity"])),np.ones((s,r["max_ls"]-r["maturity"])),1)
         # Predicted actual death rate:
         pad = np.append(np.ones(r["maturity"]-1), np.array([1-pop1.N]))
         pad = np.append(pad, np.ones(r["max_ls"] - len(pad)))
-        assert (r["fitness"] == np.tile(pf, (s,1))).all()
+        assert (r["age_wise_fitness_contribution"] == pf).all()
+        assert (r["junk_age_wise_fitness_contribution"] == pf).all()
+        assert (r["fitness"] == np.sum(pf,1)).all()
         assert (r["age_wise_n1"] == 1).all()
         assert (r["age_wise_n1_std"] == 0).all()
-        assert (r["junk_fitness"] == 1).all()
         assert (r["actual_death_rate"] == pad).all()
         assert (r["s1"] == 0).all()
 

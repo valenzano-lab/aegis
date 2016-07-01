@@ -319,7 +319,10 @@ class Record:
             "death_sd":np.copy(array1),
             "repr_mean":np.copy(array1),
             "repr_sd":np.copy(array1),
-            "fitness":np.copy(array1),
+            "product_fitness":np.copy(array1),
+            "junk_product_fitness":np.copy(array1),
+            "age_wise_fitness_contribution":np.copy(array1),
+            "junk_age_wise_fitness_contribution":np.copy(array1),
             # Genotype data:
             "density_surv":np.copy(array2),
             "density_repr":np.copy(array2),
@@ -330,7 +333,7 @@ class Record:
             "entropy":np.copy(array3),
             "junk_death":np.copy(array3),
             "junk_repr":np.copy(array3),
-            "junk_fitness":np.copy(array3)
+            "fitness":np.copy(array3)
             }
 
     def quick_update(self, n_stage, population, resources, surv_penf, repr_penf):
@@ -490,12 +493,36 @@ class Record:
         a_strd = a.strides + (a.strides[s],) # strides
         self.record["s1"] = np.std(
                 np.lib.stride_tricks.as_strided(a, shape=a_shape, strides=a_strd), 2)
-        x_surv = np.cumprod(1-self.record["death_mean"],1)
-        self.record["fitness"] = np.cumsum(
-                x_surv*self.record["repr_mean"],1)
-        self.record["junk_fitness"] = (
-                1-self.record["junk_death"])*self.record["junk_repr"]
+        # fitness calculation
+            # ns: normalised survival
+            # vs: survival value range, needed for normalisation
+            # nr: normalised reproduction
+            # vr: reproduction value range, needed for normalisation
+        ns = (1-self.record["death_mean"])
+        vs = (1-self.record["d_range"])
+        ns = 1.0/(max(vs)-min(vs))*(ns-max(vs))+1 # normalise
+        nr = self.record["repr_mean"]
+        vr = self.record["r_range"]
+        nr = 1.0/(max(vr)-min(vr))*(nr-max(vr))+1 # normalise
+        self.record["product_fitness"] = ns*nr
+        self.record["age_wise_fitness_contribution"] = np.cumprod(ns,1)*nr
+        self.record["fitness"] = np.sum(self.record["age_wise_fitness_contribution"],1)
+        # junk fitness calculation
+            # jns: normalised junk survival
+            # jnr: normalised junk reproduction
+        jns = (1-self.record["junk_death"])
+        jns = 1.0/(max(vs)-min(vs))*(jns-max(vs))+1 # normalise
+        jns = np.tile(jns.reshape(jns.shape[0],1),self.record["max_ls"])
+            # tile it to shape (n_snap,maxls)
+        jnr = self.record["junk_repr"]
+        jnr = 1.0/(max(vr)-min(vr))*(jnr-max(vr))+1 # normalise
+        jnr = np.tile(jnr.reshape(jnr.shape[0],1),self.record["max_ls"])
+            # tile it to shape (n_snap,maxls)
+        jnr[:,:self.record["maturity"]] = 0 \
+            # reproduction up to maturity is zero
+        self.record["junk_product_fitness"] = jns*jnr
+        self.record["junk_age_wise_fitness_contribution"] = np.cumprod(jns,1)*jnr
+        #
         self.record["actual_death_rate"] = self.actual_death_rate()
         self.record["age_wise_n1"] = self.age_wise_n1("n1")
         self.record["age_wise_n1_std"] = self.age_wise_n1("n1_std")
-
