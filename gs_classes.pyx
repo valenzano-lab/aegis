@@ -506,7 +506,7 @@ class Record:
         jnr = self.record["junk_repr"]
         jnr = 1.0/(max(vr)-min(vr))*(jnr-max(vr))+1
         jnr = np.tile(jnr.reshape(jnr.shape[0],1),self.record["max_ls"])
-        jnr[:,:16] = 0
+        jnr[:,:self.record["maturity"]] = 0
         self.record["junk_age_wise_fitness_contribution"] = np.cumprod(jns,1)*jnr
         self.record["actual_death_rate"] = self.actual_death_rate()
         self.record["age_wise_n1"] = self.age_wise_n1("n1")
