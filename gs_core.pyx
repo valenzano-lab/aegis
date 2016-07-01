@@ -589,8 +589,8 @@ class Simulation:
         self.log = ""
         self.logprint("\nBeginning simulation at "+simstart)
         self.logprint("Working directory: "+os.getcwd())
-        self.get_conf(config_file)
-        self.gen_conf()
+        self.conf = self.get_conf(config_file)
+        self.gen_conf(self.conf)
         self.get_startpop(seed_file)
         self.report_n = report_n
         self.verbose = verbose
@@ -624,7 +624,7 @@ class Simulation:
     def get_conf(self, file_name):
         """Import specified configuration file for simulation."""
         try:
-            self.conf = importlib.import_module(file_name)
+            conf = importlib.import_module(file_name)
         except ImportError:
             print "No such file in simulation directory: " + file_name
             q = raw_input(
@@ -633,41 +633,41 @@ class Simulation:
                 exit("Aborting: no valid configuration file given.")
             else:
                 return self.get_conf(q)
-        #logprint("Config file: "+ file_name +".py")
+        return conf
 
-    def gen_conf(self):
+    def gen_conf(self, conf):
         """Generate derived configuration parameters from simple ones and
         add to configuration object."""
-        self.conf.g_dist = {
-                "s":self.conf.g_dist_s, # Survival
-                "r":self.conf.g_dist_r, # Reproduction
-                "n":self.conf.g_dist_n # Neutral
+        conf.g_dist = {
+                "s":conf.g_dist_s, # Survival
+                "r":conf.g_dist_r, # Reproduction
+                "n":conf.g_dist_n # Neutral
                 }
         # Genome map: survival (0 to max), reproduction (maturity to max), neutral
-        self.conf.genmap = np.asarray(range(0,self.conf.max_ls) +\
-                range(self.conf.maturity+100,self.conf.max_ls+100) +\
-                range(200, 200+self.conf.n_neutral))
-        if self.conf.sexual: self.conf.repr_bound[1] *= 2
+        conf.genmap = np.asarray(range(0,conf.max_ls) +\
+                range(conf.maturity+100,conf.max_ls+100) +\
+                range(200, 200+conf.n_neutral))
+        if conf.sexual: conf.repr_bound[1] *= 2
         # Length of chromosome in binary units
-        self.conf.chr_len = len(self.conf.genmap) * self.conf.n_base 
+        conf.chr_len = len(conf.genmap) * conf.n_base 
         # Probability ranges
-        nstates = 2*self.conf.n_base+1
-        self.conf.d_range = np.linspace(self.conf.death_bound[1], 
-                self.conf.death_bound[0], nstates) # max to min death rate
-        self.conf.r_range = np.linspace(self.conf.repr_bound[0],
-                self.conf.repr_bound[1], nstates) # min to max repr rate
+        nstates = 2*conf.n_base+1
+        conf.d_range = np.linspace(conf.death_bound[1], 
+                conf.death_bound[0], nstates) # max to min death rate
+        conf.r_range = np.linspace(conf.repr_bound[0],
+                conf.repr_bound[1], nstates) # min to max repr rate
         # Determine snapshot stages:
-        if type(self.conf.number_of_snapshots) is float:
-            self.conf.number_of_snapshots = int(\
-                    self.conf.number_of_snapshots*self.conf.number_of_stages)
-        self.conf.snapshot_stages = np.around(np.linspace(0,
-            self.conf.number_of_stages-1,self.conf.number_of_snapshots),0)
+        if type(conf.number_of_snapshots) is float:
+            conf.number_of_snapshots = int(\
+                    conf.number_of_snapshots*conf.number_of_stages)
+        conf.snapshot_stages = np.around(np.linspace(0,
+            conf.number_of_stages-1,conf.number_of_snapshots),0)
         # Dictionary for population initialisation
-        self.conf.params = {"sexual":self.conf.sexual, 
-                "chr_len":self.conf.chr_len, "n_base":self.conf.n_base,
-                "maturity":self.conf.maturity, "max_ls":self.conf.max_ls, 
-                "age_random":self.conf.age_random, 
-                "start_pop":self.conf.start_pop, "g_dist":self.conf.g_dist}
+        conf.params = {"sexual":conf.sexual, 
+                "chr_len":conf.chr_len, "n_base":conf.n_base,
+                "maturity":conf.maturity, "max_ls":conf.max_ls, 
+                "age_random":conf.age_random, 
+                "start_pop":conf.start_pop, "g_dist":conf.g_dist}
 
     def get_startpop(self, seed_name):
         """Import any seed population (or return blank)."""
