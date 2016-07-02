@@ -220,6 +220,7 @@ cdef class Population:
         self.ages = self.ages[which_survive]
         self.genomes = self.genomes[which_survive]
         self.N = len(self.ages)
+        self.index = np.arange(self.N) # change
 
     # Private methods:
 
