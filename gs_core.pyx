@@ -198,6 +198,7 @@ cdef class Population:
         children.ages[:] = 0 # Make newborn
         self.addto(children)
         self.N = len(self.ages)
+        self.index = np.arange(self.N)
 
     cpdef death(self, np.ndarray[NPFLOAT_t, ndim=1] d_range, float penf):
         """Select survivors and kill rest of population."""
@@ -211,6 +212,7 @@ cdef class Population:
         self.ages = self.ages[survivors]
         self.genomes = self.genomes[survivors]
         self.N = np.sum(survivors)
+        self.index = np.arange(self.N)
 
     def crisis(self, crisis_sv):
         """Apply an extrinsic death crisis and subset population."""
@@ -220,7 +222,7 @@ cdef class Population:
         self.ages = self.ages[which_survive]
         self.genomes = self.genomes[which_survive]
         self.N = len(self.ages)
-        self.index = np.arange(self.N) # change
+        self.index = np.arange(self.N)
 
     # Private methods:
 
