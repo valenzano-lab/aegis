@@ -1,7 +1,7 @@
 # TODO: Test seeding
 
 import pyximport; pyximport.install()
-from gs_core import Simulation, Run, Population, Record, chance
+from gs_core import Simulation, Run, Outpop, Population, Record, chance
 import pytest, random, string, subprocess, math, copy, os, sys
 import numpy as np
 import scipy.stats as st
@@ -74,6 +74,10 @@ def pop1(request, spop):
     pop.genomes = np.ones(pop.genomes.shape).astype(int)
     pop.ages = np.tile(pop.maturity, pop.N)
     return pop
+
+@pytest.fixture()
+def opop1(pop1):
+    return Outpop(pop1)
 
 @pytest.fixture()
 def record(request,pop1,conf):
@@ -898,3 +902,62 @@ class TestRunClass:
         run1.execute_stage()
 
         assert len(run1.log.split("\n")) == res
+
+    def test_execute_stage(self,conf,opop1):
+        run1 = Run(conf,opop1,100,False)
+        nstates = 2*conf.n_base+1
+        # update_agestats, update_invstats use record.record
+        run1.record.record["d_range"] = np.zeros(nstates)
+        run1.record.record["r_range"] = np.zeros(nstates)
+        # growth, death use run.conf
+        run1.conf.d_range = np.zeros(nstates)
+        run1.conf.r_range = np.zeros(nstates)
+        run1.conf.crisis_sv = 1
+        #run1.n_stage = 0
+        run1.conf.number_of_stages = 1
+        run1.conf.snapshot_stages = [0]
+        run1.conf.crisis_stages = [0]
+        run1.resources = run1.population.N
+        run1.conf.res_var = False
+
+        N_old = run1.population.N
+        mask = np.zeros(run1.population.maxls)
+        age_distribution_mask = np.copy(mask)
+        age_distribution_mask[run1.population.maturity] = 1
+        density_mask = np.append(np.zeros(nstates-1),[1])
+        n1_mask = np.ones(run1.population.chrlen)
+        n1_std_mask = np.zeros(run1.population.chrlen)
+        s1_mask = np.zeros(run1.record.record["s1"][0].shape)
+
+        run1.execute_stage()
+
+        # record
+        assert run1.record.record["population_size"][0] == N_old
+        assert run1.record.record["resources"][0] == N_old
+        assert run1.record.record["surv_penf"][0] == 1
+        assert run1.record.record["repr_penf"][0] == 1
+        assert (run1.record.record["age_distribution"][0] == age_distribution_mask).all()
+        assert (run1.record.record["death_mean"][0] == mask).all()
+        assert (run1.record.record["death_sd"][0] == mask).all()
+        assert (run1.record.record["repr_mean"][0] == mask).all()
+        assert (run1.record.record["repr_sd"][0] == mask).all()
+        assert (run1.record.record["fitness"][0] == mask).all()
+        assert (run1.record.record["density_surv"][0] == density_mask).all()
+        assert (run1.record.record["density_repr"][0] == density_mask).all()
+        assert (run1.record.record["n1"][0] == n1_mask).all()
+        assert (run1.record.record["n1_std"][0] == n1_std_mask).all()
+        assert (run1.record.record["s1"][0] == s1_mask).all()
+        assert run1.record.record["entropy"][0] == 0
+        assert run1.record.record["junk_death"][0] == 0
+        assert run1.record.record["junk_repr"][0] == 0
+        assert run1.record.record["junk_fitness"][0] == 0
+        # ages, resources and starvation
+        assert (run1.population.ages == run1.population.maturity+1).all()
+        assert run1.resources == N_old
+        assert run1.surv_penf == run1.repr_penf == 1
+        # reproduction, death and crisis
+        assert run1.population.N == N_old
+        # run status
+        assert run1.dieoff == False
+        assert run1.n_stage == 1
+        assert run1.complete == True
