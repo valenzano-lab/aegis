@@ -497,7 +497,7 @@ class Record:
 
 class Run:
     """An object representing a single run of a simulation."""
-    def __init__(self, config, startpop, report_n, verbose):
+    def __init__(self, config, startsim, report_n, verbose):
         self.log = ""
         self.conf = config
         self.surv_penf = 1.0
@@ -505,8 +505,8 @@ class Run:
         self.resources = self.conf.res_start
         self.genmap = np.copy(self.conf.genmap)
         np.random.shuffle(self.genmap)
-        if startpop != "": 
-            self.population = startpop.toPop()
+        if startsim != "": 
+            self.population = startsim[0].runs[int(startsim[1])].population.toPop().clone()
         else:
             self.population = Population(self.conf.params, self.genmap,
                     np.array([-1]), np.array([[-1],[-1]]))
@@ -569,7 +569,7 @@ class Run:
         self.population.growth(self.conf.r_range, self.repr_penf,
                 self.conf.r_rate, self.conf.m_rate, self.conf.m_ratio)
         n1 = self.population.N
-        self.population.death(self.conf.d_range, self.repr_penf)
+        self.population.death(self.conf.d_range, self.surv_penf) # change
         n2 = self.population.N
         if full_report: self.logprint("done. "+str(n1-n0)+" individuals born, "+
             str(n1-n2)+" died.")
@@ -600,11 +600,14 @@ class Simulation:
         self.logprint("Working directory: "+os.getcwd())
         self.conf = self.get_conf(config_file)
         self.gen_conf(self.conf)
-        self.get_startpop(seed_file)
+        self.get_startsim(seed_file)
+        # check that seed simulation and the current one have the same number of runs
+#        if self.startsim != "" and len(self.startsim.runs) != self.conf.number_of_runs:
+#            exit("Aborting: number of runs of the seed simulation and the current one don't match.")
         self.report_n = report_n
         self.verbose = verbose
         self.logprint("Initialising runs...", False)
-        self.runs = [Run(self.conf, self.startpop, self.report_n, 
+        self.runs = [Run(self.conf, self.startsim, self.report_n, 
             self.verbose) for n in xrange(self.conf.number_of_runs)]
         self.logprint("done.")
 
@@ -678,18 +681,18 @@ class Simulation:
                 "age_random":conf.age_random, 
                 "start_pop":conf.start_pop, "g_dist":conf.g_dist}
 
-    def get_startpop(self, seed_name):
-        """Import any seed population (or return blank)."""
+    def get_startsim(self, seed_name):
+        """Import any seed simulation (or return blank)."""
         if seed_name == "":
             #logprint("Seed: None.")
-            self.startpop = ""
+            self.startsim = ""
             return
         try:
             # Make sure includes extension (default "txt")
-            if len(os.path.splitext(seed_name)[1]) == 0:
-                seed_name = seed_name + ".txt"
-            popfile = open(seed_name, "rb")
-            self.startpop = pickle.load(popfile) # Import population array
+            if len(os.path.splitext(seed_name[0])[1]) == 0:
+                seed_name[0] = seed_name[0] + ".txt"
+            simfile = open(seed_name[0], "rb")
+            self.startsim = (pickle.load(simfile),seed_name[1]) # Import simulation object
         except IOError:
             print "No such seed file: " + seed_name
             q = raw_input(

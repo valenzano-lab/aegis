@@ -3,6 +3,10 @@
 # Import libraries and define arguments
 import argparse,os,sys,pyximport; pyximport.install()
 from gs_core import Simulation
+try:
+    import Cpickle as picke
+except:
+    import pickle
 
 parser = argparse.ArgumentParser(description='Run the genome ageing \
         simulation.')
@@ -11,8 +15,8 @@ parser.add_argument('-o', metavar="<str>", default="output",
         help="prefix of simulation output file (default: output)")
 parser.add_argument('-l', metavar="<str>", default="log",
         help="prefix of simulation log file (default: log)")
-parser.add_argument('-s', metavar="<str>", default="",
-        help="path to population seed file (default: no seed)")
+parser.add_argument('-s', nargs=2, default="",
+        help="path to simulation seed file (default: no seed)")
 parser.add_argument('-c', metavar='<str>', default="config",
         help="name of configuration file within simulation directory \
                 (default: config.py)")
