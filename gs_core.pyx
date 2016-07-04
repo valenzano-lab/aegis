@@ -321,7 +321,11 @@ class Record:
             "entropy":np.copy(array3),
             "junk_death":np.copy(array3),
             "junk_repr":np.copy(array3),
-            "junk_fitness":np.copy(array3)
+            "junk_fitness":np.copy(array3),
+            # Run info
+            "dieoff":False,
+            "prev_failed":0,
+            "percent_dieoff":0
             }
 
     def quick_update(self, n_stage, population, resources, surv_penf, repr_penf):
@@ -575,7 +579,8 @@ class Run:
             self.logprint("Crisis! "+str(self.population.N)+\
                     " individuals survived. (Stage "+str(self.n_stage)+")")
         # Update run status
-        self.dieoff = self.population.N == 0
+        self.dieoff = self.record.record["dieoff"] = self.population.N == 0
+        self.record.record["percent_dieoff"] = self.dieoff*100.0
         self.n_stage += 1
         self.complete = self.dieoff or self.n_stage==self.conf.number_of_stages
         if self.complete and not self.dieoff:
@@ -605,9 +610,10 @@ class Simulation:
             self.verbose) for n in xrange(self.conf.number_of_runs)]
         self.logprint("done.")
 
-    def execute_run(self, n):
+    def execute_run(self, n, keep_only_successes=False, start=False):
         """Perform a run from start to completion."""
-        start = datetime.datetime.now()
+        if keep_only_successes: nf = 0
+        if not start: start = datetime.datetime.now()
         runstart = time.strftime('%X %x', time.localtime())+".\n"
         self.logprint("\n\nBeginning run "+str(n)+" at "+runstart)
         while not self.runs[n].complete:
@@ -620,9 +626,17 @@ class Simulation:
         x += " (perished at stage "+str(self.runs[n].n_stage)+")." if\
                 self.runs[n].dieoff else "."
         self.logprint(x)
+        if keep_only_successes:
+            nf += 1
+            self.logprint("Run "+str(n)+" failed. Total failures = "+str(nf)+\
+                    ". Repeating...")
+            self.runs[n] = Run(self.conf, self.startpop, self.report_n, 
+                self.verbose)
+            self.runs[n].record.record["prev_failed"] = nf
+            self.execute_run(n, True, start)
         self.print_runtime(start, end)
 
-    def execute(self):
+    def execute(self, keep_only_successes=False):
         """Execute all runs."""
         for n in xrange(self.conf.number_of_runs):
             self.execute_run(n)
