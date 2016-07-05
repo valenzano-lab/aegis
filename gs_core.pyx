@@ -1,3 +1,6 @@
+# TODO optional: add option to seed all populations; problematic - extinction
+# TODO: investigate possible conflict among parameters on different class levels (sim,run,pop)
+
 # cython: profile=True
 # cython: boundscheck=False
 # cython: wraparound=False
@@ -601,9 +604,6 @@ class Simulation:
         self.conf = self.get_conf(config_file)
         self.gen_conf(self.conf)
         self.get_startsim(seed_file)
-        # check that seed simulation and the current one have the same number of runs
-#        if self.startsim != "" and len(self.startsim.runs) != self.conf.number_of_runs:
-#            exit("Aborting: number of runs of the seed simulation and the current one don't match.")
         self.report_n = report_n
         self.verbose = verbose
         self.logprint("Initialising runs...", False)
@@ -692,7 +692,15 @@ class Simulation:
             if len(os.path.splitext(seed_name[0])[1]) == 0:
                 seed_name[0] = seed_name[0] + ".txt"
             simfile = open(seed_name[0], "rb")
-            self.startsim = (pickle.load(simfile),seed_name[1]) # Import simulation object
+            simobj = pickle.load(simfile) # import simulation object
+            # safeguard to check if the second seed argument is smaller than len(sim.runs)
+            if len(simobj.runs) <= int(seed_name[1]):
+                q = raw_input("\n\nIndex for the seed population in the seed simulation object is out of range.\nPossible values for index: "+str(range(len(simobj.runs)))+"\nEnter new index, or skip to abort: ")
+                if q == "":
+                    exit("Aborting: no valid seed population index given.")
+                else:
+                    return self.get_startsim((seed_name[0],q))
+            self.startsim = (simobj, seed_name[1]) # pass simulation object and run index to run__init
         except IOError:
             print "No such seed file: " + seed_name
             q = raw_input(
@@ -700,7 +708,7 @@ class Simulation:
             if q == "":
                 exit("Aborting: no valid seed file given.")
             else:
-                return self.get_startpop(q)
+                return self.get_startsim(q)
         #logprint("Seed population file: " + seed_name)
 
     def logprint(self, string, newline=True):
