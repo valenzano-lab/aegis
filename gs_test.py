@@ -1,4 +1,5 @@
 # TODO: Test seeding
+# TODO: test repr_penf against surv_penf; bug from 4-Jul-2016
 
 import pyximport; pyximport.install()
 from gs_core import Simulation, Run, Outpop, Population, Record, chance
@@ -11,7 +12,7 @@ runChanceTests=False
 runPopulationTests=False
 runRecordTests=False
 runRunTests=True
-runSimulationTests=False
+runSimulationTests=True
 
 ####################
 ### 0: FIXTURES  ###
@@ -76,10 +77,6 @@ def pop1(request, spop):
     return pop
 
 @pytest.fixture()
-def opop1(pop1):
-    return Outpop(pop1)
-
-@pytest.fixture()
 def record(request,pop1,conf):
     """Create a record from pop1 as defined in configuration file."""
     spaces = 2 * pop1.nbase + 1
@@ -87,10 +84,22 @@ def record(request,pop1,conf):
             np.linspace(1,0,spaces), np.linspace(0,1,spaces),
             conf.window_size)
 
-@pytest.fixture
+@pytest.fixture()
 def run(request,conf):
     """Create an unseeded run object from configuration."""
     return Run(conf, "", 100, False)
+
+@pytest.fixture()
+def simulation(request,conf):
+    """Create an unseeded simulation object from configuration."""
+    return Simulation("config_test", "",100, False)
+
+@pytest.fixture()
+def simulation_pop1(request, simulation, pop1):
+    """Create a simulation object with pop1 for population."""
+    sim = copy.copy(simulation)
+    sim.runs[0].population = Outpop(pop1)
+    return sim
 
 ####################
 ### 0: DUMMY RUN ###
@@ -107,6 +116,7 @@ def test_sim_run_0():
         subprocess.call(["python", "genome_simulation.py", "."])
         os.rename("run_1_pop.txt", "sample_pop.txt")
         os.rename("run_1_rec.txt", "sample_rec.txt")
+        os.rename("output.sim", "sample_output.sim")
 
 #########################
 ### 1: FREE FUNCTIONS ###
@@ -782,6 +792,7 @@ def test_post_cleanup():
     """Kill tempfiles made for test. Not really a test at all."""
     os.remove("sample_pop.txt")
     os.remove("sample_rec.txt")
+    os.remove("sample_output.sim")
     os.remove("log.txt")
 
 @pytest.mark.skipif(not runRunTests,
@@ -903,9 +914,11 @@ class TestRunClass:
 
         assert len(run1.log.split("\n")) == res
 
-    def test_execute_stage(self,conf,opop1):
-        run1 = Run(conf,opop1,100,False)
-        nstates = 2*conf.n_base+1
+    # TODO: needs update because of new seeding (startpop) mechanism
+    def test_execute_stage(self,simulation_pop1):
+        startsim = (simulation_pop1, "0")
+        run1 = Run(simulation_pop1.conf,startsim,100,False)
+        nstates = 2*run1.conf.n_base+1
         # update_agestats, update_invstats use record.record
         run1.record.record["d_range"] = np.zeros(nstates)
         run1.record.record["r_range"] = np.zeros(nstates)

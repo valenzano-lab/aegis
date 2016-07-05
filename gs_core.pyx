@@ -499,7 +499,7 @@ class Record:
 
 class Run:
     """An object representing a single run of a simulation."""
-    def __init__(self, config, startsim, report_n, n_run ,verbose):
+    def __init__(self, config, startsim, report_n, verbose, n_run=""):
         self.log = ""
         self.conf = config
         self.surv_penf = 1.0
@@ -609,8 +609,8 @@ class Simulation:
         self.report_n = report_n
         self.verbose = verbose
         self.logprint("Initialising runs...", False)
-        self.runs = [Run(self.conf, self.startsim, self.report_n, n,
-            self.verbose) for n in xrange(self.conf.number_of_runs)]
+        self.runs = [Run(self.conf, self.startsim, self.report_n,
+            self.verbose, n) for n in xrange(self.conf.number_of_runs)]
         self.logprint("done.")
 
     def execute_run(self, n):
