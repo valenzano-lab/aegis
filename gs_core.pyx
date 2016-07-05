@@ -1,4 +1,3 @@
-# TODO optional: add option to seed all populations; problematic - extinction
 # TODO: investigate possible conflict among parameters on different class levels (sim,run,pop)
 
 # cython: profile=True
@@ -500,7 +499,7 @@ class Record:
 
 class Run:
     """An object representing a single run of a simulation."""
-    def __init__(self, config, startsim, report_n, verbose):
+    def __init__(self, config, startsim, report_n, n_run ,verbose):
         self.log = ""
         self.conf = config
         self.surv_penf = 1.0
@@ -509,7 +508,10 @@ class Run:
         self.genmap = np.copy(self.conf.genmap)
         np.random.shuffle(self.genmap)
         if startsim != "": 
-            self.population = startsim[0].runs[int(startsim[1])].population.toPop().clone()
+            if startsim[1] == "a":
+                self.population = startsim[0].runs[int(n_run)].population.toPop().clone()
+            else:
+                self.population = startsim[0].runs[int(startsim[1])].population.toPop().clone()
         else:
             self.population = Population(self.conf.params, self.genmap,
                     np.array([-1]), np.array([[-1],[-1]]))
@@ -607,7 +609,7 @@ class Simulation:
         self.report_n = report_n
         self.verbose = verbose
         self.logprint("Initialising runs...", False)
-        self.runs = [Run(self.conf, self.startsim, self.report_n, 
+        self.runs = [Run(self.conf, self.startsim, self.report_n, n,
             self.verbose) for n in xrange(self.conf.number_of_runs)]
         self.logprint("done.")
 
@@ -693,9 +695,12 @@ class Simulation:
                 seed_name[0] = seed_name[0] + ".txt"
             simfile = open(seed_name[0], "rb")
             simobj = pickle.load(simfile) # import simulation object
+            # safeguard to check if, when all, the seed runs and current runs can be "zipped"
+            if seed_name[1] == "a" and len(simobj.runs) != self.conf.number_of_runs:
+                exit("Aborting: tried to seed all, but number of runs between the seed and the current simulation mismatch.")
             # safeguard to check if the second seed argument is smaller than len(sim.runs)
-            if len(simobj.runs) <= int(seed_name[1]):
-                q = raw_input("\n\nIndex for the seed population in the seed simulation object is out of range.\nPossible values for index: "+str(range(len(simobj.runs)))+"\nEnter new index, or skip to abort: ")
+            if seed_name[1] != "a" and len(simobj.runs) <= int(seed_name[1]):
+                q = raw_input("\n\nIndex for the seed population in the seed simulation object is out of range.\nPossible values for index: "+str(range(len(simobj.runs)))+" or \"a\" for all."+"\nEnter new index, or skip to abort: ")
                 if q == "":
                     exit("Aborting: no valid seed population index given.")
                 else:
