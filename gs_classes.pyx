@@ -232,7 +232,7 @@ cdef class Population:
 
     # Private methods:
 
-    cpdef recombine(self, int r_rate):
+    cpdef recombine(self, float r_rate):
         """Recombine between the two chromosomes of each individual
         in the population."""
         cdef:
