@@ -139,8 +139,8 @@ class TestConfig:
             "number_of_snapshots", "res_start", "R", "res_limit",
             "start_pop", "max_ls", "maturity", "n_base",
             "death_inc", "repr_dec", "window_size", "chr_len"], int)
-        assert alltype(["crisis_sv", "V", "r_rate", "m_rate", "m_ratio"],
-                    float)
+        assert alltype(["crisis_sv", "V", "r_rate", "m_rate", "m_ratio", 
+            "crisis_p"], float)
         assert alltype(["sexual", "res_var", "age_random", "surv_pen",
                 "repr_pen"], bool)
         assert alltype(["death_bound", "repr_bound", "crisis_stages"],

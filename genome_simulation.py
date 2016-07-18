@@ -124,7 +124,7 @@ for n_run in range(1, c.number_of_runs+1):
 
         population.death(c.d_range, surv_penf, full_report)
 
-        if n_stage in c.crisis_stages:
+        if n_stage in c.crisis_stages or fn.chance(c.crisis_p):
             population.crisis(c.crisis_sv, n_stage)
 
     ## RUN ENDED
