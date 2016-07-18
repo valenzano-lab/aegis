@@ -295,8 +295,6 @@ class TestPopInit:
         assert pop_a.maxls == pop_b.maxls == conf.params["max_ls"]
         assert pop_a.maturity==pop_b.maturity == conf.params["maturity"]
         assert pop_a.N == pop_b.N == conf.params["start_pop"]
-        assert (pop_a.index==np.arange(conf.params["start_pop"])).all()
-        assert (pop_b.index==np.arange(conf.params["start_pop"])).all()
         assert (pop_a.genmap == conf.genmap).all()
         assert (pop_b.genmap == conf.genmap).all()
         assert (pop_a.ages == pop_a.maturity).all()
