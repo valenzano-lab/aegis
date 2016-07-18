@@ -8,9 +8,9 @@ import numpy as np
 import scipy.stats as st
 from scipy.misc import comb
 
-runChanceTests=False
-runPopulationTests=False
-runRecordTests=False
+runChanceTests=False # Works with new setup
+runPopulationTests=False # "
+runRecordTests=False  # "
 runRunTests=True
 runSimulationTests=False
 
@@ -40,7 +40,7 @@ def conf(request):
         c.death_bound,c.repr_bound = [db_low, db_high],[rb_low, rb_high]
         c.r_rate, c.m_rate, c.m_ratio = np.random.uniform(size=3)
         c.max_ls = random.randint(20, 99)
-        c.maturity = random.randint(5, c.max_ls-1)
+        c.maturity = random.randint(5, c.max_ls-2)
         #c.n_neutral = random.randint(1, 100)
         c.n_base = random.randint(5, 25)
         c.surv_pen = random.choice([True, False])
@@ -93,13 +93,6 @@ def run(request,conf):
 def simulation(request,conf):
     """Create an unseeded simulation object from configuration."""
     return Simulation("config_test", "",100, False)
-
-@pytest.fixture()
-def simulation_pop1(request, simulation, pop1):
-    """Create a simulation object with pop1 for population."""
-    sim = copy.copy(simulation)
-    sim.runs[0].population = Outpop(pop1)
-    return sim
 
 ####################
 ### 0: DUMMY RUN ###
@@ -470,7 +463,7 @@ class TestPopulationClass:
         precision = 0.1
         pop = spop.clone()
         pop.crisis(p)
-        assert abs(pop.N - p*spop.N) < precision
+        assert abs(pop.N - p*spop.N)/pop.N < precision
 
     # Reproduction
 
@@ -901,79 +894,103 @@ class TestRunClass:
     [(1,False,1),(2,False,2),(15,False,2),(15,True,4),(30,False,2),\
      (30,True,5)])
     def test_execute_stage_logprint(self,run,n_stage,verbose,res):
+        """Test that execute_stage produces the right number of status
+        report lines."""
         run1 = copy.copy(run)
         run1.log = ""
-
         run1.n_stage = n_stage
         run1.verbose = verbose
         run1.report_n = 15
         run1.conf.snapshot_stages = [30]
         run1.conf.crisis_stages = [2]
-
         run1.execute_stage()
-
         assert len(run1.log.split("\n")) == res
+
+    def test_execute_stage_functionality(self, run):
+        """Test functional operations of test_execute_stage, ignoring 
+        status reporting."""
+        # Normal
+        run1 = copy.copy(run)
+        run1.execute_stage()
+        assert run1.n_stage == run.n_stage + 1
+        assert run1.n_snap == run.n_snap + 1
+        assert (run1.dieoff == (run1.population.N == 0))
+        assert run1.complete == run1.dieoff
+        # Last stage
+        run2 = copy.copy(run)
+        run2.n_stage = run2.conf.number_of_stages -1
+        run2.execute_stage()
+        assert run2.n_stage == run.conf.number_of_stages
+        assert (run2.dieoff == (run2.population.N == 0))
+        assert run2.complete
+        # Dead
+        run3 = copy.copy(run)
+        run3.population.N = 0
+        run3.population.ages = np.array([])
+        run3.population.genomes = np.array([[],[]])
+        run3.execute_stage()
+        assert run3.n_stage == run.n_stage + 1
+        assert run3.n_snap == run.n_snap
+        assert run3.dieoff and run3.complete
 
     # TODO: fails occasionally on crisis; pop dies off, although crisis_sv reportedly equals 1
     # only happens when fixture conf is called in random mode
-    @pytest.mark.skip(reason="Unsolved..")
-    @pytest.mark.xfail
-    def test_execute_stage(self,simulation_pop1):
-        startsim = (copy.copy(simulation_pop1), "0")
-        run1 = Run(simulation_pop1.conf,startsim,100,False)
-        nstates = 2*run1.conf.n_base+1
+    @pytest.mark.parametrize("crisis_p,crisis_sv",\
+            [(0,1),(1,1),(1,0.5)])
+    def test_execute_stage_degen(self,run,crisis_p,crisis_sv):
+        """Test execute_stage operates correctly when there is 0 probability
+        of birth, death or crisis death."""
+        run1 = copy.copy(run)
+        z = np.zeros(2*run1.conf.n_base + 1)
         # update_agestats, update_invstats use record.record
-        run1.record.record["d_range"] = np.zeros(nstates)
-        run1.record.record["r_range"] = np.zeros(nstates)
+        run1.record.record["d_range"] = np.copy(z)
+        run1.record.record["r_range"] = np.copy(z)
         # growth, death use run.conf
-        run1.conf.d_range = np.zeros(nstates)
-        run1.conf.r_range = np.zeros(nstates)
-        run1.conf.crisis_sv = 1
-        #run1.n_stage = 0
+        run1.conf.d_range, run1.conf.r_range = np.copy(z),np.copy(z)
+        run1.conf.crisis_p,run1.conf.crisis_sv = crisis_p, crisis_sv
+        # Other setup
+        run1.population.genomes = np.ones(run1.population.genomes.shape).astype(int)
         run1.conf.number_of_stages = 1
-        run1.conf.snapshot_stages = [0]
-        run1.conf.crisis_stages = [0]
-        run1.conf.crisis_stages = [1]
-        run1.resources = run1.population.N
+        run1.conf.snapshot_stages = [0]#!
         run1.conf.res_var = False
-
-        N_old = run1.population.N
+        run1.resources = run1.population.N
+        # Test masks
+        old_N = run1.population.N
         mask = np.zeros(run1.population.maxls)
-        age_distribution_mask = np.copy(mask)
-        age_distribution_mask[run1.population.maturity] = 1
-        density_mask = np.append(np.zeros(nstates-1),[1])
+        ad_mask = np.copy(mask) # Age distribution
+        ad_mask[run1.population.maturity] = 1
+        density_mask = np.append(np.zeros(2*run1.conf.n_base),[1])
         n1_mask = np.ones(run1.population.chrlen)
         n1_std_mask = np.zeros(run1.population.chrlen)
         s1_mask = np.zeros(run1.record.record["s1"][0].shape)
-
+        # Execute
         run1.execute_stage()
-
         # record
-        assert run1.record.record["population_size"][0] == N_old
-        assert run1.record.record["resources"][0] == N_old
-        assert run1.record.record["surv_penf"][0] == 1
-        assert run1.record.record["repr_penf"][0] == 1
-        assert (run1.record.record["age_distribution"][0] == age_distribution_mask).all()
-        assert (run1.record.record["death_mean"][0] == mask).all()
-        assert (run1.record.record["death_sd"][0] == mask).all()
-        assert (run1.record.record["repr_mean"][0] == mask).all()
-        assert (run1.record.record["repr_sd"][0] == mask).all()
-        assert (run1.record.record["fitness"][0] == mask).all()
-        assert (run1.record.record["density_surv"][0] == density_mask).all()
-        assert (run1.record.record["density_repr"][0] == density_mask).all()
-        assert (run1.record.record["n1"][0] == n1_mask).all()
-        assert (run1.record.record["n1_std"][0] == n1_std_mask).all()
-        assert (run1.record.record["s1"][0] == s1_mask).all()
+        assert run1.record.record["population_size"][0] == old_N
+        assert run1.record.record["surv_penf"][0] == run.surv_penf
+        assert run1.record.record["repr_penf"][0] == run.repr_penf
+        assert run1.record.record["resources"][0] == old_N
+        assert np.all(run1.record.record["age_distribution"][0] == ad_mask)
+        assert np.all(run1.record.record["death_mean"][0] == mask)
+        assert np.all(run1.record.record["death_sd"][0] == mask)
+        assert np.all(run1.record.record["repr_mean"][0] == mask)
+        assert np.all(run1.record.record["repr_sd"][0] == mask)
+        assert np.all(run1.record.record["fitness"][0] == mask)
+        assert np.all(run1.record.record["density_surv"][0] == density_mask)
+        assert np.all(run1.record.record["density_repr"][0] == density_mask)
+        assert np.all(run1.record.record["n1"][0] == n1_mask)
+        assert np.all(run1.record.record["n1_std"][0] == n1_std_mask)
+        assert np.all(run1.record.record["s1"][0] == s1_mask)
         assert run1.record.record["entropy"][0] == 0
         assert run1.record.record["junk_death"][0] == 0
         assert run1.record.record["junk_repr"][0] == 0
         assert run1.record.record["junk_fitness"][0] == 0
-        # ages, resources and starvation
-        assert (run1.population.ages == run1.population.maturity+1).all()
-        assert run1.resources == N_old
-        assert run1.surv_penf == run1.repr_penf == 1
-        # reproduction, death and crisis
-        assert run1.population.N == N_old
+        # population
+        assert np.all(run1.population.ages == run1.population.maturity+1)
+        assert run1.resources == old_N
+        assert run1.surv_penf == run.surv_penf
+        assert run1.repr_penf == run.repr_penf
+        assert abs(run1.population.N - old_N*crisis_sv) <= 1
         # run status
         assert run1.dieoff == False
         assert run1.n_stage == 1

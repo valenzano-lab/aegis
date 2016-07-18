@@ -549,39 +549,42 @@ class Run:
 
     def execute_stage(self):
         """Perform one stage of a simulation run and test for completion."""
-        if self.n_stage % self.report_n ==0:
+        report_stage = (self.n_stage % self.report_n == 0)
+        if report_stage:
             self.logprint("Stage "+str(self.n_stage)+":", False)
             self.logprint(str(self.population.N) + " individuals.")
-        # Record information
-        take_snapshot = self.n_stage in self.conf.snapshot_stages
-        full_report = self.n_stage % self.report_n == 0 and self.verbose
-        if take_snapshot and full_report: 
-            self.logprint("Taking snapshot...", False)
-        self.record.update(self.population, self.resources, self.surv_penf,
-                self.repr_penf, self.n_stage, self.n_snap, take_snapshot)
-        self.n_snap = self.n_snap + 1 if take_snapshot else self.n_snap
-        if take_snapshot and full_report: self.logprint("done.")
-        # Update ages, resources and starvation
-        self.population.increment_ages()
-        self.update_resources()
-        self.update_starvation_factors()
-        if full_report: self.logprint("Starvation factors = "+\
-                str(self.surv_penf)+" (survival), "+str(self.repr_penf)+\
-                " (reproduction).")
-        # Reproduction and death
-        if full_report: self.logprint("Calculating reproduction and death...", False)
-        n0 = self.population.N
-        self.population.growth(self.conf.r_range, self.repr_penf,
-                self.conf.r_rate, self.conf.m_rate, self.conf.m_ratio)
-        n1 = self.population.N
-        self.population.death(self.conf.d_range, self.surv_penf) # change
-        n2 = self.population.N
-        if full_report: self.logprint("done. "+str(n1-n0)+" individuals born, "+
-            str(n1-n2)+" died.")
-        if self.n_stage in self.conf.crisis_stages:
-            self.population.crisis(self.conf.crisis_sv)
-            self.logprint("Crisis! "+str(self.population.N)+\
-                    " individuals survived. (Stage "+str(self.n_stage)+")")
+        self.dieoff = self.population.N == 0
+        if not self.dieoff:
+            # Record information
+            take_snapshot = self.n_stage in self.conf.snapshot_stages
+            full_report = report_stage and self.verbose
+            if take_snapshot and full_report: 
+                self.logprint("Taking snapshot...", False)
+            self.record.update(self.population, self.resources, self.surv_penf,
+                    self.repr_penf, self.n_stage, self.n_snap, take_snapshot)
+            self.n_snap += 1 if take_snapshot else 0
+            if take_snapshot and full_report: self.logprint("done.")
+            # Update ages, resources and starvation
+            self.population.increment_ages()
+            self.update_resources()
+            self.update_starvation_factors()
+            if full_report: self.logprint("Starvation factors = "+\
+                    str(self.surv_penf)+" (survival), "+str(self.repr_penf)+\
+                    " (reproduction).")
+            # Reproduction and death
+            if full_report: self.logprint("Calculating reproduction and death...", False)
+            n0 = self.population.N
+            self.population.growth(self.conf.r_range, self.repr_penf,
+                    self.conf.r_rate, self.conf.m_rate, self.conf.m_ratio)
+            n1 = self.population.N
+            self.population.death(self.conf.d_range, self.surv_penf) # change
+            n2 = self.population.N
+            if full_report: self.logprint("done. "+str(n1-n0)+" individuals born, "+
+                str(n1-n2)+" died.")
+            if self.n_stage in self.conf.crisis_stages or chance(self.conf.crisis_p):
+                self.population.crisis(self.conf.crisis_sv)
+                self.logprint("Crisis! "+str(self.population.N)+\
+                        " individuals survived. (Stage "+str(self.n_stage)+")")
         # Update run status
         self.dieoff = self.population.N == 0
         self.n_stage += 1
