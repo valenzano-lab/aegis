@@ -1,3 +1,5 @@
+# TODO: investigate possible conflict among parameters on different class levels (sim,run,pop)
+
 # cython: profile=True
 # cython: boundscheck=False
 # cython: wraparound=False
@@ -198,6 +200,7 @@ cdef class Population:
         children.ages[:] = 0 # Make newborn
         self.addto(children)
         self.N = len(self.ages)
+        self.index = np.arange(self.N)
 
     cpdef death(self, np.ndarray[NPFLOAT_t, ndim=1] d_range, float penf):
         """Select survivors and kill rest of population."""
@@ -211,6 +214,7 @@ cdef class Population:
         self.ages = self.ages[survivors]
         self.genomes = self.genomes[survivors]
         self.N = np.sum(survivors)
+        self.index = np.arange(self.N)
 
     def crisis(self, crisis_sv):
         """Apply an extrinsic death crisis and subset population."""
@@ -220,6 +224,7 @@ cdef class Population:
         self.ages = self.ages[which_survive]
         self.genomes = self.genomes[which_survive]
         self.N = len(self.ages)
+        self.index = np.arange(self.N)
 
     # Private methods:
 
@@ -498,7 +503,7 @@ class Record:
 
 class Run:
     """An object representing a single run of a simulation."""
-    def __init__(self, config, startpop, report_n, verbose):
+    def __init__(self, config, startsim, report_n, verbose, n_run=""):
         self.log = ""
         self.conf = config
         self.surv_penf = 1.0
@@ -506,8 +511,11 @@ class Run:
         self.resources = self.conf.res_start
         self.genmap = np.copy(self.conf.genmap)
         np.random.shuffle(self.genmap)
-        if startpop != "": 
-            self.population = startpop.toPop()
+        if startsim != "": 
+            if startsim[1] == "a":
+                self.population = startsim[0].runs[int(n_run)].population.toPop().clone()
+            else:
+                self.population = startsim[0].runs[int(startsim[1])].population.toPop().clone()
         else:
             self.population = Population(self.conf.params, self.genmap,
                     np.array([-1]), np.array([[-1],[-1]]))
@@ -545,39 +553,42 @@ class Run:
 
     def execute_stage(self):
         """Perform one stage of a simulation run and test for completion."""
-        if self.n_stage % self.report_n ==0:
+        report_stage = (self.n_stage % self.report_n == 0)
+        if report_stage:
             self.logprint("Stage "+str(self.n_stage)+":", False)
             self.logprint(str(self.population.N) + " individuals.")
-        # Record information
-        take_snapshot = self.n_stage in self.conf.snapshot_stages
-        full_report = self.n_stage % self.report_n == 0 and self.verbose
-        if take_snapshot and full_report: 
-            self.logprint("Taking snapshot...", False)
-        self.record.update(self.population, self.resources, self.surv_penf,
-                self.repr_penf, self.n_stage, self.n_snap, take_snapshot)
-        self.n_snap = self.n_snap + 1 if take_snapshot else self.n_snap
-        if take_snapshot and full_report: self.logprint("done.")
-        # Update ages, resources and starvation
-        self.population.increment_ages()
-        self.update_resources()
-        self.update_starvation_factors()
-        if full_report: self.logprint("Starvation factors = "+\
-                str(self.surv_penf)+" (survival), "+str(self.repr_penf)+\
-                " (reproduction).")
-        # Reproduction and death
-        if full_report: self.logprint("Calculating reproduction and death...", False)
-        n0 = self.population.N
-        self.population.growth(self.conf.r_range, self.repr_penf,
-                self.conf.r_rate, self.conf.m_rate, self.conf.m_ratio)
-        n1 = self.population.N
-        self.population.death(self.conf.d_range, self.repr_penf)
-        n2 = self.population.N
-        if full_report: self.logprint("done. "+str(n1-n0)+" individuals born, "+
-            str(n1-n2)+" died.")
-        if self.n_stage in self.conf.crisis_stages:
-            self.population.crisis(self.conf.crisis_sv)
-            self.logprint("Crisis! "+str(self.population.N)+\
-                    " individuals survived. (Stage "+str(self.n_stage)+")")
+        self.dieoff = self.population.N == 0
+        if not self.dieoff:
+            # Record information
+            take_snapshot = self.n_stage in self.conf.snapshot_stages
+            full_report = report_stage and self.verbose
+            if take_snapshot and full_report: 
+                self.logprint("Taking snapshot...", False)
+            self.record.update(self.population, self.resources, self.surv_penf,
+                    self.repr_penf, self.n_stage, self.n_snap, take_snapshot)
+            self.n_snap += 1 if take_snapshot else 0
+            if take_snapshot and full_report: self.logprint("done.")
+            # Update ages, resources and starvation
+            self.population.increment_ages()
+            self.update_resources()
+            self.update_starvation_factors()
+            if full_report: self.logprint("Starvation factors = "+\
+                    str(self.surv_penf)+" (survival), "+str(self.repr_penf)+\
+                    " (reproduction).")
+            # Reproduction and death
+            if full_report: self.logprint("Calculating reproduction and death...", False)
+            n0 = self.population.N
+            self.population.growth(self.conf.r_range, self.repr_penf,
+                    self.conf.r_rate, self.conf.m_rate, self.conf.m_ratio)
+            n1 = self.population.N
+            self.population.death(self.conf.d_range, self.surv_penf) # change
+            n2 = self.population.N
+            if full_report: self.logprint("done. "+str(n1-n0)+" individuals born, "+
+                str(n1-n2)+" died.")
+            if self.n_stage in self.conf.crisis_stages or chance(self.conf.crisis_p):
+                self.population.crisis(self.conf.crisis_sv)
+                self.logprint("Crisis! "+str(self.population.N)+\
+                        " individuals survived. (Stage "+str(self.n_stage)+")")
         # Update run status
         self.dieoff = self.record.record["dieoff"] = self.population.N == 0
         self.record.record["percent_dieoff"] = self.dieoff*100.0
@@ -602,12 +613,12 @@ class Simulation:
         self.logprint("Working directory: "+os.getcwd())
         self.conf = self.get_conf(config_file)
         self.gen_conf(self.conf)
-        self.get_startpop(seed_file)
+        self.get_startsim(seed_file)
         self.report_n = report_n
         self.verbose = verbose
         self.logprint("Initialising runs...", False)
-        self.runs = [Run(self.conf, self.startpop, self.report_n, 
-            self.verbose) for n in xrange(self.conf.number_of_runs)]
+        self.runs = [Run(self.conf, self.startsim, self.report_n,
+            self.verbose, n) for n in xrange(self.conf.number_of_runs)]
         self.logprint("done.")
 
     def execute_run(self, n, keep_only_successes=False, start=False):
@@ -689,18 +700,29 @@ class Simulation:
                 "age_random":conf.age_random, 
                 "start_pop":conf.start_pop, "g_dist":conf.g_dist}
 
-    def get_startpop(self, seed_name):
-        """Import any seed population (or return blank)."""
+    def get_startsim(self, seed_name):
+        """Import any seed simulation (or return blank)."""
         if seed_name == "":
             #logprint("Seed: None.")
-            self.startpop = ""
+            self.startsim = ""
             return
         try:
             # Make sure includes extension (default "txt")
-            if len(os.path.splitext(seed_name)[1]) == 0:
-                seed_name = seed_name + ".txt"
-            popfile = open(seed_name, "rb")
-            self.startpop = pickle.load(popfile) # Import population array
+            if len(os.path.splitext(seed_name[0])[1]) == 0:
+                seed_name[0] = seed_name[0] + ".txt"
+            simfile = open(seed_name[0], "rb")
+            simobj = pickle.load(simfile) # import simulation object
+            # safeguard to check if, when all, the seed runs and current runs can be "zipped"
+            if seed_name[1] == "a" and len(simobj.runs) != self.conf.number_of_runs:
+                exit("Aborting: tried to seed all, but number of runs between the seed and the current simulation mismatch.")
+            # safeguard to check if the second seed argument is smaller than len(sim.runs)
+            if seed_name[1] != "a" and len(simobj.runs) <= int(seed_name[1]):
+                q = raw_input("\n\nIndex for the seed population in the seed simulation object is out of range.\nPossible values for index: "+str(range(len(simobj.runs)))+" or \"a\" for all."+"\nEnter new index, or skip to abort: ")
+                if q == "":
+                    exit("Aborting: no valid seed population index given.")
+                else:
+                    return self.get_startsim((seed_name[0],q))
+            self.startsim = (simobj, seed_name[1]) # pass simulation object and run index to run__init
         except IOError:
             print "No such seed file: " + seed_name
             q = raw_input(
@@ -708,7 +730,7 @@ class Simulation:
             if q == "":
                 exit("Aborting: no valid seed file given.")
             else:
-                return self.get_startpop(q)
+                return self.get_startsim(q)
         #logprint("Seed population file: " + seed_name)
 
     def logprint(self, string, newline=True):
