@@ -461,8 +461,8 @@ class TestReproduction:
     def test_recombine_float(self, spop):
         """Test if genome changes if recombination fn.chance p; 0<p<1."""
         pop = spop.clone()
-        pop.recombine(np.random.uniform(0.1,0.9))
-        assert not (pop.genomes == spop.genomes).all()
+        pop.recombine(np.random.uniform(0.01,0.09))
+        assert not np.array_equal(pop.genomes, spop.genomes)
 
     def test_assortment(self, parents):
         """Test if assortment of two adults is done properly by
