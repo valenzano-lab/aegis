@@ -11,8 +11,8 @@ from scipy.misc import comb
 runChanceTests=False # Works with new setup
 runPopulationTests=False # "
 runRecordTests=False  # "
-runRunTests=True
-runSimulationTests=False
+runRunTests=False # "
+runSimulationTests=True
 
 ####################
 ### 0: FIXTURES  ###
@@ -33,12 +33,12 @@ def conf(request):
     c.number_of_stages = 100
     if request.param == "random":
         # Randomise fundamental parameters
-        c.g_dist_s, c.g_dist_r, c.g_dist_n  = np.random.uniform(size=3)
+        c.g_dist_s,c.g_dist_r,c.g_dist_n = [random.random() for x in range(3)]
         db_low, rb_low = np.random.uniform(size=2)
         db_high = db_low + random.uniform(0, 1-db_low)
         rb_high = rb_low + random.uniform(0, 1-rb_low)
         c.death_bound,c.repr_bound = [db_low, db_high],[rb_low, rb_high]
-        c.r_rate, c.m_rate, c.m_ratio = np.random.uniform(size=3)
+        c.r_rate, c.m_rate, c.m_ratio = [random.random() for x in range(3)]
         c.max_ls = random.randint(20, 99)
         c.maturity = random.randint(5, c.max_ls-2)
         #c.n_neutral = random.randint(1, 100)
@@ -121,96 +121,6 @@ class TestConfig:
     """Test that the initial simulation configuration is performed
     correctly."""
 
-    def test_get_dir_good(self):
-        """Verify that fn.get_dir functions correctly when given (a) the
-        current directory, (b) the parent directory, (c) the root
-        directory."""
-        old_dir = os.getcwd()
-        old_path = sys.path[:]
-        fn.get_dir(old_dir)
-        same_dir = os.getcwd()
-        same_path = sys.path[:]
-        assert same_dir == old_dir
-        assert same_path == old_path
-        test = (same_dir == old_dir and same_path == old_path)
-        if old_dir != "/":
-            fn.get_dir("..")
-            par_dir = os.getcwd()
-            par_path = sys.path[:]
-            exp_path = [par_dir] + [x for x in old_path if x != old_dir]
-            assert par_dir == os.path.split(old_dir)[0]
-            assert par_path == exp_path
-            if par_dir != "/":
-                fn.get_dir("/")
-                root_dir = os.getcwd()
-                root_path = sys.path[:]
-                exp_path = ["/"] + [x for x in par_path if x != par_dir]
-                assert root_dir=="/"
-                assert root_path==exp_path
-            fn.get_dir(old_dir)
-
-    def test_get_dir_bad(self, ran_str):
-        """Verify that fn.get_dir throws an error when the target directory
-        does not exist."""
-        with pytest.raises(SystemExit) as e_info: fn.get_dir(ran_str)
-
-    def test_get_conf_good(self):
-        """Test that fn.get_conf on the config template file returns a valid
-        object of the expected composition."""
-        c = fn.get_conf("config_test")
-        def alltype(keys,typ):
-            """Test whether all listed config items are of the
-            specified type."""
-            return np.all([type(c.__dict__[x]) is typ for x in keys])
-        assert alltype(["number_of_runs", "number_of_stages",
-            "number_of_snapshots", "res_start", "R", "res_limit",
-            "start_pop", "max_ls", "maturity", "n_base",
-            "death_inc", "repr_dec", "window_size", "chr_len"], int)
-        assert alltype(["crisis_sv", "V", "r_rate", "m_rate", "m_ratio"],
-                    float)
-        assert alltype(["sexual", "res_var", "age_random", "surv_pen",
-                "repr_pen"], bool)
-        assert alltype(["death_bound", "repr_bound", "crisis_stages"],
-                    list)
-        assert alltype(["g_dist", "params"], dict)
-        assert alltype(["genmap", "d_range", "r_range",
-                "snapshot_stages"], np.ndarray)
-
-    @pytest.mark.parametrize("sexvar,nsnap", [(True, 10), (False, 0.1)])
-    def test_gen_conf(self, conf, sexvar, nsnap):
-        """Test that gen_conf correctly generates derived simulation params."""
-        c = fn.get_conf("config_test")
-        c.sexual = sexvar
-        crb1 = c.repr_bound[1]
-        d = fn.gen_conf(conf)
-        assert d.g_dist["s"] == c.g_dist_s
-        assert d.g_dist["r"] == c.g_dist_r
-        assert d.g_dist["n"] == c.g_dist_n
-        assert len(c.genmap) == c.max_ls + (c.max_ls-c.maturity) + c.n_neutral
-        assert d.chr_len == len(c.genmap) * c.n_base
-        assert d.repr_bound[1]/crb1 == 2 if sexvar else 1
-        assert (d.d_range == np.linspace(c.death_bound[1], c.death_bound[0],
-                2*c.n_base+1)).all()
-        assert (d.r_range == np.linspace(c.repr_bound[0], c.repr_bound[1],
-                2*c.n_base+1)).all()
-        assert len(d.snapshot_stages) == c.number_of_snapshots if \
-                type(nsnap) is int else int(nsnap * c.number_of_stages)
-        assert np.all(d.snapshot_stages == np.around(
-            np.linspace(0, c.number_of_stages-1, d.number_of_snapshots), 0))
-        assert d.params["sexual"] == sexvar
-        assert d.params["chr_len"] == d.chr_len
-        assert d.params["n_base"] == c.n_base
-        assert d.params["maturity"] == c.maturity
-        assert d.params["max_ls"] == c.max_ls
-        assert d.params["age_random"] == c.age_random
-        assert d.params["start_pop"] == c.start_pop
-        assert d.params["g_dist"] == d.g_dist
-
-    def test_get_conf_bad(self, ran_str):
-        """Verify that fn.get_dir throws an error when the target file
-        does not exist."""
-        with pytest.raises(IOError) as e_info: fn.get_conf(ran_str)
-
     def test_get_startpop_good(self):
         """Test that a blank seed returns a blank string and a valid seed
         returns a population array of the correct size."""
@@ -247,23 +157,6 @@ class TestChance:
         s = c.shape
         assert c.shape == shape and c.dtype == "bool"
         assert abs(p-np.mean(c)) < precision
-
-@pytest.mark.skip(reason="Moved to Run class.")
-@pytest.mark.xfail
-class TestUpdateResources:
-    """Confirm that resources are updated correctly in the variable-
-    resources condition."""
-
-    def test_update_resources_bounded(self):
-        """Confirm that resources cannot exceed upper bound or go below
-        zero."""
-        assert fn.update_resources(5000, 0, 1000, 2, 5000) == 5000
-        assert fn.update_resources(0, 5000, 1000, 2, 5000) == 0
-
-    def test_update_resources_unbounded(self):
-        """Test resource updating between bounds."""
-        assert fn.update_resources(1000, 500, 1000, 2, 5000) == 2000
-        assert fn.update_resources(500, 1000, 1000, 2, 5000) == 500
 
 ######################
 ### 2: POPULATION  ###
@@ -820,7 +713,7 @@ class TestRunClass:
         assert run1.resources == old_res
         # Variable resources
         run1.conf.res_var = True
-        run1.conf.V, run1.conf.R, run1.conf.res_limit = 2, 1000, 5000
+        run1.conf.V, run1.conf.R, run1.conf.res_limit = 2.0, 1000, 5000
         run1.resources, run1.population.N = 5000, 0
         run1.update_resources()
         assert run1.resources == 5000
@@ -933,10 +826,8 @@ class TestRunClass:
         assert run3.n_snap == run.n_snap
         assert run3.dieoff and run3.complete
 
-    # TODO: fails occasionally on crisis; pop dies off, although crisis_sv reportedly equals 1
-    # only happens when fixture conf is called in random mode
     @pytest.mark.parametrize("crisis_p,crisis_sv",\
-            [(0,1),(1,1),(1,0.5)])
+            [(0.0,1.0),(1.0,1.0),(1.0,0.5)])
     def test_execute_stage_degen(self,run,crisis_p,crisis_sv):
         """Test execute_stage operates correctly when there is 0 probability
         of birth, death or crisis death."""
@@ -995,3 +886,79 @@ class TestRunClass:
         assert run1.dieoff == False
         assert run1.n_stage == 1
         assert run1.complete == True
+
+@pytest.mark.skipif(not runSimulationTests,
+        reason="Not running Simulation class tests.")
+class TestSimulationClass:
+
+    def test_init_sim(self):
+        assert True
+    def test_execute_run(self):
+        assert True
+    def test_execute(self):
+        assert True
+
+
+    def test_get_conf_bad(self, simulation, ran_str):
+        """Verify that fn.get_dir throws an error when the target file
+        does not exist."""
+        with pytest.raises(IOError) as e_info: simulation.get_conf(ran_str)
+
+    def test_get_conf_good(self, simulation):
+        """Test that get_conf on the config template file returns a valid
+        object of the expected composition."""
+        c = simulation.get_conf("config_test")
+        def alltype(keys,typ):
+            """Test whether all listed config items are of the
+            specified type."""
+            return np.all([type(c.__dict__[x]) is typ for x in keys])
+        assert alltype(["number_of_runs", "number_of_stages",
+            "number_of_snapshots", "res_start", "R", "res_limit",
+            "start_pop", "max_ls", "maturity", "n_base",
+            "death_inc", "repr_dec", "window_size", "chr_len"], int)
+        assert alltype(["crisis_sv", "V", "r_rate", "m_rate", "m_ratio",
+            "crisis_p"], float)
+        assert alltype(["sexual", "res_var", "age_random", "surv_pen",
+                "repr_pen"], bool)
+        assert alltype(["death_bound", "repr_bound", "crisis_stages"],
+                    list)
+        assert alltype(["g_dist", "params"], dict)
+        assert alltype(["genmap", "d_range", "r_range",
+                "snapshot_stages"], np.ndarray)
+
+    @pytest.mark.parametrize("sexvar,nsnap", [(True, 10), (False, 0.1)])
+    def test_gen_conf(self, simulation, conf, sexvar, nsnap):
+        """Test that gen_conf correctly generates derived simulation params."""
+        # Remove stuff that gets introduced/changed in gen_conf
+        del conf.g_dist, conf.genmap, conf.chr_len, conf.d_range, conf.r_range
+        del conf.snapshot_stages, conf.params
+        if conf.sexual: conf.repr_bound[1] /= 2
+        crb1 = conf.repr_bound[1]
+        # Set parameters and run
+        conf.number_of_snapshots = nsnap
+        conf.sexual = sexvar
+        simulation.gen_conf(conf)
+        # Test output
+        assert conf.g_dist["s"] == conf.g_dist_s
+        assert conf.g_dist["r"] == conf.g_dist_r
+        assert conf.g_dist["n"] == conf.g_dist_n
+        assert len(conf.genmap) == conf.max_ls + (conf.max_ls-conf.maturity) +\
+                conf.n_neutral
+        assert conf.chr_len == len(conf.genmap) * conf.n_base
+        assert conf.repr_bound[1]/crb1 == 2 if sexvar else 1
+        assert (conf.d_range == np.linspace(conf.death_bound[1], 
+            conf.death_bound[0],2*conf.n_base+1)).all()
+        assert (conf.r_range == np.linspace(conf.repr_bound[0], 
+            conf.repr_bound[1],2*conf.n_base+1)).all()
+        assert len(conf.snapshot_stages) == conf.number_of_snapshots if \
+                type(nsnap) is int else int(nsnap * conf.number_of_stages)
+        assert np.all(conf.snapshot_stages == np.around(np.linspace(
+            0, conf.number_of_stages-1, conf.number_of_snapshots), 0))
+        assert conf.params["sexual"] == sexvar
+        assert conf.params["chr_len"] == conf.chr_len
+        assert conf.params["n_base"] == conf.n_base
+        assert conf.params["maturity"] == conf.maturity
+        assert conf.params["max_ls"] == conf.max_ls
+        assert conf.params["age_random"] == conf.age_random
+        assert conf.params["start_pop"] == conf.start_pop
+        assert conf.params["g_dist"] == conf.g_dist
