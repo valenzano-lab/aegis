@@ -32,7 +32,6 @@ class Outpop:
         self.ages = pop.ages
         self.genomes = pop.genomes
         self.N = pop.N
-        self.index = pop.index
 
     def params(self):
         """Get population-intrinsic parameters from Population object."""
@@ -52,7 +51,7 @@ class Outpop:
 
 cdef class Population:
     """A simulated population with genomes and ages."""
-    cdef public np.ndarray genmap, ages, genomes, index
+    cdef public np.ndarray genmap, ages, genomes
     cdef public int sex, chrlen, nbase, maxls, maturity, N
     # Initialisation
     def __init__(self, dict params, np.ndarray[NPINT_t, ndim=1] genmap, 
@@ -81,7 +80,6 @@ cdef class Population:
         self.ages = ages[:]
         self.genomes = genomes[:]
         self.N = len(self.ages)
-        self.index = np.arange(self.N)
 
     # Minor methods
 
@@ -121,33 +119,6 @@ cdef class Population:
         # As it stands cythonising this doesn't make much difference
 
     # Major methods:
-
-    cpdef get_subpop_alt(self, int min_age, int max_age, int offset,
-            np.ndarray[NPFLOAT_t, ndim=1] val_range):
-        """Select a population subset based on chance defined by genotype."""
-        cdef:
-            np.ndarray[NPINT_t, ndim=1] loci, add, index, ages
-            np.ndarray[NPFLOAT_t, ndim=1] probs
-            np.ndarray[NPINT_t, ndim=2] genomes, gen
-            np.ndarray[NPINT_t, ndim=3] genloc
-            np.ndarray[NPBOOL_t, ndim=1,cast=True] inc, cond
-            int a, N, g
-        # first remove old and juvenile individuals
-        cond = np.logical_and(self.ages >= min_age, self.ages < max_age)
-        genomes, ages = self.genomes[cond], self.ages[cond]
-        N,g = len(ages), len(self.genmap)
-        # Get locus sums for each individual and pick which loci to use
-        genloc = np.reshape(genomes, (N, g*2, self.nbase))
-        gen = np.einsum('ijk->ij', np.reshape(genomes, (N, g*2, self.nbase)))
-        loci = np.nonzero(self.genmap - offset - ages[:,np.newaxis] == 0)[1]
-        # Convert locus sums into membership probabilities
-        add = np.cumsum(np.append(0, np.tile(g, N-1))) 
-        index = gen.take(loci + add) + gen.take(loci + g + add)
-        probs = val_range[index]
-        # Determine membership
-        inc = fn.chance(probs, N)
-        return Population(self.params(), self.genmap,
-                ages[inc], genomes[inc])
 
     cpdef get_subpop(self, int min_age, int max_age, int offset,
             np.ndarray[NPFLOAT_t, ndim=1] val_range):
@@ -223,7 +194,7 @@ cdef class Population:
     def crisis(self, crisis_sv, n_stage):
         """Apply an extrinsic death crisis and subset population."""
         n_survivors = int(self.N*crisis_sv)
-        which_survive = np.random.choice(self.index, n_survivors, False)
+        which_survive = np.random.choice(np.arange(self.N), n_survivors, False)
         self.ages = self.ages[which_survive]
         self.genomes = self.genomes[which_survive]
         self.N = len(self.ages)
