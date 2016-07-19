@@ -879,9 +879,12 @@ class TestSimulationClass:
         assert True
     def test_execute_run(self):
         assert True
-    def test_execute(self):
-        assert True
 
+    def test_execute(self, S):
+        """Quickly test that execute runs execute_run for every run."""
+        S.execute()
+        for r in S.runs:
+            assert r.complete
 
     def test_get_conf_bad(self, S, ran_str):
         """Verify that fn.get_conf throws an error when the target file
