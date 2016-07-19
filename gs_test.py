@@ -98,18 +98,14 @@ def simulation(request,conf):
 ### 0: DUMMY RUN ###
 ####################
 
-@pytest.mark.skip(reason="New setup needed.")
-@pytest.mark.xfail
-def test_sim_run_0():
+def test_sim_run():
     # Begin by running a dummy simulation and saving the output
     # Also functions as test of output functions
-    with pytest.warns(Warning) as e_info:
-        scriptdir = os.path.split(os.path.realpath(__file__))[0]
-        os.chdir(scriptdir)
-        subprocess.call(["python", "genome_simulation.py", "."])
-        os.rename("run_1_pop.txt", "sample_pop.txt")
-        os.rename("run_1_rec.txt", "sample_rec.txt")
-        os.rename("output.sim", "sample_output.sim")
+    scriptdir = os.path.split(os.path.realpath(__file__))[0]
+    os.chdir(scriptdir)
+    subprocess.call(["python", "genome_simulation.py", "."])
+    os.rename("output.sim", "sample_output.sim")
+    os.rename("log.txt", "sample_log.txt")
 
 #########################
 ### 1: FREE FUNCTIONS ###
@@ -672,15 +668,6 @@ class TestRecord:
         assert (r["actual_death_rate"] == pad).all()
         assert (r["s1"] == 0).all()
 
-@pytest.mark.skip(reason="New setup needed.")
-@pytest.mark.xfail
-def test_post_cleanup():
-    """Kill tempfiles made for test. Not really a test at all."""
-    os.remove("sample_pop.txt")
-    os.remove("sample_rec.txt")
-    os.remove("sample_output.sim")
-    os.remove("log.txt")
-
 @pytest.mark.skipif(not runRunTests,
         reason="Not running Run class tests.")
 class TestRunClass:
@@ -962,3 +949,8 @@ class TestSimulationClass:
         assert conf.params["age_random"] == conf.age_random
         assert conf.params["start_pop"] == conf.start_pop
         assert conf.params["g_dist"] == conf.g_dist
+
+def test_post_cleanup():
+    """Kill tempfiles made for test. Not really a test at all."""
+    os.remove("sample_output.sim")
+    os.remove("sample_log.txt")
