@@ -3,7 +3,7 @@
 
 import pyximport; pyximport.install()
 from gs_core import Simulation, Run, Outpop, Population, Record, chance
-import pytest, random, string, subprocess, math, copy, os, sys
+import pytest, random, string, subprocess, math, copy, os, sys, cPickle
 import numpy as np
 import scipy.stats as st
 from scipy.misc import comb
@@ -11,7 +11,7 @@ from scipy.misc import comb
 runChanceTests=False # Works with new setup
 runPopulationTests=False # "
 runRecordTests=False  # "
-runRunTests=False # "
+runRunTests=True # "
 runSimulationTests=True
 
 ####################
@@ -92,7 +92,22 @@ def run(request,conf):
 @pytest.fixture()
 def simulation(request,conf):
     """Create an unseeded simulation object from configuration."""
+    sim = Simulation("config_test", "", -1, 100, False)
+    sim.conf = conf
+    sim.runs = [Run(sim.conf, sim.startpop[0], sim.report_n,
+                sim.verbose) for n in xrange(sim.conf.number_of_runs)]
+    return sim
+
+# Create separate fixtures to avoid unnecessary trebling of tests that
+# don't depend on config state
+@pytest.fixture()
+def S(request):
+    """Create an unmodified, unseeded simulation object for procedure testing."""
     return Simulation("config_test", "", -1, 100, False)
+@pytest.fixture()
+def R(request, S):
+    """Create an unmodified, unseeded run object for procedure testing."""
+    return Run(S.conf, "", 100, False)
 
 ####################
 ### 0: DUMMY RUN ###
@@ -110,24 +125,6 @@ def test_sim_run():
 #########################
 ### 1: FREE FUNCTIONS ###
 #########################
-
-@pytest.mark.skip(reason="Moved to Simulation class.")
-@pytest.mark.xfail
-class TestConfig:
-    """Test that the initial simulation configuration is performed
-    correctly."""
-
-    def test_get_startpop_good(self):
-        """Test that a blank seed returns a blank string and a valid seed
-        returns a population array of the correct size."""
-        assert fn.get_startpop("") == ""
-        p = fn.get_startpop("sample_pop.txt")
-        assert p.genomes.shape == (p.N, 2*p.chrlen)
-
-    def test_get_startpop_bad(self, ran_str):
-        """Verify that fn.get_startpop throws an error when the target
-        file does not exist."""
-        with pytest.raises(IOError) as e_info: fn.get_startpop(ran_str)
 
 # -------------------------
 # RANDOM NUMBER GENERATION
@@ -689,10 +686,10 @@ class TestRunClass:
         # Quick test of correct genmap transition from run -> pop -> record;
         # Population and Record initiation tested more thoroughly elsewhere
 
-    def test_update_resources(self, run):
+    def test_update_resources(self, R):
         """Test resource updating between bounds and confirm resources
         cannot go outside them."""
-        run1 = copy.copy(run)
+        run1 = copy.copy(R)
         # Constant resources
         run1.conf.res_var = False
         old_res = run1.resources
@@ -714,10 +711,10 @@ class TestRunClass:
         run1.update_resources()
         assert run1.resources == 500
 
-    def test_starving(self, run):
+    def test_starving(self, R):
         """Test run enters starvation state under correct conditions for
         constant and variable resources."""
-        run1 = copy.copy(run)
+        run1 = copy.copy(R)
         # Constant resources
         run1.conf.res_var = False
         run1.resources, run1.population.N = 5000, 4999
@@ -733,10 +730,10 @@ class TestRunClass:
 
     @pytest.mark.parametrize("spen", [True, False])
     @pytest.mark.parametrize("rpen", [True, False])
-    def test_update_starvation_factors(self, run, spen, rpen):
+    def test_update_starvation_factors(self, R, spen, rpen):
         """Test that starvation factors update correctly under various
         conditions."""
-        run1 = copy.copy(run)
+        run1 = copy.copy(R)
         run1.conf.surv_pen, run1.conf.repr_pen = spen, rpen
         # Expected changes
         ec_s = run1.conf.death_inc if spen else 1.0
@@ -759,9 +756,9 @@ class TestRunClass:
         run1.update_starvation_factors()
         assert run1.surv_penf == run1.repr_penf == 1.0
 
-    def test_logprint(self, run, ran_str):
+    def test_logprint(self, R, ran_str):
         """Test logging (and especially newline) functionality."""
-        run1 = copy.copy(run)
+        run1 = copy.copy(R)
         run1.log = ""
         run1.logprint(ran_str)
         assert run1.log == ran_str + "\n"
@@ -773,10 +770,10 @@ class TestRunClass:
     @pytest.mark.parametrize("n_stage,verbose,res",\
     [(1,False,1),(2,False,2),(15,False,2),(15,True,4),(30,False,2),\
      (30,True,5)])
-    def test_execute_stage_logprint(self,run,n_stage,verbose,res):
+    def test_execute_stage_logprint(self,R,n_stage,verbose,res):
         """Test that execute_stage produces the right number of status
         report lines."""
-        run1 = copy.copy(run)
+        run1 = copy.copy(R)
         run1.log = ""
         run1.n_stage = n_stage
         run1.verbose = verbose
@@ -886,15 +883,15 @@ class TestSimulationClass:
         assert True
 
 
-    def test_get_conf_bad(self, simulation, ran_str):
-        """Verify that fn.get_dir throws an error when the target file
+    def test_get_conf_bad(self, S, ran_str):
+        """Verify that fn.get_conf throws an error when the target file
         does not exist."""
-        with pytest.raises(IOError) as e_info: simulation.get_conf(ran_str)
+        with pytest.raises(IOError) as e_info: S.get_conf(ran_str)
 
-    def test_get_conf_good(self, simulation):
+    def test_get_conf_good(self, S):
         """Test that get_conf on the config template file returns a valid
         object of the expected composition."""
-        c = simulation.get_conf("config_test")
+        c = S.get_conf("config_test")
         def alltype(keys,typ):
             """Test whether all listed config items are of the
             specified type."""
@@ -949,6 +946,28 @@ class TestSimulationClass:
         assert conf.params["age_random"] == conf.age_random
         assert conf.params["start_pop"] == conf.start_pop
         assert conf.params["g_dist"] == conf.g_dist
+
+    def test_get_startpop_good(self, S):
+        """Test that a blank seed returns a list containing a blank string and i
+        a valid seed returns a list of populations of the correct size."""
+        assert S.get_startpop("") == [""]
+        try:
+            f = open("sample_output.sim", "rb")
+            px = cPickle.load(f)
+        finally:
+            f.close()
+        p0 = S.get_startpop("sample_output.sim", 0)
+        assert len(p0) == 1
+        assert p0[0].genomes.shape == px.runs[0].population.genomes.shape
+        p1 = S.get_startpop("sample_output.sim", -1)
+        assert len(p1) == len(px.runs)
+        for n in range(len(px.runs)):
+            assert p1[n].genomes.shape == px.runs[n].population.genomes.shape
+
+    def test_get_startpop_bad(self, S, ran_str):
+        """Verify that fn.get_startpop throws an error when the target
+        file does not exist."""
+        with pytest.raises(IOError) as e_info: S.get_startpop(ran_str)
 
 def test_post_cleanup():
     """Kill tempfiles made for test. Not really a test at all."""

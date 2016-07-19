@@ -5,8 +5,8 @@
 sexual = False # Sexual or asexual reproduction
 
 ## RUNNING PARAMETERS ##
-number_of_runs = 1 # Total number of independent runs
-number_of_stages = 10 # Total number of stages per run
+number_of_runs = 2 # Total number of independent runs
+number_of_stages = 5 # Total number of stages per run
 crisis_p = 0.0 # Per-stage probability of extrinsic death crisis
 crisis_stages = [] # Stages of guaranteed extrinsic death crisis
 crisis_sv = 0.05 # Fraction of crisis survivors (if applicable)
