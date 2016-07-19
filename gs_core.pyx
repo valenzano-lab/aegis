@@ -635,7 +635,7 @@ class Simulation:
         if keep_only_successes: nf = 0
         if not start: start = datetime.datetime.now()
         runstart = time.strftime('%X %x', time.localtime())+".\n"
-        self.logprint("\nBeginning run "+str(n)+" at "+runstart)
+        self.logprint("\n\nBeginning run "+str(n)+" at "+runstart)
         while not self.runs[n].complete:
             self.runs[n].execute_stage()
         self.log += self.runs[n].log + "\n" # Add run log to sim log
@@ -721,7 +721,6 @@ class Simulation:
             simfile = open(seed_name, "rb")
             simobj = pickle.load(simfile) # import simulation object
             nruns = len(simobj.runs)
-            # safeguard to check if, when all, the seed runs and current runs can be "zipped"
             if pop_number == -1:
                 # -1 = seed all populations to equivalent runs in new sim
                 if nruns != self.conf.number_of_runs:
@@ -783,9 +782,9 @@ class Simulation:
         """Finish recording and save output files."""
         self.endtime = datetime.datetime.now()
         simend = time.strftime('%X %x', time.localtime())+"."
-        self.logprint("Simulation completed at "+simend)
+        self.logprint("\nSimulation completed at "+simend)
         self.print_runtime(self.starttime, self.endtime)
-        self.logprint("Saving output and exiting.\n")
+        self.logprint("Saving output and exiting.\n\n")
         # Convert output into saveable form
         for n in xrange(self.conf.number_of_runs):
             self.runs[n].population = Outpop(self.runs[n].population)
@@ -800,8 +799,3 @@ class Simulation:
         finally:
             sim_file.close()
             log_file.close()
-    def finalize(self, file_pref, log_pref):
-        """For the Americans. ;)"""
-        self.finalise(file_pref, log_pref)
-
-

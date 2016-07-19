@@ -3,7 +3,7 @@
 
 import pyximport; pyximport.install()
 from gs_core import Simulation, Run, Outpop, Population, Record, chance
-import pytest, random, string, subprocess, math, copy, os, sys, cPickle
+import pytest, random, string, subprocess, math, copy, os, sys, cPickle, datetime
 import numpy as np
 import scipy.stats as st
 from scipy.misc import comb
@@ -11,7 +11,7 @@ from scipy.misc import comb
 runChanceTests=False # Works with new setup
 runPopulationTests=False # "
 runRecordTests=False  # "
-runRunTests=True # "
+runRunTests=False # "
 runSimulationTests=True
 
 ####################
@@ -968,6 +968,37 @@ class TestSimulationClass:
         """Verify that fn.get_startpop throws an error when the target
         file does not exist."""
         with pytest.raises(IOError) as e_info: S.get_startpop(ran_str)
+
+    def test_logprint_simulation(self, S, ran_str):
+        """Test logging (and especially newline) functionality."""
+        sim1 = copy.copy(S)
+        sim1.log = ""
+        sim1.logprint(ran_str)
+        assert sim1.log == ran_str + "\n"
+        sim1.log = ""
+        sim1.logprint(ran_str, False)
+        sim1.logprint(ran_str)
+        assert sim1.log == ran_str + ran_str + "\n"
+
+    def test_print_runtime(self, S):
+        """Test that runtime calculates differences correctly."""
+        a = datetime.datetime(1, 1, 1, 0, 0, 0, 0)
+        b = datetime.datetime(1, 1, 2, 0, 0, 5, 0)
+        c = datetime.datetime(1, 1, 3, 1, 0, 20, 0)
+        d = datetime.datetime(1, 1, 3, 2, 5, 0, 0)
+        S.log = ""
+        S.print_runtime(a, b)
+        assert S.log == "Total runtime: 1 days, 5 seconds.\n\n"
+        S.log = ""
+        S.print_runtime(a, c)
+        assert S.log == "Total runtime: 2 days, 1 hours, 20 seconds.\n\n"
+        S.log = ""
+        S.print_runtime(a, d)
+        assert S.log == "Total runtime: 2 days, 2 hours, 5 minutes, 0 seconds.\n\n"
+
+    def test_finalise(self, S):
+        assert True
+
 
 def test_post_cleanup():
     """Kill tempfiles made for test. Not really a test at all."""
