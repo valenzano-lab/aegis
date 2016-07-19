@@ -716,8 +716,8 @@ class Simulation:
             self.logprint("Seed: None.")
             return [""]
         try:
-            # Make sure includes extension (default "txt")
-            seed_name += ".txt" if os.path.splitext(seed_name)[1] == "" else ""
+            # Make sure includes extension (default "sim")
+            seed_name += ".sim" if os.path.splitext(seed_name)[1] == "" else ""
             simfile = open(seed_name, "rb")
             simobj = pickle.load(simfile) # import simulation object
             nruns = len(simobj.runs)

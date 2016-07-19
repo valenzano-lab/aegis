@@ -1,5 +1,8 @@
-# TODO: Test seeding
-# TODO: test repr_penf against surv_penf; bug from 4-Jul-2016
+# TODO: 
+# - Write test_execute for Simulation package
+# - Test repr_penf against surv_penf; bug from 4-Jul-2016
+# - Remove redundant tests
+# - Speed up tests involving get_startpop (currently very slow)
 
 import pyximport; pyximport.install()
 from gs_core import Simulation, Run, Outpop, Population, Record, chance
@@ -8,10 +11,10 @@ import numpy as np
 import scipy.stats as st
 from scipy.misc import comb
 
-runChanceTests=False # Works with new setup
-runPopulationTests=False # "
-runRecordTests=False  # "
-runRunTests=False # "
+runChanceTests=True # Works with new setup
+runPopulationTests=True # "
+runRecordTests=True # "
+runRunTests=True # "
 runSimulationTests=True
 
 ####################
@@ -180,8 +183,6 @@ class TestPopulationClass:
         assert pop_a.maxls == pop_b.maxls == conf.params["max_ls"]
         assert pop_a.maturity==pop_b.maturity == conf.params["maturity"]
         assert pop_a.N == pop_b.N == conf.params["start_pop"]
-        assert (pop_a.index==np.arange(conf.params["start_pop"])).all()
-        assert (pop_b.index==np.arange(conf.params["start_pop"])).all()
         assert (pop_a.genmap == conf.genmap).all()
         assert (pop_b.genmap == conf.genmap).all()
         assert (pop_a.ages == pop_a.maturity).all()
@@ -349,7 +350,7 @@ class TestPopulationClass:
         precision = 0.1
         pop = spop.clone()
         pop.crisis(p)
-        assert abs(pop.N - p*spop.N)/pop.N < precision
+        assert abs(pop.N - p*spop.N)/spop.N < precision
 
     # Reproduction
 
@@ -875,10 +876,41 @@ class TestRunClass:
         reason="Not running Simulation class tests.")
 class TestSimulationClass:
 
-    def test_init_sim(self):
-        assert True
+    @pytest.mark.parametrize("seed,report_n,verbose",\
+            [("",1,False), ("",10,False), ("",100,True), 
+            ("sample_output",1,True)])
+    def test_init_sim(self, S, seed, report_n, verbose):
+        T = Simulation("config_test", seed, -1, report_n, verbose)
+        if seed == "":
+            assert T.startpop == [""]
+        else: 
+            s = S.get_startpop(seed, -1)
+            for n in xrange(len(T.startpop)):
+                assert np.all(T.startpop[n].genomes == s[n].genomes)
+                assert np.all(T.startpop[n].ages == s[n].ages)
+                assert T.startpop[n].chrlen == s[n].chrlen
+                assert T.startpop[n].nbase == s[n].nbase
+                assert np.all(T.startpop[n].genmap == s[n].genmap)
+        assert T.report_n == report_n
+        assert T.verbose == verbose
+        assert len(T.runs) == T.conf.number_of_runs
+        for n in xrange(T.conf.number_of_runs):
+            r = T.runs[n]
+            assert r.report_n == T.report_n
+            assert r.verbose == T.verbose
+            if seed == "":
+                assert r.conf == T.conf
+            if seed != "":
+                s = T.startpop[0] if len(T.startpop) == 1 else T.startpop[n]
+                assert np.all(r.population.genomes == s.genomes)
+                assert np.all(r.population.ages == s.ages)
+                assert r.population.chrlen == s.chrlen
+                assert r.population.nbase == s.nbase
+                assert np.all(r.population.genmap == s.genmap)
+
+    @pytest.mark.xfail(reason="unwritten")
     def test_execute_run(self):
-        assert True
+        assert False
 
     def test_execute(self, S):
         """Quickly test that execute runs execute_run for every run."""
