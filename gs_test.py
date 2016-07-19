@@ -997,8 +997,18 @@ class TestSimulationClass:
         assert S.log == "Total runtime: 2 days, 2 hours, 5 minutes, 0 seconds.\n\n"
 
     def test_finalise(self, S):
-        assert True
-
+        """Test that the simulation correctly creates output files."""
+        S.log = ""
+        S.startpop = "test"
+        S.finalise("test_output", "test_log")
+        assert S.startpop == ""
+        for r in S.runs:
+            assert isinstance(r.population, Outpop)
+            assert r.conf == ""
+        assert os.stat("test_output.sim").st_size > 0
+        assert os.stat("test_log.txt").st_size > 0
+        os.remove("test_output.sim")
+        os.remove("test_log.txt")
 
 def test_post_cleanup():
     """Kill tempfiles made for test. Not really a test at all."""
