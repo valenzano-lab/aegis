@@ -27,7 +27,7 @@ def ran_str(request):
 @pytest.fixture(params=["import", "random", "random"])
 def conf(request):
     """Create a default configuration object."""
-    S = Simulation("config_test", "", 10, False)
+    S = Simulation("config_test", "", -1, 10, False)
     c = S.get_conf("config_test")
     S.gen_conf(c)
     c.number_of_stages = 100
@@ -92,7 +92,7 @@ def run(request,conf):
 @pytest.fixture()
 def simulation(request,conf):
     """Create an unseeded simulation object from configuration."""
-    return Simulation("config_test", "",100, False)
+    return Simulation("config_test", "", -1, 100, False)
 
 ####################
 ### 0: DUMMY RUN ###
