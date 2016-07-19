@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 # Import libraries and define arguments
-import argparse,os,sys,pyximport; pyximport.install()
+import argparse,os,sys,warnings,pyximport; pyximport.install()
 from gs_core import Simulation
 try:
     import Cpickle as picke
@@ -47,11 +47,11 @@ try:
     sys.path = [os.getcwd()] + sys.path
 except OSError:
     exit("Error: Specified simulation directory does not exist.")
-
-sim = Simulation(args.c, args.s, args.S, args.r, args.verbose)
-sim.execute()
-sim.finalise(args.o, args.l)
+    pr.create_stats()
+with warnings.catch_warnings(DeprecationWarning):
+    sim = Simulation(args.c, args.s, args.S, args.r, args.verbose)
+    sim.execute()
+    sim.finalise(args.o, args.l)
 
 if args.profile:
-    pr.create_stats()
     pr.dump_stats('timestats.txt')

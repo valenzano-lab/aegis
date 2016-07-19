@@ -1,17 +1,20 @@
 # TODO: 
-# - Write test_execute for Simulation package
+# - test_execute_run (TestFunctions)
+# - Write test_execute for Run package
 # - Test repr_penf against surv_penf; bug from 4-Jul-2016
 # - Remove redundant tests
 # - Speed up tests involving get_startpop (currently very slow)
+# - Add tests for Config class
 
 import pyximport; pyximport.install()
-from gs_core import Simulation, Run, Outpop, Population, Record, chance
+from gs_core import Simulation, Run, Outpop, Population, Record, Config # Classes
+from gs_core import chance, logprint, print_runtime, execute_run # Functions
 import pytest, random, string, subprocess, math, copy, os, sys, cPickle, datetime
 import numpy as np
 import scipy.stats as st
 from scipy.misc import comb
 
-runChanceTests=True # Works with new setup
+runFunctionTests=True # Works with new setup
 runPopulationTests=True # "
 runRecordTests=True # "
 runRunTests=True # "
@@ -132,9 +135,9 @@ def test_sim_run():
 # -------------------------
 # RANDOM NUMBER GENERATION
 # -------------------------
-@pytest.mark.skipif(not runChanceTests,
-        reason="Not running chance tests.")
-class TestChance:
+@pytest.mark.skipif(not runFunctionTests,
+        reason="Not running function tests.")
+class TestFunctions:
     "Test that random binary array generation is working correctly."""
 
     @pytest.mark.parametrize("p", [0,1])
@@ -153,6 +156,38 @@ class TestChance:
         s = c.shape
         assert c.shape == shape and c.dtype == "bool"
         assert abs(p-np.mean(c)) < precision
+
+    def test_logprint(self, ran_str):
+        """Test logging (and especially newline) functionality."""
+        class Test:
+            def __init__(self):
+                self.log = ""
+        o = Test()
+        logprint(o, ran_str)
+        assert o.log == ran_str + "\n"
+        o.log = ""
+        logprint(o, ran_str, False)
+        logprint(o, ran_str)
+        assert o.log == ran_str + ran_str + "\n"
+
+    def test_print_runtime(self, S):
+        """Test that runtime calculates differences correctly."""
+        class Test:
+            def __init__(self):
+                self.log = ""
+        o = Test()
+        a = datetime.datetime(1, 1, 1, 0, 0, 0, 0)
+        b = datetime.datetime(1, 1, 2, 0, 0, 5, 0)
+        c = datetime.datetime(1, 1, 3, 1, 0, 20, 0)
+        d = datetime.datetime(1, 1, 3, 2, 5, 0, 0)
+        print_runtime(o, a, b)
+        assert o.log == "Total runtime: 1 days, 5 seconds.\n\n"
+        o.log = ""
+        print_runtime(o, a, c)
+        assert o.log == "Total runtime: 2 days, 1 hours, 20 seconds.\n\n"
+        o.log = ""
+        print_runtime(o, a, d)
+        assert o.log == "Total runtime: 2 days, 2 hours, 5 minutes, 0 seconds.\n\n"
 
 ######################
 ### 2: POPULATION  ###
@@ -475,7 +510,7 @@ class TestPopulationClass:
 
 @pytest.mark.skipif(not runRecordTests,
         reason="Not running Record tests.")
-class TestRecord:
+class TestRecordClass:
     """Test methods of the Record class."""
 
     # Initialisation
@@ -757,17 +792,6 @@ class TestRunClass:
         run1.update_starvation_factors()
         assert run1.surv_penf == run1.repr_penf == 1.0
 
-    def test_logprint(self, R, ran_str):
-        """Test logging (and especially newline) functionality."""
-        run1 = copy.copy(R)
-        run1.log = ""
-        run1.logprint(ran_str)
-        assert run1.log == ran_str + "\n"
-        run1.log = ""
-        run1.logprint(ran_str, False)
-        run1.logprint(ran_str)
-        assert run1.log == ran_str + ran_str + "\n"
-
     @pytest.mark.parametrize("n_stage,verbose,res",\
     [(1,False,1),(2,False,2),(15,False,2),(15,True,4),(30,False,2),\
      (30,True,5)])
@@ -781,6 +805,7 @@ class TestRunClass:
         run1.report_n = 15
         run1.conf.snapshot_stages = [30]
         run1.conf.crisis_stages = [2]
+        run1.population = run1.population.toPop()
         run1.execute_stage()
         assert len(run1.log.split("\n")) == res
 
@@ -789,6 +814,7 @@ class TestRunClass:
         status reporting."""
         # Normal
         run1 = copy.copy(run)
+        run1.population = run1.population.toPop()
         run1.execute_stage()
         assert run1.n_stage == run.n_stage + 1
         assert run1.n_snap == run.n_snap + 1
@@ -797,12 +823,14 @@ class TestRunClass:
         # Last stage
         run2 = copy.copy(run)
         run2.n_stage = run2.conf.number_of_stages -1
+        run2.population = run2.population.toPop()
         run2.execute_stage()
         assert run2.n_stage == run.conf.number_of_stages
         assert (run2.dieoff == (run2.population.N == 0))
         assert run2.complete
         # Dead
         run3 = copy.copy(run)
+        run3.population = run3.population.toPop()
         run3.population.N = 0
         run3.population.ages = np.array([])
         run3.population.genomes = np.array([[],[]])
@@ -830,6 +858,7 @@ class TestRunClass:
         run1.conf.snapshot_stages = [0]#!
         run1.conf.res_var = False
         run1.resources = run1.population.N
+        run1.population = run1.population.toPop()
         # Test masks
         old_N = run1.population.N
         mask = np.zeros(run1.population.maxls)
@@ -899,7 +928,12 @@ class TestSimulationClass:
             assert r.report_n == T.report_n
             assert r.verbose == T.verbose
             if seed == "":
-                assert r.conf == T.conf
+                for k in r.conf.__dict__.keys():
+                    test = r.conf.__dict__[k] == T.conf.__dict__[k]
+                    if isinstance(r.conf.__dict__[k], np.ndarray):
+                        assert np.all(test)
+                    else:
+                        assert test
             if seed != "":
                 s = T.startpop[0] if len(T.startpop) == 1 else T.startpop[n]
                 assert np.all(r.population.genomes == s.genomes)
@@ -927,23 +961,21 @@ class TestSimulationClass:
         """Test that get_conf on the config template file returns a valid
         object of the expected composition."""
         c = S.get_conf("config_test")
-        def alltype(keys,typ):
+        def assert_alltype(keys,typ):
             """Test whether all listed config items are of the
             specified type."""
-            return np.all([type(c.__dict__[x]) is typ for x in keys])
-        assert alltype(["number_of_runs", "number_of_stages",
+            for x in keys:
+                assert isinstance(c.__dict__[x], typ)
+        assert_alltype(["number_of_runs", "number_of_stages",
             "number_of_snapshots", "res_start", "R", "res_limit",
             "start_pop", "max_ls", "maturity", "n_base",
-            "death_inc", "repr_dec", "window_size", "chr_len"], int)
-        assert alltype(["crisis_sv", "V", "r_rate", "m_rate", "m_ratio",
+            "death_inc", "repr_dec", "window_size"], int)
+        assert_alltype(["crisis_sv", "V", "r_rate", "m_rate", "m_ratio",
             "crisis_p"], float)
-        assert alltype(["sexual", "res_var", "age_random", "surv_pen",
+        assert_alltype(["sexual", "res_var", "age_random", "surv_pen",
                 "repr_pen"], bool)
-        assert alltype(["death_bound", "repr_bound", "crisis_stages"],
+        assert_alltype(["death_bound", "repr_bound", "crisis_stages"],
                     list)
-        assert alltype(["g_dist", "params"], dict)
-        assert alltype(["genmap", "d_range", "r_range",
-                "snapshot_stages"], np.ndarray)
 
     @pytest.mark.parametrize("sexvar,nsnap", [(True, 10), (False, 0.1)])
     def test_gen_conf(self, simulation, conf, sexvar, nsnap):
@@ -1004,46 +1036,18 @@ class TestSimulationClass:
         file does not exist."""
         with pytest.raises(IOError) as e_info: S.get_startpop(ran_str)
 
-    def test_logprint_simulation(self, S, ran_str):
-        """Test logging (and especially newline) functionality."""
-        sim1 = copy.copy(S)
-        sim1.log = ""
-        sim1.logprint(ran_str)
-        assert sim1.log == ran_str + "\n"
-        sim1.log = ""
-        sim1.logprint(ran_str, False)
-        sim1.logprint(ran_str)
-        assert sim1.log == ran_str + ran_str + "\n"
-
-    def test_print_runtime(self, S):
-        """Test that runtime calculates differences correctly."""
-        a = datetime.datetime(1, 1, 1, 0, 0, 0, 0)
-        b = datetime.datetime(1, 1, 2, 0, 0, 5, 0)
-        c = datetime.datetime(1, 1, 3, 1, 0, 20, 0)
-        d = datetime.datetime(1, 1, 3, 2, 5, 0, 0)
-        S.log = ""
-        S.print_runtime(a, b)
-        assert S.log == "Total runtime: 1 days, 5 seconds.\n\n"
-        S.log = ""
-        S.print_runtime(a, c)
-        assert S.log == "Total runtime: 2 days, 1 hours, 20 seconds.\n\n"
-        S.log = ""
-        S.print_runtime(a, d)
-        assert S.log == "Total runtime: 2 days, 2 hours, 5 minutes, 0 seconds.\n\n"
-
     def test_finalise(self, S):
         """Test that the simulation correctly creates output files."""
         S.log = ""
-        S.startpop = "test"
-        S.finalise("test_output", "test_log")
-        assert S.startpop == ""
+        #S.startpop = "test"
+        S.finalise("x_output", "x_log")
+        #assert S.startpop == "" # Not currently deleting startpop
         for r in S.runs:
             assert isinstance(r.population, Outpop)
-            assert r.conf == ""
-        assert os.stat("test_output.sim").st_size > 0
-        assert os.stat("test_log.txt").st_size > 0
-        os.remove("test_output.sim")
-        os.remove("test_log.txt")
+        assert os.stat("x_output.sim").st_size > 0
+        assert os.stat("x_log.txt").st_size > 0
+        os.remove("x_output.sim")
+        os.remove("x_log.txt")
 
 def test_post_cleanup():
     """Kill tempfiles made for test. Not really a test at all."""

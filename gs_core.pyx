@@ -8,7 +8,7 @@
 import numpy as np
 cimport numpy as np
 import scipy.stats as st
-import importlib, operator, time, os, random, datetime
+import importlib, operator, time, os, random, datetime, copy, multiprocessing
 try:
        import cPickle as pickle
 except:
@@ -29,6 +29,81 @@ def chance(p,n=1):
     or a tuple of integers) of independent booleans with P(True)=z."""
     return rand.rvs(n)<p
 
+def logprint(obj, string, newline=True):
+    """Print string to both stdout and obj.log."""
+    if newline:
+        print string
+    else: 
+        print string,
+    obj.log += string + "\n" if newline else string
+
+def print_runtime(obj, starttime, endtime):
+    """Convert two datetime.now() outputs into a time difference 
+    in human-readable units and print the result."""
+    runtime = endtime - starttime
+    days = runtime.days
+    hours = runtime.seconds/3600
+    minutes = runtime.seconds/60 - hours*60
+    seconds = runtime.seconds - minutes*60 - hours*3600
+    logprint(obj, "Total runtime: ", False)
+    if days != 0:
+        logprint(obj, "{d} days".format(d=days)+", ", False)
+    if hours != 0:
+        logprint(obj, "{h} hours".format(h=hours)+", ", False)
+    if minutes != 0:
+        logprint(obj, "{m} minutes".format(m=minutes)+", ", False)
+    logprint(obj, "{s} seconds".format(s=seconds)+".")
+
+def execute_run(run, n=0, keep_only_successes=False):
+    if keep_only_successes: blank_run = copy.deepcopy(run)
+    run.execute(n)
+    if keep_only_successes and run.dieoff:
+        logprint(run, "Run {0} failed. Total failures = {1}. Repeating..."\
+                .format(n, run.record.record["prev_failed"]))
+        blank_run.record.record["prev_failed"] += 1
+        blank_run.log = run.log + "\n"
+        blank_run.starttime = run.starttime
+        return execute_run(blank_run, n, True)
+    print_runtime(run, run.starttime, run.endtime) 
+    return run
+
+class Config:
+    """Object derived from imported config module."""
+    def __init__(self, c):
+        """For now just take config module, no other methods."""
+        self.sexual = c.sexual
+        self.number_of_runs = c.number_of_runs
+        self.number_of_stages = c.number_of_stages
+        self.crisis_p = c.crisis_p
+        self.crisis_stages = c.crisis_stages
+        self.crisis_sv = c.crisis_sv
+        self.number_of_snapshots = c.number_of_snapshots
+        self.res_start = c.res_start
+        self.res_var = c.res_var
+        self.res_limit = c.res_limit
+        self.R = c.R
+        self.V = c.V
+        self.start_pop = c.start_pop
+        self.age_random = c.age_random
+        self.g_dist_s = c.g_dist_s
+        self.g_dist_r = c.g_dist_r
+        self.g_dist_n = c.g_dist_n
+        self.death_bound = c.death_bound
+        self.repr_bound = c.repr_bound
+        self.r_rate = c.r_rate
+        self.m_rate = c.m_rate
+        self.m_ratio = c.m_ratio
+        self.max_ls = c.max_ls
+        self.maturity = c.maturity
+        self.n_neutral = c.n_neutral
+        self.n_base = c.n_base
+        self.surv_pen = c.surv_pen
+        self.repr_pen = c.repr_pen
+        self.death_inc = c.death_inc
+        self.repr_dec = c.repr_dec
+        self.window_size = c.window_size
+
+
 class Outpop:
     """Pickle-able output form of Population class."""
     def __init__(self, pop):
@@ -37,9 +112,9 @@ class Outpop:
         self.chrlen = pop.chrlen
         self.maxls = pop.maxls
         self.maturity = pop.maturity
-        self.genmap = pop.genmap
-        self.ages = pop.ages
-        self.genomes = pop.genomes
+        self.genmap = copy.copy(pop.genmap)
+        self.ages = np.copy(pop.ages)
+        self.genomes = np.copy(pop.genomes)
         self.N = pop.N
 
     def params(self):
@@ -57,6 +132,10 @@ class Outpop:
         """Make cythonised Population object from this object."""
         return Population(self.params(), self.genmap, self.ages, 
                 self.genomes)
+
+    def clone(self):
+        """Generate a new, identical population object."""
+        return Outpop(self)
 
 cdef class Population:
     """A simulated population with genomes and ages."""
@@ -522,8 +601,8 @@ class Run:
                     "age_random":self.conf.age_random, 
                     "start_pop":self.conf.start_pop, "g_dist":self.conf.g_dist}
         else:
-            self.population = Population(self.conf.params, self.genmap,
-                    np.array([-1]), np.array([[-1],[-1]]))
+            self.population = Outpop(Population(self.conf.params, self.genmap,
+                    np.array([-1]), np.array([[-1],[-1]])))
         self.n_stage = 0
         self.n_snap = 0
         self.record = Record(self.population, self.conf.snapshot_stages,
@@ -558,42 +637,44 @@ class Run:
 
     def execute_stage(self):
         """Perform one stage of a simulation run and test for completion."""
+        if not isinstance(self.population, Population):
+            raise TypeError("Convert Outpop objects to Population before running execute_stage.")
         report_stage = (self.n_stage % self.report_n == 0)
         if report_stage:
-            self.logprint("Stage "+str(self.n_stage)+":", False)
-            self.logprint(str(self.population.N) + " individuals.")
+            logprint(self, "Stage {0}: {1} individuals."\
+                    .format(self.n_stage,self.population.N))
         self.dieoff = self.population.N == 0
         if not self.dieoff:
             # Record information
             take_snapshot = self.n_stage in self.conf.snapshot_stages
             full_report = report_stage and self.verbose
             if take_snapshot and full_report: 
-                self.logprint("Taking snapshot...", False)
+                logprint(self, "Taking snapshot...", False)
             self.record.update(self.population, self.resources, self.surv_penf,
                     self.repr_penf, self.n_stage, self.n_snap, take_snapshot)
             self.n_snap += 1 if take_snapshot else 0
-            if take_snapshot and full_report: self.logprint("done.")
+            if take_snapshot and full_report: logprint(self, "done.")
             # Update ages, resources and starvation
             self.population.increment_ages()
             self.update_resources()
             self.update_starvation_factors()
-            if full_report: self.logprint("Starvation factors = "+\
-                    str(self.surv_penf)+" (survival), "+str(self.repr_penf)+\
-                    " (reproduction).")
+            if full_report: logprint(self,"Starvation factors = {0} (servival),\
+                     {1} (reproduction).".format(self.surv_penf,self.repr_penf))
             # Reproduction and death
-            if full_report: self.logprint("Calculating reproduction and death...", False)
+            if full_report: logprint(self, 
+                    "Calculating reproduction and death...", False)
             n0 = self.population.N
             self.population.growth(self.conf.r_range, self.repr_penf,
                     self.conf.r_rate, self.conf.m_rate, self.conf.m_ratio)
             n1 = self.population.N
             self.population.death(self.conf.d_range, self.surv_penf) # change
             n2 = self.population.N
-            if full_report: self.logprint("done. "+str(n1-n0)+" individuals born, "+
-                str(n1-n2)+" died.")
+            if full_report: logprint(self, 
+                    "done. {0} individuals born, {1} died.".format(n1-n0,n1-n2))
             if self.n_stage in self.conf.crisis_stages or chance(self.conf.crisis_p):
                 self.population.crisis(self.conf.crisis_sv)
-                self.logprint("Crisis! "+str(self.population.N)+\
-                        " individuals survived. (Stage "+str(self.n_stage)+")")
+                logprint(self, "Crisis! {0} individuals survived. (Stage {1})"\
+                        .format(self.population.N, self.n_stage))
         # Update run status
         self.dieoff = self.record.record["dieoff"] = self.population.N == 0
         self.record.record["percent_dieoff"] = self.dieoff*100.0
@@ -602,10 +683,21 @@ class Run:
         if self.complete and not self.dieoff:
             self.record.final_update(self.conf.window_size)
 
-    def logprint(self, string, newline=True):
-        """Print string to both stdout and self.log."""
-        print string if newline else string,
-        self.log += string + "\n" if newline else string
+    def execute(self, n=0):
+        """Execute a run object from start to completion."""
+        self.population = self.population.toPop()
+        if not hasattr(self, "starttime"): 
+            self.starttime = datetime.datetime.now()
+        runstart = time.strftime('%X %x', time.localtime())
+        logprint(self, "\nBeginning run {0} at {1}.".format(n, runstart))
+        while not self.complete:
+            self.execute_stage()
+        self.population = Outpop(self.population)
+        self.endtime = datetime.datetime.now()
+        runend = time.strftime('%X %x', time.localtime())
+        y = " (perished at stage {0})".format(self.n_stage) if self.dieoff else ""
+        x = " Final population: {0}{1}.".format(self.population.N, y)
+        logprint(self, "End of run {0} at {1}. {2}".format(n,runend,x), False)
 
 class Simulation:
     """An object representing a simulation, as defined by a config file."""
@@ -614,53 +706,39 @@ class Simulation:
         self.starttime = datetime.datetime.now()
         simstart = time.strftime('%X %x', time.localtime())+".\n"
         self.log = ""
-        self.logprint("\nBeginning simulation at "+simstart)
-        self.logprint("Working directory: "+os.getcwd())
-        self.conf = self.get_conf(config_file)
+        logprint(self, "\nBeginning simulation at "+simstart)
+        logprint(self, "Working directory: "+os.getcwd())
+        self.conf = Config(self.get_conf(config_file))
         self.gen_conf(self.conf)
         self.startpop = self.get_startpop(seed_file, seed_n)
         self.report_n = report_n
         self.verbose = verbose
-        self.logprint("Initialising runs...", False)
+        logprint(self, "Initialising runs...", False)
         if len(self.startpop) == 1:
-            self.runs = [Run(self.conf, self.startpop[0], self.report_n,
-                self.verbose) for n in xrange(self.conf.number_of_runs)]
+            self.runs = [Run(copy.deepcopy(self.conf), self.startpop[0],
+                self.report_n, self.verbose) \
+                for n in xrange(self.conf.number_of_runs)]
         else:
-            self.runs = [Run(self.conf, self.startpop[n], self.report_n,
-                self.verbose) for n in xrange(self.conf.number_of_runs)]
-        self.logprint("done.")
-
-    def execute_run(self, n, keep_only_successes=False, start=False):
-        """Perform a run from start to completion."""
-        if keep_only_successes: nf = 0
-        if not start: start = datetime.datetime.now()
-        runstart = time.strftime('%X %x', time.localtime())+".\n"
-        self.logprint("\n\nBeginning run "+str(n)+" at "+runstart)
-        while not self.runs[n].complete:
-            self.runs[n].execute_stage()
-        self.log += self.runs[n].log + "\n" # Add run log to sim log
-        end = datetime.datetime.now()
-        runend = time.strftime('%X %x', time.localtime())+". "
-        self.logprint("\nEnd of run "+str(n)+" at ", False)
-        x = runend + "Final population: " + str(self.runs[n].population.N)
-        x += " (perished at stage "+str(self.runs[n].n_stage)+")." if\
-                self.runs[n].dieoff else "."
-        self.logprint(x)
-        if keep_only_successes and self.runs[n].dieoff:
-            nf += 1
-            self.logprint("Run "+str(n)+" failed. Total failures = "+str(nf)+\
-                    ". Repeating...")
-            new_run = 0 if len(self.startpop) == 1 else n
-            self.runs[n] = Run(self.conf, self.startpop[new_run], 
-                    self.report_n, self.verbose)
-            self.runs[n].record.record["prev_failed"] = nf
-            self.execute_run(n, True, start)
-        self.print_runtime(start, end)
+            self.runs = [Run(copy.deepcopy(self.conf), self.startpop[n],
+                self.report_n, self.verbose) \
+                for n in xrange(self.conf.number_of_runs)]
+        logprint(self, "done.")
 
     def execute(self, keep_only_successes=False):
         """Execute all runs."""
+        pool = multiprocessing.Pool()
+        lock = multiprocessing.Lock()
+        lock.acquire()
+        asyncruns = []
+        #pool.map(self.execute_run, range(self.conf.number_of_runs))
         for n in xrange(self.conf.number_of_runs):
-            self.execute_run(n)
+            asyncruns+= [pool.apply_async(execute_run, [self.runs[n], n,
+                keep_only_successes])]
+            #self.runs[n] = execute_run(self.runs[n], n, keep_only_successes)
+        outruns = [x.get() for x in asyncruns]
+        self.runs = outruns
+        self.log += "\n".join([x.log for x in self.runs])
+        lock.release()
 
     def get_conf(self, file_name):
         """Import specified configuration file for simulation."""
@@ -713,7 +791,7 @@ class Simulation:
     def get_startpop(self, seed_name="", pop_number=-1):
         """Import any seed simulation (or return blank)."""
         if seed_name == "":
-            self.logprint("Seed: None.")
+            logprint(self, "Seed: None.")
             return [""]
         try:
             # Make sure includes extension (default "sim")
@@ -726,8 +804,8 @@ class Simulation:
                 if nruns != self.conf.number_of_runs:
                     exit("Error: number of runs in seed file does not match\
                             current configuration.")
-                self.logprint("Seed: {0}, all populations.".format(seed_name))
-                return [r.population.toPop() for r in simobj.runs]
+                logprint(self, "Seed: {0}, all populations.".format(seed_name))
+                return [r.population for r in simobj.runs]
             else:
                 if pop_number >= nruns:
                     print "Population seed number out of range. Possible \
@@ -740,9 +818,9 @@ class Simulation:
                         q = raw_input("Please enter a valid integer from -1 \
                                 to {0}, or skip to abort.".format(nruns-1))
                     return self.get_startpop(seed_name, q)
-                self.logprint("Seed: {0}, population {1}.".format(seed_name, 
+                logprint(self, "Seed: {0}, population {1}.".format(seed_name, 
                     pop_number))
-                return [simobj.runs[pop_number].population.toPop()]
+                return [simobj.runs[pop_number].population]
         except IOError:
             print "No such seed file: " + seed_name
             q = raw_input(
@@ -753,44 +831,15 @@ class Simulation:
             if r == "": exit("Aborting.")
             return self.get_startpop(q, r)
 
-    def logprint(self, string, newline=True):
-        """Print string to both stdout and self.log."""
-        if newline:
-            print string
-        else: 
-            print string,
-        self.log += string + "\n" if newline else string
-
-    def print_runtime(self, starttime, endtime):
-        """Convert two datetime.now() outputs into a time difference 
-        in human-readable units and print the result."""
-        runtime = endtime - starttime
-        days = runtime.days
-        hours = runtime.seconds/3600
-        minutes = runtime.seconds/60 - hours*60
-        seconds = runtime.seconds - minutes*60 - hours*3600
-        self.logprint("Total runtime: ", False)
-        if days != 0:
-            self.logprint("{d} days".format(d=days)+", ", False)
-        if hours != 0:
-            self.logprint("{h} hours".format(h=hours)+", ", False)
-        if minutes != 0:
-            self.logprint("{m} minutes".format(m=minutes)+", ", False)
-        self.logprint("{s} seconds".format(s=seconds)+".\n")
-
     def finalise(self, file_pref, log_pref):
         """Finish recording and save output files."""
         self.endtime = datetime.datetime.now()
         simend = time.strftime('%X %x', time.localtime())+"."
-        self.logprint("\nSimulation completed at "+simend)
-        self.print_runtime(self.starttime, self.endtime)
-        self.logprint("Saving output and exiting.\n\n")
+        logprint(self, "Simulation completed at "+simend)
+        print_runtime(self, self.starttime, self.endtime)
+        logprint(self, "Saving output and exiting.\n")
         # Convert output into saveable form
-        for n in xrange(self.conf.number_of_runs):
-            self.runs[n].population = Outpop(self.runs[n].population)
-            self.runs[n].conf = ""#self.runs[n].conf.__dict__
-            self.startpop = "" # Don't need to keep startpop(s)
-        self.conf = ""#self.conf.__dict__ # Can't pickle module files
+        #self.startpop = "" # Don't need to keep startpop(s)
         sim_file = open(file_pref + ".sim", "wb")
         log_file = open(log_pref + ".txt", "w")
         try:
