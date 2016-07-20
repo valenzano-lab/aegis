@@ -8,13 +8,13 @@
 
 import pyximport; pyximport.install()
 from gs_core import Simulation, Run, Outpop, Population, Record, Config # Classes
-from gs_core import chance, logprint, print_runtime, execute_run # Functions
+from gs_core import chance, get_runtime, execute_run # Functions
 import pytest, random, string, subprocess, math, copy, os, sys, cPickle, datetime
 import numpy as np
 import scipy.stats as st
 from scipy.misc import comb
 
-runFunctionTests=True # Works with new setup
+runFunctionConfigTests=True # Works with new setup
 runPopulationTests=True # "
 runRecordTests=True # "
 runRunTests=True # "
@@ -34,8 +34,7 @@ def ran_str(request):
 def conf(request):
     """Create a default configuration object."""
     S = Simulation("config_test", "", -1, 10, False)
-    c = S.get_conf("config_test")
-    S.gen_conf(c)
+    c = copy.deepcopy(S.conf)
     c.number_of_stages = 100
     if request.param == "random":
         # Randomise fundamental parameters
@@ -55,7 +54,7 @@ def conf(request):
         c.repr_dec = random.randint(1, 10)
         gm_len = c.max_ls + (c.max_ls - c.maturity) + c.n_neutral
         c.window_size = random.randint(1, gm_len*c.n_base)
-        S.gen_conf(c)
+        c.generate()
     return c
 
 @pytest.fixture()
@@ -93,7 +92,7 @@ def record(request,pop1,conf):
 @pytest.fixture()
 def run(request,conf):
     """Create an unseeded run object from configuration."""
-    return Run(conf, "", 100, False)
+    return Run(conf, "", 0, 100, False)
 
 @pytest.fixture()
 def simulation(request,conf):
@@ -113,7 +112,7 @@ def S(request):
 @pytest.fixture()
 def R(request, S):
     """Create an unmodified, unseeded run object for procedure testing."""
-    return Run(S.conf, "", 100, False)
+    return Run(S.conf, "", 0, 100, False)
 
 ####################
 ### 0: DUMMY RUN ###
@@ -135,10 +134,9 @@ def test_sim_run():
 # -------------------------
 # RANDOM NUMBER GENERATION
 # -------------------------
-@pytest.mark.skipif(not runFunctionTests,
-        reason="Not running function tests.")
-class TestFunctions:
-    "Test that random binary array generation is working correctly."""
+@pytest.mark.skipif(not runFunctionConfigTests,
+        reason="Not running function/Config tests.")
+class TestFunctionsConfig:
 
     @pytest.mark.parametrize("p", [0,1])
     def test_chance_degenerate(self, p):
@@ -157,37 +155,56 @@ class TestFunctions:
         assert c.shape == shape and c.dtype == "bool"
         assert abs(p-np.mean(c)) < precision
 
-    def test_logprint(self, ran_str):
-        """Test logging (and especially newline) functionality."""
-        class Test:
-            def __init__(self):
-                self.log = ""
-        o = Test()
-        logprint(o, ran_str)
-        assert o.log == ran_str + "\n"
-        o.log = ""
-        logprint(o, ran_str, False)
-        logprint(o, ran_str)
-        assert o.log == ran_str + ran_str + "\n"
-
-    def test_print_runtime(self, S):
-        """Test that runtime calculates differences correctly."""
-        class Test:
-            def __init__(self):
-                self.log = ""
-        o = Test()
+    def test_get_runtime(self):
+        """Test that get_runtime calculates differences correctly."""
         a = datetime.datetime(1, 1, 1, 0, 0, 0, 0)
         b = datetime.datetime(1, 1, 2, 0, 0, 5, 0)
         c = datetime.datetime(1, 1, 3, 1, 0, 20, 0)
         d = datetime.datetime(1, 1, 3, 2, 5, 0, 0)
-        print_runtime(o, a, b)
-        assert o.log == "Total runtime: 1 days, 5 seconds.\n\n"
-        o.log = ""
-        print_runtime(o, a, c)
-        assert o.log == "Total runtime: 2 days, 1 hours, 20 seconds.\n\n"
-        o.log = ""
-        print_runtime(o, a, d)
-        assert o.log == "Total runtime: 2 days, 2 hours, 5 minutes, 0 seconds.\n\n"
+        B = get_runtime(a, b)
+        assert B == "Total runtime: 1 days, 5 seconds."
+        C = get_runtime(a, c)
+        assert C == "Total runtime: 2 days, 1 hours, 20 seconds."
+        D = get_runtime(a, d)
+        assert D == "Total runtime: 2 days, 2 hours, 5 minutes, 0 seconds."
+
+    @pytest.mark.parametrize("sexvar,nsnap", [(True, 10), (False, 0.1)])
+    def test_config_generate(self, conf, sexvar, nsnap):
+        """Test that gen_conf correctly generates derived simulation params."""
+        # Remove stuff that gets introduced/changed in gen_conf
+        c = copy.deepcopy(conf)
+        del c.g_dist, c.genmap, c.chr_len, c.d_range, c.r_range, c.params
+        del c.snapshot_stages
+        if c.sexual: c.repr_bound[1] /= 2
+        crb1 = c.repr_bound[1]
+        # Set parameters and run
+        c.number_of_snapshots = nsnap
+        c.sexual = sexvar
+        c.generate()
+        # Test output
+        assert c.g_dist["s"] == c.g_dist_s
+        assert c.g_dist["r"] == c.g_dist_r
+        assert c.g_dist["n"] == c.g_dist_n
+        assert len(c.genmap) == c.max_ls + (c.max_ls-c.maturity) +\
+                c.n_neutral
+        assert c.chr_len == len(c.genmap) * c.n_base
+        assert c.repr_bound[1]/crb1 == 2 if sexvar else 1
+        assert (c.d_range == np.linspace(c.death_bound[1], 
+            c.death_bound[0],2*c.n_base+1)).all()
+        assert (c.r_range == np.linspace(c.repr_bound[0], 
+            c.repr_bound[1],2*c.n_base+1)).all()
+        assert len(c.snapshot_stages) == c.number_of_snapshots if \
+                type(nsnap) is int else int(nsnap * c.number_of_stages)
+        assert np.all(c.snapshot_stages == np.around(np.linspace(
+            0, c.number_of_stages-1, c.number_of_snapshots), 0))
+        assert c.params["sexual"] == sexvar
+        assert c.params["chr_len"] == c.chr_len
+        assert c.params["n_base"] == c.n_base
+        assert c.params["maturity"] == c.maturity
+        assert c.params["max_ls"] == c.max_ls
+        assert c.params["age_random"] == c.age_random
+        assert c.params["start_pop"] == c.start_pop
+        assert c.params["g_dist"] == c.g_dist
 
 ######################
 ### 2: POPULATION  ###
@@ -708,7 +725,7 @@ class TestRunClass:
     @pytest.mark.parametrize("report_n, verbose",
             [(random.randint(1, 100), True), (random.randint(1, 100), False)])
     def test_init_run(self, conf, report_n, verbose):
-        run1 = Run(conf, "", report_n, verbose)
+        run1 = Run(conf, "", conf.number_of_runs-1, report_n, verbose)
         assert run1.log == ""
         assert run1.n_snap == run1.n_stage == 0
         assert run1.surv_penf == run1.repr_penf == 1.0
@@ -718,6 +735,7 @@ class TestRunClass:
         assert run1.report_n == report_n
         assert run1.verbose == verbose
         assert run1.dieoff == run1.complete == False
+        assert run1.n_run == conf.number_of_runs-1
         assert (run1.record.record["genmap"] == run1.genmap).all()
         # Quick test of correct genmap transition from run -> pop -> record;
         # Population and Record initiation tested more thoroughly elsewhere
@@ -791,23 +809,6 @@ class TestRunClass:
         run1.resources = 1
         run1.update_starvation_factors()
         assert run1.surv_penf == run1.repr_penf == 1.0
-
-    @pytest.mark.parametrize("n_stage,verbose,res",\
-    [(1,False,1),(2,False,2),(15,False,2),(15,True,4),(30,False,2),\
-     (30,True,5)])
-    def test_execute_stage_logprint(self,R,n_stage,verbose,res):
-        """Test that execute_stage produces the right number of status
-        report lines."""
-        run1 = copy.copy(R)
-        run1.log = ""
-        run1.n_stage = n_stage
-        run1.verbose = verbose
-        run1.report_n = 15
-        run1.conf.snapshot_stages = [30]
-        run1.conf.crisis_stages = [2]
-        run1.population = run1.population.toPop()
-        run1.execute_stage()
-        assert len(run1.log.split("\n")) == res
 
     def test_execute_stage_functionality(self, run):
         """Test functional operations of test_execute_stage, ignoring 
@@ -901,6 +902,21 @@ class TestRunClass:
         assert run1.n_stage == 1
         assert run1.complete == True
 
+    def test_logprint_run(self, R, ran_str):
+        """Test logging (and especially newline) functionality."""
+        R.log = ""
+        R.conf.number_of_runs = 1
+        R.conf.number_of_stages = 1
+        R.n_run = 0
+        R.n_stage = 0
+        R.logprint(ran_str)
+        assert R.log == "RUN 0 | STAGE 0 | {0}\n".format(ran_str)
+        R.log = ""
+        R.conf.number_of_runs = 101
+        R.conf.number_of_stages = 101
+        R.logprint(ran_str)
+        assert R.log == "RUN   0 | STAGE   0 | {0}\n".format(ran_str)
+
 @pytest.mark.skipif(not runSimulationTests,
         reason="Not running Simulation class tests.")
 class TestSimulationClass:
@@ -913,7 +929,8 @@ class TestSimulationClass:
         if seed == "":
             assert T.startpop == [""]
         else: 
-            s = S.get_startpop(seed, -1)
+            S.get_startpop(seed, -1)
+            s = S.startpop
             for n in xrange(len(T.startpop)):
                 assert np.all(T.startpop[n].genomes == s[n].genomes)
                 assert np.all(T.startpop[n].ages == s[n].ages)
@@ -960,7 +977,8 @@ class TestSimulationClass:
     def test_get_conf_good(self, S):
         """Test that get_conf on the config template file returns a valid
         object of the expected composition."""
-        c = S.get_conf("config_test")
+        S.get_conf("config_test")
+        c = S.conf
         def assert_alltype(keys,typ):
             """Test whether all listed config items are of the
             specified type."""
@@ -977,59 +995,24 @@ class TestSimulationClass:
         assert_alltype(["death_bound", "repr_bound", "crisis_stages"],
                     list)
 
-    @pytest.mark.parametrize("sexvar,nsnap", [(True, 10), (False, 0.1)])
-    def test_gen_conf(self, simulation, conf, sexvar, nsnap):
-        """Test that gen_conf correctly generates derived simulation params."""
-        # Remove stuff that gets introduced/changed in gen_conf
-        del conf.g_dist, conf.genmap, conf.chr_len, conf.d_range, conf.r_range
-        del conf.snapshot_stages, conf.params
-        if conf.sexual: conf.repr_bound[1] /= 2
-        crb1 = conf.repr_bound[1]
-        # Set parameters and run
-        conf.number_of_snapshots = nsnap
-        conf.sexual = sexvar
-        simulation.gen_conf(conf)
-        # Test output
-        assert conf.g_dist["s"] == conf.g_dist_s
-        assert conf.g_dist["r"] == conf.g_dist_r
-        assert conf.g_dist["n"] == conf.g_dist_n
-        assert len(conf.genmap) == conf.max_ls + (conf.max_ls-conf.maturity) +\
-                conf.n_neutral
-        assert conf.chr_len == len(conf.genmap) * conf.n_base
-        assert conf.repr_bound[1]/crb1 == 2 if sexvar else 1
-        assert (conf.d_range == np.linspace(conf.death_bound[1], 
-            conf.death_bound[0],2*conf.n_base+1)).all()
-        assert (conf.r_range == np.linspace(conf.repr_bound[0], 
-            conf.repr_bound[1],2*conf.n_base+1)).all()
-        assert len(conf.snapshot_stages) == conf.number_of_snapshots if \
-                type(nsnap) is int else int(nsnap * conf.number_of_stages)
-        assert np.all(conf.snapshot_stages == np.around(np.linspace(
-            0, conf.number_of_stages-1, conf.number_of_snapshots), 0))
-        assert conf.params["sexual"] == sexvar
-        assert conf.params["chr_len"] == conf.chr_len
-        assert conf.params["n_base"] == conf.n_base
-        assert conf.params["maturity"] == conf.maturity
-        assert conf.params["max_ls"] == conf.max_ls
-        assert conf.params["age_random"] == conf.age_random
-        assert conf.params["start_pop"] == conf.start_pop
-        assert conf.params["g_dist"] == conf.g_dist
-
     def test_get_startpop_good(self, S):
         """Test that a blank seed returns a list containing a blank string and i
         a valid seed returns a list of populations of the correct size."""
-        assert S.get_startpop("") == [""]
+        S.get_startpop("")
+        assert S.startpop == [""]
         try:
             f = open("sample_output.sim", "rb")
             px = cPickle.load(f)
         finally:
             f.close()
-        p0 = S.get_startpop("sample_output.sim", 0)
-        assert len(p0) == 1
-        assert p0[0].genomes.shape == px.runs[0].population.genomes.shape
-        p1 = S.get_startpop("sample_output.sim", -1)
-        assert len(p1) == len(px.runs)
+        S.get_startpop("sample_output.sim", 0)
+        assert len(S.startpop) == 1
+        assert S.startpop[0].genomes.shape==px.runs[0].population.genomes.shape
+        S.get_startpop("sample_output.sim", -1)
+        assert len(S.startpop) == len(px.runs)
         for n in range(len(px.runs)):
-            assert p1[n].genomes.shape == px.runs[n].population.genomes.shape
+            assert S.startpop[n].genomes.shape == \
+                    px.runs[n].population.genomes.shape
 
     def test_get_startpop_bad(self, S, ran_str):
         """Verify that fn.get_startpop throws an error when the target
@@ -1048,6 +1031,12 @@ class TestSimulationClass:
         assert os.stat("x_log.txt").st_size > 0
         os.remove("x_output.sim")
         os.remove("x_log.txt")
+
+    def test_logprint_sim(self, S, ran_str):
+        """Test logging (and especially newline) functionality."""
+        S.log = ""
+        S.logprint(ran_str)
+        assert S.log == ran_str + "\n"
 
 def test_post_cleanup():
     """Kill tempfiles made for test. Not really a test at all."""

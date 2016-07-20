@@ -3,16 +3,15 @@
 # Import libraries and define arguments
 import argparse,os,sys,warnings,pyximport; pyximport.install()
 from gs_core import Simulation
-try:
-    import Cpickle as picke
-except:
-    import pickle
 
 parser = argparse.ArgumentParser(description='Run the genome ageing \
         simulation.')
 parser.add_argument('dir', help="path to simulation directory")
 parser.add_argument('-o', metavar="<str>", default="output",
         help="prefix of simulation output file (default: output)")
+parser.add_argument('-t', metavar="<int>", default=-1,
+        help="number of cores to use for multiprocessing (default:\
+                all available cores)")
 parser.add_argument('-l', metavar="<str>", default="log",
         help="prefix of simulation log file (default: log)")
 parser.add_argument('-s', default="",
@@ -40,6 +39,7 @@ if args.profile:
 
 if args.s != "":
     args.s = os.path.abspath(args.s) # Get abspath before changing dir
+
 #Change to simulation directory
 try:
     sys.path.remove(os.getcwd())
@@ -47,11 +47,12 @@ try:
     sys.path = [os.getcwd()] + sys.path
 except OSError:
     exit("Error: Specified simulation directory does not exist.")
-    pr.create_stats()
+
 with warnings.catch_warnings(DeprecationWarning):
     sim = Simulation(args.c, args.s, args.S, args.r, args.verbose)
-    sim.execute()
+    sim.execute(int(args.t))
     sim.finalise(args.o, args.l)
 
 if args.profile:
+    pr.create_stats()
     pr.dump_stats('timestats.txt')
