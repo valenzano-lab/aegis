@@ -14,10 +14,10 @@ import numpy as np
 import scipy.stats as st
 from scipy.misc import comb
 
-runFunctionConfigTests=False # Works with new setup
-runPopulationTests=False # "
-runRecordTests=False # "
-runRunTests=False # "
+runFunctionConfigTests=True # Works with new setup
+runPopulationTests=True # "
+runRecordTests=True # "
+runRunTests=True # "
 runSimulationTests=True
 
 ####################
@@ -105,7 +105,7 @@ def simulation(request,conf):
 
 # Create separate fixtures to avoid unnecessary trebling of tests that
 # don't depend on config state
-@pytest.fixture()
+@pytest.fixture(scope="session")
 def S(request):
     """Create an unmodified, unseeded simulation object for procedure testing."""
     return Simulation("config_test", "", -1, 100, False)
@@ -113,6 +113,9 @@ def S(request):
 def R(request, S):
     """Create an unmodified, unseeded run object for procedure testing."""
     return Run(S.conf, "", 0, 100, False)
+@pytest.fixture()
+def P(request, R):
+    return R.population.toPop()
 
 ####################
 ### 0: DUMMY RUN ###
@@ -264,8 +267,7 @@ class TestPopulationClass:
 
     @pytest.mark.parametrize("gd", [
         {"s":random.random(), "r":random.random(), "n":random.random()},
-        {"s":0.5, "r":0.5, "n":0.5},
-        {"s":0.1, "r":0.9, "n":0.4}])
+        {"s":random.random(), "r":random.random(), "n":random.random()}])
     @pytest.mark.parametrize("gm", [genmap_simple, genmap_shuffled])
     def test_make_genome_array(self, spop, gm, gd):
         """Test that genome array is of the correct size and that
@@ -294,57 +296,56 @@ class TestPopulationClass:
 
     # Minor methods
 
-    def test_shuffle(self, spop):
+    def test_shuffle(self, P):
         """Test if all ages, therefore individuals, present before the
         shuffle are also present after it."""
-        spop2 = spop.clone() # clone tested separately
-        spop2.shuffle()
+        P2 = P.clone() # clone tested separately
+        P2.shuffle()
         is_shuffled = \
-                not (spop.genomes == spop2.genomes).all()
-        spop.ages.sort()
-        spop2.ages.sort()
+                not (P.genomes == P2.genomes).all()
+        P.ages.sort()
+        P2.ages.sort()
         assert is_shuffled
-        assert (spop.ages == spop2.ages).all()
+        assert (P.ages == P2.ages).all()
 
-    def test_clone(self, spop):
+    def test_clone(self, P):
         """Test if cloned population is identical to parent population,
         by comparing params, ages, genomes."""
-        spop2 = spop.clone()
-        assert spop.params() == spop2.params()
-        assert (spop.genmap == spop2.genmap).all()
-        assert (spop.ages == spop2.ages).all()
-        assert (spop.genomes == spop2.genomes).all()
+        P2 = P.clone()
+        assert P.params() == P2.params()
+        assert (P.genmap == P2.genmap).all()
+        assert (P.ages == P2.ages).all()
+        assert (P.genomes == P2.genomes).all()
 
-    def test_increment_ages(self, spop):
+    def test_increment_ages(self, P):
         """Test if all ages are incrementd by one."""
-        ages1 = np.copy(spop.ages)
-        spop.increment_ages()
-        ages2 = spop.ages
-        assert (ages1+1 == ages2).all()
+        P2 = P.clone()
+        P2.increment_ages()
+        assert (P.ages+1 == P2.ages).all()
 
-    def test_params(self, spop):
+    def test_params(self, P):
         """Test that params returns (at least) the
         required information."""
-        p = spop.params()
-        assert len(p) >= 5 and p["sexual"] == spop.sex
-        assert p["chr_len"] == spop.chrlen
-        assert p["n_base"] == spop.nbase
-        assert p["max_ls"] == spop.maxls
-        assert p["maturity"] == spop.maturity
+        p = P.params()
+        assert len(p) >= 5 and p["sexual"] == P.sex
+        assert p["chr_len"] == P.chrlen
+        assert p["n_base"] == P.nbase
+        assert p["max_ls"] == P.maxls
+        assert p["maturity"] == P.maturity
 
-    def test_addto(self, spop):
+    def test_addto(self, P):
         """Test if a population is successfully appended to the receiver
         population, which remains unchanged, by appending a population to
         itself."""
-        pop_a = spop.clone()
-        pop_b = spop.clone()
+        pop_a = P.clone()
+        pop_b = P.clone()
         pop_b.addto(pop_a)
         assert (pop_b.ages == np.tile(pop_a.ages,2)).all()
         assert (pop_b.genomes == np.tile(pop_a.genomes,(2,1))).all()
 
     # Death and crisis
 
-    @pytest.mark.parametrize("p", [0, 0.3, 0.8, 1])
+    @pytest.mark.parametrize("p", [0, random.random(), 1])
     @pytest.mark.parametrize("adults_only,offset",[(False,0),(True,100)])
     def test_get_subpop(self, spop, p, adults_only, offset):
         precision = 0.1
@@ -374,7 +375,7 @@ class TestPopulationClass:
                 np.linspace(0,1,2*pop.nbase + 1))
         assert np.sum(subpop) == 0
 
-    @pytest.mark.parametrize("p", [0.0, 0.3, 0.8, 1.0])
+    @pytest.mark.parametrize("p", [0.0, random.random(), 1.0])
     @pytest.mark.parametrize("x", [1.0, 3.0, 9.0])
     def test_death(self, spop, p, x):
         """Test if self.death() correctly inverts death probabilities
@@ -395,28 +396,28 @@ class TestPopulationClass:
         pmod = max(0, min(1, (1-x*(1-p))))
         assert abs(pop2.N/float(pop.N) - pmod) < precision
 
-    def test_death_extreme_starvation(self, spop):
+    def test_death_extreme_starvation(self, P):
         """Confirm that death() handles extreme starvation factors
         correctly (probability limits at 0 and 1)."""
-        pop0 = spop.clone()
-        pop1 = spop.clone()
-        pop2 = spop.clone()
-        drange = np.linspace(1, 0.001, 2*spop.nbase+1)
+        pop0 = P.clone()
+        pop1 = P.clone()
+        pop2 = P.clone()
+        drange = np.linspace(1, 0.001, 2*P.nbase+1)
         pop0.death(drange, 1e10)
         pop1.death(drange, -1e10)
         pop2.death(drange, 1e-10)
         assert pop0.N == 0
-        assert pop1.N == spop.N
-        assert pop2.N == spop.N
+        assert pop1.N == P.N
+        assert pop2.N == P.N
 
-    @pytest.mark.parametrize("p", [0, 0.3, 0.8, 1])
-    def test_crisis(self, spop,p):
+    @pytest.mark.parametrize("p", [0, random.random(), 1])
+    def test_crisis(self, P, p):
         """Test whether extrinsic death crisis removes the expected
         fraction of the population."""
         precision = 0.1
-        pop = spop.clone()
+        pop = P.clone()
         pop.crisis(p)
-        assert abs(pop.N - p*spop.N)/spop.N < precision
+        assert abs(pop.N - p*P.N)/P.N < precision
 
     # Reproduction
 
@@ -463,30 +464,31 @@ class TestPopulationClass:
         (children == np.append(parent1[c:], parent2[c:])).all() or\
         (children == np.append(parent2[c:], parent1[c:])).all()
 
-    @pytest.mark.parametrize("mrate", [0, 0.3, 0.8, 1])
-    def test_mutate_unbiased(self, spop, mrate):
+    @pytest.mark.parametrize("mrate", [0, random.random(), 1])
+    def test_mutate_unbiased(self, P, mrate):
         """Test that, in the absence of a +/- bias, the appropriate
         proportion of the genome is mutated."""
-        genomes = np.copy(spop.genomes)
-        spop.mutate(mrate,1)
-        assert abs((1-np.mean(genomes == spop.genomes))-mrate) < 0.01
+        t = 0.01 # Tolerance
+        genomes = np.copy(P.genomes)
+        P.mutate(mrate,1)
+        assert abs((1-np.mean(genomes == P.genomes))-mrate) < t
 
-    @pytest.mark.parametrize("mratio", [0, 0.1, 0.5, 1])
-    def test_mutate_biased(self, spop, mratio):
+    @pytest.mark.parametrize("mratio", [0, random.random(), 1])
+    def test_mutate_biased(self, P, mratio):
         """Test that the bias between positive and negative mutations is
         implemented correctly."""
         t = 0.01 # Tolerance
         mrate = 0.5
-        g0 = np.copy(spop.genomes)
-        spop.mutate(mrate,mratio)
-        g1 = spop.genomes
+        g0 = np.copy(P.genomes)
+        P.mutate(mrate,mratio)
+        g1 = P.genomes
         is1 = (g0==1)
         is0 = np.logical_not(is1)
         assert abs((1-np.mean(g0[is1] == g1[is1]))-mrate) < t
         assert abs((1-np.mean(g0[is0] == g1[is0]))-mrate*mratio) < t
 
     @pytest.mark.parametrize("sexvar",[True, False])
-    @pytest.mark.parametrize("m",[0.0, 0.3, 0.8, 1.0])
+    @pytest.mark.parametrize("m",[0.0, random.random(), 1.0])
     def test_growth(self,conf,sexvar,m):
         """Test number of children produced for all-adult population
         for sexual and asexual conditions."""
@@ -508,31 +510,31 @@ class TestPopulationClass:
         assert abs(exp_growth-obs_growth) < precision
 
     @pytest.mark.parametrize("nparents",[1, 3, 5])
-    def test_growth_smallpop(self, pop1, nparents):
+    def test_growth_smallpop(self, P, nparents):
         """Test that odd numbers of sexual parents are dropped and that a
         sexual parent population of size 1 doesn't reproduce."""
-        parents = Population(pop1.params(), pop1.genmap,
-                pop1.ages[:nparents],pop1.genomes[:nparents])
+        parents = Population(P.params(), P.genmap, P.ages[:nparents],
+                np.ones(P.genomes.shape,dtype=int)[:nparents])
         parents.sex = True
         parents.growth(np.linspace(0,1,2*parents.nbase+1),1,0,0,1)
         assert parents.N == (nparents + (nparents-1)/2)
 
     @pytest.mark.parametrize("sexvar",[True, False])
-    def test_growth_extreme_starvation(self, spop, sexvar):
+    def test_growth_extreme_starvation(self, P, sexvar):
         """Confirm that growth() handles extreme starvation factors
         correctly (probability limits at 0 and 1)."""
-        pop0 = spop.clone()
-        pop1 = spop.clone()
-        pop2 = spop.clone()
-        pop0.ages = pop1.ages = pop2.ages = np.tile(spop.maturity, spop.N)
+        pop0 = P.clone()
+        pop1 = P.clone()
+        pop2 = P.clone()
+        pop0.ages = pop1.ages = pop2.ages = np.tile(P.maturity, P.N)
         pop0.sex = pop1.sex = pop2.sex = sexvar
-        exp_N = math.floor(1.5*spop.N) if sexvar else (2*spop.N)
-        rrange = np.linspace(0.001, 1 , 2*spop.nbase+1)
+        exp_N = math.floor(1.5*P.N) if sexvar else (2*P.N)
+        rrange = np.linspace(0.001, 1 , 2*P.nbase+1)
         pop0.growth(rrange, 1e10, 0, 0, 1)
         pop1.growth(rrange, -1e10, 0, 0, 1)
         pop2.growth(rrange, 1e-10, 0, 0, 1)
-        assert pop0.N == spop.N
-        assert pop1.N == spop.N
+        assert pop0.N == P.N
+        assert pop1.N == P.N
         assert pop2.N == exp_N
 
 #################
@@ -918,18 +920,19 @@ class TestRunClass:
 
     def test_logprint_run(self, R, ran_str):
         """Test logging (and especially newline) functionality."""
-        R.log = ""
-        R.conf.number_of_runs = 1
-        R.conf.number_of_stages = 1
-        R.n_run = 0
-        R.n_stage = 0
-        R.logprint(ran_str)
-        assert R.log == "RUN 0 | STAGE 0 | {0}\n".format(ran_str)
-        R.log = ""
-        R.conf.number_of_runs = 101
-        R.conf.number_of_stages = 101
-        R.logprint(ran_str)
-        assert R.log == "RUN   0 | STAGE   0 | {0}\n".format(ran_str)
+        R2 = copy.deepcopy(R)
+        R2.log = ""
+        R2.conf.number_of_runs = 1
+        R2.conf.number_of_stages = 1
+        R2.n_run = 0
+        R2.n_stage = 0
+        R2.logprint(ran_str)
+        assert R2.log == "RUN 0 | STAGE 0 | {0}\n".format(ran_str)
+        R2.log = ""
+        R2.conf.number_of_runs = 101
+        R2.conf.number_of_stages = 101
+        R2.logprint(ran_str)
+        assert R2.log == "RUN   0 | STAGE   0 | {0}\n".format(ran_str)
 
 @pytest.mark.skipif(not runSimulationTests,
         reason="Not running Simulation class tests.")

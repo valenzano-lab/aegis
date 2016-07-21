@@ -858,8 +858,10 @@ class Simulation:
         if pop_number == -1:
             # -1 = seed all populations to equivalent runs in new sim
             if nruns != self.conf.number_of_runs:
-                raise IndexError ("Number of runs in seed file does not"+\
-                        "match current configuration.")
+                message = "Number of runs in seed file ({0}) ".format(nruns)
+                message += "does not match current configuration ({0} runs)."\
+                        .format(self.conf.number_of_runs)
+                raise IndexError(message)
             self.logprint(status.format("all populations"))
             self.startpop = [r.population for r in simobj.runs]
         else:
