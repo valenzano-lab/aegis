@@ -14,10 +14,10 @@ import numpy as np
 import scipy.stats as st
 from scipy.misc import comb
 
-runFunctionConfigTests=True # Works with new setup
-runPopulationTests=True # "
-runRecordTests=True # "
-runRunTests=True # "
+runFunctionConfigTests=False # Works with new setup
+runPopulationTests=False # "
+runRecordTests=False # "
+runRunTests=False # "
 runSimulationTests=True
 
 ####################
@@ -127,6 +127,16 @@ def test_sim_run():
     os.rename("output.sim", "sample_output.sim")
     os.rename("log.txt", "sample_log.txt")
 
+@pytest.fixture(scope="session")
+def run_sim(request):
+    """Get pre-run simulation created during test_sim_run."""
+    try:
+        f = open("sample_output.sim", "rb")
+        px = cPickle.load(f)
+        return px
+    finally:
+        f.close()
+
 #########################
 ### 1: FREE FUNCTIONS ###
 #########################
@@ -167,6 +177,10 @@ class TestFunctionsConfig:
         assert C == "Total runtime: 2 days, 1 hours, 20 seconds."
         D = get_runtime(a, d)
         assert D == "Total runtime: 2 days, 2 hours, 5 minutes, 0 seconds."
+
+    @pytest.mark.xfail(reason="unwritten")
+    def test_execute_run(self):
+        assert False
 
     @pytest.mark.parametrize("sexvar,nsnap", [(True, 10), (False, 0.1)])
     def test_config_generate(self, conf, sexvar, nsnap):
@@ -548,7 +562,7 @@ class TestRecordClass:
         assert (r["maturity"] == np.array([pop1.maturity])).all()
         assert (r["d_range"] == np.linspace(1,0,2*pop1.nbase+1)).all()
         assert (r["r_range"] == np.linspace(0,1,2*pop1.nbase+1)).all()
-        assert (r["snapshot_stages"] == conf.snapshot_stages + 1).all()
+        assert (r["snapshot_stages"] == conf.snapshot_stages).all()
         assert sameshape(["death_mean", "death_sd", "repr_mean",
                     "repr_sd", "fitness"], (n,pop1.maxls))
         assert sameshape(["density_surv", "density_repr"],
@@ -923,8 +937,9 @@ class TestSimulationClass:
 
     @pytest.mark.parametrize("seed,report_n,verbose",\
             [("",1,False), ("",10,False), ("",100,True), 
-            ("sample_output",1,True)])
-    def test_init_sim(self, S, seed, report_n, verbose):
+            ("run_sim",1,True)])
+    def test_init_sim(self, S, run_sim, seed, report_n, verbose):
+        if seed == "run_sim": seed = run_sim
         T = Simulation("config_test", seed, -1, report_n, verbose)
         if seed == "":
             assert T.startpop == [""]
@@ -959,10 +974,6 @@ class TestSimulationClass:
                 assert r.population.nbase == s.nbase
                 assert np.all(r.population.genmap == s.genmap)
 
-    @pytest.mark.xfail(reason="unwritten")
-    def test_execute_run(self):
-        assert False
-
     def test_execute(self, S):
         """Quickly test that execute runs execute_run for every run."""
         S.execute()
@@ -995,16 +1006,12 @@ class TestSimulationClass:
         assert_alltype(["death_bound", "repr_bound", "crisis_stages"],
                     list)
 
-    def test_get_startpop_good(self, S):
+    def test_get_startpop_good(self, S, run_sim):
         """Test that a blank seed returns a list containing a blank string and i
         a valid seed returns a list of populations of the correct size."""
         S.get_startpop("")
         assert S.startpop == [""]
-        try:
-            f = open("sample_output.sim", "rb")
-            px = cPickle.load(f)
-        finally:
-            f.close()
+        px = run_sim
         S.get_startpop("sample_output.sim", 0)
         assert len(S.startpop) == 1
         assert S.startpop[0].genomes.shape==px.runs[0].population.genomes.shape
@@ -1013,24 +1020,38 @@ class TestSimulationClass:
         for n in range(len(px.runs)):
             assert S.startpop[n].genomes.shape == \
                     px.runs[n].population.genomes.shape
+        S.get_startpop(px, 0)
+        assert len(S.startpop) == 1
+        assert S.startpop[0].genomes.shape==px.runs[0].population.genomes.shape
+
 
     def test_get_startpop_bad(self, S, ran_str):
         """Verify that fn.get_startpop throws an error when the target
         file does not exist."""
         with pytest.raises(IOError) as e_info: S.get_startpop(ran_str)
 
-    def test_finalise(self, S):
+    def test_finalise(self, S, run_sim):
         """Test that the simulation correctly creates output files."""
         S.log = ""
-        #S.startpop = "test"
+        S.runs = run_sim.runs
+        assert not hasattr(S,"avg_record")
+        print [(r.complete, r.dieoff) for r in S.runs]
         S.finalise("x_output", "x_log")
-        #assert S.startpop == "" # Not currently deleting startpop
+        assert isinstance(S.avg_record, Record)
         for r in S.runs:
             assert isinstance(r.population, Outpop)
         assert os.stat("x_output.sim").st_size > 0
         assert os.stat("x_log.txt").st_size > 0
         os.remove("x_output.sim")
         os.remove("x_log.txt")
+
+    def test_average_records(self, S, run_sim):
+        S.runs = run_sim.runs
+        S.average_records()
+        test = True
+        for key in run_sim.runs[0].record.record.keys():
+            assert np.all(np.isclose(S.avg_record.record[key], np.mean(
+                    np.array([r.record.record[key] for r in S.runs]), 0)))
 
     def test_logprint_sim(self, S, ran_str):
         """Test logging (and especially newline) functionality."""

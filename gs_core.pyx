@@ -432,7 +432,7 @@ class Record:
             # Death and reproduction chance ranges:
             "d_range":d_range,
             "r_range":r_range,
-            "snapshot_stages":snapshot_stages+1,
+            "snapshot_stages":snapshot_stages,
             # Per-stage data:
             "population_size":np.copy(array4),
             "resources":np.copy(array4),
@@ -773,7 +773,7 @@ class Run:
 class Simulation:
     """An object representing a simulation, as defined by a config file."""
 
-    def __init__(self, config_file, seed_file, seed_n, report_n, verbose):
+    def __init__(self, config_file, seed, seed_n, report_n, verbose):
         self.starttime = datetime.datetime.now()
         simstart = time.strftime('%X %x', time.localtime())+".\n"
         self.log = ""
@@ -781,7 +781,7 @@ class Simulation:
         self.logprint("Working directory: "+os.getcwd())
         self.get_conf(config_file)
         self.conf.generate()
-        self.get_startpop(seed_file, seed_n)
+        self.get_startpop(seed, seed_n)
         self.report_n = report_n
         self.verbose = verbose
         self.logprint("Initialising runs...")
@@ -828,53 +828,59 @@ class Simulation:
                 return self.get_conf(q)
         self.conf = Config(conf)
 
-    def get_startpop(self, seed_name="", pop_number=-1):
+    def get_startpop(self, seed="", pop_number=-1):
         """Import any seed simulation (or return blank)."""
-        if seed_name == "":
+        if seed == "":
             self.logprint("Seed: None.")
             self.startpop = [""]
             return
-        try:
-            # Make sure includes extension (default "sim")
-            seed_name += ".sim" if os.path.splitext(seed_name)[1] == "" else ""
-            simfile = open(seed_name, "rb")
-            simobj = pickle.load(simfile) # import simulation object
-            nruns = len(simobj.runs)
-            if pop_number == -1:
-                # -1 = seed all populations to equivalent runs in new sim
-                if nruns != self.conf.number_of_runs:
-                    exit("Error: number of runs in seed file does not match\
-                            current configuration.")
-                self.logprint("Seed: {0}, all populations.".format(seed_name))
-                self.startpop = [r.population for r in simobj.runs]
-            else:
-                if pop_number >= nruns:
-                    print "Population seed number out of range. Possible \
-                            values: 0 to {0}".format(nruns-1)
-                    q = raw_input("Enter a new population number, or enter -1 \
-                            to seed all populations, or skip to abort.")
-                    while q not in range(-1, nruns): 
-                        # Repeat until valid input given
-                        if q == "": exit("Aborting.")
-                        q = raw_input("Please enter a valid integer from -1 \
-                                to {0}, or skip to abort.".format(nruns-1))
-                    return self.get_startpop(seed_name, q)
-                self.logprint("Seed: {0}, population {1}.".format(seed_name, 
-                    pop_number))
-                self.startpop = [simobj.runs[pop_number].population]
-            return
-        except IOError:
-            print "No such seed file: " + seed_name
-            q = raw_input(
-                    "Enter correct path to seed file, or skip to abort: ")
-            if q == "": exit("Aborting.")
-            r = raw_input("Enter population seed number, or enter -1 to \
-                    seed all populations, or skip to abort.")
-            if r == "": exit("Aborting.")
-            return self.get_startpop(q, r)
+        p = "all populations" if pop_number==-1 else "population "+str(pop_number)
+        if isinstance(seed, Simulation):
+            status = "Seeding {0} directly from Simulation object."
+            simobj = seed
+        else:
+            try:
+                # Make sure includes extension (default "sim")
+                seed += ".sim" if os.path.splitext(seed)[1] == "" else ""
+                status = "Seed: "+seed+", {0}."
+                simfile = open(seed, "rb")
+                simobj = pickle.load(simfile) # import simulation object
+            except IOError:
+                print "No such seed file: " + seed
+                q = raw_input(
+                        "Enter correct path to seed file, or skip to abort: ")
+                if q == "": exit("Aborting.")
+                r = raw_input("Enter population seed number, or enter -1 to \
+                        seed all populations, or skip to abort.")
+                if r == "": exit("Aborting.")
+                return self.get_startpop(q, r)
+        nruns = len(simobj.runs)
+        if pop_number == -1:
+            # -1 = seed all populations to equivalent runs in new sim
+            if nruns != self.conf.number_of_runs:
+                raise IndexError ("Number of runs in seed file does not"+\
+                        "match current configuration.")
+            self.logprint(status.format("all populations"))
+            self.startpop = [r.population for r in simobj.runs]
+        else:
+            if pop_number >= nruns:
+                print "Population seed number out of range. Possible \
+                        values: 0 to {0}".format(nruns-1)
+                q = raw_input("Enter a new population number, or enter -1 \
+                        to seed all populations, or skip to abort.")
+                while q not in range(-1, nruns): 
+                    # Repeat until valid input given
+                    if q == "": exit("Aborting.")
+                    q = raw_input("Please enter a valid integer from -1 \
+                            to {0}, or skip to abort.".format(nruns-1))
+                return self.get_startpop(seed, q)
+            self.logprint(status.format("population {0}".format(pop_number)))
+            self.startpop = [simobj.runs[pop_number].population]
+        return
 
     def finalise(self, file_pref, log_pref):
         """Finish recording and save output files."""
+        self.average_records()
         self.endtime = datetime.datetime.now()
         simend = time.strftime('%X %x', time.localtime())+"."
         self.logprint("\nSimulation completed at "+simend)
@@ -893,3 +899,33 @@ class Simulation:
         """Print message to stdout and save in log object."""
         print message
         self.log += message+"\n"
+
+    def average_records(self):
+        self.avg_record = copy.deepcopy(self.runs[0].record)
+        if len(self.runs) == 1: return
+        rec_list = [x.record for x in self.runs if x.complete and not x.dieoff]
+        rec_list = [r.record for r in rec_list] # Get record dicts
+        # First test that all runs are compatible
+        eq_array_0 = np.array([[len(r["genmap"]), r["chr_len"], r["n_bases"],
+            r["max_ls"], r["maturity"]] for r in rec_list])
+        eq_array_1 = np.array([list(r["d_range"])+list(r["d_range"])+\
+                list(r["snapshot_stages"]) for r in rec_list])
+        eq_array_2 = np.array([r["death_mean"].shape+r["density_surv"].shape+\
+                r["entropy"].shape+r["resources"].shape+r["n1"].shape+\
+                r["s1"].shape+r["age_distribution"].shape for r in rec_list])
+        cm = np.all(np.isclose(eq_array_0, eq_array_0[0])) and \
+                np.all(np.isclose(eq_array_1, eq_array_1[0])) and \
+                np.all(np.isclose(eq_array_2,eq_array_2[0]))
+        if cm:
+            self.logprint("Runs are compatible; generating averaged data.")
+            for key in self.avg_record.record.keys():
+                karray = np.array([r[key] for r in rec_list])
+                self.avg_record.record[key] = np.mean(karray, 0)
+            return
+        else:
+            np.set_printoptions(threshold=np.inf)
+            print eq_array_0-eq_array_0[0]
+            print eq_array_1-eq_array_1[0]
+            print eq_array_2-eq_array_2[0]
+            raise ValueError("Cannot generate average run data;"+\
+                    " runs incompatible.")
