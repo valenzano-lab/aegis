@@ -46,16 +46,25 @@ def get_runtime(starttime, endtime):
     delta += "{s} seconds.".format(s=seconds)
     return delta
 
-def execute_run(run, keep_only_successes=False):
-    if keep_only_successes: blank_run = copy.deepcopy(run)
+def execute_run(run, maxfail):
+    if maxfail>0: blank_run = copy.deepcopy(run)
     run.execute()
-    if keep_only_successes and run.dieoff:
-        run.logprint("Run failed. Total failures = {10. Repeating..."\
-                .format(run.record.record["prev_failed"]))
-        blank_run.record.record["prev_failed"] += 1
+    if maxfail>0 and run.dieoff:
+        nfail = blank_run.record.record["prev_failed"] + 1
+        if nfail >= maxfail:
+            run.logprint("Total failures = {0}.".format(nfail))
+            run.logprint("Failure limit reached. Accepting failed run.")
+            run.logprint(get_runtime(run.starttime, run.endtime))
+            return run
+        run.logprint("Run failed. Total failures = {0}. Repeating..."\
+                .format(nfail))
+        blank_run.record.record["prev_failed"] = nfail
+        def divplus1(x): return (x*100)/(x+1)
+        blank_run.record.record["percent_dieoff"] = \
+                divplus1(blank_run.record.record["prev_failed"])
         blank_run.log = run.log + "\n"
         blank_run.starttime = run.starttime
-        return execute_run(blank_run, True)
+        return execute_run(blank_run, maxfail)
     run.logprint(get_runtime(run.starttime, run.endtime))
     return run
 
@@ -795,7 +804,7 @@ class Simulation:
                 for n in xrange(self.conf.number_of_runs)]
         self.logprint("Runs initialised. Executing...\n")
 
-    def execute(self, nproc=-1, keep_only_successes=False):
+    def execute(self, nproc=-1, maxfail=10):
         """Execute all runs."""
         if nproc < 0: # Use all available cores
             pool = multiprocessing.Pool()
@@ -807,7 +816,7 @@ class Simulation:
             asyncruns = []
             for n in xrange(self.conf.number_of_runs):
                 asyncruns+= [pool.apply_async(execute_run, [self.runs[n],
-                    keep_only_successes])]
+                    maxfail])]
             outruns = [x.get() for x in asyncruns]
             self.runs = outruns
             self.log += "\n".join([x.log for x in self.runs])

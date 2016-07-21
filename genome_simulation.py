@@ -20,6 +20,9 @@ parser.add_argument('-S', default=-1,
         help="Run number in seed file from which to take seed population;\
                 -1 indicates to seed each new run with the corresponding\
                 run from the seed file (default: -1)")
+parser.add_argument('-m', type=int, metavar="<int>", default=10,
+        help="maximum number of failed runs to repeat before accepting result"\
+                +" (default: 10)")
 parser.add_argument('-c', metavar='<str>', default="config",
         help="name of configuration file within simulation directory \
                 (default: config.py)")
@@ -50,7 +53,7 @@ except OSError:
 
 with warnings.catch_warnings(DeprecationWarning):
     sim = Simulation(args.c, args.s, args.S, args.r, args.verbose)
-    sim.execute(int(args.t))
+    sim.execute(int(args.t), int(args.m))
     sim.finalise(args.o, args.l)
 
 if args.profile:

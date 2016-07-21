@@ -1,10 +1,6 @@
 # TODO: 
-# - test_execute_run (TestFunctions)
-# - Write test_execute for Run package
 # - Test repr_penf against surv_penf; bug from 4-Jul-2016
-# - Remove redundant tests
 # - Speed up tests involving get_startpop (currently very slow)
-# - Add tests for Config class
 
 import pyximport; pyximport.install()
 from gs_core import Simulation, Run, Outpop, Population, Record, Config # Classes
@@ -116,6 +112,9 @@ def R(request, S):
 @pytest.fixture()
 def P(request, R):
     return R.population.toPop()
+@pytest.fixture()
+def Rc(request, R):
+    return R.record
 
 ####################
 ### 0: DUMMY RUN ###
@@ -181,9 +180,20 @@ class TestFunctionsConfig:
         D = get_runtime(a, d)
         assert D == "Total runtime: 2 days, 2 hours, 5 minutes, 0 seconds."
 
-    @pytest.mark.xfail(reason="unwritten")
-    def test_execute_run(self):
-        assert False
+    def test_execute_run(self, R):
+        run1, run2 = copy.deepcopy(R), copy.deepcopy(R)
+        xr1 = execute_run(run1, 100)
+        assert xr1.complete
+        assert not xr1.dieoff
+        r2p = run2.population
+        r2p.ages = np.array([r2p.maxls-1] * r2p.N)
+        maxfail = random.randrange(9)+1
+        print run2, maxfail
+        xr2 = execute_run(run2, maxfail)
+        assert xr2.complete
+        assert xr2.dieoff
+        assert xr2.record.record["percent_dieoff"] == 100.0
+        assert xr2.record.record["prev_failed"] == maxfail - 1
 
     @pytest.mark.parametrize("sexvar,nsnap", [(True, 10), (False, 0.1)])
     def test_config_generate(self, conf, sexvar, nsnap):
@@ -579,12 +589,13 @@ class TestRecordClass:
 
     # Per-stage updating
 
-    def test_quick_update(self, record, pop1):
+    def test_quick_update(self, Rc, P):
         """Test that every-stage update function records correctly."""
-        record.quick_update(0, pop1, 100, 1, 1)
-        r = record.record
-        agedist=np.bincount(pop1.ages,minlength=pop1.maxls)/float(pop1.N)
-        assert r["population_size"][0] == pop1.N
+        Rc2 = copy.deepcopy(Rc)
+        Rc2.quick_update(0, P, 100, 1, 1)
+        r = Rc2.record
+        agedist=np.bincount(P.ages,minlength=P.maxls)/float(P.N)
+        assert r["population_size"][0] == P.N
         assert r["resources"][0] == 100
         assert r["surv_penf"][0] == 1
         assert r["repr_penf"][0] == 1
@@ -606,35 +617,29 @@ class TestRecordClass:
         assert r["density_surv"][0][-1] == 1
         assert r["density_repr"][0][-1] == 1
 
-    def test_update_shannon_weaver_degenerate(self,record,pop1):
+    def test_update_shannon_weaver_degenerate(self,Rc,P):
         """Test if equals zero when all set members are of same type."""
-        assert record.update_shannon_weaver(pop1) == -0
+        P2 = P.clone()
+        P2.genomes = np.ones(P2.genomes.shape, dtype=int)
+        assert Rc.update_shannon_weaver(P2) == -0
 
     def test_update_shannon_weaver(self,record,spop,conf):
         """Test that shannon weaver entropy is computed correctly for
         a newly-initialised population."""
         precision = 0.015
         b = spop.nbase
-        print spop.nbase, len(spop.genmap), conf.n_neutral
-        print spop.params()
-
         props = np.array([spop.maxls, spop.maxls-spop.maturity, conf.n_neutral])\
                 /float(len(spop.genmap)) # Expected proportion of genome
                 # in survival loci, reproductive loci, etc.
-        print props
-        print "Sum of props = ", sum(props)
         probs = np.array([conf.g_dist[x] for x in ["s", "r", "n"]])
                 # Probability of a 1 for each locus type
-        print probs
         dists = np.array(
                 [[comb(2*b, x)*p**x*(1-p)**(2*b-x) for x in np.arange(2*b+1)]\
                         for p in probs])
                 # Binomial distribution values for 0 to 2*b zeros for each
-        print "Sum, shape of dists = ", np.sum(dists,1), dists.shape
         exp = np.sum(dists * props[:,np.newaxis], 0)
             # expected proportions of loci with each number of 1's over
             # entire genome
-        print exp
         exp_entropy = st.entropy(exp)
         obs_entropy = record.update_shannon_weaver(spop)
         assert abs(exp_entropy - obs_entropy) < precision
@@ -654,7 +659,6 @@ class TestRecordClass:
             # Flatten col vector to get one element per genome bit
         mask = np.tile(np.arange(len(genmap)).reshape((len(ix),1)),b)
 
-
     def test_update_invstats(self,record,pop1):
         """Test if update_invstats properly calculates genomestats for
         pop1 (genomes filled with ones)."""
@@ -667,23 +671,21 @@ class TestRecordClass:
         assert np.isclose(r["junk_death"][0], r["d_range"][-1])
         assert np.isclose(r["junk_repr"][0], r["r_range"][-1])
 
-    def test_update(self,record,pop1):
+    def test_update(self,Rc,P):
         """Test that update properly chains quick_update,
         update_agestats and update_invstats."""
-        record1 = copy.deepcopy(record)
-        record.update(pop1, 100, 1, 1, 0, 0, False)
-        record1.quick_update(0, pop1, 100, 1, 1)
-        r = record.record
-        r1 = record1.record
-        for k in r.keys():
-            assert (np.array(r[k]) == np.array(r1[k])).all()
-        record.update(pop1, 100, 1, 1, 0, 0, True)
-        record1.update_agestats(pop1, 0)
-        record1.update_invstats(pop1, 0)
-        r = record.record
-        r1 = record1.record
-        for k in r.keys():
-            assert (np.array(r[k]) == np.array(r1[k])).all()
+        Rc1,Rc2 = copy.deepcopy(Rc), copy.deepcopy(Rc)
+        Rc1.update(P, 100, 1, 1, 0, 0, False)
+        Rc2.quick_update(0, P, 100, 1, 1)
+        r1,r2 = Rc1.record, Rc2.record
+        for k in r1.keys():
+            assert (np.array(r1[k]) == np.array(r2[k])).all()
+        Rc1.update(P, 100, 1, 1, 0, 0, True)
+        Rc2.update_agestats(P, 0)
+        Rc2.update_invstats(P, 0)
+        r1,r2 = Rc1.record, Rc2.record
+        for k in r1.keys():
+            assert (np.array(r1[k]) == np.array(r2[k])).all()
 
     # Test final updating
 
@@ -698,16 +700,17 @@ class TestRecordClass:
         print mask.shape
         assert (record.age_wise_n1("mask") == ix).all()
 
-    def test_actual_death_rate(self, record):
+    def test_actual_death_rate(self, Rc):
         """Test if actual_death_rate returns expected results for
         artificial data."""
-        r = record.record
+        Rc1 = copy.deepcopy(Rc)
+        r = Rc1.record
         maxls = r["max_ls"][0]
         r["age_distribution"] = np.tile(1/float(maxls), (3, maxls))
         r["population_size"] = np.array([maxls*4,maxls*2,maxls])
         print r["age_distribution"]
         print r["population_size"]
-        adr = record.actual_death_rate()
+        adr = Rc1.actual_death_rate()
         print adr
         assert (adr[:,:-1] == 0.5).all()
         assert (adr[:,-1] == 1).all()
