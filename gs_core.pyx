@@ -298,7 +298,7 @@ cdef class Population:
         cdef:
             np.ndarray[NPINT_t, ndim=1] subpop_indices = np.empty(0,int)
             int age, locus, g
-            np.ndarray[NPINT_t, ndim=1] pos, which
+            np.ndarray[NPINT_t, ndim=1] which
             np.ndarray[NPFLOAT_t, ndim=1] inc_rates
             np.ndarray[NPINT_t, ndim=3] genloc, pop
             np.ndarray[NPBOOL_t, ndim=1,cast=True] inc
