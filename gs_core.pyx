@@ -932,6 +932,7 @@ class Simulation:
             for key in self.avg_record.record.keys():
                 karray = np.array([r[key] for r in rec_list])
                 self.avg_record.record[key] = np.mean(karray, 0)
+                self.avg_record.record[key+"_SD"] = np.std(karray, 0)
             return
         else:
             np.set_printoptions(threshold=np.inf)

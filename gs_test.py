@@ -1058,6 +1058,8 @@ class TestSimulationClass:
         for key in run_sim.runs[0].record.record.keys():
             assert np.all(np.isclose(S.avg_record.record[key], np.mean(
                     np.array([r.record.record[key] for r in S.runs]), 0)))
+            assert np.all(np.isclose(S.avg_record.record[key+"_SD"], np.std(
+                    np.array([r.record.record[key] for r in S.runs]), 0)))
 
     def test_logprint_sim(self, S, ran_str):
         """Test logging (and especially newline) functionality."""
