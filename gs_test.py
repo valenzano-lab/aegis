@@ -10,11 +10,11 @@ import numpy as np
 import scipy.stats as st
 from scipy.misc import comb
 
-runFunctionConfigTests=False # Works with new setup
-runPopulationTests=False # "
+runFunctionConfigTests=True # Works with new setup
+runPopulationTests=True # "
 runRecordTests=True # "
-runRunTests=False # "
-runSimulationTests=False
+runRunTests=True # "
+runSimulationTests=True
 
 ####################
 ### 0: FIXTURES  ###
@@ -665,6 +665,12 @@ class TestRecordClass:
         genome = genome.reshape((1,len(genome)*b))[0]
             # Flatten col vector to get one element per genome bit
         mask = np.tile(np.arange(len(genmap)).reshape((len(ix),1)),b)
+        mask = mask.reshape((1,len(mask)*b))[0]
+        np.set_printoptions(threshold=np.inf)
+        print mask
+        print genome
+        print record.sort_by_age(genome)
+        assert (rec.sort_by_age(genome).astype(int) == mask).all()
 
     def test_update_invstats(self,record,pop1):
         """Test if update_invstats properly calculates genomestats for
