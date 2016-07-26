@@ -128,6 +128,7 @@ def test_sim_run():
     os.chdir(scriptdir)
     subprocess.call(["python", "genome_simulation.py", "."])
     os.rename("output.sim", "sample_output.sim")
+    os.rename("output.rec", "sample_output.rec")
     os.rename("log.txt", "sample_log.txt")
 
 @pytest.fixture(scope="session")
@@ -1152,8 +1153,10 @@ class TestSimulationClass:
         for r in S.runs:
             assert isinstance(r.population, Outpop)
         assert os.stat("x_output.sim").st_size > 0
+        assert os.stat("x_output.rec").st_size > 0
         assert os.stat("x_log.txt").st_size > 0
         os.remove("x_output.sim")
+        os.remove("x_output.rec")
         os.remove("x_log.txt")
 
     def test_average_records(self, S, run_sim):
@@ -1179,4 +1182,5 @@ class TestSimulationClass:
 def test_post_cleanup():
     """Kill tempfiles made for test. Not really a test at all."""
     os.remove("sample_output.sim")
+    os.remove("sample_output.rec")
     os.remove("sample_log.txt")

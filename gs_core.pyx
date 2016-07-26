@@ -632,7 +632,7 @@ class Record:
         d,s = r["n1"].ndim-1, len(r["n1"].strides)-1
         a_shape = r["n1"].shape[:d] + (r["n1"].shape[d] - window + 1, window)
         a_strd = r["n1"].strides + (r["n1"].strides[s],) # strides
-        self.record["s1"] = np.std(np.lib.stride_tricks.as_strided(
+        r["s1"] = np.std(np.lib.stride_tricks.as_strided(
             r["n1"], shape=a_shape, strides=a_strd), 2)
         # normalise survival and reproduction probabilities (0 to 1)
         def normalise(meanvar, rangevar):
@@ -922,12 +922,15 @@ class Simulation:
         self.logprint("Saving output and exiting.\n")
         sim_file = open(file_pref + ".sim", "wb")
         log_file = open(log_pref + ".txt", "w")
+        rec_file = open(file_pref + ".rec", "wb")
         try:
             log_file.write(self.log)
             pickle.dump(self, sim_file)
+            pickle.dump(self.avg_record, rec_file)
         finally:
             sim_file.close()
             log_file.close()
+            rec_file.close()
 
     def logprint(self, message):
         """Print message to stdout and save in log object."""
