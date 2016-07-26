@@ -364,7 +364,7 @@ cdef class Population:
         self.genomes = self.genomes[which_survive]
         self.N = len(self.ages)
 
-    cpdef recombine(self, int r_rate):
+    cpdef recombine(self, float r_rate):
         """Recombine between the two chromosomes of each individual
         in the population."""
         cdef:
@@ -606,9 +606,9 @@ class Record:
             self.update_invstats(population, n_snap)
 
     def age_wise_n1(self, arr_str):
-        """Convert n1/n1_std array from value-per-bit to sorted value-per-age."""
+        """Convert n1/n1_std array from value-per-bit to value-per-age."""
         arr = self.record[arr_str] # already sorted
-        s = arr.shape
+        s, b = arr.shape, self.record["n_bases"]
         res = np.mean(arr.reshape((s[0], self.record["chr_len"]/b, b)), 2)
         return res
 
@@ -634,21 +634,23 @@ class Record:
         self.record["s1"] = np.std(np.lib.stride_tricks.as_strided(
             r["n1"], shape=a_shape, strides=a_strd), 2)
         # normalise survival and reproduction probabilities (0 to 1)
-        surv_, surv_range = (1-r["death_mean"]), (1-r["d_range"])
-        norm_surv = (surv_-np.max(surv_range)) * 1.0/np.ptp(surv_range) + 1
-        repr_, repr_range = (1-r["repr_mean"]), (1-r["r_range"])
-        norm_repr = (repr_-np.max(repr_range)) * 1.0/np.ptp(repr_range) + 1
+        def normalise(meanvar, rangevar):
+            if np.ptp(rangevar) == 0: 
+                f = np.zeros if np.max(meanvar) == 0 else np.ones
+                return f(meanvar.shape)
+            return meanvar - np.max(rangevar) * 1.0/np.ptp(rangevar) + 1
+        norm_surv = normalise(1-r["death_mean"], 1-r["d_range"])
+        norm_repr = normalise(r["repr_mean"], r["r_range"])
+        norm_repr[:,:r["maturity"]] = 0 # (repr before maturity = 0)
         # Calculate fitness measures
         r["age_wise_fitness_product"] = norm_surv * norm_repr
         r["age_wise_fitness_contribution"] = np.cumprod(norm_surv,1)*norm_repr
         r["fitness"] = np.sum(r["age_wise_fitness_contribution"],1)
         # Junk fitness
-        jns, jnr, ml = (1-r["junk death"]), r["junk_repr"], r["max_ls"]
-        junk_surv_n = (jns_-np.max(surv_range)) * 1.0/np.ptp(surv_range) + 1
-        junk_repr_n = (jnr_-np.max(repr_range)) * 1.0/np.ptp(repr_range) + 1
-        def jtile(x): return np.tile(x.reshape(x.shape[0],1),ml)
-        junk_surv_n, junk_repr_n = jtile(junk_surv_n), jtile(junk_repr_n)
+        def jtile(x): return np.tile(x.reshape(x.shape[0],1),r["max_ls"])
         # (tile to shape (n_snap,maxls))
+        junk_surv_n = jtile(normalise(1-r["junk_death"], 1-r["d_range"]))
+        junk_repr_n = jtile(normalise(r["junk_repr"], r["r_range"]))
         junk_repr_n[:,:r["maturity"]] = 0 # (repr before maturity = 0)
         r["junk_age_wise_fitness_product"] = junk_surv_n * junk_repr_n
         r["junk_age_wise_fitness_contribution"] = \

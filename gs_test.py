@@ -10,11 +10,11 @@ import numpy as np
 import scipy.stats as st
 from scipy.misc import comb
 
-runFunctionConfigTests=True # Works with new setup
-runPopulationTests=True # "
+runFunctionConfigTests=False # Works with new setup
+runPopulationTests=False # "
 runRecordTests=True # "
-runRunTests=True # "
-runSimulationTests=True
+runRunTests=False # "
+runSimulationTests=False
 
 ####################
 ### 0: FIXTURES  ###
@@ -81,9 +81,10 @@ def pop1(request, spop):
 def record(request,pop1,conf):
     """Create a record from pop1 as defined in configuration file."""
     spaces = 2 * pop1.nbase + 1
-    return Record(pop1, conf.snapshot_stages, conf.number_of_stages,
+    rec = Record(pop1, conf.snapshot_stages, conf.number_of_stages,
             np.linspace(1,0,spaces), np.linspace(0,1,spaces),
             conf.window_size)
+    return rec
 
 @pytest.fixture()
 def run(request,conf):
@@ -562,10 +563,12 @@ class TestRecordClass:
         n = conf.number_of_snapshots
         m = conf.number_of_stages
         w = conf.window_size
-        def sameshape(keys,ref):
+        def assert_sameshape(keys,ref):
             """Test whether all listed record arrays have identical
             shape."""
-            return np.all([r[x].shape == ref for x in keys])
+            for x in keys:
+                assert r[x].shape == ref
+                assert np.all(r[x] == 0)
         assert (r["genmap"] == pop1.genmap).all()
         assert (r["chr_len"] == np.array([pop1.chrlen])).all()
         assert (r["n_bases"] == np.array([pop1.nbase])).all()
@@ -574,18 +577,20 @@ class TestRecordClass:
         assert (r["d_range"] == np.linspace(1,0,2*pop1.nbase+1)).all()
         assert (r["r_range"] == np.linspace(0,1,2*pop1.nbase+1)).all()
         assert (r["snapshot_stages"] == conf.snapshot_stages).all()
-        assert sameshape(["death_mean", "death_sd", "repr_mean",
-                    "repr_sd", "age_wise_fitness_contribution",
+        assert_sameshape(["death_mean", "death_sd", "repr_mean",
+                    "repr_sd", "age_wise_fitness_product",
+                    "junk_age_wise_fitness_product",
+                    "age_wise_fitness_contribution",
                     "junk_age_wise_fitness_contribution"], (n,pop1.maxls))
-        assert sameshape(["density_surv", "density_repr"],
+        assert_sameshape(["density_surv", "density_repr"],
                     (n,2*pop1.nbase+1))
-        assert sameshape(["entropy","junk_death","junk_repr",
+        assert_sameshape(["entropy","junk_death","junk_repr","junk_fitness",
                     "fitness"], (n,))
-        assert sameshape(["population_size", "resources", "surv_penf",
+        assert_sameshape(["population_size", "resources", "surv_penf",
                     "repr_penf"], (m,))
-        assert sameshape(["age_distribution"],(m,pop1.maxls))
-        assert sameshape(["n1", "n1_std"], (n,pop1.chrlen))
-        assert sameshape(["s1"], (n, pop1.chrlen - w + 1))
+        assert_sameshape(["age_distribution"],(m,pop1.maxls))
+        assert_sameshape(["n1", "n1_std"], (n,pop1.chrlen))
+        assert_sameshape(["s1"], (n, pop1.chrlen - w + 1))
 
     # Per-stage updating
 
@@ -604,8 +609,9 @@ class TestRecordClass:
     def test_update_agestats(self,record,pop1):
         """Test if update_agestats properly calculates agestats for pop1
         (genomes filled with ones)."""
-        record.update_agestats(pop1,0)
-        r = record.record
+        rec = copy.deepcopy(record)
+        rec.update_agestats(pop1,0)
+        r = rec.record
         assert  np.isclose(r["death_mean"][0],
                 np.tile(r["d_range"][-1],r["max_ls"])).all()
         assert np.isclose(r["death_sd"][0], np.zeros(r["max_ls"])).all()
@@ -647,12 +653,13 @@ class TestRecordClass:
     def test_sort_by_age(self, record):
         """Test if sort_by_age correctly sorts an artificial genome
         array."""
-        genmap = np.sort(record.record["genmap"])
+        rec = copy.deepcopy(record)
+        genmap = np.sort(rec.record["genmap"])
         ix = np.arange(len(genmap))
             # Randomly reshuffle genmap
         np.random.shuffle(ix)
-        record.record["genmap"] = genmap[ix]
-        b = record.record["n_bases"]
+        rec.record["genmap"] = genmap[ix]
+        b = rec.record["n_bases"]
         genome = np.tile(ix.reshape((len(ix),1)),b)
             # Make into a col vector
         genome = genome.reshape((1,len(genome)*b))[0]
@@ -662,8 +669,9 @@ class TestRecordClass:
     def test_update_invstats(self,record,pop1):
         """Test if update_invstats properly calculates genomestats for
         pop1 (genomes filled with ones)."""
-        record.update_invstats(pop1,0)
-        r = record.record
+        rec = copy.deepcopy(record)
+        rec.update_invstats(pop1,0)
+        r = rec.record
         print np.sum(r["n1"][0] == np.ones(r["chr_len"]))
         assert (r["n1"][0] == np.ones(r["chr_len"])).all()
         assert (r["n1_std"][0] == np.zeros(r["chr_len"])).all()
@@ -691,14 +699,15 @@ class TestRecordClass:
 
     def test_age_wise_n1(self,record):
         """Test if ten consecutive array items are correctly averaged."""
-        genmap = record.record["genmap"]
-        b = record.record["n_bases"]
+        rec = copy.deepcopy(record)
+        genmap = rec.record["genmap"]
+        b = rec.record["n_bases"]
         ix = np.arange(len(genmap))
         mask = np.tile(np.arange(len(genmap)).reshape((len(ix),1)),b)
         mask = mask.reshape((1,len(mask)*b))[0]
-        record.record["mask"] = np.array([mask])
+        rec.record["mask"] = np.array([mask])
         print mask.shape
-        assert (record.age_wise_n1("mask") == ix).all()
+        assert (rec.age_wise_n1("mask") == ix).all()
 
     def test_actual_death_rate(self, Rc):
         """Test if actual_death_rate returns expected results for
@@ -716,26 +725,119 @@ class TestRecordClass:
         assert (adr[:,-1] == 1).all()
 
     def test_final_update(self, pop1, record, conf):
+        rec = copy.deepcopy(record)
         s = conf.number_of_snapshots
         t = conf.number_of_stages
         for n in range(s):
-            record.update(pop1, 100, 1, 1, 0, n, True)
+            rec.update(pop1, 100, 1, 1, 0, n, True)
         for m in range(t):
-            record.update(pop1, 100, 1, 1, m, 0, False)
-        record.final_update(conf.window_size)
-        r = record.record
+            rec.update(pop1, 100, 1, 1, m, 0, False)
+        rec.final_update(conf.window_size)
+        r = rec.record
         # Predicted age_wise_fitness_contribution array:
-        pf = np.append(np.zeros((s,r["maturity"])),np.ones((s,r["max_ls"]-r["maturity"])),1)
+        pf = np.append(np.zeros((s,r["maturity"])),
+                np.ones((s,r["max_ls"]-r["maturity"])),1)
         # Predicted actual death rate:
         pad = np.append(np.ones(r["maturity"]-1), np.array([1-pop1.N]))
         pad = np.append(pad, np.ones(r["max_ls"] - len(pad)))
         assert (r["age_wise_fitness_contribution"] == pf).all()
         assert (r["junk_age_wise_fitness_contribution"] == pf).all()
+        assert (r["age_wise_fitness_product"] == pf).all()
+        assert (r["junk_age_wise_fitness_product"] == pf).all()
         assert (r["fitness"] == np.sum(pf,1)).all()
+        assert (r["junk_fitness"] == np.sum(pf,1)).all()
         assert (r["age_wise_n1"] == 1).all()
         assert (r["age_wise_n1_std"] == 0).all()
         assert (r["actual_death_rate"] == pad).all()
         assert (r["s1"] == 0).all()
+
+    def test_fitness_calc(self, run):
+        """Test whether fitness is calculated correctly for various cases."""
+        rec, p = copy.deepcopy(run.record), copy.deepcopy(run.population)
+        r,s,t = rec.record,run.conf.number_of_snapshots,run.conf.number_of_stages
+        r["d_range"], r["r_range"] = [np.linspace(1,0,2*p.nbase+1)]*2
+        for n in range(s):
+            rec.update(p, 100, 1, 1, 0, n, True)
+        for m in range(t):
+            rec.update(p, 100, 1, 1, m, 0, False)
+        def gen_death(x): return np.tile(x, (p.N, p.maxls))
+        def gen_repr(x): return np.hstack([np.zeros((p.N, p.maturity)),
+            np.tile(x, (p.N, p.maxls-p.maturity))])
+        def set_means_and_calc(x, y):
+            r["death_mean"],r["repr_mean"] = gen_death(x), gen_repr(y)
+            rec.final_update(100)
+        def assert_fitnesses(a, b):
+            fc,fp = "age_wise_fitness_contribution","age_wise_fitness_product"
+            assert np.all(r["fitness"] == np.sum(r[fc],1))
+            assert np.all(r[fp][:,:p.maturity]==0)
+            assert np.all(r[fc][:,:p.maturity]==0)
+            assert np.all(np.isclose(r[fp][:,p.maturity:],a))
+            assert np.all(np.isclose(r[fc][:,p.maturity:],b))
+        # Certain reproduction, impossible death
+        set_means_and_calc(0.0, 1.0)
+        assert_fitnesses(1.0, 1.0)
+        # Certain reproduction, random death
+        death_rate = random.random()
+        set_means_and_calc(death_rate, 1.0)
+        assert_fitnesses(1-death_rate,
+                (1-death_rate)**(np.arange(p.maturity,p.maxls)+1)) 
+        # Random reproduction, zero death
+        repr_rate = random.random()
+        set_means_and_calc(0.0,repr_rate)
+        assert_fitnesses(repr_rate,repr_rate) 
+        # Random reproduction, certain death
+        repr_rate = random.random()
+        set_means_and_calc(1.0,repr_rate)
+        assert_fitnesses(0,0)
+        # Zero reproduction, random death
+        death_rate = random.random()
+        set_means_and_calc(death_rate,0.0)
+        assert_fitnesses(0,0) 
+
+    def test_fitness_calc_junk(self, run):
+        """Same as test_fitness_calc, but for junk fitness."""
+        rec, p = copy.deepcopy(run.record), copy.deepcopy(run.population)
+        r,s,t = rec.record,run.conf.number_of_snapshots,run.conf.number_of_stages
+        print r["junk_death"].shape,r["junk_repr"].shape
+        r["d_range"], r["r_range"] = [np.linspace(1,0,2*p.nbase+1)]*2
+        for n in range(s):
+            rec.update(p, 100, 1, 1, 0, n, True)
+        for m in range(t):
+            rec.update(p, 100, 1, 1, m, 0, False)
+        def gen_death(x): return np.tile(x, r["junk_death"].shape)
+        def gen_repr(x): return np.tile(x, r["junk_repr"].shape)
+        def set_means_and_calc(x, y):
+            r["junk_death"],r["junk_repr"] = gen_death(x), gen_repr(y)
+            print r["junk_death"].shape,r["junk_repr"].shape
+            rec.final_update(100)
+        def assert_fitnesses(a, b):
+            fc = "junk_age_wise_fitness_contribution"
+            fp = "junk_age_wise_fitness_product"
+            assert np.all(r["junk_fitness"] == np.sum(r[fc],1))
+            assert np.all(r[fp][:,:p.maturity]==0)
+            assert np.all(r[fc][:,:p.maturity]==0)
+            assert np.all(np.isclose(r[fp][:,p.maturity:],a))
+            assert np.all(np.isclose(r[fc][:,p.maturity:],b))
+        # Certain reproduction, impossible death
+        set_means_and_calc(0.0, 1.0)
+        assert_fitnesses(1.0, 1.0)
+        # Certain reproduction, random death
+        death_rate = random.random()
+        set_means_and_calc(death_rate, 1.0)
+        assert_fitnesses(1-death_rate,
+                (1-death_rate)**(np.arange(p.maturity,p.maxls)+1)) 
+        # Random reproduction, zero death
+        repr_rate = random.random()
+        set_means_and_calc(0.0,repr_rate)
+        assert_fitnesses(repr_rate,repr_rate) 
+        # Random reproduction, certain death
+        repr_rate = random.random()
+        set_means_and_calc(1.0,repr_rate)
+        assert_fitnesses(0,0)
+        # Zero reproduction, random death
+        death_rate = random.random()
+        set_means_and_calc(death_rate,0.0)
+        assert_fitnesses(0,0) 
 
 @pytest.mark.skipif(not runRunTests,
         reason="Not running Run class tests.")
@@ -880,6 +982,7 @@ class TestRunClass:
         run1.resources = run1.population.N
         run1.population = run1.population.toPop()
         # Test masks
+        r = run1.record.record
         old_N = run1.population.N
         mask = np.zeros(run1.population.maxls)
         ad_mask = np.copy(mask) # Age distribution
@@ -891,25 +994,23 @@ class TestRunClass:
         # Execute
         run1.execute_stage()
         # record
-        assert run1.record.record["population_size"][0] == old_N
-        assert run1.record.record["surv_penf"][0] == run.surv_penf
-        assert run1.record.record["repr_penf"][0] == run.repr_penf
-        assert run1.record.record["resources"][0] == old_N
-        assert np.all(run1.record.record["age_distribution"][0] == ad_mask)
-        assert np.all(run1.record.record["death_mean"][0] == mask)
-        assert np.all(run1.record.record["death_sd"][0] == mask)
-        assert np.all(run1.record.record["repr_mean"][0] == mask)
-        assert np.all(run1.record.record["repr_sd"][0] == mask)
-        assert np.all(run1.record.record["fitness"][0] == mask)
-        assert np.all(run1.record.record["density_surv"][0] == density_mask)
-        assert np.all(run1.record.record["density_repr"][0] == density_mask)
-        assert np.all(run1.record.record["n1"][0] == n1_mask)
-        assert np.all(run1.record.record["n1_std"][0] == n1_std_mask)
-        assert np.all(run1.record.record["s1"][0] == s1_mask)
-        assert run1.record.record["entropy"][0] == 0
-        assert run1.record.record["junk_death"][0] == 0
-        assert run1.record.record["junk_repr"][0] == 0
-        assert run1.record.record["junk_fitness"][0] == 0
+        def assert_allequal(keys,test):
+            for x in keys:
+                if isinstance(r[x][0],np.ndarray): assert np.all(r[x][0]==test)
+                else: assert r[x][0] == test
+        assert_allequal(["surv_penf"], run.surv_penf)
+        assert_allequal(["repr_penf"], run.repr_penf)
+        assert_allequal(["population_size", "resources"], old_N)
+        assert_allequal(["age_distribution"], ad_mask)
+        assert_allequal(["age_wise_fitness_product","death_mean","death_sd",
+            "age_wise_fitness_contribution","junk_age_wise_fitness_product",
+            "junk_age_wise_fitness_contribution","repr_mean","repr_sd"], mask)
+        assert_allequal(["density_surv","density_repr"], density_mask)
+        assert_allequal(["entropy","junk_death","junk_repr","junk_fitness",
+            "fitness"], 0)
+        assert_allequal(["n1"], n1_mask)
+        assert_allequal(["n1_std"], n1_std_mask)
+        assert_allequal(["s1"], s1_mask)
         # population
         assert np.all(run1.population.ages == run1.population.maturity+1)
         assert run1.resources == old_N
@@ -997,8 +1098,6 @@ class TestSimulationClass:
         S.get_conf("config_test")
         c = S.conf
         def assert_alltype(keys,typ):
-            """Test whether all listed config items are of the
-            specified type."""
             for x in keys:
                 assert isinstance(c.__dict__[x], typ)
         assert_alltype(["number_of_runs", "number_of_stages",
