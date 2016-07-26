@@ -50,12 +50,13 @@ def execute_run(run, maxfail):
     if maxfail>0: blank_run = copy.deepcopy(run)
     run.execute()
     if maxfail>0 and run.dieoff:
-        nfail = blank_run.record.record["prev_failed"] + 1
-        if nfail >= maxfail:
-            run.logprint("Total failures = {0}.".format(nfail))
+        nfail = blank_run.record.record["prev_failed"]
+        if nfail >= maxfail - 1:
+            run.logprint("Total failures = {0}.".format(nfail+1))
             run.logprint("Failure limit reached. Accepting failed run.")
             run.logprint(get_runtime(run.starttime, run.endtime))
             return run
+        nfail += 1
         run.logprint("Run failed. Total failures = {0}. Repeating..."\
                 .format(nfail))
         blank_run.record.record["prev_failed"] = nfail
@@ -469,7 +470,7 @@ class Record:
             "fitness":np.copy(array3),
             # Run info
             "dieoff":False,
-            "prev_failed":0,
+            "prev_failed":0, # DOES NOT include current run if it fails
             "percent_dieoff":0
             }
 
@@ -950,11 +951,17 @@ class Simulation:
                 np.all(np.isclose(eq_array_1, eq_array_1[0])) and \
                 np.all(np.isclose(eq_array_2,eq_array_2[0]))
         if cm:
+            sar = self.avg_record.record
             self.logprint("Runs are compatible; generating averaged data.")
-            for key in self.avg_record.record.keys():
+            for key in sar.keys():
                 karray = np.array([r[key] for r in rec_list])
-                self.avg_record.record[key] = np.mean(karray, 0)
-                self.avg_record.record[key+"_SD"] = np.std(karray, 0)
+                sar[key],sar[key+"_SD"] = np.mean(karray, 0),np.std(karray, 0)
+            # Calculate number and % of failed runs explicitly
+            sar["prev_failed"] = np.sum([r["prev_failed"] for r in rec_list])
+            sar["percent_dieoff"] = 100*\
+                    (sar["prev_failed"]+sum([x.dieoff for x in self.runs]))/\
+                    (sar["prev_failed"]+len(self.runs))
+            self.avg_record.record
             return
         else:
             np.set_printoptions(threshold=np.inf)

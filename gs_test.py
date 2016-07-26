@@ -1159,12 +1159,16 @@ class TestSimulationClass:
     def test_average_records(self, S, run_sim):
         S.runs = run_sim.runs
         S.average_records()
+        sarr, rr = S.avg_record.record, [r.record.record for r in S.runs]
         test = True
-        for key in run_sim.runs[0].record.record.keys():
-            assert np.all(np.isclose(S.avg_record.record[key], np.mean(
-                    np.array([r.record.record[key] for r in S.runs]), 0)))
-            assert np.all(np.isclose(S.avg_record.record[key+"_SD"], np.std(
-                    np.array([r.record.record[key] for r in S.runs]), 0)))
+        avg_keys = set(rr[0].keys()) - set(["prev_failed", "percent_dieoff"])
+        for key in avg_keys:
+            assert np.all(np.isclose(sarr[key],np.mean([r[key] for r in rr],0)))
+            assert np.all(np.isclose(sarr[key+"_SD"],np.std([r[key] for r in rr],0)))
+        assert sarr["prev_failed"] == np.sum([r["prev_failed"] for r in rr])
+        assert sarr["percent_dieoff"] == 100*\
+                (sarr["prev_failed"]+sum(r.dieoff for r in S.runs))/\
+                (sarr["prev_failed"]+len(S.runs))
 
     def test_logprint_sim(self, S, ran_str):
         """Test logging (and especially newline) functionality."""
