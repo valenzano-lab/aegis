@@ -5,10 +5,10 @@
 sexual = False # Sexual or asexual reproduction
 
 ## RUNNING PARAMETERS ##
-number_of_runs = 1 # Total number of independent runs
-number_of_stages = 10 # Total number of stages per run
+number_of_runs = 2 # Total number of independent runs
+number_of_stages = 20 # Total number of stages per run
 crisis_p = 0.0 # Per-stage probability of extrinsic death crisis
-crisis_stages = [] # Stages with guaranteed extrinsic death crisis
+crisis_stages = [] # Stages of guaranteed extrinsic death crisis
 crisis_sv = 0.05 # Fraction of crisis survivors (if applicable)
 number_of_snapshots = 16 # Number of stages at which to store output data;
                          # if integer, will take that many snapshots
@@ -26,8 +26,8 @@ res_limit = 5000 # Maximum resource value, if variable
 start_pop = 500 # Starting population size
 age_random = False # Random starting ages; else all start as new adults
 g_dist_s = 0.5 # Propoprtion of 1's in survival loci of initial genomes
-g_dist_r = 0.5 #                       reproductive loci
-g_dist_n = 0.5 #                       neutral loci
+g_dist_r = g_dist_s #                       reproductive loci
+g_dist_n = g_dist_s #                       neutral loci
 
 ## SIMULATION FUNDAMENTALS: CHANGE WITH CARE ##
 death_bound = [0.001, 0.02] # min and max death rates
@@ -42,6 +42,6 @@ n_base = 10 # Genome size (binary units per locus)
 surv_pen = True # Survival penalty under starvation
 repr_pen = False # Reproduction penalty under starvation
 death_inc = 3 # Per-stage death rate increase under starvation
-repr_dec = 3 # Per-stage reproduction rate decrease under starvation
-window_size = 10 # Size of sliding window for recording standard deviation of locus
-                 # genotypes along genomes.
+repr_dec = death_inc # Per-stage reproduction rate decrease under starvation
+window_size = 10 # Size of sliding window for recording standard deviation of
+                 # locus genotypes along genomes.
