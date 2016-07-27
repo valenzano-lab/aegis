@@ -1160,18 +1160,28 @@ class TestSimulationClass:
         os.remove("x_log.txt")
 
     def test_average_records(self, S, run_sim):
+        def comp(a, b): assert np.all(np.isclose(a, b))
+        def test_keys(n,m): # n = number of failed runs, m = prev_failed per run
+            test,ref = S.avg_record.record,[r.record.record for r in S.runs[n:]]
+            excl = ["prev_failed", "percent_dieoff", "n_runs", "n_successes"]
+            avg_keys,l = set(ref[0].keys()) - set(excl), len(S.runs)
+            for key in avg_keys:
+                comp(test[key], np.mean([r[key] for r in ref],0) )
+                comp(test[key+"_SD"], np.std([r[key] for r in ref],0) )
+            assert test["prev_failed"] == l*m
+            assert np.isclose(test["percent_dieoff"],100*(l*m+n)/(l*m+l))
+            assert test["n_runs"] == len(S.runs)
+            assert test["n_successes"] == len(S.runs)-n
         S.runs = run_sim.runs
         S.average_records()
-        sarr, rr = S.avg_record.record, [r.record.record for r in S.runs]
-        test = True
-        avg_keys = set(rr[0].keys()) - set(["prev_failed", "percent_dieoff"])
-        for key in avg_keys:
-            assert np.all(np.isclose(sarr[key],np.mean([r[key] for r in rr],0)))
-            assert np.all(np.isclose(sarr[key+"_SD"],np.std([r[key] for r in rr],0)))
-        assert sarr["prev_failed"] == np.sum([r["prev_failed"] for r in rr])
-        assert sarr["percent_dieoff"] == 100*\
-                (sarr["prev_failed"]+sum(r.dieoff for r in S.runs))/\
-                (sarr["prev_failed"]+len(S.runs))
+        test_keys(0,0)
+        S.runs[0].dieoff = True
+        S.average_records()
+        test_keys(1,0)
+        for r in S.runs:
+            r.record.record["prev_failed"] = 1
+        S.average_records()
+        test_keys(1,1)
 
     def test_logprint_sim(self, S, ran_str):
         """Test logging (and especially newline) functionality."""

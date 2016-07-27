@@ -953,14 +953,18 @@ class Simulation:
         cm = np.all(np.isclose(eq_array_0, eq_array_0[0])) and \
                 np.all(np.isclose(eq_array_1, eq_array_1[0])) and \
                 np.all(np.isclose(eq_array_2,eq_array_2[0]))
-        if cm:
+        if cm: # Test if record item dimensions are concordant
             sar = self.avg_record.record
             self.logprint("Runs are compatible; generating averaged data.")
             for key in sar.keys():
                 karray = np.array([r[key] for r in rec_list])
                 sar[key],sar[key+"_SD"] = np.mean(karray, 0),np.std(karray, 0)
             # Calculate number and % of failed runs explicitly
-            sar["prev_failed"] = np.sum([r["prev_failed"] for r in rec_list])
+            sar["n_runs"] = len(self.runs)
+            sar["n_successes"] = \
+                    sum([x.complete and not x.dieoff for x in self.runs])
+            sar["prev_failed"] = \
+                np.sum([r.record.record["prev_failed"] for r in self.runs])
             sar["percent_dieoff"] = 100*\
                     (sar["prev_failed"]+sum([x.dieoff for x in self.runs]))/\
                     (sar["prev_failed"]+len(self.runs))
