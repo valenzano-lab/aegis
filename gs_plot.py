@@ -2,42 +2,66 @@
 # TODO maybe interpolate
 # TODO update tests for fitness
 
+# Libraries and arguments
+
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 from matplotlib import ticker
-import cPickle as pickle
 import argparse, os
+try:
+       import cPickle as pickle
+except:
+       import pickle
 
 parser = argparse.ArgumentParser(description="Load record and plot\
         the simulation data.")
-parser.add_argument("dir", help="path to simulation directory")
-parser.add_argument("-out", metavar="<str>", default=".", help="path to output directory (default: cwd)")
-parser.add_argument("-f", metavar="<str>", default="run_1_rec.txt",
-        help="path to record file within dir (default: run_1_rec.txt)")
-parser.add_argument("-All", metavar="<bool>", default=False, help="toggle the All option (default: False)")
+parser.add_argument("file", help="path to file containing record data")
+parser.add_argument("-o", metavar="<str>", default="", help="path to directory\
+        in which to deposit figures (default: directory of target file)")
+parser.add_argument("-r", metavar="<int>", default=-1, help="if target file \
+        contains a simulation object with multiple runs, specify from which \
+        run to take record data (default: average of all runs)")
+#parser.add_argument("-All", metavar="<bool>", default=False, help="toggle the All option (default: False)")
 
 args = parser.parse_args()
 
-# save cwd
-if args.out==".": args.out = os.getcwd()
+# Process I/O
+def get_record(target, run=-1):
+    """Retrieve a Record object from a pickled REC or SIM file."""
+    if not os.path.isfile(target):
+        print "No such file: " + target
+        q = raw_input("Enter correct file path, or skip to abort: ")
+        if q == "": exit("Aborting.")
+        return self.get_startpop(q, run)
+    f = open(target, "rb")
+    obj = pickle.load(f)
+    if isinstance(obj, Record): return obj
+    elif isinstance(obj, Run): return obj.record
+    elif isinstance(obj, Simulation): 
+        if run == -1: return obj.avg_record # Summary record
+        else: return obj.runs[run].record # Record of specific run
+    else: 
+        x = "Inappropriate object type; cannot extract record data."
+        raise TypeError(x)
 
-# change to input dir and load the record
-os.chdir(args.dir)
-recfile = open(args.f)
+def get_outdir(outpath, target):
+    """Tests validity of output directory path and creates figure directory
+    if necessary."""
+    if outpath=="": outpath = os.path.dirname(target)
+    if not os.path.isdir(outpath):
+        print "No such directory: " + outpath
+        q = raw_input("Enter path to existing directory, or skip to abort: ")
+        if q == "": exit("Aborting.")
+        return self.get_outdir(q, target)
+    figdir = os.path.join(outpath, "figures")
+    if not os.path.isdir(figdir):
+        os.mkdir(figdir)
+    return figdir
 
-# check if dir "figures" exists in output dir and create it if not
-os.chdir(args.out)
-try: os.stat("figures")
-except: os.mkdir("figures")
+L = get_record(args.file, args.r)
+O = get_outdir(args.o, args.file)
 
-L = pickle.load(recfile) # dict
-# add data needed for plotting, not contained in record
-L["maxls"] = 71
-L["n_stages"] = len(L["population_size"])
-L["num_plots"] = len(L["snapshot_stages"])
-L["var"] = True # variable resources
-L["snapshot_stages"] = L["snapshot_stages"].astype(int) # convert to int so using as index is possible
 
 # plotting variables (not meant for UI)
 tick_size = 7
@@ -74,6 +98,7 @@ tick_size = 7
 #    "junk_product_fitness" : fitness calculated as js_i*jr_i
 #    "age_wise_fitness_contribution" : summands of fitness
 #    "junk_age_wise_fitness_contribution" : summands of junk_fitness
+#! Update this
 
 ######################
 ### PLOT FUNCTIONS ###
@@ -84,35 +109,39 @@ tick_size = 7
 # recent one, the blue line represents junk values for the most recent
 # stage, vertical line is maturation age and the green line represents
 # standard deviation
+
+def save_close(name): 
+    plt.savefig(os.path.join(O, name + ".png"))
+    plt.close()
+
 def survival(out=args.out):
     colormap = plt.cm.YlOrRd # select colormap
-    colors = [colormap(i) for i in np.linspace(0.1, 0.8, L["num_plots"])] # subset colormap
+    colors = [colormap(i) for i in np.linspace(0.1, 0.8, L["n_snapshots"])] # subset colormap
     m = L["maturity"]
     y_bound = ((1-L["d_range"])[0], (1-L["d_range"])[-1])
-    x_bound = (0, L["maxls"])
+    x_bound = (0, L["max_ls"])
 
     fig, ax = plt.subplots(2, sharex=True)
 
     # subplot 0
-    for i in range(L["num_plots"]):
+    for i in range(L["n_snapshots"]):
         ax[0].plot(1-L["death_mean"][i], color=colors[i]) # survival
     ax[0].plot((m,m),(y_bound[0],1), "k-") # maturity
-    ax[0].plot(x_bound,(1-L["junk_death"][L["num_plots"]-1],1-L["junk_death"][L["num_plots"]-1]), "b-") # junk
+    ax[0].plot(x_bound,(1-L["junk_death"][L["n_snapshots"]-1],1-L["junk_death"][L["n_snapshots"]-1]), "b-") # junk
     ax[0].set_ylim(y_bound)
     ax[0].set_xlim(x_bound)
 
     # subplot 1
-    ax[1].plot(L["death_sd"][L["num_plots"]-1], color="green") # standard deviation
+    ax[1].plot(L["death_sd"][L["n_snapshots"]-1], color="green") # standard deviation
     ax[1].plot((m,m),(0,1), "k-") # maturity
-    ax[1].set_ylim((0,max(L["death_sd"][L["num_plots"]-1])))
+    ax[1].set_ylim((0,max(L["death_sd"][L["n_snapshots"]-1])))
     # no need to set xlim because it's shared with subplot 0
 
     ax[0].set_ylabel("s", rotation="horizontal")
     ax[1].set_ylabel("s_sd", rotation="horizontal")
     ax[1].set_xlabel("age")
     fig.suptitle("Survival")
-    plt.savefig(out+"/figures/survival.png")
-    plt.close()
+    save_close("survival")
 
 # reproduction and standard deviation (2x1)
 # colors represent values for snapshot stages with red being the most
@@ -121,32 +150,31 @@ def survival(out=args.out):
 # standard deviation
 def reproduction(out=args.out):
     colormap = plt.cm.YlOrRd # select colormap
-    colors = [colormap(i) for i in np.linspace(0.1, 0.8, L["num_plots"])] # subset colormap
+    colors = [colormap(i) for i in np.linspace(0.1, 0.8, L["n_snapshots"])] # subset colormap
     m = L["maturity"]
     y_bound = ((L["r_range"])[0], (L["r_range"])[-1])
-    x_bound = (L["maturity"], L["maxls"])
+    x_bound = (L["maturity"], L["max_ls"])
 
     fig, ax = plt.subplots(2, sharex=True)
 
     # subplot 0
-    for i in range(L["num_plots"]):
+    for i in range(L["n_snapshots"]):
         ax[0].plot(L["repr_mean"][i], color=colors[i]) # reproduction
-    ax[0].plot(x_bound,(L["junk_repr"][L["num_plots"]-1],L["junk_repr"][L["num_plots"]-1]), "b-") # junk
+    ax[0].plot(x_bound,(L["junk_repr"][L["n_snapshots"]-1],L["junk_repr"][L["n_snapshots"]-1]), "b-") # junk
     ax[0].set_ylim(y_bound)
     ax[0].set_xlim(x_bound)
     #ax[0].yaxis.set_ticks(np.linspace(L["r_range"][0],L["r_range"][-1],5))
 
     # subplot 1
-    ax[1].plot(L["repr_sd"][L["num_plots"]-1], color="green") # standard deviation
-    ax[1].set_ylim((0,max(L["repr_sd"][L["num_plots"]-1])))
+    ax[1].plot(L["repr_sd"][L["n_snapshots"]-1], color="green") # standard deviation
+    ax[1].set_ylim((0,max(L["repr_sd"][L["n_snapshots"]-1])))
     # no need to set xlim because it's shared with subplot 0
 
     ax[0].set_ylabel("r", rotation="horizontal")
     ax[1].set_ylabel("r_sd", rotation="horizontal")
     ax[1].set_xlabel("age")
     fig.suptitle("Reproduction")
-    plt.savefig(out+"/figures/reproduction.png")
-    plt.close()
+    save_close("reproduction")
 
 # population (blue) and resources (red)
 # plot from stage s1 to stage s2, default: whole run
@@ -162,25 +190,22 @@ def pop_res(s1=0, s2=L["n_stages"], out=args.out):
     plt.axis([s1,s2,0,max(max(L["resources"][s1:s2+1]),max(L["population_size"][s1:s2+1]))])
     plt.xticks(np.linspace(0,s2-s1,6),map(str,(np.linspace(s1,s2,6)).astype(int)))
 
-    plt.savefig(out+"/figures/pop_res.png")
-    plt.close()
+    save_close("pop_res")
 
 # age distribution
 # colors represent values for snapshot stages with red being the most
 # recent one
 def age_distribution(out=args.out):
     colormap = plt.cm.YlOrRd # select colormap
-    colors = [colormap(i) for i in np.linspace(0.1, 0.8, L["num_plots"])] # subset colormap
+    colors = [colormap(i) for i in np.linspace(0.1, 0.8, L["n_snapshots"])] # subset colormap
 
-    for i,j in zip(L["snapshot_stages"]-1,range(L["num_plots"])):
+    for i,j in zip(L["snapshot_stages"]-1,range(L["n_snapshots"])):
         plt.plot(L["age_distribution"][i], color=colors[j])
 
     plt.title("Age distribution")
     plt.xlabel("age")
     plt.ylabel("fraction",rotation="vertical")
-
-    plt.savefig(out+"/figures/age_distribution.png")
-    plt.close()
+    save_close("age_distribution")
 
 # frequency of 1's
 # (n1 is already sorted in age-ascending order, surv preceds repr)
@@ -189,11 +214,11 @@ def age_distribution(out=args.out):
 # or just the last is plotted with the recording standard deviation
 def frequency(out=args.out, All=args.All):
     mv = (L["maturity"]*L["n_bases"], L["maturity"]*L["n_bases"]) # maturity vertical
-    rv = (L["maxls"]*L["n_bases"], L["maxls"]*L["n_bases"]) # reproduction vertical
+    rv = (L["max_ls"]*L["n_bases"], L["max_ls"]*L["n_bases"]) # reproduction vertical
 
     if All:
         fig, ax = plt.subplots(4,4,sharex="col",sharey="row")
-        ix = zip((0,0,0,0,1,1,1,1,2,2,2,2,3,3,3,3),(0,1,2,3,0,1,2,3,0,1,2,3,0,1,2,3),range(L["num_plots"])) # index for 4x4 subplots
+        ix = zip((0,0,0,0,1,1,1,1,2,2,2,2,3,3,3,3),(0,1,2,3,0,1,2,3,0,1,2,3,0,1,2,3),range(L["n_snapshots"])) # index for 4x4 subplots
 
         for i,j,k in ix:
             ax[i,j].scatter(range(L["chr_len"]),L["n1"][k],s=5,c="k",marker=".")
@@ -231,9 +256,7 @@ def frequency(out=args.out, All=args.All):
         ax[1].set_xlabel("position")
         fig.suptitle("Frequency of 1's")
 
-
-    plt.savefig(out+"/figures/frequency_1s.png")
-    plt.close()
+    save_close("frequency_1s")
 
 # age-wise frequency of 1's
 # (age_wise_n1 is already sorted in age-ascending order, surv preceds
@@ -243,11 +266,11 @@ def frequency(out=args.out, All=args.All):
 # or just the last is plotted with the recording standard deviation
 def age_wise_frequency(out=args.out, All=args.All):
     mv = (L["maturity"], L["maturity"]) # maturity vertical
-    rv = (L["maxls"], L["maxls"]) # reproduction vertical
+    rv = (L["max_ls"], L["max_ls"]) # reproduction vertical
 
     if All:
         fig, ax = plt.subplots(4,4,sharex="col",sharey="row")
-        ix = zip((0,0,0,0,1,1,1,1,2,2,2,2,3,3,3,3),(0,1,2,3,0,1,2,3,0,1,2,3,0,1,2,3),range(L["num_plots"])) # index for 4x4 subplots
+        ix = zip((0,0,0,0,1,1,1,1,2,2,2,2,3,3,3,3),(0,1,2,3,0,1,2,3,0,1,2,3,0,1,2,3),range(L["n_snapshots"])) # index for 4x4 subplots
 
         for i,j,k in ix:
             ax[i,j].scatter(range(L["chr_len"]/L["n_bases"]),L["age_wise_n1"][k],s=7,c="k",marker=".")
@@ -285,7 +308,7 @@ def age_wise_frequency(out=args.out, All=args.All):
         ax[1].set_xlabel("age")
         fig.suptitle("Age-wise frequency of 1's")
 
-    plt.savefig(out+"/figures/age_wise_frequency_1s.png")
+    save_plot("age_wise_frequency_1s")
     plt.close()
 
 # density of genotypes (age unspecific)
@@ -295,7 +318,7 @@ def age_wise_frequency(out=args.out, All=args.All):
 def density(out=args.out, All=args.All):
     if All:
         fig, ax = plt.subplots(4,4,sharex="col",sharey="row")
-        ix = zip((0,0,0,0,1,1,1,1,2,2,2,2,3,3,3,3),(0,1,2,3,0,1,2,3,0,1,2,3,0,1,2,3),range(L["num_plots"])) # index for 4x4 subplots
+        ix = zip((0,0,0,0,1,1,1,1,2,2,2,2,3,3,3,3),(0,1,2,3,0,1,2,3,0,1,2,3,0,1,2,3),range(L["n_snapshots"])) # index for 4x4 subplots
         y_bound = (0,np.around(max(np.max(L["density_surv"]),np.max(L["density_repr"])),2))
 
         for i,j,k in ix:
@@ -316,7 +339,7 @@ def density(out=args.out, All=args.All):
         plt.xlabel("genotype")
         plt.title("Genotype density")
 
-    plt.savefig(out+"/figures/density.png")
+    save_plot("density")
     plt.close()
 
 # observed death rate (calculated from population_size*age_distribution)
@@ -327,31 +350,33 @@ def observed_death_rate(out=args.out, s1=L["n_stages"]-100, s2=L["n_stages"]):
     plt.xlabel("age")
     plt.title("Observed death rate")
 
-    plt.savefig(out+"/figures/observed_death_rate.png")
+    save_plot("observed_death_rate.png")
     plt.close()
 
+
+def set_axis_labels(ax, ylab, xlab, xticks):
+    ax.set_ylabel(ylab, rotation="horizontal")
+    ax.set_xlabel(xlab)
+    if xticks != "": ax.set_xticklabels(xticks)
+    return ax
 # entropy (shannon diversity index)
-def shannon_diversity(out=args.out):
+def shannon_diversity():
+    """Plot Shannon entropy of population gene pool per snapshot."""
     fig,ax = plt.subplots()
     ax.plot(L["entropy"], "o-")
-    ax.set_ylabel("H", rotation="horizontal")
-    ax.set_xlabel("stage")
-    ax.set_xticklabels(L["snapshot_stages"][::2])
+    ax = set_axis_labels("H", "stage", L["snapshot_stages"][::2])
     plt.title("Shannon diversity index")
 
-    plt.savefig(out+"/figures/shannon_diversity.png")
+    title_save_close("Shannon diversity intex","shannon_diversity")
     plt.close()
 
-# fitness (value per snapshot)
-def fitness(out=args.out):
+def fitness():
+    """Plot population genomic fitness per snapshot."""
     fig,ax = plt.subplots()
     ax.plot(L["fitness"], "o-")
-    ax.set_ylabel("F", rotation="horizontal")
-    ax.set_xlabel("stage")
-    ax.set_xticklabels(L["snapshot_stages"][::2])
+    ax = set_axis_labels("F", "stage", L["snapshot_stages"][::2])
     plt.title("Fitness")
-
-    plt.savefig(out+"/figures/fitness.png")
+    save_plot("fitness")
     plt.close()
 
 # product fitness
@@ -360,11 +385,11 @@ def fitness(out=args.out):
 def product_fitness(out=args.out, All=args.All):
     if All:
         fig, ax = plt.subplots(4,4,sharex="col",sharey="row")
-        ix = zip((0,0,0,0,1,1,1,1,2,2,2,2,3,3,3,3),(0,1,2,3,0,1,2,3,0,1,2,3,0,1,2,3),range(L["num_plots"])) # index for 4x4 subplots
+        ix = zip((0,0,0,0,1,1,1,1,2,2,2,2,3,3,3,3),(0,1,2,3,0,1,2,3,0,1,2,3,0,1,2,3),range(L["n_snapshots"])) # index for 4x4 subplots
 
         for i,j,k in ix:
             ax[i,j].plot(L["product_fitness"][k])
-            ax[i,j].set_xlim((L["maturity"],L["maxls"]-1))
+            ax[i,j].set_xlim((L["maturity"],L["max_ls"]-1))
             ax[i,j].yaxis.set_major_locator(ticker.MaxNLocator(5)) # set tick number to 5
             ax[i,j].tick_params(axis="both",labelsize=7)
         fig.text(0.01,0.52,"$prod \\ F_{age}$",rotation="horizontal",fontsize=12)
@@ -376,7 +401,7 @@ def product_fitness(out=args.out, All=args.All):
 
         l1 = ax.plot(L["product_fitness"][-1])
         l2 = ax.plot(L["junk_product_fitness"][-1], "g-")
-        ax.set_xlim((L["maturity"],L["maxls"]-1))
+        ax.set_xlim((L["maturity"],L["max_ls"]-1))
 
         blue_proxy = mpatches.Patch(color="blue", label="product $F_{age})$")
         green_proxy = mpatches.Patch(color="green", label="junk product $F_{age}$")
@@ -394,11 +419,11 @@ def product_fitness(out=args.out, All=args.All):
 def age_wise_fitness_contribution(out=args.out, All=args.All):
     if All:
         fig, ax = plt.subplots(4,4,sharex="col",sharey="row")
-        ix = zip((0,0,0,0,1,1,1,1,2,2,2,2,3,3,3,3),(0,1,2,3,0,1,2,3,0,1,2,3,0,1,2,3),range(L["num_plots"])) # index for 4x4 subplots
+        ix = zip((0,0,0,0,1,1,1,1,2,2,2,2,3,3,3,3),(0,1,2,3,0,1,2,3,0,1,2,3,0,1,2,3),range(L["n_snapshots"])) # index for 4x4 subplots
 
         for i,j,k in ix:
             ax[i,j].plot(np.log(L["age_wise_fitness_contribution"][k]))
-            ax[i,j].set_xlim((L["maturity"],L["maxls"]-1))
+            ax[i,j].set_xlim((L["maturity"],L["max_ls"]-1))
             ax[i,j].yaxis.set_major_locator(ticker.MaxNLocator(5)) # set tick number to 5
             ax[i,j].tick_params(axis="both",labelsize=7)
         fig.text(0.01,0.52,"$log(F_{age})$",rotation="horizontal",fontsize=12)
@@ -410,7 +435,7 @@ def age_wise_fitness_contribution(out=args.out, All=args.All):
 
         l1 = ax.plot(np.log(L["age_wise_fitness_contribution"][-1]))
         l2 = ax.plot(np.log(L["junk_age_wise_fitness_contribution"][-1]), "g-")
-        ax.set_xlim((L["maturity"],L["maxls"]-1))
+        ax.set_xlim((L["maturity"],L["max_ls"]-1))
 
         blue_proxy = mpatches.Patch(color="blue", label="$log(F_{age})$")
         green_proxy = mpatches.Patch(color="green", label="junk $log(F_{age})$")

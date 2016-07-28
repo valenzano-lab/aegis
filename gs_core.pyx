@@ -161,7 +161,7 @@ class Config:
             self.number_of_snapshots = int(\
                     self.number_of_snapshots*self.number_of_stages)
         self.snapshot_stages = np.around(np.linspace(0,
-            self.number_of_stages-1,self.number_of_snapshots),0)
+            self.number_of_stages-1,self.number_of_snapshots),0).astype(int)
         # Dictionary for population initialisation
         self.params = {"sexual":self.sexual, 
                 "chr_len":self.chr_len, "n_base":self.n_base,
@@ -421,32 +421,32 @@ cdef class Population:
 
 class Record:
     """An enhanced dictionary object recording simulation data."""
-
-    def __init__(self, population, snapshot_stages, n_stages, d_range,
-            r_range, window_size):
-        """ Create a new dictionary object for recording output data."""
-        m = len(snapshot_stages)
-        array1 = np.zeros([m,population.maxls])
-        array2 = np.zeros([m,2*population.nbase+1])
+    def __init__(self, conf):
+        m = len(conf.snapshot_stages)
+        array1 = np.zeros([m,conf.max_ls])
+        array2 = np.zeros([m,2*conf.n_base+1])
         array3 = np.zeros(m)
-        array4 = np.zeros(n_stages)
+        array4 = np.zeros(conf.number_of_stages)
         self.record = {
             # Population parameters:
-            "genmap":population.genmap,
-            "chr_len":np.array([population.chrlen]),
-            "n_bases":np.array([population.nbase]),
-            "max_ls":np.array([population.maxls]),
-            "maturity":np.array([population.maturity]),
-            # Death and reproduction chance ranges:
-            "d_range":d_range,
-            "r_range":r_range,
-            "snapshot_stages":snapshot_stages,
+            "genmap":conf.genmap,
+            "chr_len":np.array([conf.chr_len]),
+            "n_bases":np.array([conf.n_base]),
+            "max_ls":np.array([conf.max_ls]),
+            "maturity":np.array([conf.maturity]),
+            # Run parameters:
+            "d_range":conf.d_range,
+            "r_range":conf.r_range,
+            "snapshot_stages":conf.snapshot_stages,
+            "n_snapshots":conf.number_of_snapshots,
+            "n_stages":conf.number_of_stages,
+            "res_var":conf.res_var,
             # Per-stage data:
             "population_size":np.copy(array4),
             "resources":np.copy(array4),
             "surv_penf":np.copy(array4),
             "repr_penf":np.copy(array4),
-            "age_distribution":np.zeros([n_stages,population.maxls]),
+            "age_distribution":np.zeros([conf.number_of_stages,conf.max_ls]),
             # Per-age data:
             "death_mean":np.copy(array1),
             "death_sd":np.copy(array1),
@@ -459,9 +459,9 @@ class Record:
             # Genotype data:
             "density_surv":np.copy(array2),
             "density_repr":np.copy(array2),
-            "n1":np.zeros([m,population.chrlen]),
-            "n1_std":np.zeros([m,population.chrlen]),
-            "s1":np.zeros([m,population.chrlen-window_size+1]),
+            "n1":np.zeros([m,conf.chr_len]),
+            "n1_std":np.zeros([m,conf.chr_len]),
+            "s1":np.zeros([m,conf.chr_len-conf.window_size+1]),
             # Simple per-snapshot data:
             "entropy":np.copy(array3),
             "junk_death":np.copy(array3),
@@ -666,16 +666,16 @@ class Run:
     """An object representing a single run of a simulation."""
     def __init__(self, config, startpop, n_run, report_n, verbose):
         self.log = ""
-        self.conf = config
+        self.conf = copy.deepcopy(config)
         self.surv_penf = 1.0
         self.repr_penf = 1.0
         self.resources = self.conf.res_start
-        self.genmap = np.copy(self.conf.genmap)
-        np.random.shuffle(self.genmap)
+        np.random.shuffle(self.conf.genmap)
+        self.genmap = self.conf.genmap # Not a copy
         if startpop != "":
             self.population = startpop.clone()
             # Adopt from population: genmap, nbase, chrlen
-            self.genmap = self.population.genmap
+            self.conf.genmap = self.population.genmap
             self.conf.chr_len = self.population.chrlen
             self.conf.n_base = self.population.nbase
             # Keep new max_ls, maturity, sexual
@@ -688,14 +688,12 @@ class Run:
                     "age_random":self.conf.age_random, 
                     "start_pop":self.conf.start_pop, "g_dist":self.conf.g_dist}
         else:
-            self.population = Outpop(Population(self.conf.params, self.genmap,
-                    np.array([-1]), np.array([[-1],[-1]])))
+            self.population = Outpop(Population(self.conf.params, 
+                self.conf.genmap, np.array([-1]), np.array([[-1],[-1]])))
         self.n_stage = 0
         self.n_snap = 0
         self.n_run = n_run
-        self.record = Record(self.population, self.conf.snapshot_stages,
-                self.conf.number_of_stages, self.conf.d_range, 
-                self.conf.r_range, self.conf.window_size)
+        self.record = Record(self.conf)
         self.dieoff = False
         self.complete = False
         self.report_n = report_n
@@ -818,11 +816,11 @@ class Simulation:
         self.verbose = verbose
         self.logprint("Initialising runs...")
         if len(self.startpop) == 1:
-            self.runs = [Run(copy.deepcopy(self.conf), self.startpop[0],
+            self.runs = [Run(self.conf, self.startpop[0],
                 n, self.report_n, self.verbose) \
                 for n in xrange(self.conf.number_of_runs)]
         else:
-            self.runs = [Run(copy.deepcopy(self.conf), self.startpop[n],
+            self.runs = [Run(self.conf, self.startpop[n],
                 n, self.report_n, self.verbose) \
                 for n in xrange(self.conf.number_of_runs)]
         self.logprint("Runs initialised. Executing...\n")
@@ -938,7 +936,7 @@ class Simulation:
         self.log += message+"\n"
 
     def average_records(self):
-        self.avg_record = copy.deepcopy(self.runs[0].record)
+        self.avg_record = Record(self.conf)
         if len(self.runs) == 1: return
         rec_list = [x.record for x in self.runs if x.complete and not x.dieoff]
         rec_list = [r.record for r in rec_list] # Get record dicts
@@ -954,9 +952,9 @@ class Simulation:
                 np.all(np.isclose(eq_array_1, eq_array_1[0])) and \
                 np.all(np.isclose(eq_array_2,eq_array_2[0]))
         if cm: # Test if record item dimensions are concordant
-            sar = self.avg_record.record
+            sar,rr = self.avg_record.record, rec_list[0].keys()
             self.logprint("Runs are compatible; generating averaged data.")
-            for key in sar.keys():
+            for key in rr:
                 karray = np.array([r[key] for r in rec_list])
                 sar[key],sar[key+"_SD"] = np.mean(karray, 0),np.std(karray, 0)
             # Calculate number and % of failed runs explicitly

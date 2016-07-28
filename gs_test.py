@@ -78,12 +78,12 @@ def pop1(request, spop):
     return pop
 
 @pytest.fixture()
-def record(request,pop1,conf):
+def record(request,conf):
     """Create a record from pop1 as defined in configuration file."""
-    spaces = 2 * pop1.nbase + 1
-    rec = Record(pop1, conf.snapshot_stages, conf.number_of_stages,
-            np.linspace(1,0,spaces), np.linspace(0,1,spaces),
-            conf.window_size)
+    spaces = 2 * conf.n_base + 1
+    c = copy.deepcopy(conf)
+    c.d_range,c.r_range = np.linspace(1,0,spaces),np.linspace(0,1,spaces)
+    rec = Record(c)
     return rec
 
 @pytest.fixture()
@@ -559,7 +559,7 @@ class TestRecordClass:
 
     # Initialisation
 
-    def test_init_record(self, record, conf, pop1):
+    def test_init_record(self, record, conf):
         r = record.record
         n = conf.number_of_snapshots
         m = conf.number_of_stages
@@ -570,28 +570,28 @@ class TestRecordClass:
             for x in keys:
                 assert r[x].shape == ref
                 assert np.all(r[x] == 0)
-        assert (r["genmap"] == pop1.genmap).all()
-        assert (r["chr_len"] == np.array([pop1.chrlen])).all()
-        assert (r["n_bases"] == np.array([pop1.nbase])).all()
-        assert (r["max_ls"] == np.array([pop1.maxls])).all()
-        assert (r["maturity"] == np.array([pop1.maturity])).all()
-        assert (r["d_range"] == np.linspace(1,0,2*pop1.nbase+1)).all()
-        assert (r["r_range"] == np.linspace(0,1,2*pop1.nbase+1)).all()
+        assert (r["genmap"] == conf.genmap).all()
+        assert (r["chr_len"] == np.array([conf.chr_len])).all()
+        assert (r["n_bases"] == np.array([conf.n_base])).all()
+        assert (r["max_ls"] == np.array([conf.max_ls])).all()
+        assert (r["maturity"] == np.array([conf.maturity])).all()
+        assert (r["d_range"] == np.linspace(1,0,2*conf.n_base+1)).all()
+        assert (r["r_range"] == np.linspace(0,1,2*conf.n_base+1)).all()
         assert (r["snapshot_stages"] == conf.snapshot_stages).all()
         assert_sameshape(["death_mean", "death_sd", "repr_mean",
                     "repr_sd", "age_wise_fitness_product",
                     "junk_age_wise_fitness_product",
                     "age_wise_fitness_contribution",
-                    "junk_age_wise_fitness_contribution"], (n,pop1.maxls))
+                    "junk_age_wise_fitness_contribution"], (n,conf.max_ls))
         assert_sameshape(["density_surv", "density_repr"],
-                    (n,2*pop1.nbase+1))
+                    (n,2*conf.n_base+1))
         assert_sameshape(["entropy","junk_death","junk_repr","junk_fitness",
                     "fitness"], (n,))
         assert_sameshape(["population_size", "resources", "surv_penf",
                     "repr_penf"], (m,))
-        assert_sameshape(["age_distribution"],(m,pop1.maxls))
-        assert_sameshape(["n1", "n1_std"], (n,pop1.chrlen))
-        assert_sameshape(["s1"], (n, pop1.chrlen - w + 1))
+        assert_sameshape(["age_distribution"],(m,conf.max_ls))
+        assert_sameshape(["n1", "n1_std"], (n,conf.chr_len))
+        assert_sameshape(["s1"], (n, conf.chr_len - w + 1))
 
     # Per-stage updating
 
@@ -1054,12 +1054,13 @@ class TestSimulationClass:
             ("run_sim",1,True)])
     def test_init_sim(self, S, run_sim, seed, report_n, verbose):
         if seed == "run_sim": seed = run_sim
+        S1 = copy.deepcopy(S)
         T = Simulation("config_test", seed, -1, report_n, verbose)
         if seed == "":
             assert T.startpop == [""]
         else: 
-            S.get_startpop(seed, -1)
-            s = S.startpop
+            S1.get_startpop(seed, -1)
+            s = S1.startpop
             for n in xrange(len(T.startpop)):
                 assert np.all(T.startpop[n].genomes == s[n].genomes)
                 assert np.all(T.startpop[n].ages == s[n].ages)
@@ -1074,12 +1075,13 @@ class TestSimulationClass:
             assert r.report_n == T.report_n
             assert r.verbose == T.verbose
             if seed == "":
-                for k in r.conf.__dict__.keys():
-                    test = r.conf.__dict__[k] == T.conf.__dict__[k]
-                    if isinstance(r.conf.__dict__[k], np.ndarray):
-                        assert np.all(test)
-                    else:
-                        assert test
+                for k in set(r.conf.__dict__.keys()):
+                    print k
+                    rck = r.conf.__dict__[k]
+                    if k == "genmap": rck = np.sort(rck)
+                    test = rck == T.conf.__dict__[k]
+                    if isinstance(rck, np.ndarray): test = np.all(test)
+                    assert test
             if seed != "":
                 s = T.startpop[0] if len(T.startpop) == 1 else T.startpop[n]
                 assert np.all(r.population.genomes == s.genomes)
@@ -1090,20 +1092,23 @@ class TestSimulationClass:
 
     def test_execute(self, S):
         """Quickly test that execute runs execute_run for every run."""
-        S.execute()
-        for r in S.runs:
+        S1 = copy.deepcopy(S)
+        S1.execute()
+        for r in S1.runs:
             assert r.complete
 
     def test_get_conf_bad(self, S, ran_str):
         """Verify that fn.get_conf throws an error when the target file
         does not exist."""
-        with pytest.raises(IOError) as e_info: S.get_conf(ran_str)
+        S1 = copy.deepcopy(S)
+        with pytest.raises(IOError) as e_info: S1.get_conf(ran_str)
 
     def test_get_conf_good(self, S):
         """Test that get_conf on the config template file returns a valid
         object of the expected composition."""
-        S.get_conf("config_test")
-        c = S.conf
+        S1 = copy.deepcopy(S)
+        S1.get_conf("config_test")
+        c = S1.conf
         def assert_alltype(keys,typ):
             for x in keys:
                 assert isinstance(c.__dict__[x], typ)
@@ -1121,36 +1126,39 @@ class TestSimulationClass:
     def test_get_startpop_good(self, S, run_sim):
         """Test that a blank seed returns a list containing a blank string and i
         a valid seed returns a list of populations of the correct size."""
-        S.get_startpop("")
-        assert S.startpop == [""]
+        S1 = copy.deepcopy(S)
+        S1.get_startpop("")
+        assert S1.startpop == [""]
         px = run_sim
-        S.get_startpop("sample_output.sim", 0)
-        assert len(S.startpop) == 1
-        assert S.startpop[0].genomes.shape==px.runs[0].population.genomes.shape
-        S.get_startpop("sample_output.sim", -1)
-        assert len(S.startpop) == len(px.runs)
+        S1.get_startpop("sample_output.sim", 0)
+        assert len(S1.startpop) == 1
+        assert S1.startpop[0].genomes.shape==px.runs[0].population.genomes.shape
+        S1.get_startpop("sample_output.sim", -1)
+        assert len(S1.startpop) == len(px.runs)
         for n in range(len(px.runs)):
-            assert S.startpop[n].genomes.shape == \
+            assert S1.startpop[n].genomes.shape == \
                     px.runs[n].population.genomes.shape
-        S.get_startpop(px, 0)
-        assert len(S.startpop) == 1
-        assert S.startpop[0].genomes.shape==px.runs[0].population.genomes.shape
+        S1.get_startpop(px, 0)
+        assert len(S1.startpop) == 1
+        assert S1.startpop[0].genomes.shape==px.runs[0].population.genomes.shape
 
 
     def test_get_startpop_bad(self, S, ran_str):
         """Verify that fn.get_startpop throws an error when the target
         file does not exist."""
-        with pytest.raises(IOError) as e_info: S.get_startpop(ran_str)
+        S1 = copy.deepcopy(S)
+        with pytest.raises(IOError) as e_info: S1.get_startpop(ran_str)
 
     def test_finalise(self, S, run_sim):
         """Test that the simulation correctly creates output files."""
-        S.log = ""
-        S.runs = run_sim.runs
-        assert not hasattr(S,"avg_record")
-        print [(r.complete, r.dieoff) for r in S.runs]
-        S.finalise("x_output", "x_log")
-        assert isinstance(S.avg_record, Record)
-        for r in S.runs:
+        S1 = copy.deepcopy(S)
+        S1.log = ""
+        S1.runs = run_sim.runs
+        assert not hasattr(S1,"avg_record")
+        print [(r.complete, r.dieoff) for r in S1.runs]
+        S1.finalise("x_output", "x_log")
+        assert isinstance(S1.avg_record, Record)
+        for r in S1.runs:
             assert isinstance(r.population, Outpop)
         assert os.stat("x_output.sim").st_size > 0
         assert os.stat("x_output.rec").st_size > 0
@@ -1160,34 +1168,40 @@ class TestSimulationClass:
         os.remove("x_log.txt")
 
     def test_average_records(self, S, run_sim):
+        S1 = copy.deepcopy(S)
+        S1.runs = run_sim.runs
+        S1.average_records()
         def comp(a, b): assert np.all(np.isclose(a, b))
         def test_keys(n,m): # n = number of failed runs, m = prev_failed per run
-            test,ref = S.avg_record.record,[r.record.record for r in S.runs[n:]]
+            test,ref = S1.avg_record.record,[r.record.record for r in S1.runs[n:]]
             excl = ["prev_failed", "percent_dieoff", "n_runs", "n_successes"]
-            avg_keys,l = set(ref[0].keys()) - set(excl), len(S.runs)
+            avg_keys,l = set(ref[0].keys()) - set(excl), len(S1.runs)
+            print sorted(test.keys())
+            print sorted(ref[0].keys())
+            print sorted(list(avg_keys))
             for key in avg_keys:
                 comp(test[key], np.mean([r[key] for r in ref],0) )
                 comp(test[key+"_SD"], np.std([r[key] for r in ref],0) )
             assert test["prev_failed"] == l*m
             assert np.isclose(test["percent_dieoff"],100*(l*m+n)/(l*m+l))
-            assert test["n_runs"] == len(S.runs)
-            assert test["n_successes"] == len(S.runs)-n
-        S.runs = run_sim.runs
-        S.average_records()
+            assert test["n_runs"] == l
+            assert test["n_successes"] == l-n
+        S1.average_records()
         test_keys(0,0)
-        S.runs[0].dieoff = True
-        S.average_records()
+        S1.runs[0].dieoff = True
+        S1.average_records()
         test_keys(1,0)
-        for r in S.runs:
+        for r in S1.runs:
             r.record.record["prev_failed"] = 1
-        S.average_records()
+        S1.average_records()
         test_keys(1,1)
 
     def test_logprint_sim(self, S, ran_str):
         """Test logging (and especially newline) functionality."""
-        S.log = ""
-        S.logprint(ran_str)
-        assert S.log == ran_str + "\n"
+        S1 = copy.deepcopy(S)
+        S1.log = ""
+        S1.logprint(ran_str)
+        assert S1.log == ran_str + "\n"
 
 def test_post_cleanup():
     """Kill tempfiles made for test. Not really a test at all."""
