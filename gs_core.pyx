@@ -434,6 +434,7 @@ class Record:
             "n_bases":np.array([conf.n_base]),
             "max_ls":np.array([conf.max_ls]),
             "maturity":np.array([conf.maturity]),
+            "sexual":conf.sexual,
             # Run parameters:
             "d_range":conf.d_range,
             "r_range":conf.r_range,
@@ -634,29 +635,27 @@ class Record:
         a_strd = r["n1"].strides + (r["n1"].strides[s],) # strides
         r["s1"] = np.std(np.lib.stride_tricks.as_strided(
             r["n1"], shape=a_shape, strides=a_strd), 2)
-        # normalise survival and reproduction probabilities (0 to 1)
-        def normalise(meanvar, rangevar):
-            if np.ptp(rangevar) == 0: 
-                f = np.zeros if np.max(meanvar) == 0 else np.ones
-                return f(meanvar.shape)
-            return meanvar - np.max(rangevar) * 1.0/np.ptp(rangevar) + 1
-        norm_surv = normalise(1-r["death_mean"], 1-r["d_range"])
-        norm_repr = normalise(r["repr_mean"], r["r_range"])
-        norm_repr[:,:r["maturity"]] = 0 # (repr before maturity = 0)
         # Calculate fitness measures
+        norm_surv,norm_repr = 1-r["death_mean"],r["repr_mean"]
+        norm_repr[:,:r["maturity"]] = 0 # (repr before maturity = 0)
         r["age_wise_fitness_product"] = norm_surv * norm_repr
         r["age_wise_fitness_contribution"] = np.cumprod(norm_surv,1)*norm_repr
         r["fitness"] = np.sum(r["age_wise_fitness_contribution"],1)
         # Junk fitness
         def jtile(x): return np.tile(x.reshape(x.shape[0],1),r["max_ls"])
-        # (tile to shape (n_snap,maxls))
-        junk_surv_n = jtile(normalise(1-r["junk_death"], 1-r["d_range"]))
-        junk_repr_n = jtile(normalise(r["junk_repr"], r["r_range"]))
+        # (tile to shape (n_snap,maxls) - IMPORTANT)
+        junk_surv_n,junk_repr_n = jtile(1-r["junk_death"]),jtile(r["junk_repr"])
         junk_repr_n[:,:r["maturity"]] = 0 # (repr before maturity = 0)
         r["junk_age_wise_fitness_product"] = junk_surv_n * junk_repr_n
         r["junk_age_wise_fitness_contribution"] = \
                 np.cumprod(junk_surv_n,1)*junk_repr_n
         r["junk_fitness"] = np.sum(r["junk_age_wise_fitness_contribution"],1)
+        # Halve fitness values for sexual populations
+        if r["sexual"]:
+            for k in ["age_wise_fitness_product","age_wise_fitness_contribution",
+                    "fitness","junk_age_wise_fitness_product","junk_fitness",
+                    "junk_age_wise_fitness_contribution"]:
+                r[k] /= 2.0
         # Other stats
         self.record["actual_death_rate"] = self.actual_death_rate()
         self.record["age_wise_n1"] = self.age_wise_n1("n1")
@@ -957,6 +956,11 @@ class Simulation:
             for key in rr:
                 karray = np.array([r[key] for r in rec_list])
                 sar[key],sar[key+"_SD"] = np.mean(karray, 0),np.std(karray, 0)
+                if isinstance(sar[key],np.ndarray):
+                    if np.all(np.isclose(sar[key], sar[key].astype(int))):
+                            sar[key] = sar[key].astype(int)
+                elif sar[key] == int(sar[key]):
+                    sar[key] = int(sar[key])
             # Calculate number and % of failed runs explicitly
             sar["n_runs"] = len(self.runs)
             sar["n_successes"] = \

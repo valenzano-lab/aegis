@@ -149,7 +149,7 @@ class TestFunctionsConfig:
     def test_chance_degenerate(self, p):
         """Tests wether p=1 returns True/1 and p=0 returns False/0."""
         shape=(1000,1000)
-        assert (chance(p, shape).astype(int) == p).all()
+        assert np.all(chance(p, shape).astype(int) == p)
 
     @pytest.mark.parametrize("p", [0.2, 0.5, 0.8])
     def test_chance(self, p):
@@ -211,13 +211,13 @@ class TestFunctionsConfig:
                 c.n_neutral
         assert c.chr_len == len(c.genmap) * c.n_base
         assert c.repr_bound[1]/crb1 == 2 if sexvar else 1
-        assert (c.d_range == np.linspace(c.death_bound[1], 
-            c.death_bound[0],2*c.n_base+1)).all()
-        assert (c.r_range == np.linspace(c.repr_bound[0], 
-            c.repr_bound[1],2*c.n_base+1)).all()
+        assert np.array_equal(c.d_range, np.linspace(c.death_bound[1], 
+            c.death_bound[0],2*c.n_base+1))
+        assert np.array_equal(c.r_range, np.linspace(c.repr_bound[0], 
+            c.repr_bound[1],2*c.n_base+1))
         assert len(c.snapshot_stages) == c.number_of_snapshots if \
                 type(nsnap) is int else int(nsnap * c.number_of_stages)
-        assert np.all(c.snapshot_stages == np.around(np.linspace(
+        assert np.array_equal(c.snapshot_stages,np.around(np.linspace(
             0, c.number_of_stages-1, c.number_of_snapshots), 0))
         assert c.params["sexual"] == sexvar
         assert c.params["chr_len"] == c.chr_len
@@ -257,10 +257,10 @@ class TestPopulationClass:
         assert pop_a.maxls == pop_b.maxls == conf.params["max_ls"]
         assert pop_a.maturity==pop_b.maturity == conf.params["maturity"]
         assert pop_a.N == pop_b.N == conf.params["start_pop"]
-        assert (pop_a.genmap == conf.genmap).all()
-        assert (pop_b.genmap == conf.genmap).all()
-        assert (pop_a.ages == pop_a.maturity).all()
-        assert not (pop_b.ages == pop_b.maturity).all()
+        assert np.array_equal(pop_a.genmap, conf.genmap)
+        assert np.array_equal(pop_b.genmap, conf.genmap)
+        assert np.all(pop_a.ages == pop_a.maturity)
+        assert not np.all(pop_b.ages == pop_b.maturity)
         assert abs(np.mean(pop_b.ages)-pop_b.maxls/2) < precision
 
     # Genome array
@@ -307,11 +307,11 @@ class TestPopulationClass:
         P2 = P.clone() # clone tested separately
         P2.shuffle()
         is_shuffled = \
-                not (P.genomes == P2.genomes).all()
+                not np.array_equal(P.genomes, P2.genomes)
         P.ages.sort()
         P2.ages.sort()
         assert is_shuffled
-        assert (P.ages == P2.ages).all()
+        assert np.array_equal(P.ages, P2.ages)
 
     def test_clone(self, P):
         """Test if cloned population is identical to parent population,
@@ -747,6 +747,7 @@ class TestRecordClass:
         # Predicted actual death rate:
         pad = np.append(np.ones(r["maturity"]-1), np.array([1-pop1.N]))
         pad = np.append(pad, np.ones(r["max_ls"] - len(pad)))
+        # All fitness terms should be positive
         assert (r["age_wise_fitness_contribution"] == pf).all()
         assert (r["junk_age_wise_fitness_contribution"] == pf).all()
         assert (r["age_wise_fitness_product"] == pf).all()
@@ -762,24 +763,32 @@ class TestRecordClass:
         """Test whether fitness is calculated correctly for various cases."""
         rec, p = copy.deepcopy(run.record), copy.deepcopy(run.population)
         r,s,t = rec.record,run.conf.number_of_snapshots,run.conf.number_of_stages
+        r["sexual"] = False
         r["d_range"], r["r_range"] = [np.linspace(1,0,2*p.nbase+1)]*2
         for n in range(s):
             rec.update(p, 100, 1, 1, 0, n, True)
         for m in range(t):
             rec.update(p, 100, 1, 1, m, 0, False)
+        rec1 = copy.deepcopy(rec); r1 = rec1.record; r1["sexual"]= True
         def gen_death(x): return np.tile(x, (p.N, p.maxls))
         def gen_repr(x): return np.hstack([np.zeros((p.N, p.maturity)),
             np.tile(x, (p.N, p.maxls-p.maturity))])
         def set_means_and_calc(x, y):
             r["death_mean"],r["repr_mean"] = gen_death(x), gen_repr(y)
+            r1["death_mean"],r1["repr_mean"] = gen_death(x), gen_repr(y)
             rec.final_update(100)
+            rec1.final_update(100)
         def assert_fitnesses(a, b):
             fc,fp = "age_wise_fitness_contribution","age_wise_fitness_product"
-            assert np.all(r["fitness"] == np.sum(r[fc],1))
+            assert np.array_equal(r["fitness"], np.sum(r[fc],1))
             assert np.all(r[fp][:,:p.maturity]==0)
             assert np.all(r[fc][:,:p.maturity]==0)
             assert np.all(np.isclose(r[fp][:,p.maturity:],a))
             assert np.all(np.isclose(r[fc][:,p.maturity:],b))
+            for k in ["fitness", "age_wise_fitness_product",
+                    "age_wise_fitness_contribution"]:
+                assert np.all(r[k] >= 0)
+                assert np.all(np.isclose(r[k]/2.0, r1[k]))
         # Certain reproduction, impossible death
         set_means_and_calc(0.0, 1.0)
         assert_fitnesses(1.0, 1.0)
@@ -805,26 +814,33 @@ class TestRecordClass:
         """Same as test_fitness_calc, but for junk fitness."""
         rec, p = copy.deepcopy(run.record), copy.deepcopy(run.population)
         r,s,t = rec.record,run.conf.number_of_snapshots,run.conf.number_of_stages
-        print r["junk_death"].shape,r["junk_repr"].shape
+        r["sexual"] = False
         r["d_range"], r["r_range"] = [np.linspace(1,0,2*p.nbase+1)]*2
         for n in range(s):
             rec.update(p, 100, 1, 1, 0, n, True)
         for m in range(t):
             rec.update(p, 100, 1, 1, m, 0, False)
+        rec1 = copy.deepcopy(rec); r1 = rec1.record; r1["sexual"]= True
         def gen_death(x): return np.tile(x, r["junk_death"].shape)
         def gen_repr(x): return np.tile(x, r["junk_repr"].shape)
         def set_means_and_calc(x, y):
             r["junk_death"],r["junk_repr"] = gen_death(x), gen_repr(y)
-            print r["junk_death"].shape,r["junk_repr"].shape
+            r1["junk_death"],r1["junk_repr"] = gen_death(x), gen_repr(y)
             rec.final_update(100)
+            rec1.final_update(100)
         def assert_fitnesses(a, b):
             fc = "junk_age_wise_fitness_contribution"
             fp = "junk_age_wise_fitness_product"
-            assert np.all(r["junk_fitness"] == np.sum(r[fc],1))
+            assert np.array_equal(r["junk_fitness"], np.sum(r[fc],1))
             assert np.all(r[fp][:,:p.maturity]==0)
             assert np.all(r[fc][:,:p.maturity]==0)
             assert np.all(np.isclose(r[fp][:,p.maturity:],a))
             assert np.all(np.isclose(r[fc][:,p.maturity:],b))
+            for k in ["junk_fitness", "junk_age_wise_fitness_product",
+                    "junk_age_wise_fitness_contribution"]:
+                print k
+                assert np.all(r[k] >= 0)
+                assert np.all(np.isclose(r[k]/2.0, r1[k]))
         # Certain reproduction, impossible death
         set_means_and_calc(0.0, 1.0)
         assert_fitnesses(1.0, 1.0)
@@ -1003,7 +1019,8 @@ class TestRunClass:
         # record
         def assert_allequal(keys,test):
             for x in keys:
-                if isinstance(r[x][0],np.ndarray): assert np.all(r[x][0]==test)
+                if isinstance(r[x][0],np.ndarray): 
+                    assert np.array_equal(r[x][0],test)
                 else: assert r[x][0] == test
         assert_allequal(["surv_penf"], run.surv_penf)
         assert_allequal(["repr_penf"], run.repr_penf)
@@ -1062,11 +1079,11 @@ class TestSimulationClass:
             S1.get_startpop(seed, -1)
             s = S1.startpop
             for n in xrange(len(T.startpop)):
-                assert np.all(T.startpop[n].genomes == s[n].genomes)
-                assert np.all(T.startpop[n].ages == s[n].ages)
-                assert T.startpop[n].chrlen == s[n].chrlen
-                assert T.startpop[n].nbase == s[n].nbase
-                assert np.all(T.startpop[n].genmap == s[n].genmap)
+                assert np.array_equal(T.startpop[n].genomes, s[n].genomes)
+                assert np.array_equal(T.startpop[n].ages, s[n].ages)
+                assert np.array_equal(T.startpop[n].chrlen, s[n].chrlen)
+                assert np.array_equal(T.startpop[n].nbase, s[n].nbase)
+                assert np.array_equal(T.startpop[n].genmap, s[n].genmap)
         assert T.report_n == report_n
         assert T.verbose == verbose
         assert len(T.runs) == T.conf.number_of_runs
@@ -1084,11 +1101,11 @@ class TestSimulationClass:
                     assert test
             if seed != "":
                 s = T.startpop[0] if len(T.startpop) == 1 else T.startpop[n]
-                assert np.all(r.population.genomes == s.genomes)
-                assert np.all(r.population.ages == s.ages)
+                assert np.array_equal(r.population.genomes, s.genomes)
+                assert np.array_equal(r.population.ages, s.ages)
                 assert r.population.chrlen == s.chrlen
                 assert r.population.nbase == s.nbase
-                assert np.all(r.population.genmap == s.genmap)
+                assert np.array_equal(r.population.genmap, s.genmap)
 
     def test_execute(self, S):
         """Quickly test that execute runs execute_run for every run."""
