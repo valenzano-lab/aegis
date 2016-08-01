@@ -26,8 +26,8 @@ parser.add_argument('-m', type=int, metavar="<int>", default=10,
 parser.add_argument('-c', metavar='<str>', default="config",
         help="name of configuration file within simulation directory \
                 (default: config.py)")
-parser.add_argument('-r', type=int, metavar="<int>", default=10,
-        help="report information every <int> stages (default: 10)")
+parser.add_argument('-r', type=int, metavar="<int>", default=100,
+        help="report information every <int> stages (default: 100)")
 parser.add_argument('-p', '--profile', action="store_true",
         help="profile genome simulation with cProfile")
 parser.add_argument('-v', '--verbose', action="store_true",
