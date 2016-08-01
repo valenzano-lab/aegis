@@ -111,12 +111,6 @@ tick_size = 7
 colormap = plt.cm.YlOrRd
 colors = [colormap(i) for i in np.linspace(0.1, 0.8, L["n_snapshots"])]
 
-# survival and standard deviation (2x1)
-# colors represent values for snapshot stages with red being the most
-# recent one, the blue line represents junk values for the most recent
-# stage, vertical line is maturation age and the green line represents
-# standard deviation
-
 def save_close(name): 
     plt.savefig(os.path.join(O, name + ".png"))
     plt.close()
@@ -217,38 +211,26 @@ def frequency(plot_all=False):
     genome map: juvenile survival, mature survival, mature reproduction. If
     plot_all, plot all snapshots on a grid; else plot the final snapshot
     along with the accompanying standard deviation."""
-    mv = (L["maturity"]*L["n_bases"], 
-            L["maturity"]*L["n_bases"]) # maturity vertical
-    rv = (L["max_ls"]*L["n_bases"], 
-            L["max_ls"]*L["n_bases"]) # reproduction vertical
-    if plot_all:
-        x = int(math.sqrt(lns))
-        y = int(math.ceil(lns/float(x)))
-        fig, ax = plt.subplots(x,y,sharex="col",sharey="row")
-        ix = zip(np.sort(np.tile(range(x),x)), np.tile(range(y),y), range(lns))
-        for i,j,k in ix:
-            ax[i,j].scatter(range(L["chr_len"]),L["n1"][k],s=5,c="k",marker=".")
-            ax[i,j].plot(mv, (0,1), "r--")
-            ax[i,j].plot(rv, (0,1), "r-")
-            ax[i,j].xaxis.set_ticks([0,mv[0],rv[0]])
-            ax[i,j].set_xticklabels([0,mv[0][0],rv[0][0]],fontsize=tick_size)
-            ax[i,j].set_yticklabels(np.linspace(0,1,6),fontsize=tick_size)
-            ax[i,j].set_ylim((0,1))
-            ax[i,j].set_xlim((0,L["chr_len"]))
-        fig.text(0.03,0.55,"frequency",rotation="vertical",fontsize=12)
-        fig.text(0.45,0.03,"position",rotation="horizontal",fontsize=12)
-        fig.suptitle("Frequency of 1's (All Snapshots)")
-        #! No SD when plotting all?
+    basename = "frequency_1s"
+    # Vertical lines (maturity, start of reproduction positions)
+    mv = (L["maturity"]*L["n_bases"],L["maturity"]*L["n_bases"])
+    rv = (L["max_ls"]*L["n_bases"], L["max_ls"]*L["n_bases"])
+    def f_plot(ax,nsnap):
+        ax.scatter(range(L["chr_len"]),L["n1"][nsnap],c="k",s=5,marker=".")
+        ax.plot(mv, (0,1), "r--")
+        ax.plot(rv, (0,1), "r-")
+        ax.xaxis.set_ticks([0,mv[0],rv[0]])
+        ax.set_xticklabels([0,mv[0][0],rv[0]],fontsize=tick_size)
+        ax.set_yticklabels(np.linspace(0,1,6),fontsize=tick_size)
+        ax.set_xlim((0,L["chr_len"]))
+        ax.set_ylim((0,1))
+        return ax
+    if plot_all: #! No SD when plotting all?
+        grid_plot(f_plot, "Frequency of 1's (all snapshots)",
+                "Position", "Frequency", basename+"_all")
     else:
         fig, ax = plt.subplots(2,sharex=True)
-        # Subplot 0
-        ax[0].scatter(range(L["chr_len"]),L["n1"][-1],c="k")
-        ax[0].plot(mv, (0,1), "r--")
-        ax[0].plot(rv, (0,1), "r-")
-        ax[0].xaxis.set_ticks([0,mv[0],rv[0]])
-        ax[0].yaxis.set_ticks([0,1])
-        ax[0].set_xlim((0,L["chr_len"]))
-        ax[0].set_ylim((0,1))
+        ax[0] = f_plot(ax[0], L["n_snapshots"]-1)
         # Subplot 1
         ax[1].plot(L["n1_std"][-1], "k-")
         ax[1].plot(mv, (0,1), "r--")
@@ -256,45 +238,47 @@ def frequency(plot_all=False):
         ax[1].set_ylim((0,max(L["n1_std"][-1])))
         ax = set_axis_labels(ax, ["frequency","sd"], ["", "position"], "")
         fig.suptitle("Frequency of 1's (Final Snapshot + SD)")
-    filename = "frequency_1s_all" if plot_all else "frequency_1s_final"
-    save_close(filename)
+        save_close(basename+"_final")
+
+def grid_plot(plot_func, title, xtitle, ytitle, filename):
+    """Reproduce a plot once for each snapshot and arrange on a grid."""
+    x = int(math.sqrt(lns))
+    y = int(math.ceil(lns/float(x)))
+    fig, ax = plt.subplots(x,y,sharex="col",sharey="row")
+    ix = zip(np.sort(np.tile(range(x),x)), np.tile(range(y),y), range(lns))
+    for i,j,k in ix:
+        plot_func(ax[i,j], k)
+    fig.text(0.45,0.03,xtitle,rotation="horizontal",fontsize=12)
+    fig.text(0.03,0.55,ytitle,rotation="vertical",fontsize=12)
+    fig.suptitle(title + " (all snapshots)")
+    save_close(filename+"_all")
 
 def age_wise_frequency(plot_all=False):
     """Plot the mean number of 1's in each locus along the sorted
     genome map: juvenile survival, mature survival, mature reproduction. If
     plot_all, plot all snapshots on a grid; else plot the final snapshot
     along with the accompanying standard deviation."""
-    mv = (L["maturity"], L["maturity"]) # maturity vertical
-    rv = (L["max_ls"], L["max_ls"]) # reproduction vertical
-    if plot_all:
-        x = int(math.sqrt(lns))
-        y = int(math.ceil(lns/float(x)))
-        fig, ax = plt.subplots(x,y,sharex="col",sharey="row")
-        ix = zip(np.sort(np.tile(range(x),x)), np.tile(range(y),y), range(lns))
-        for i,j,k in ix:
-            ax[i,j].scatter(range(L["chr_len"]/L["n_bases"]),
-                    L["age_wise_n1"][k],s=7,c="k",marker=".")
-            ax[i,j].plot(mv, (0,1), "r--")
-            ax[i,j].plot(rv, (0,1), "r-")
-            ax[i,j].xaxis.set_ticks([0,mv[0],rv[0]])
-            ax[i,j].set_xticklabels([0,mv[0][0],rv[0]],fontsize=tick_size)
-            ax[i,j].set_yticklabels(np.linspace(0,1,6),fontsize=tick_size)
-            ax[i,j].set_ylim((0,1))
-            ax[i,j].set_xlim((0,L["chr_len"]/L["n_bases"]))
-        fig.text(0.03,0.55,"frequency",rotation="vertical",fontsize=12)
-        fig.text(0.45,0.03,"position",rotation="horizontal",fontsize=12)
-        fig.suptitle("Age-wise frequency of 1's (all snapshots)")
-        #! No SD when plotting all?
+    basename = "age_wise_frequency_1s"
+    mv = (L["maturity"], L["maturity"]) # maturity vertical line
+    rv = (L["max_ls"], L["max_ls"]) # reproduction vertical line
+    def awf_plot(ax,nsnap):
+        nloc = len(L["genmap"])
+        ax.scatter(range(nloc),L["age_wise_n1"][nsnap],c="k",s=7,marker=".")
+        ax.plot(mv, (0,1), "r--")
+        ax.plot(rv, (0,1), "r-")
+        ax.xaxis.set_ticks([0,mv[0],rv[0]])
+        #ax.yaxis.set_ticks([0,1])
+        ax.set_xticklabels([0,mv[0][0],rv[0]],fontsize=tick_size)
+        ax.set_yticklabels(np.linspace(0,1,6),fontsize=tick_size)
+        ax.set_xlim((0,nloc))
+        ax.set_ylim((0,1))
+        return ax
+    if plot_all: #! No SD when plotting all?
+        grid_plot(awf_plot, "Age-wise frequency of 1's (all snapshots)",
+                "Position", "Frequency", basename+"_all")
     else:
         fig, ax = plt.subplots(2,sharex=True)
-        # Subplot 0
-        ax[0].scatter(range(L["chr_len"]/L["n_bases"]),L["age_wise_n1"][-1],c="k")
-        ax[0].plot(mv, (0,1), "r--")
-        ax[0].plot(rv, (0,1), "r-")
-        ax[0].xaxis.set_ticks([0,mv[0],rv[0]])
-        ax[0].yaxis.set_ticks([0,1])
-        ax[0].set_xlim((0,L["chr_len"]/L["n_bases"]))
-        ax[0].set_ylim((0,1))
+        awf_plot(ax[0], L["n_snapshots"]-1)
         # Subplot 1
         ax[1].plot(L["age_wise_n1_std"][-1], "k-")
         ax[1].plot(mv, (0,1), "r--")
@@ -302,38 +286,30 @@ def age_wise_frequency(plot_all=False):
         ax[1].set_ylim((0,max(L["age_wise_n1_std"][-1])))
         ax = set_axis_labels(ax, ["frequency","sd"], ["", "age"], "")
         fig.suptitle("Age-wise frequency of 1's (final snapshot + SD)") #! New name
-    filename = "age_wise_frequency_1s_all" if plot_all \
-            else "age_wise_frequency_1s_final"
-    save_close(filename)
+        save_close(basename+"_final")
 
 def density(plot_all=False):
     """Plot the distribution of genotypes (locus sums) across all survival
     (blue) and reproduction (red) loci in the genome. If plot_all, plot all 
     snapshots on a grid; else plot the final snapshot alone."""
+    basename = "density"
+    pt,xt,yt = "Genotype density distribution","Genotype","Density"
+    y_bound = (0,np.around(max(np.max(L["density_surv"]),
+        np.max(L["density_repr"])),2))
+    def d_plot(ax, nsnap):
+            ax.plot(L["density_surv"][nsnap],"b-")
+            ax.plot(L["density_repr"][nsnap],"r-")
+            ax.set_ylim(y_bound)
+            ax.yaxis.set_ticks(np.linspace(y_bound[0],y_bound[1],5))
+            ax.tick_params(axis="both",labelsize=7)
     if plot_all:
-        x = int(math.sqrt(lns))
-        y = int(math.ceil(lns/float(x)))
-        fig, ax = plt.subplots(x,y,sharex="col",sharey="row")
-        ix = zip(np.sort(np.tile(range(x),x)), np.tile(range(y),y), range(lns))
-        y_bound = (0,np.around(max(np.max(L["density_surv"]),
-            np.max(L["density_repr"])),2))
-        for i,j,k in ix:
-            ax[i,j].plot(L["density_surv"][k],"b-")
-            ax[i,j].plot(L["density_repr"][k],"r-")
-            ax[i,j].set_ylim(y_bound)
-            ax[i,j].yaxis.set_ticks(np.linspace(y_bound[0],y_bound[1],5))
-            ax[i,j].tick_params(axis="both",labelsize=7)
-        fig.text(0.03,0.55,"genotype",rotation="vertical",fontsize=12)
-        fig.text(0.45,0.03,"density",rotation="horizontal",fontsize=12)
-        fig.suptitle("Genotype density distribution (all snapshots)")
+        grid_plot(d_plot, pt, xt, yt, basename)
     else:
-        plt.plot(L["density_surv"][-1],"b-")
-        plt.plot(L["density_repr"][-1],"r-")
-        plt.ylabel("fraction", rotation="vertical")
-        plt.xlabel("genotype")
-        plt.title("Genotype density distribution (final snapshot only)")
-    filename = "density_all" if plot_all else "density_final"
-    save_close(filename)
+        fig, ax = plt.subplots()
+        d_plot(ax, L["n_snapshots"]-1)
+        plt.title(pt + " (final snapshot only)")
+        set_axis_labels(ax, yt, xt, "")
+        save_close(basename+"_final")
 
 def observed_death_rate(s1=L["n_stages"]-100, s2=L["n_stages"]):
     """Plot the age-wise observed death rate for each stage within the
@@ -365,74 +341,57 @@ def age_wise_fitness_product(plot_all=False):
     """Plot the mean survival probablity multiplied by the mean reproduction
     probability at each age. If plot_all, plot all snapshots on a grid; else
     plot the final snapshot and the corresponding neutral locus values"""
+    basename = "fitness_product"
+    pt,xt,yt = "Age-wise fitness product","Age","$s_{age} \\times r_{age}$"
+    def awfp_plot(ax, nsnap):
+        ax.plot(L["age_wise_fitness_product"][nsnap])
+        ax.set_xlim((L["maturity"],L["max_ls"]-1))
+        ax.yaxis.set_major_locator(
+                ticker.MaxNLocator(5)) # set tick number to 5
+        ax.tick_params(axis="both",labelsize=7)
     if plot_all:
-        x = int(math.sqrt(lns))
-        y = int(math.ceil(lns/float(x)))
-        fig, ax = plt.subplots(x,y,sharex="col",sharey="row")
-        ix = zip(np.sort(np.tile(range(x),x)), np.tile(range(y),y), range(lns))
-        for i,j,k in ix:
-            #! Unify and functionalise grid-plotting code
-            ax[i,j].plot(L["age_wise_fitness_product"][k])
-            ax[i,j].set_xlim((L["maturity"],L["max_ls"]-1))
-            ax[i,j].yaxis.set_major_locator(
-                    ticker.MaxNLocator(5)) # set tick number to 5
-            ax[i,j].tick_params(axis="both",labelsize=7)
-        fig.text(0.01,0.52,"$prod \\ F_{age}$",rotation="horizontal",
-                fontsize=12)
-        fig.text(0.48,0.03,"age",rotation="horizontal",fontsize=12)
-        fig.suptitle("Product fitness")
+        grid_plot(awfp_plot, pt, xt, yt, basename)
     else:
         fig, ax = plt.subplots()
-        l1 = ax.plot(L["age_wise_fitness_product"][-1])
-        l2 = ax.plot(L["junk_age_wise_fitness_product"][-1], "g-")
-        ax.set_xlim((L["maturity"],L["max_ls"]-1))
-        blue_proxy = mpatches.Patch(color="blue", label="product $F_{age})$")
-        green_proxy = mpatches.Patch(color="green",
-                label="junk product $F_{age}$")
+        awfp_plot(ax, L["n_snapshots"]-1)
+        ax.plot(L["junk_age_wise_fitness_product"][-1], "g-")
+        blue_proxy = mpatches.Patch(color="blue", label="active loci")
+        green_proxy = mpatches.Patch(color="green",label="junk loci")
         ax.legend(handles=[blue_proxy,green_proxy],loc="upper right",
                 prop={"size":7})
-        ax = set_axis_labels(ax, "product $F_{age}$", "age", "")
-        plt.title("Product fitness")
-    save_close("age_wise_fitness_product")
+        set_axis_labels(ax, yt, xt, "")
+        plt.title(pt)
+        save_close(basename+"_final")
 
 def age_wise_fitness_contribution(plot_all=False):
     """Plot the contribution to the total mean genomic fitness of the
     population by each age class in log space. If plot_all, plot all snapshots
     on a grid; else plot the final snapshot and the corresponding neutral locus
     values"""
-    if plot_all:
-        x = int(math.sqrt(lns))
-        y = int(math.ceil(lns/float(x)))
-        fig, ax = plt.subplots(x,y,sharex="col",sharey="row")
-        ix = zip(np.sort(np.tile(range(x),x)), np.tile(range(y),y), range(lns))
-        for i,j,k in ix:
-            lawc = L["age_wise_fitness_contribution"][k]
-            lawc,ages = lawc[lawc != 0], np.arange(L["max_ls"])[lawc != 0]
-            ax[i,j].plot(ages,np.log10(lawc))
-            ax[i,j].set_xlim((L["maturity"],L["max_ls"]-1))
-            ax[i,j].yaxis.set_major_locator(
-                    ticker.MaxNLocator(5)) # set tick number to 5
-            ax[i,j].tick_params(axis="both",labelsize=7)
-        fig.text(0.01,0.52,"$log(F_{age})$",rotation="horizontal",fontsize=12)
-        fig.text(0.48,0.03,"age",rotation="horizontal",fontsize=12)
-        fig.suptitle("Age-wise fitness contribution")
-    else:
-        lawc = L["age_wise_fitness_contribution"][-1]
-        jlawc = L["junk_age_wise_fitness_contribution"][-1]
-        ages, lawc = np.arange(L["max_ls"])[lawc != 0], lawc[lawc != 0],
-        jages, jlawc = np.arange(L["max_ls"])[jlawc != 0], jlawc[jlawc != 0]
-        fig, ax = plt.subplots()
-        l1 = ax.plot(ages,np.log10(lawc))
-        l2 = ax.plot(jages,np.log10(jlawc), "g-")
+    basename = "fitness_contribution"
+    pt,xt,yt = "Age-wise fitness contribution","Age","$F_{age}$"
+    def awfc_plot(ax, nsnap):
+        lawc = L["age_wise_fitness_contribution"][nsnap]
+        lawc,ages = lawc[lawc != 0], np.arange(L["max_ls"])[lawc != 0]
+        ax.plot(ages,np.log10(lawc))
         ax.set_xlim((L["maturity"],L["max_ls"]-1))
-        blue_proxy = mpatches.Patch(color="blue", label="$log(F_{age})$")
-        green_proxy = mpatches.Patch(color="green",
-                label="junk $log(F_{age})$")
-        ax.legend(handles=[blue_proxy,green_proxy],
-                loc="upper right",prop={"size":7})
-        ax = set_axis_labels(ax, "log($F_{age}$)", "age", "")
-        plt.title("Age-wise fitness contribution")
-    save_close("age_wise_fitness_contribution")
+        ax.yaxis.set_major_locator(
+                ticker.MaxNLocator(5)) # set tick number to 5
+        ax.tick_params(axis="both",labelsize=7)
+    if plot_all:
+        grid_plot(awfc_plot, pt, xt, yt, basename)
+    else:
+        fig, ax = plt.subplots()
+        awfc_plot(ax, L["n_snapshots"]-1)
+        jlawc = L["junk_age_wise_fitness_contribution"][L["n_snapshots"]-1]
+        jages, jlawc = np.arange(L["max_ls"])[jlawc != 0], jlawc[jlawc != 0]
+        ax.plot(jages,np.log10(jlawc))
+        handles = [mpatches.Patch(color="blue", label="active loci"),
+                mpatches.Patch(color="green",label="junk loci")]
+        ax.legend(handles=handles,loc="upper right",prop={"size":7})
+        set_axis_labels(ax, yt, xt, "")
+        plt.title(pt)
+        save_close(basename+"_final")
 
 def plot_all(pop_res_limits, odr_limits):
     """Generate all plots for the imported Record object."""
