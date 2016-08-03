@@ -63,7 +63,7 @@ def get_outdir(outpath, target):
         os.mkdir(figdir)
     return figdir
 
-L = get_record(args.file, args.r).record
+L = get_record(args.file, int(args.r)).record
 O = get_outdir(args.o, args.file)
 lns = L["n_snapshots"]
 
@@ -195,6 +195,28 @@ def pop_res(s1=0, s2=L["n_stages"]):
             map(str,(np.linspace(s1,s2,6)).astype(int)))
     save_close("pop_res")
 
+def starvation(s1=0, s2=L["n_stages"]):
+    """Plot population (green) and resource (magenta) survival factors
+    in specified stage range."""
+    res_top = max(L["repr_penf"]) > max(L["surv_penf"])
+    if res_top:
+        l1,l2 = plt.plot(L["repr_penf"][s1:s2+1],"m-",
+                L["surv_penf"][s1:s2+1],"g-")
+    else: 
+        l2,l1 = plt.plot(L["repr_penf"][s1:s2+1],"m-",
+                L["surv_penf"][s1:s2+1],"g-")
+    plt.figure(1).legend((l1,l2),("resources","population"),
+            "upper right",prop={"size":7})
+    plt.title("Survival factors")
+    plt.xlabel("Stage")
+    plt.ylabel("Survival factor",rotation="horizontal")
+    plt.axis([s1,s2,0,max(max(L["surv_penf"][s1:s2+1]),
+        max(L["repr_penf"][s1:s2+1]))])
+    plt.xticks(np.linspace(0,s2-s1,6),
+            map(str,(np.linspace(s1,s2,6)).astype(int)))
+    # Add legend
+    save_close("starvation")
+
 def age_distribution():
     """Plot age_distribution for each snapshot (red = most recent)."""
     for i,j in zip(L["snapshot_stages"]-1,range(L["n_snapshots"])):
@@ -315,9 +337,9 @@ def observed_death_rate(s1=L["n_stages"]-100, s2=L["n_stages"]):
     """Plot the age-wise observed death rate for each stage within the
     specified limits."""
     #! Change default limits?
-    plt.plot(np.mean(L["actual_death_rate"][s1:s2],0))
+    plt.plot(np.mean(L["actual_death_rate"][s1:s2,:-1],0))
     plt.ylabel(r"$\mu$", rotation="horizontal")
-    plt.xlabel("age")
+    plt.xlabel("Age")
     plt.title("Observed death rate")
     save_close("observed_death_rate")
 
@@ -403,6 +425,7 @@ def plot_all(pop_res_limits, odr_limits):
     observed_death_rate(odr_limits[0],odr_limits[1])
     shannon_diversity()
     fitness()
+    starvation()
     for x in [True, False]:
         frequency(x)
         age_wise_frequency(x)

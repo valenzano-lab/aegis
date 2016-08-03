@@ -716,9 +716,11 @@ class Run:
     def update_starvation_factors(self):
         """Update starvation factors under starvation."""
         if self.starving():
-            self.surv_penf *= self.conf.death_inc if self.conf.surv_pen else 1
-            self.repr_penf *= self.conf.repr_dec if self.conf.repr_pen else 1
-        else: self.surv_penf = self.repr_penf = 1.0
+            self.surv_penf *= self.conf.death_inc if self.conf.surv_pen else 1.0
+            self.repr_penf *= self.conf.repr_dec if self.conf.repr_pen else 1.0
+        else: 
+            self.surv_penf = 1.0
+            self.repr_penf = 1.0
 
     def execute_stage(self):
         """Perform one stage of a simulation run and test for completion."""

@@ -952,7 +952,8 @@ class TestRunClass:
         # 4: After starvation ends factors reset to 1.0
         run1.resources = 1
         run1.update_starvation_factors()
-        assert run1.surv_penf == run1.repr_penf == 1.0
+        assert run1.surv_penf == 1.0
+        assert run1.repr_penf == 1.0
 
     def test_execute_stage_functionality(self, run):
         """Test functional operations of test_execute_stage, ignoring 
