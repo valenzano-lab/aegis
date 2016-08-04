@@ -229,8 +229,8 @@ cdef class Population:
                     (genomes == testgen).all():
                 genomes = self.make_genome_array(
                         params["start_pop"], params["g_dist"])
-        self.ages = ages[:]
-        self.genomes = genomes[:]
+        self.ages = np.copy(ages)
+        self.genomes = np.copy(genomes)
         self.N = len(self.ages)
 
     # Minor methods
@@ -328,16 +328,20 @@ cdef class Population:
         if self.N == 0: return # Insulate from empty population
         r_range = np.clip(var_range / penf, 0, 1) # Limit to real probabilities
         which_parents = self.get_subpop(self.maturity, self.maxls, 100, 
-                r_range/penf)
+                r_range)
         parents = Population(self.params(), self.genmap,
                 self.ages[which_parents], self.genomes[which_parents])
         if self.sex:
-            if parents.N == 1:
+            if sum(which_parents) == 1:
                 return # No children if only one parent
             else:
+                parents = Population(self.params(), self.genmap,
+                        self.ages[which_parents],self.genomes[which_parents])
                 parents.recombine(r_rate)
                 children = parents.assortment()
-        else: children = parents.clone()
+        else: 
+            children = Population(self.params(), self.genmap,
+                    self.ages[which_parents], self.genomes[which_parents])
         children.mutate(m_rate, m_ratio)
         children.ages[:] = 0 # Make newborn
         self.addto(children)

@@ -352,7 +352,7 @@ class TestPopulationClass:
 
     @pytest.mark.parametrize("p", [0, random.random(), 1])
     @pytest.mark.parametrize("adults_only,offset",[(False,0),(True,100)])
-    def test_get_subpop(self, spop, p, adults_only, offset):
+    def test_get_subpop_allsame(self, spop, p, adults_only, offset):
         precision = 0.1
         """Test if the probability of passing is close to that indicated
         by the genome (when all loci have the same distribution)."""
@@ -368,6 +368,22 @@ class TestPopulationClass:
                 np.linspace(0,1,2*pop.nbase + 1))
         assert abs(np.sum(subpop)/float(pop.N) - p)*(1-min_age/pop.maxls) < \
                 precision
+
+    def test_get_subpop_different(self, run):
+        """Test whether individuals with different genotypes are selected
+        with appropriately different frequencies by get_subpop."""
+        precision = 0.1
+        pop = run.population.clone().toPop()
+        pop.ages = np.array([pop.maturity+1]*300)
+        pop.N = 300
+        x = np.zeros((100, pop.genomes.shape[1]))
+        pop.genomes = np.vstack((x,np.ones(x.shape),
+            chance(0.5,x.shape))).astype(int)
+        subpop = pop.get_subpop(0, pop.maxls, 0,
+                np.linspace(0,1,2*pop.nbase+1))
+        assert abs(np.mean(subpop[:100])) < precision
+        assert abs(np.mean(subpop[100:200]) - 1) < precision
+        assert abs(np.mean(subpop[200:300]) - 0.5) < precision
 
     @pytest.mark.parametrize("offset",[0, 100])
     def test_get_subpop_extreme_values(self, spop, offset):
