@@ -945,8 +945,8 @@ class Simulation:
         self.log += message+"\n"
 
     def average_records(self):
-        self.avg_record = Record(self.conf)
         if len(self.runs) == 1: return
+        self.avg_record = Record(self.conf)
         rec_list = [x.record for x in self.runs if x.complete and not x.dieoff]
         rec_list = [r.record for r in rec_list] # Get record dicts
         # First test that all runs are compatible
