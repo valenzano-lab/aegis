@@ -69,6 +69,9 @@ def execute_run(run, maxfail):
     run.logprint(get_runtime(run.starttime, run.endtime))
     return run
 
+def testage(): return np.array([-1]) # For generating new populations
+def testgen(): return np.array([[-1],[-1]])
+
 ###############################################################################
 # CLASSES 
 ###############################################################################
@@ -177,7 +180,7 @@ class Outpop:
         self.chrlen = pop.chrlen
         self.maxls = pop.maxls
         self.maturity = pop.maturity
-        self.genmap = copy.copy(pop.genmap)
+        self.genmap = np.copy(pop.genmap)
         self.ages = np.copy(pop.ages)
         self.genomes = np.copy(pop.genomes)
         self.N = pop.N
@@ -217,16 +220,14 @@ cdef class Population:
         self.maturity = params["maturity"]
         self.genmap = genmap
         # Determine ages and genomes if not given
-        cdef np.ndarray[NPINT_t, ndim=1] testage = np.array([-1])
-        cdef np.ndarray[NPINT_t, ndim=2] testgen = np.array([[-1],[-1]])
         if params.has_key("start_pop"):
-            if np.shape(ages) == np.shape(testage) and \
-                    (ages == testage).all():
+            if np.shape(ages) == np.shape(testage()) and \
+                    np.array_equal(ages, testage()):
                 ages = np.random.random_integers(0, self.maxls-1,
                         params["start_pop"]) if params["age_random"]\
                         else np.repeat(self.maturity,params["start_pop"])
-            if np.shape(genomes) == np.shape(testgen) and \
-                    (genomes == testgen).all():
+            if np.shape(genomes) == np.shape(testgen()) and \
+                    np.array_equal(genomes, testgen()):
                 genomes = self.make_genome_array(
                         params["start_pop"], params["g_dist"])
         self.ages = np.copy(ages)
@@ -245,7 +246,7 @@ cdef class Population:
     def clone(self):
         """Generate a new, identical population object."""
         return Population(self.params(), self.genmap,
-                np.copy(self.ages), np.copy(self.genomes))
+                self.ages, self.genomes)
 
     def increment_ages(self):
         """Age all individuals in population by one stage."""
@@ -297,7 +298,6 @@ cdef class Population:
             np.ndarray[NPFLOAT_t, ndim=1] val_range):
         """Select a population subset based on chance defined by genotype."""
         cdef:
-            np.ndarray[NPINT_t, ndim=1] subpop_indices = np.empty(0,int)
             int age, locus, g
             np.ndarray[NPINT_t, ndim=1] which
             np.ndarray[NPFLOAT_t, ndim=1] inc_rates
@@ -310,7 +310,7 @@ cdef class Population:
         for age in range(min_age, min(max_age, np.max(self.ages)+1)):
             # Get indices of appropriate locus for that age:
             locus = np.ndarray.nonzero(self.genmap==(age+offset))[0][0]
-                # NB: Will only return FIRST locus for that age
+            # NB: Will only return FIRST locus for that age in each chromosome
             # Subset to correct age and required locus:
             which = np.nonzero(self.ages == age)[0]
             pop = genloc[which][:,[locus, locus+g]]
@@ -329,8 +329,6 @@ cdef class Population:
         r_range = np.clip(var_range / penf, 0, 1) # Limit to real probabilities
         which_parents = self.get_subpop(self.maturity, self.maxls, 100, 
                 r_range)
-        parents = Population(self.params(), self.genmap,
-                self.ages[which_parents], self.genomes[which_parents])
         if self.sex:
             if sum(which_parents) == 1:
                 return # No children if only one parent
@@ -345,17 +343,17 @@ cdef class Population:
         children.mutate(m_rate, m_ratio)
         children.ages[:] = 0 # Make newborn
         self.addto(children)
-        self.N = len(self.ages)
 
-    cpdef death(self, np.ndarray[NPFLOAT_t, ndim=1] d_range, float penf):
+    cpdef death(self, np.ndarray[NPFLOAT_t, ndim=1] var_range, float penf):
         """Select survivors and kill rest of population."""
         cdef:
-            np.ndarray[NPFLOAT_t, ndim=1] val_range
+            np.ndarray[NPFLOAT_t, ndim=1] d_range
             np.ndarray[NPBOOL_t, ndim=1,cast=True] survivors
             int new_N, dead
         if self.N == 0: return # Insulate from empty population
-        val_range = np.clip(1-(d_range*penf),0,1) # Limit to real probabilities
-        survivors = self.get_subpop(0, self.maxls, 0, val_range)
+        d_range = np.clip(var_range*penf, 0, 1) # Limit to real probabilities
+        survivors = self.get_subpop(0, self.maxls, 0, 1-d_range)
+            # Identify deaths, invert to get survivors
         self.ages = self.ages[survivors]
         self.genomes = self.genomes[survivors]
         self.N = np.sum(survivors)
@@ -692,7 +690,7 @@ class Run:
                     "start_pop":self.conf.start_pop, "g_dist":self.conf.g_dist}
         else:
             self.population = Outpop(Population(self.conf.params, 
-                self.conf.genmap, np.array([-1]), np.array([[-1],[-1]])))
+                self.conf.genmap, testage(), testgen()))
         self.n_stage = 0
         self.n_snap = 0
         self.n_run = n_run
@@ -708,7 +706,7 @@ class Run:
         if self.conf.res_var: # Else do nothing
             k = 1 if self.population.N > self.resources else self.conf.V
             new_res = int((self.resources-self.population.N)*k + self.conf.R)
-            self.resources = min(max(new_res, 0), self.conf.res_limit)
+            self.resources = np.clip(new_res, 0, self.conf.res_limit)
 
     def starving(self):
         """Determine whether population is starving based on resource level."""
@@ -733,7 +731,7 @@ class Run:
         report_stage = (self.n_stage % self.report_n == 0)
         if report_stage:
             self.logprint("Population = {0}.".format(self.population.N))
-        self.dieoff = self.population.N == 0
+        self.dieoff = (self.population.N == 0)
         if not self.dieoff:
             # Record information
             take_snapshot = self.n_stage in self.conf.snapshot_stages
@@ -765,7 +763,7 @@ class Run:
                 self.logprint("Crisis! {0} individuals died, {1} survived."\
                         .format(n2-self.population.N, self.population.N))
         # Update run status
-        self.dieoff = self.record.record["dieoff"] = self.population.N == 0
+        self.dieoff = self.record.record["dieoff"] = (self.population.N == 0)
         self.record.record["percent_dieoff"] = self.dieoff*100.0
         self.n_stage += 1
         self.complete = self.dieoff or self.n_stage==self.conf.number_of_stages
@@ -789,7 +787,7 @@ class Run:
         b = "Extinction" if self.dieoff else "Completion"
         self.logprint("{0} at {1}. Final population: {2}"\
                 .format(b, runend, self.population.N))
-        if f>1 and not self.dieoff: 
+        if f>0 and not self.dieoff: 
             self.logprint("Total attempts required: {0}.".format(f))
 
     def logprint(self, message):
@@ -832,8 +830,11 @@ class Simulation:
 
     def execute(self, nproc=-1, maxfail=10):
         """Execute all runs."""
-        if nproc < 0: # Use all available cores
+        if nproc <= 0: # Use all available cores
             pool = multiprocessing.Pool()
+        elif nproc == 1: # Run without multiprocessing
+            self.runs = [execute_run(r, maxfail) for r in self.runs]
+            return
         else: # Use specifed number of cores
             pool = multiprocessing.Pool(nproc)
         lock = multiprocessing.Lock()
@@ -929,7 +930,10 @@ class Simulation:
         try:
             log_file.write(self.log)
             pickle.dump(self, sim_file)
-            pickle.dump(self.avg_record, rec_file)
+            if hasattr(self, "avg_record"):
+                pickle.dump(self.avg_record, rec_file)
+            else:
+                pickle.dump(self.runs[0].record, rec_file)
         finally:
             sim_file.close()
             log_file.close()

@@ -395,7 +395,8 @@ def age_wise_fitness_contribution(plot_all=False):
     def awfc_plot(ax, nsnap):
         lawc = L["age_wise_fitness_contribution"][nsnap]
         lawc,ages = lawc[lawc != 0], np.arange(L["max_ls"])[lawc != 0]
-        ax.plot(ages,np.log10(lawc))
+        ax.plot(ages,lawc)
+        ax.set_yscale('log')
         ax.set_xlim((L["maturity"],L["max_ls"]-1))
         ax.yaxis.set_major_locator(
                 ticker.MaxNLocator(5)) # set tick number to 5

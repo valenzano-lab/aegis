@@ -4,7 +4,7 @@
 
 import pyximport; pyximport.install()
 from gs_core import Simulation, Run, Outpop, Population, Record, Config # Classes
-from gs_core import chance, get_runtime, execute_run # Functions
+from gs_core import chance, get_runtime, execute_run, testage, testgen # Functions
 import pytest, random, string, subprocess, math, copy, os, sys, cPickle, datetime
 import numpy as np
 import scipy.stats as st
@@ -156,7 +156,7 @@ class TestFunctionsConfig:
         precision = 0.01
         """Test that the shape of the output is correct and that the mean
         over many trials is close to the expected value."""
-        shape=(1000,1000)
+        shape=(random.randint(1,1000),random.randint(1,1000))
         c = chance(p, shape)
         s = c.shape
         assert c.shape == shape and c.dtype == "bool"
@@ -238,31 +238,92 @@ class TestPopulationClass:
     """Test population object methods."""
 
     # Initialisation
-    def test_init_population(self, record, conf):
+    def test_init_population_blank(self, conf):
         """Test that population parameters are correct for random and
         nonrandom ages."""
         precision = 1.1
-        conf.params["start_pop"] = 2000
-        conf.params["age_random"] = False
-        pop_a = Population(conf.params, conf.genmap, np.array([-1]),
+        x = random.random()
+        conf1 = copy.deepcopy(conf)
+        conf1.params["start_pop"] = 2000
+        conf1.params["age_random"] = False
+        conf1.params["g_dist"] = {"s":x,"r":x,"n":x}
+        pop_a = Population(conf1.params, conf1.genmap, np.array([-1]),
             np.array([[-1],[-1]]))
-        conf.params["age_random"] = True
-        pop_b = Population(conf.params, conf.genmap, np.array([-1]),
+        conf1.params["age_random"] = True
+        pop_b = Population(conf1.params, conf1.genmap, np.array([-1]),
             np.array([[-1],[-1]]))
         print np.mean(pop_b.ages)
         print abs(np.mean(pop_b.ages)-pop_b.maxls/2)
-        assert pop_a.sex == pop_b.sex == conf.params["sexual"]
-        assert pop_a.chrlen == pop_b.chrlen == conf.params["chr_len"]
-        assert pop_a.nbase == pop_b.nbase == conf.params["n_base"]
-        assert pop_a.maxls == pop_b.maxls == conf.params["max_ls"]
-        assert pop_a.maturity==pop_b.maturity == conf.params["maturity"]
-        assert pop_a.N == pop_b.N == conf.params["start_pop"]
-        assert np.array_equal(pop_a.genmap, conf.genmap)
-        assert np.array_equal(pop_b.genmap, conf.genmap)
+        for pp in [pop_a, pop_b]:
+            assert pp.sex == conf1.params["sexual"]
+            assert pp.chrlen == conf1.params["chr_len"]
+            assert pp.nbase == conf1.params["n_base"]
+            assert pp.maxls == conf1.params["max_ls"]
+            assert pp.maturity == conf1.params["maturity"]
+            assert pp.N == conf1.params["start_pop"]
+            assert np.array_equal(pp.genmap, conf1.genmap)
+            assert abs(np.mean(pp.genomes)-x) < 0.05
         assert np.all(pop_a.ages == pop_a.maturity)
         assert not np.all(pop_b.ages == pop_b.maturity)
         assert abs(np.mean(pop_b.ages)-pop_b.maxls/2) < precision
 
+    def test_init_population_nonblank(self, conf):
+        """Test that population is generated correctly when ages and/or
+        genomes are provided."""
+        conf1 = copy.deepcopy(conf)
+        x = random.random()
+        ages = np.random.randint(0, 10, conf1.params["start_pop"])
+        genomes = chance(1-x**2, 
+                (conf1.params["start_pop"],conf1.params["chr_len"])).astype(int)
+        conf1.params["age_random"] = False
+        x = random.random()
+        conf1.params["g_dist"] = {"s":x,"r":x,"n":x}
+        pop_a = Population(conf1.params, conf1.genmap, ages, genomes)
+        pop_b = Population(conf1.params, conf1.genmap, ages, testgen())
+        pop_c = Population(conf1.params, conf1.genmap, testage(), genomes)
+        # Check params
+        for pp in [pop_a, pop_b, pop_c]:
+            assert pp.sex == conf1.params["sexual"]
+            assert pp.chrlen == conf1.params["chr_len"]
+            assert pp.nbase == conf1.params["n_base"]
+            assert pp.maxls == conf1.params["max_ls"]
+            assert pp.maturity == conf1.params["maturity"]
+            assert pp.N == conf1.params["start_pop"]
+        # Check ages
+        assert np.array_equal(ages, pop_a.ages)
+        assert np.array_equal(ages, pop_b.ages)
+        assert not np.array_equal(ages, pop_c.ages)
+        assert np.all(pop_c.ages == conf1.params["maturity"])
+        # Check genomes
+        assert np.array_equal(genomes, pop_a.genomes)
+        assert np.array_equal(genomes, pop_c.genomes)
+        assert not np.array_equal(genomes, pop_b.genomes)
+        assert abs(np.mean(pop_b.genomes) - x) < 0.05
+
+    def test_popgen_independence(self, P):
+        """Test that generating a population from another and then manipulating
+        it cloned population does not affect original (important for 
+        reproduction)."""
+        P1 = P.clone()
+        P2 = Population(P1.params(), P1.genmap, P1.ages, P1.genomes)
+        P3 = Population(P1.params(), P1.genmap, P1.ages[:100], P1.genomes[:100])
+        P4 = Population(P3.params(), P3.genmap, P3.ages, P3.genomes)
+        P2.mutate(0.5, 1)
+        P4.mutate(0.5, 1)
+        # Test ages
+        assert np.array_equal(P.ages, P1.ages)
+        assert np.array_equal(P.ages, P2.ages)
+        assert np.array_equal(P.ages[:100], P3.ages)
+        assert np.array_equal(P.ages[:100], P4.ages)
+        # Test genomes
+        assert np.array_equal(P.genomes, P1.genomes)
+        assert np.array_equal(P.genomes[:100], P3.genomes)
+        assert P.genomes.shape == P2.genomes.shape
+        assert P.genomes[:100].shape == P4.genomes.shape
+        assert not np.array_equal(P.genomes, P2.genomes)
+        assert not np.array_equal(P.genomes[:100], P4.genomes)
+
+    # Minor methods
     # Genome array
     """Test that new genome arrays are generated correctly."""
     genmap_simple = np.append(np.arange(25),
@@ -298,8 +359,6 @@ class TestPopulationClass:
             pos = np.append(pos, pos + chr_len)
             tstat = abs(np.mean(ga[:,pos])-gd[k])
             assert tstat < precision
-
-    # Minor methods
 
     def test_shuffle(self, P):
         """Test if all ages, therefore individuals, present before the
@@ -345,8 +404,9 @@ class TestPopulationClass:
         pop_a = P.clone()
         pop_b = P.clone()
         pop_b.addto(pop_a)
-        assert (pop_b.ages == np.tile(pop_a.ages,2)).all()
-        assert (pop_b.genomes == np.tile(pop_a.genomes,(2,1))).all()
+        assert np.array_equal(pop_b.ages, np.tile(pop_a.ages,2))
+        assert np.array_equal(pop_b.genomes, np.tile(pop_a.genomes,(2,1)))
+        assert pop_b.N == 2*pop_a.N
 
     # Death and crisis
 
@@ -357,6 +417,7 @@ class TestPopulationClass:
         """Test if the probability of passing is close to that indicated
         by the genome (when all loci have the same distribution)."""
         pop = spop.clone()
+        # Set appropriate loci to given probability value
         loci = np.nonzero(
                 np.logical_and(pop.genmap >= offset, pop.genmap < offset + 100)
                 )[0]
@@ -364,10 +425,12 @@ class TestPopulationClass:
         pos = np.append(pos, pos + pop.chrlen)
         min_age = pop.maturity if adults_only else 0
         pop.genomes[:,pos] = chance(p, pop.genomes[:,pos].shape).astype(int)
+        # Get subpop and test
         subpop = pop.get_subpop(min_age, pop.maxls, offset,
                 np.linspace(0,1,2*pop.nbase + 1))
-        assert abs(np.sum(subpop)/float(pop.N) - p)*(1-min_age/pop.maxls) < \
-                precision
+        assert abs(np.mean(subpop) - p) < precision
+        #assert abs(np.sum(subpop)/float(pop.N) - p)*(1-min_age/pop.maxls) < \
+        #        precision
 
     def test_get_subpop_different(self, run):
         """Test whether individuals with different genotypes are selected
@@ -404,13 +467,14 @@ class TestPopulationClass:
         and survivor array."""
         precision = 0.15
         pop = spop.clone()
+        # Modify survival loci to specified p
         b = pop.nbase
         surv_loci = np.nonzero(spop.genmap<100)[0]
         surv_pos = np.array([range(b) + y for y in surv_loci*b])
         surv_pos = np.append(surv_pos, surv_pos + pop.chrlen)
         pop.genomes[:, surv_pos] =\
                 chance(p, pop.genomes[:, surv_pos].shape).astype(int)
-        # (specifically modify survival loci only)
+        # Call and test death function
         pop2 = pop.clone()
         print pop2.genomes[:, surv_pos]
         pop2.death(np.linspace(1,0,2*pop2.nbase+1), x)
@@ -495,45 +559,56 @@ class TestPopulationClass:
     def test_mutate_unbiased(self, P, mrate):
         """Test that, in the absence of a +/- bias, the appropriate
         proportion of the genome is mutated."""
-        t = 0.01 # Tolerance
-        genomes = np.copy(P.genomes)
-        P.mutate(mrate,1)
-        assert abs((1-np.mean(genomes == P.genomes))-mrate) < t
+        P1 = P.clone()
+        t = 0.001 # Tolerance
+        genomes = np.copy(P1.genomes)
+        P1.mutate(mrate,1)
+        assert abs((1-np.mean(genomes == P1.genomes))-mrate) < t
 
     @pytest.mark.parametrize("mratio", [0, random.random(), 1])
     def test_mutate_biased(self, P, mratio):
         """Test that the bias between positive and negative mutations is
         implemented correctly."""
-        t = 0.01 # Tolerance
+        t = 0.0015 # Tolerance
+        P1 = P.clone()
         mrate = 0.5
-        g0 = np.copy(P.genomes)
-        P.mutate(mrate,mratio)
-        g1 = P.genomes
+        g0 = np.copy(P1.genomes)
+        P1.mutate(mrate,mratio)
+        g1 = P1.genomes
         is1 = (g0==1)
         is0 = np.logical_not(is1)
-        assert abs((1-np.mean(g0[is1] == g1[is1]))-mrate) < t
-        assert abs((1-np.mean(g0[is0] == g1[is0]))-mrate*mratio) < t
+        assert abs(np.mean(g0[is1] != g1[is1])-mrate) < t
+        assert abs(np.mean(g0[is0] != g1[is0])-mrate*mratio) < t
 
+    @pytest.mark.parametrize("x", [1.0, 5.0])
     @pytest.mark.parametrize("sexvar",[True, False])
-    @pytest.mark.parametrize("m",[0.0, random.random(), 1.0])
-    def test_growth(self,conf,sexvar,m):
-        """Test number of children produced for all-adult population
-        for sexual and asexual conditions."""
-        # Make and grow population
-        precision = 0.1
-        n = 500
-        params = conf.params.copy()
-        params["sexual"] = sexvar
-        params["age_random"] = False
-        params["start_pop"] = n
-        pop = Population(params, conf.genmap, np.array([-1]),
-            np.array([[-1],[-1]]))
-        pop.genomes = chance(m, pop.genomes.shape).astype(int)
-        pop.growth(np.linspace(0,1,2*pop.nbase+1),1,0,0,1)
+    def test_growth(self, spop, x, sexvar):
+        """Test if self.death() correctly inverts death probabilities
+        and incorporates starvation factor to get survivor probabilities
+        and survivor array."""
+        p = random.random()
+        precision = 0.05
+        pop = spop.clone()
+        pop.sex = sexvar
+        # Modify reproductive loci to specified p
+        b = pop.nbase
+        repr_loci = np.nonzero(
+                np.logical_and(spop.genmap>=100, spop.genmap<200))[0]
+        print repr_loci
+        repr_pos = np.array([range(b) + y for y in repr_loci*b])
+        repr_pos = np.append(repr_pos, repr_pos + pop.chrlen)
+        pop.genomes[:, repr_pos] =\
+                chance(p, pop.genomes[:, repr_pos].shape).astype(int)
+        assert abs(np.mean(pop.genomes[:, repr_pos]) - p) < precision # Validate
+        # Call and test death function
+        pop2 = pop.clone()
+        print pop2.genomes[:, repr_pos]
+        pop2.growth(np.linspace(0,1,2*pop2.nbase+1), x, 0, 0, 1)
         # Calculate proportional observed and expected growth
-        x = 2 if sexvar else 1
-        obs_growth = (pop.N - n)/float(n)
-        exp_growth = m/x
+        z = x*2 if sexvar else x
+        obs_growth = (pop2.N - pop.N)/float(pop.N)
+        exp_growth = p/z
+        print pop.N, pop2.N, p, z
         assert abs(exp_growth-obs_growth) < precision
 
     @pytest.mark.parametrize("nparents",[1, 3, 5])
