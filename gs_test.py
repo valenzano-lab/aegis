@@ -410,7 +410,7 @@ class TestPopulationClass:
 
     # Death and crisis
 
-    @pytest.mark.parametrize("p", [0, random.random(), 1])
+    @pytest.mark.parametrize("p", [random.random(), random.random()])
     @pytest.mark.parametrize("adults_only,offset",[(False,0),(True,100)])
     def test_get_subpop_allsame(self, spop, p, adults_only, offset):
         precision = 0.1
@@ -425,10 +425,13 @@ class TestPopulationClass:
         pos = np.append(pos, pos + pop.chrlen)
         min_age = pop.maturity if adults_only else 0
         pop.genomes[:,pos] = chance(p, pop.genomes[:,pos].shape).astype(int)
-        # Get subpop and test
+        # Get subpop and test (for a random probability range)
+        maxp = random.random()
+        minp = random.uniform(0, maxp)
+        expp = minp + p*(maxp-minp)
         subpop = pop.get_subpop(min_age, pop.maxls, offset,
-                np.linspace(0,1,2*pop.nbase + 1))
-        assert abs(np.mean(subpop) - p) < precision
+                np.linspace(minp,maxp,2*pop.nbase + 1))
+        assert abs(np.mean(subpop) - expp) < precision
         #assert abs(np.sum(subpop)/float(pop.N) - p)*(1-min_age/pop.maxls) < \
         #        precision
 
@@ -442,11 +445,13 @@ class TestPopulationClass:
         x = np.zeros((100, pop.genomes.shape[1]))
         pop.genomes = np.vstack((x,np.ones(x.shape),
             chance(0.5,x.shape))).astype(int)
+        maxp = random.random()
+        minp = random.uniform(0, maxp)
         subpop = pop.get_subpop(0, pop.maxls, 0,
-                np.linspace(0,1,2*pop.nbase+1))
-        assert abs(np.mean(subpop[:100])) < precision
-        assert abs(np.mean(subpop[100:200]) - 1) < precision
-        assert abs(np.mean(subpop[200:300]) - 0.5) < precision
+                np.linspace(minp,maxp,2*pop.nbase+1))
+        assert abs(np.mean(subpop[:100]) - minp) < precision
+        assert abs(np.mean(subpop[100:200]) - maxp) < precision
+        assert abs(np.mean(subpop[200:300]) - 0.5*(minp+maxp)) < precision
 
     @pytest.mark.parametrize("offset",[0, 100])
     def test_get_subpop_extreme_values(self, spop, offset):
@@ -459,13 +464,13 @@ class TestPopulationClass:
                 np.linspace(0,1,2*pop.nbase + 1))
         assert np.sum(subpop) == 0
 
-    @pytest.mark.parametrize("p", [0.0, random.random(), 1.0])
     @pytest.mark.parametrize("x", [1.0, 3.0, 9.0])
-    def test_death(self, spop, p, x):
+    def test_death(self, spop, x):
         """Test if self.death() correctly inverts death probabilities
         and incorporates starvation factor to get survivor probabilities
         and survivor array."""
         precision = 0.15
+        p = random.random()
         pop = spop.clone()
         # Modify survival loci to specified p
         b = pop.nbase
@@ -477,9 +482,13 @@ class TestPopulationClass:
         # Call and test death function
         pop2 = pop.clone()
         print pop2.genomes[:, surv_pos]
-        pop2.death(np.linspace(1,0,2*pop2.nbase+1), x)
-        pmod = max(0, min(1, (1-x*(1-p))))
-        assert abs(pop2.N/float(pop.N) - pmod) < precision
+        maxp = random.random()
+        minp = random.uniform(0, maxp)
+        rangep = np.linspace(maxp, minp, 2*pop2.nbase+1)
+        exp_range,q = np.clip(rangep*x, 0, 1), p*(2*pop2.nbase+1)
+        print maxp, minp, exp_range, q
+        pop2.death(rangep, x)
+        assert abs(float(pop.N-pop2.N)/pop.N - exp_range[q]) < precision
 
     def test_death_extreme_starvation(self, P):
         """Confirm that death() handles extreme starvation factors
@@ -615,13 +624,14 @@ class TestPopulationClass:
         # Call and test death function
         pop2 = pop.clone()
         print pop2.genomes[:, repr_pos]
-        pop2.growth(np.linspace(0,1,2*pop2.nbase+1), x, 0, 0, 1)
-        # Calculate proportional observed and expected growth
+        maxp = random.random()
+        minp = random.uniform(0, maxp)
+        rangep = np.linspace(minp, maxp, 2*pop2.nbase+1)
         z = x*2 if sexvar else x
-        obs_growth = (pop2.N - pop.N)/float(pop.N)
-        exp_growth = p/z
-        print pop.N, pop2.N, p, z
-        assert abs(exp_growth-obs_growth) < precision
+        exp_range,q = np.clip(rangep/z, 0, 1), p*(2*pop2.nbase+1)
+        print maxp, minp, exp_range, q
+        pop2.growth(rangep, x, 0, 0, 1)
+        assert abs(float(pop2.N-pop.N)/pop.N - exp_range[q]) < precision
 
     @pytest.mark.parametrize("nparents",[1, 3, 5])
     def test_growth_smallpop(self, P, nparents):
