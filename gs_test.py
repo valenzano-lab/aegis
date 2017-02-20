@@ -10,10 +10,10 @@ import numpy as np
 import scipy.stats as st
 from scipy.misc import comb
 
-runFunctionConfigTests=True # Works with new setup
-runPopulationTests=True # "
-runRecordTests=True # "
-runRunTests=True # "
+runFunctionConfigTests=True
+runPopulationTests=True
+runRecordTests=True
+runRunTests=True
 runSimulationTests=True
 
 ####################
@@ -513,22 +513,34 @@ class TestPopulationClass:
         assert (pop.genomes == spop.genomes).all()
 
     def test_recombine_all(self, conf):
-        """Test if resulting genomee is equal to recombine_zig_zag when
+        """Test if resulting genome is equal to recombine_zig_zag when
         recombination chance is one."""
         def recombine_zig_zag(pop):
             """Recombine the genome like so:
             before: a1-a2-a3-a4-b1-b2-b3-b4
-            after:  b1-a2-b3-a4-a1-b2-a3-b4."""
+            after:  a1-b2-a3-b4-b1-a2-b3-a4."""
             g = pop.genomes.copy()
-            h = np.copy(g[:,:pop.chrlen:2])
-            g[:,:pop.chrlen:2] = g[:,pop.chrlen::2]
-            g[:,pop.chrlen::2] = h
+            h = np.copy(g[:,pop.chrlen::2])
+            g[:,pop.chrlen::2] = g[:,:pop.chrlen:2]
+            g[:,:pop.chrlen:2] = h
             return g
         conf.params["start_pop"] = 10
         pop = Population(conf.params, conf.genmap, np.array([-1]),
             np.array([[-1],[-1]]))
         zz = recombine_zig_zag(pop)
+        def report_genomes(name, array, n=10):
+            def report_part(message, lrange):
+                print message + " -", array[0,lrange],
+            l = pop.chrlen
+            print name + ":",
+            report_part("start chr1", np.arange(n))
+            report_part("end chr1", np.arange(l-n,l))
+            report_part("start chr2", np.arange(l,l+n))
+            report_part("end chr2", np.arange(-n,0)); print
+        report_genomes("Old genomes", pop.genomes)
         pop.recombine(1)
+        report_genomes("New genomes", pop.genomes)
+        report_genomes("     Zigzag", zz)
         assert (pop.genomes == zz).all()
 
     def test_recombine_float(self, spop):
@@ -698,11 +710,11 @@ class TestRecordClass:
         assert r["repr_penf"][0] == 1
         assert (r["age_distribution"][0] == agedist).all()
 
-    def test_update_agestats(self,record,pop1):
-        """Test if update_agestats properly calculates agestats for pop1
+    def test_full_update(self,record,pop1):
+        """Test if full_update properly calculates statistics for pop1
         (genomes filled with ones)."""
         rec = copy.deepcopy(record)
-        rec.update_agestats(pop1,0)
+        rec.full_update(pop1,0)
         r = rec.record
         assert  np.isclose(r["death_mean"][0],
                 np.tile(r["d_range"][-1],r["max_ls"])).all()
@@ -714,63 +726,6 @@ class TestRecordClass:
         assert np.isclose(r["repr_sd"][0], np.zeros(r["max_ls"])).all()
         assert r["density_surv"][0][-1] == 1
         assert r["density_repr"][0][-1] == 1
-
-    def test_update_shannon_weaver_degenerate(self,Rc,P):
-        """Test if equals zero when all set members are of same type."""
-        P2 = P.clone()
-        P2.genomes = np.ones(P2.genomes.shape, dtype=int)
-        assert Rc.update_shannon_weaver(P2) == -0
-
-    def test_update_shannon_weaver(self,record,spop,conf):
-        """Test that shannon weaver entropy is computed correctly for
-        a newly-initialised population."""
-        precision = 0.015
-        b = spop.nbase
-        props = np.array([spop.maxls, spop.maxls-spop.maturity, conf.n_neutral])\
-                /float(len(spop.genmap)) # Expected proportion of genome
-                # in survival loci, reproductive loci, etc.
-        probs = np.array([conf.g_dist[x] for x in ["s", "r", "n"]])
-                # Probability of a 1 for each locus type
-        dists = np.array(
-                [[comb(2*b, x)*p**x*(1-p)**(2*b-x) for x in np.arange(2*b+1)]\
-                        for p in probs])
-                # Binomial distribution values for 0 to 2*b zeros for each
-        exp = np.sum(dists * props[:,np.newaxis], 0)
-            # expected proportions of loci with each number of 1's over
-            # entire genome
-        exp_entropy = st.entropy(exp)
-        obs_entropy = record.update_shannon_weaver(spop)
-        assert abs(exp_entropy - obs_entropy) < precision
-
-    def test_sort_by_age(self, record):
-        """Test if sort_by_age correctly sorts an artificial genome
-        array."""
-        rec = copy.deepcopy(record)
-        genmap = np.sort(rec.record["genmap"])
-        ix = np.arange(len(genmap))
-            # Randomly reshuffle genmap
-        np.random.shuffle(ix)
-        rec.record["genmap"] = genmap[ix]
-        b = rec.record["n_bases"]
-        genome = np.tile(ix.reshape((len(ix),1)),b)
-            # Make into a col vector
-        genome = genome.reshape((1,len(genome)*b))[0]
-            # Flatten col vector to get one element per genome bit
-        mask = np.tile(np.arange(len(genmap)).reshape((len(ix),1)),b)
-        mask = mask.reshape((1,len(mask)*b))[0]
-        np.set_printoptions(threshold=np.inf)
-        print mask
-        print genome
-        print record.sort_by_age(genome)
-        assert (rec.sort_by_age(genome).astype(int) == mask).all()
-
-    def test_update_invstats(self,record,pop1):
-        """Test if update_invstats properly calculates genomestats for
-        pop1 (genomes filled with ones)."""
-        rec = copy.deepcopy(record)
-        rec.update_invstats(pop1,0)
-        r = rec.record
-        print np.sum(r["n1"][0] == np.ones(r["chr_len"]))
         assert (r["n1"][0] == np.ones(r["chr_len"])).all()
         assert (r["n1_std"][0] == np.zeros(r["chr_len"])).all()
         assert r["entropy"][0] == -0
@@ -778,8 +733,7 @@ class TestRecordClass:
         assert np.isclose(r["junk_repr"][0], r["r_range"][-1])
 
     def test_update(self,Rc,P):
-        """Test that update properly chains quick_update,
-        update_agestats and update_invstats."""
+        """Test that update properly chains quick_update & full_update."""
         Rc1,Rc2 = copy.deepcopy(Rc), copy.deepcopy(Rc)
         Rc1.update(P, 100, 1, 1, 0, 0, False)
         Rc2.quick_update(0, P, 100, 1, 1)
@@ -787,8 +741,7 @@ class TestRecordClass:
         for k in r1.keys():
             assert (np.array(r1[k]) == np.array(r2[k])).all()
         Rc1.update(P, 100, 1, 1, 0, 0, True)
-        Rc2.update_agestats(P, 0)
-        Rc2.update_invstats(P, 0)
+        Rc2.full_update(P, 0)
         r1,r2 = Rc1.record, Rc2.record
         for k in r1.keys():
             assert (np.array(r1[k]) == np.array(r2[k])).all()
@@ -852,7 +805,7 @@ class TestRecordClass:
 
     def test_fitness_calc(self, run):
         """Test whether fitness is calculated correctly for various cases."""
-        rec, p = copy.deepcopy(run.record), copy.deepcopy(run.population)
+        rec, p = copy.deepcopy(run.record), copy.deepcopy(run.population).toPop()
         r,s,t = rec.record,run.conf.number_of_snapshots,run.conf.number_of_stages
         r["sexual"] = False
         r["d_range"], r["r_range"] = [np.linspace(1,0,2*p.nbase+1)]*2
@@ -903,7 +856,7 @@ class TestRecordClass:
 
     def test_fitness_calc_junk(self, run):
         """Same as test_fitness_calc, but for junk fitness."""
-        rec, p = copy.deepcopy(run.record), copy.deepcopy(run.population)
+        rec, p = copy.deepcopy(run.record), copy.deepcopy(run.population).toPop()
         r,s,t = rec.record,run.conf.number_of_snapshots,run.conf.number_of_stages
         r["sexual"] = False
         r["d_range"], r["r_range"] = [np.linspace(1,0,2*p.nbase+1)]*2
@@ -1083,7 +1036,7 @@ class TestRunClass:
         of birth, death or crisis death."""
         run1 = copy.copy(run)
         z = np.zeros(2*run1.conf.n_base + 1)
-        # update_agestats, update_invstats use record.record
+        # full_update uses record.record
         run1.record.record["d_range"] = np.copy(z)
         run1.record.record["r_range"] = np.copy(z)
         # growth, death use run.conf

@@ -17,9 +17,8 @@ parser.add_argument('-l', metavar="<str>", default="log",
 parser.add_argument('-s', default="",
         help="path to simulation seed file (default: no seed)")
 parser.add_argument('-S', default=-1, 
-        help="Run number in seed file from which to take seed population;\
-                -1 indicates to seed each new run with the corresponding\
-                run from the seed file (default: -1)")
+        help="Run number in seed file from which to take seed population\
+                (default: seed each run with the corresponding seed run)")
 parser.add_argument('-m', type=int, metavar="<int>", default=10,
         help="maximum number of failed runs to repeat before accepting result"\
                 +" (default: 10)")
