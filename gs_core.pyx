@@ -5,6 +5,7 @@ import numpy as np
 cimport numpy as np
 import scipy.stats as st
 import importlib, operator, time, os, random, datetime, copy, multiprocessing
+import sys
 try:
        import cPickle as pickle
 except:
@@ -50,7 +51,7 @@ def execute_run(run, maxfail):
     if maxfail>0: blank_run = copy.deepcopy(run)
     run.execute()
     if maxfail>0 and run.dieoff:
-        nfail = blank_run.record.record["prev_failed"]
+        nfail = blank_run.record.get("prev_failed")
         if nfail >= maxfail - 1:
             run.logprint("Total failures = {0}.".format(nfail+1))
             run.logprint("Failure limit reached. Accepting failed run.")
@@ -59,10 +60,10 @@ def execute_run(run, maxfail):
         nfail += 1
         run.logprint("Run failed. Total failures = {0}. Repeating..."\
                 .format(nfail))
-        blank_run.record.record["prev_failed"] = nfail
+        blank_run.record.set("prev_failed", nfail)
         def divplus1(x): return (x*100)/(x+1)
-        blank_run.record.record["percent_dieoff"] = \
-                divplus1(blank_run.record.record["prev_failed"])
+        blank_run.record.set("percent_dieoff",
+                divplus1(blank_run.record.get("prev_failed")))
         blank_run.log = run.log + "\n"
         blank_run.starttime = run.starttime
         return execute_run(blank_run, maxfail)
@@ -111,7 +112,7 @@ class Config:
         self.number_of_runs = c.number_of_runs # Total number of runs
         self.number_of_stages = c.number_of_stages # Number of stages per run
         self.crisis_p = c.crisis_p # Per-stage crisis probability
-        self.crisis_stages = c.crisis_stages # Stages with guaranteed crises
+        self.crisis_stages = np.array(c.crisis_stages) # Stages w guaranteed crises
         self.crisis_sv = c.crisis_sv # Proportion of crisis survivors
         self.number_of_snapshots = c.number_of_snapshots # Total snapshots per run
         self.res_start = c.res_start # Initial resource value
@@ -124,8 +125,8 @@ class Config:
         self.g_dist_s = c.g_dist_s # Proportion of 1's in initial survival loci
         self.g_dist_r = c.g_dist_r # --""-- reproductive loci
         self.g_dist_n = c.g_dist_n # --""-- neutral loci
-        self.death_bound = c.death_bound # Min and max death rates
-        self.repr_bound = c.repr_bound # Min and max reproduction rates
+        self.death_bound = np.array(c.death_bound) # Min and max death rates
+        self.repr_bound = np.array(c.repr_bound) # Min and max reproduction rates
         self.r_rate = c.r_rate # Per-bit recombination rate, if sexual
         self.m_rate = c.m_rate # Per-bit mutation rate during reproduction
         self.m_ratio = c.m_ratio # Positive:negative mutation ratio
@@ -153,15 +154,18 @@ class Config:
                 range(200, 200+self.n_neutral))
         # Map from genmap to ordered loci:
         self.genmap_argsort = np.argsort(self.genmap)
-        if self.sexual: self.repr_bound[1] *= 2 # x2 fertility rate in sexual case
+        if self.sexual: self.repr_bound *= 2 # x2 fertility rate in sexual case
         # Length of chromosome in binary units
         self.chr_len = len(self.genmap) * self.n_base 
         # Probability ranges for survival and death (linearly-spaced between limits)
-        nstates = 2*self.n_base+1
-        self.d_range = np.linspace(self.death_bound[1], 
-                self.death_bound[0], nstates) # max to min death rate
+        self.n_states = 2*self.n_base+1
+        self.surv_bound = 1-self.death_bound[::-1] # Min/max survival probs
+        self.repr_step = np.diff(self.repr_bound)/self.n_states
+        self.surv_step = np.diff(self.surv_bound)/self.n_states
+        self.s_range = np.linspace(self.surv_bound[0], 
+                self.surv_bound[1], self.n_states) # min to max surv rate
         self.r_range = np.linspace(self.repr_bound[0],
-                self.repr_bound[1], nstates) # min to max repr rate
+                self.repr_bound[1], self.n_states) # min to max repr rate
         # Determine snapshot stages (evenly spaced within run):
         if type(self.number_of_snapshots) is float:
             self.snapshot_proportion = self.number_of_snapshots
@@ -302,6 +306,12 @@ cdef class Population:
         # to get total genotype value for each locus (dim1=indiv, dim2=locus)
         locs = np.einsum("ijkl->jk", chrx)
         return locs[:,self.genmap_argsort]
+    def surv_loci(self):
+        return self.sorted_loci()[:,:self.maxls]
+    def repr_loci(self):
+        return self.sorted_loci()[:,self.maxls:(2*self.maxls-self.maturity)]
+    def neut_loci(self):
+        return self.sorted_loci()[:,(2*self.maxls-self.maturity):]
 
     # Major methods:
 
@@ -469,173 +479,250 @@ class Record:
     def __init__(self, conf):
         """Initialise record object and specify initial values."""
         self.record = {}
+        def assign(keys, value): 
+            """Assign a value to a list of keys."""
+            if not isinstance(keys, list): keys = [keys]
+            for k in keys: self.record[k] = copy.deepcopy(value) 
+            return
+        def set_keys(keylist, shape): assign(keylist, np.zeros(shape))
         # Basic run info
-        self.record["dieoff"] = False
-        self.record["prev_failed"] = 0 # DOES NOT include current run if it fails
-        self.record["percent_dieoff"] = 0
+        assign("dieoff", False)
+        assign(["prev_failed", "percent_dieoff"], 0)
+        # NB: prev_failed does NOT include current ru if it fails
         # Population parameters from config object
-        self.record["genmap"] = conf.genmap
-        self.record["genmap_argsort"] = np.argsort(conf.genmap)
-        self.record["chr_len"] = np.array([conf.chr_len])
-        self.record["n_bases"] = np.array([conf.n_base])
-        self.record["max_ls"] = np.array([conf.max_ls])
-        self.record["maturity"] = np.array([conf.maturity])
-        self.record["sexual"] = conf.sexual
+        assign("genmap", conf.genmap)
+        assign("genmap_argsort", np.argsort(conf.genmap))
+        assign("chr_len", np.array([conf.chr_len]))
+        assign("n_base", np.array([conf.n_base]))
+        assign("max_ls", np.array([conf.max_ls]))
+        assign("maturity", np.array([conf.maturity]))
+        assign("n_neutral", np.array([conf.n_neutral]))
+        assign("sexual", conf.sexual)
         # Run parameters from config object
-        self.record["d_range"] = conf.d_range
-        self.record["r_range"] = conf.r_range
-        self.record["snapshot_stages"] = conf.snapshot_stages
-        self.record["n_snapshots"] = conf.number_of_snapshots
-        self.record["n_stages"] = conf.number_of_stages
-        self.record["res_var"] = conf.res_var
-        # Data collected at every stage
-        per_stage_array = np.zeros(conf.number_of_stages)
-        self.record["population_size"] = np.copy(per_stage_array)
-        self.record["resources"] = np.copy(per_stage_array)
-        self.record["surv_penf"] = np.copy(per_stage_array)
-        self.record["repr_penf"] = np.copy(per_stage_array)
-        self.record["age_distribution"] = np.zeros([conf.number_of_stages,
-            conf.max_ls])
-        # Data collected for each age at each snapshot
-        m = len(conf.snapshot_stages)
-        age_snapshot_array = np.zeros([m,conf.max_ls])
-        keys = ["death_mean","death_sd","repr_mean","repr_sd",
-                "age_wise_fitness_product","age_wise_fitness_contribution",
-                "junk_age_wise_fitness_product",
-                "junk_age_wise_fitness_contribution"]
-        for k in keys: self.record[k] = np.copy(age_snapshot_array)
-        # Genotype distribution data collected at each snapshot
-        gt_snapshot_array = np.zeros([m,2*conf.n_base+1])
-        ## Distribution of locus sums, from min to max total value
-        self.record["density_surv"] = np.copy(gt_snapshot_array)
-        self.record["density_repr"] = np.copy(gt_snapshot_array)
-        ## Number of 1's at each position along the chromosome
-        self.record["n1"] = np.zeros([m,conf.chr_len])
-        ## ?
-        self.record["n1_std"] = np.zeros([m,conf.chr_len])
-        ## ?
-        self.record["s1"] = np.zeros([m,conf.chr_len-conf.window_size+1])
-        # Simple per-snapshot data
-        snapshot_array = np.zeros(m)
-        keys = ["entropy","junk_death","junk_repr","junk_fitness","fitness",
-                "junk_death_sd", "junk_repr_sd"]
-        for k in keys: self.record[k] = np.copy(snapshot_array)
+        assign("surv_bound", conf.surv_bound)
+        assign("repr_bound", conf.repr_bound)
+        assign("surv_step", np.array(conf.surv_step))
+        assign("repr_step", np.array(conf.repr_step))
+        assign("snapshot_stages", conf.snapshot_stages)
+        assign("n_snapshots", conf.number_of_snapshots)
+        assign("n_stages", conf.number_of_stages)
+        assign("res_var", conf.res_var)
+        assign("surv_pen", conf.surv_pen)
+        assign("repr_pen", conf.repr_pen)
+        # Recording parameters from config object
+        assign("window_size", conf.window_size)
+        assign("n_states", conf.n_states)
+        # Simple data collected at every stage
+        n,l = self.record["n_stages"],self.record["max_ls"]
+        set_keys(["population_size","resources","surv_penf","repr_penf"],n)
+        set_keys(["age_distribution"],[n,l])
+        # Save population at each snapshot
+        assign("snapshot_pops", [0] * conf.number_of_snapshots)
 
-    def quick_update(self, n_stage, population, resources, surv_penf, repr_penf):
-        """Record only per-stage data, i.e. population size, age distribution, 
-        resources, and starvation penalties."""
-        self.record["population_size"][n_stage] = population.N
-        self.record["resources"][n_stage] = resources
-        self.record["surv_penf"][n_stage] = surv_penf
-        self.record["repr_penf"][n_stage] = repr_penf
-        self.record["age_distribution"][n_stage] = np.bincount(population.ages,
-                minlength = population.maxls)/float(population.N)
+    def get(self, key): 
+        return self.record[key]
+    def set(self, key, value, row=-1): 
+        """Assign an object to a record entry, or to a row of that entry."""
+        if row < 0: 
+            self.record[key] = value
+        else:
+            self.record[key][row] = value
+    def get_keys(self):
+        """Return a sorted list of entry keys."""
+        return sorted(self.record.keys())
 
-    def full_update(self, population, n_snap):
-        """Record detailed per-age statistics of population at
-        current snapshot stage, inc. death rate, reproduction rate, genotype
-        density."""
-        p = population
-        b,g = p.nbase,len(p.genmap) # Number of bits per locus
-        locs = p.sorted_loci()
-        # Subset to survival/reproductive/neutral loci
-        surv_locs = locs[:,:p.maxls]
-        repr_locs = locs[:,p.maxls:(2*p.maxls-p.maturity)]
-        neut_locs = locs[:,(2*p.maxls-p.maturity):]
-        #repr_locs = locs[:,np.arange(p.maturity,p.maxls)+p.maxls]
-        # Calculate overall genotype distribution of surv/repr loci
-        def density(loci):
-            """Return the normalised distributions of sum genotypes of an array
-            of genomic loci."""
-            bins = np.bincount(np.ndarray.flatten(locs),minlength=2*b+1)
-            return bins/float(sum(bins))
-        self.record["density_surv"][n_snap] += density(surv_locs)
-        self.record["density_repr"][n_snap] += density(repr_locs)
-        self.record["entropy"][n_snap] = st.entropy(density(locs))
-        # Convert genotypes to selection rates and find per-age mean and SD
-        death_rates = self.record["d_range"][surv_locs]
-        repr_rates = np.zeros([p.N, p.maxls])
-        repr_rates[:,p.maturity:] += self.record["r_range"][repr_locs]
-        self.record["death_mean"][n_snap] += np.mean(death_rates, 0)
-        self.record["death_sd"][n_snap] += np.std(death_rates, 0)
-        self.record["repr_mean"][n_snap] += np.mean(repr_rates, 0)
-        self.record["repr_sd"][n_snap] += np.std(repr_rates, 0)
-        # Junk stats calculated from neutral locus
-        death_rates_neut = self.record["d_range"][neut_locs]
-        repr_rates_neut = self.record["r_range"][neut_locs]
-        self.record["junk_death"][n_snap] = np.mean(death_rates_neut)
-        self.record["junk_death_sd"][n_snap] = np.std(death_rates_neut)
-        self.record["junk_repr"][n_snap] = np.mean(repr_rates_neut)
-        self.record["junk_repr_sd"][n_snap] = np.std(repr_rates_neut)
-        # Calculate mean and SD of number of 1's at each chromosome position,
-        # ordered according to genome map
-        chr_pos = p.genomes.reshape(p.N*2,p.chrlen)
-        # Mean and SD number of 1's per chromosome bit, ordered by genome map
+    def p_calc(self, gt, bound):
+        """Derive a probability array from a genotype array and list of 
+        max/min values."""
+        minval, maxval, limit = np.min(gt), np.max(gt), 2*self.get("n_base")
+        if minval < 0:
+            raise ValueError("Invalid genotype value: {}".format(minval))
+        if maxval > 2*limit:
+            raise ValueError("Invalid genotype value: {}".format(maxval))
+        p_min,p_max = np.array(bound).astype(float)
+        return p_min + (p_max - p_min)*gt/limit
+
+    def p_surv(self, gt):
+        """Derive an array of survival probabilities from a genotype array."""
+        return self.p_calc(gt, self.get("surv_bound"))
+    def p_repr(self, gt):
+        """Derive an array of reproduction probabilities from a genotype array."""
+        return self.p_calc(gt, self.get("repr_bound"))
+
+    def update(self, pop, res, surv_penf, repr_penf, n_stage, n_snap=-1):
+        """Record per-stage data (population size, age distribution, resources,
+        and survival penalties), plus, if on a snapshot stage, the population
+        as a whole."""
+        self.set("population_size", pop.N, n_stage)
+        self.set("resources", res, n_stage)
+        self.set("surv_penf", surv_penf, n_stage)
+        self.set("repr_penf", repr_penf, n_stage)
+        self.set("age_distribution", np.bincount(pop.ages,
+            minlength = pop.maxls)/float(pop.N), n_stage)
+        if n_snap >= 0:
+            self.set("snapshot_pops", Outpop(pop), n_snap)
+
+    def compute_densities(self):
+        """During finalisation, compute per-age and overall genotype density
+        distributions for different types of loci at each snapshot, along with
+        mean, variance and entropy in genotype sum."""
+        l,m,b = self.get("max_ls"), self.get("maturity"), self.get("n_base")
+        ad,ss = self.get("age_distribution"), self.get("snapshot_stages")
+        gt = np.arange(self.get("n_states"))
+        # 0: Auxiliary functions:
+        def density_by_locus(loci):
+            """Return the normalised distributions of sum genotypes for each 
+            column in a locus array."""
+            def density(x):
+                bins = np.bincount(x,minlength=self.get("n_states"))
+                return bins/float(sum(bins))
+            # dim1 = snapshot, dim2 = genotype, dim3 = age
+            out = np.array([np.apply_along_axis(density,0,x) for x in loci])
+            # dim1 = genotype, dim2 = snapshot, dim3 = locus
+            return out.transpose(1,0,2)
+        def total_density(locus_densities):
+            """Compute an overall density distribution from an array of
+            per-locus distributions."""
+            collapsed = np.sum(locus_densities, 2)
+            # dim1 = genotype, dim2 = snapshot
+            return collapsed/np.sum(collapsed, 0)
+        def get_mean_var_gt(locus_densities):
+            """Get the per-locus mean and variance of a genotype distribution
+            from an array of densities."""
+            ad_tr = locus_densities.transpose(1,2,0) # [snapshot,locus,genotype]
+            # Mean and variance of gt distribution
+            mean_gt = np.sum(ad_tr * gt, 2)
+            # Get difference between each potential genotype and the mean at
+            # each snapshot/locus
+            gt_diff = np.tile(gt, [len(ss),ad_tr.shape[1],1]) - \
+                    np.repeat(mean_gt[:,:,np.newaxis], len(gt), axis=2)
+            var_gt = np.sum(ad_tr * (gt_diff**2), 2)
+            return [mean_gt, var_gt]
+        loci = np.array([p.toPop().sorted_loci() \
+                for p in self.get("snapshot_pops")])
+        loci_by_type = {"s":np.array([L[:,:l] for L in loci]),
+                "r":np.array([L[:,l:(2*l-m)] for L in loci]),
+                "n":np.array([L[:,(2*l-m):] for L in loci]), "a":loci}
+        # Dimensions will differ depending on population size at each snapshot,
+        # so can't collapse into a single array yet.
+        density_per_locus, density, mean_gt, var_gt, entropy_gt = {},{},{},{},{}
+        for k in ["s","r","n","a"]: # Survival, reproductive, neutral, all
+            density_per_locus[k] = density_by_locus(loci_by_type[k])
+            density[k] = total_density(density_per_locus[k])
+            mean_gt[k], var_gt[k] = get_mean_var_gt(density_per_locus[k])
+            entropy_gt[k] = np.apply_along_axis(st.entropy, 0, density[k])
+        # Set record entries
+        self.set("density_per_locus", density_per_locus)
+        self.set("density", density)
+        self.set("mean_gt", mean_gt)
+        self.set("var_gt", var_gt)
+        self.set("entropy_gt", entropy_gt)
+
+    def compute_probabilities(self):
+        """During finalisation, compute mean and variance in survival and 
+        reproduction probability at each snapshot, along with the resulting
+        fitness and reproductive value."""
+        l,m,b = self.get("max_ls"), self.get("maturity"), self.get("n_base")
+        # Simple surv/repr probabilities
+        mean_gt, var_gt = self.get("mean_gt"), self.get("var_gt")
+        prob_mean, prob_var, junk_mean, junk_var = {},{},{},{}
+        keys, fns = ["surv","repr"],[self.p_surv,self.p_repr]
+        for n in xrange(2):
+            k,f = keys[n], fns[n]
+            prob_mean[k] = f(mean_gt[k[0]])
+            prob_var[k] = var_gt[k[0]]*self.get(k+"_step")
+            junk_mean[k] = f(mean_gt["n"])
+            junk_var[k] = var_gt["n"]*self.get(k+"_step")
+        # Cumulative survival probabilities: P(survival from birth to age x)
+        init_surv = np.tile(1,len(prob_mean["surv"]))
+        # (P(survival from age 0 to age 0) = 1)
+        cmv_surv = np.ones(prob_mean["surv"].shape)
+        cmv_surv[:,1:] = np.cumprod(prob_mean["surv"],1)[:,:-1]
+        junk_cmv_surv = np.mean(junk_mean["surv"],1)[:,np.newaxis]**np.arange(l)
+        #! Ideally should calculate this separately for each neutral locus,
+        #! rather than taking the average
+        # Fit reproduction probs to shape of survival probs
+        mean_repr = np.zeros(prob_mean["surv"].shape)
+        mean_repr[:,m:] = prob_mean["repr"]
+        mean_repr /= 2.0 if self.get("sexual") else 1.0
+        junk_repr = np.zeros(prob_mean["surv"].shape)
+        junk_repr[:,m:] = np.mean(junk_mean["repr"],1)[:,np.newaxis]
+        junk_repr /= 2.0 if self.get("sexual") else 1.0
+        # Per-age fitness contribution = P(survival to x) x P(reproduction at x)
+        f = cmv_surv * mean_repr
+        fitness = np.sum(f, 1)
+        junk_f = junk_cmv_surv * junk_repr
+        junk_fitness = np.sum(junk_f, 1)
+        # Reproductive value = E(future offspring at age x| survival to age x)
+        def cumsum_rev(a): return np.fliplr(np.cumsum(np.fliplr(a),1))
+        repr_value = cumsum_rev(f)/cmv_surv
+        junk_repr_value = cumsum_rev(junk_f)/junk_cmv_surv
+        # Set record entries
+        self.set("cmv_surv", cmv_surv)
+        self.set("junk_cmv_surv", junk_cmv_surv)
+        self.set("prob_mean", prob_mean)
+        self.set("prob_var", prob_var)
+        self.set("junk_mean", junk_mean)
+        self.set("junk_var", junk_var)
+        self.set("fitness_term", f)
+        self.set("junk_fitness_term", junk_f)
+        self.set("fitness", fitness)
+        self.set("junk_fitness", junk_fitness)
+        self.set("repr_value", repr_value)
+        self.set("junk_repr_value", junk_repr_value)
+
+    def compute_bits(self):
+        """During finalisation, compute the distribution of 1s and 0s at each
+        position on the chromosome (sorted by genome map), along with
+        associated statistics."""
+        l,m,b = self.get("max_ls"), self.get("maturity"), self.get("n_base")
+        # Reshape genomes to stack chromosomes
+        # [snapshot, individual, bit]
+        stacked_chrs = [p.toPop().genomes.reshape(p.N*2,p.chrlen) \
+                for p in self.get("snapshot_pops")]
+        # Dimensions will differ depending on population size at each snapshot,
+        # so can't collapse into a single array yet.
+        # Compute order of bits in genome map
         order = np.ndarray.flatten(
-            np.array([p.genmap_argsort*b + c for c in xrange(b)]),
-            order="F")
-        self.record["n1"][n_snap] = np.mean(chr_pos, axis=0)[order]
-        self.record["n1_std"][n_snap] = np.std(chr_pos, axis=0)[order]
+            np.array([p.toPop().genmap_argsort*b + c for c in xrange(b)]),
+            order="F") # Using last population; genmaps should all be same
+        # Average across individuals and sort [snapshot, bit]
+        n1 = np.array([np.mean(sc, axis=0)[order] for sc in stacked_chrs])
+        n1_var = np.array([np.var(sc, axis=0)[order] for sc in stacked_chrs])
+        # Compute overall frequency of 1's at each snapshot
+        n1_total = np.mean(n1, 1)
+        bit_distr = np.vstack((n1_total,1-n1_total))
+        entropy_bits = np.apply_along_axis(st.entropy, 0, bit_distr)
+        # Sliding-window variance in number of 1s along genome
+        d,s,w = n1.ndim-1, len(n1.strides)-1, self.get("window_size")
+        a_shape = n1.shape[:d] + (n1.shape[d] - w + 1, w)
+        a_strd = n1.strides + (n1.strides[s],) # strides
+        sliding_window_n1 = np.std(np.lib.stride_tricks.as_strided(
+            n1, shape=a_shape, strides=a_strd), 2)
+        # Set record entries
+        self.set("n1", n1)
+        self.set("n1_var", n1_var)
+        self.set("entropy_bits", entropy_bits)
+        self.set("sliding_window_n1", sliding_window_n1)
 
-    def update(self, population, resources, surv_penf, repr_penf, stage, n_snap,
-           full_update):
-        """Record detailed population data at current snapshot stage."""
-        self.quick_update(stage, population, resources, surv_penf, repr_penf)
-        if full_update: self.full_update(population, n_snap)
-
-    def age_wise_n1(self, arr_str):
-        """Convert n1/n1_std array from value-per-bit to value-per-age."""
-        arr = self.record[arr_str] # already sorted
-        s, b = arr.shape, self.record["n_bases"]
-        res = np.mean(arr.reshape((s[0], self.record["chr_len"]/b, b)), 2)
-        return res
-
-    def actual_death_rate(self):
+    def compute_actual_death(self):
         """Compute actual death rate for each age at each stage."""
-        N_age = self.record["age_distribution"] *\
-                self.record["population_size"][:,None]
+        N_age = self.get("age_distribution") *\
+                self.get("population_size")[:,None]
         dividend = N_age[1:, 1:]
         divisor = np.copy(N_age[:-1, :-1])
         divisor[divisor == 0] = 1 # avoid division by zero
         death = 1 - dividend / divisor
         # value for last age is 1
-        return np.append(death, np.ones([death.shape[0], 1]), axis=1)
+        self.set("actual_death_rate", 
+                np.append(death, np.ones([death.shape[0], 1]), axis=1))
 
-    def final_update(self, window):
-        """Compute end-of-run statistics: fitness, rolling SD of n1, 
-        actual survival, etc."""
-        r = self.record
-        # Rolling standard deviation of #1's along genome:
-        d,s = r["n1"].ndim-1, len(r["n1"].strides)-1
-        a_shape = r["n1"].shape[:d] + (r["n1"].shape[d] - window + 1, window)
-        a_strd = r["n1"].strides + (r["n1"].strides[s],) # strides
-        r["s1"] = np.std(np.lib.stride_tricks.as_strided(
-            r["n1"], shape=a_shape, strides=a_strd), 2)
-        # Calculate fitness measures
-        norm_surv,norm_repr = 1-r["death_mean"],r["repr_mean"]
-        norm_repr[:,:r["maturity"]] = 0 # (repr before maturity = 0)
-        r["age_wise_fitness_product"] = norm_surv * norm_repr
-        r["age_wise_fitness_contribution"] = np.cumprod(norm_surv,1)*norm_repr
-        r["fitness"] = np.sum(r["age_wise_fitness_contribution"],1)
-        # Junk fitness
-        def jtile(x): return np.tile(x.reshape(x.shape[0],1),r["max_ls"])
-        # (tile to shape (n_snap,maxls) - IMPORTANT)
-        junk_surv_n,junk_repr_n = jtile(1-r["junk_death"]),jtile(r["junk_repr"])
-        junk_repr_n[:,:r["maturity"]] = 0 # (repr before maturity = 0)
-        r["junk_age_wise_fitness_product"] = junk_surv_n * junk_repr_n
-        r["junk_age_wise_fitness_contribution"] = \
-                np.cumprod(junk_surv_n,1)*junk_repr_n
-        r["junk_fitness"] = np.sum(r["junk_age_wise_fitness_contribution"],1)
-        # Halve fitness values for sexual populations
-        if r["sexual"]:
-            for k in ["age_wise_fitness_product","age_wise_fitness_contribution",
-                    "fitness","junk_age_wise_fitness_product","junk_fitness",
-                    "junk_age_wise_fitness_contribution"]:
-                r[k] /= 2.0
-        # Other stats
-        self.record["actual_death_rate"] = self.actual_death_rate()
-        self.record["age_wise_n1"] = self.age_wise_n1("n1")
-        self.record["age_wise_n1_std"] = self.age_wise_n1("n1_std")
+    def finalise(self):
+        """Calculate additional stats from recorded data of a completed run."""
+        self.compute_densities()
+        self.compute_probabilities()
+        self.compute_bits()
+        self.compute_actual_death()
 
 class Run:
     """An object representing a single run of a simulation."""
@@ -709,12 +796,13 @@ class Run:
         self.dieoff = (self.population.N == 0)
         if not self.dieoff:
             # Record information
-            take_snapshot = self.n_stage in self.conf.snapshot_stages
+            snapshot = -1 if self.n_stage not in self.conf.snapshot_stages \
+                    else self.n_snap
             full_report = report_stage and self.verbose
             self.record.update(self.population, self.resources, self.surv_penf,
-                    self.repr_penf, self.n_stage, self.n_snap, take_snapshot)
-            self.n_snap += 1 if take_snapshot else 0
-            if take_snapshot and full_report: self.logprint("Snapshot taken.")
+                    self.repr_penf, self.n_stage, snapshot)
+            self.n_snap += (1 if snapshot >= 0 else 0)
+            if (snapshot >= 0) and full_report: self.logprint("Snapshot taken.")
             # Update ages, resources and starvation
             self.population.increment_ages()
             self.update_resources()
@@ -728,7 +816,7 @@ class Run:
             self.population.growth(self.conf.r_range, self.repr_penf,
                     self.conf.r_rate, self.conf.m_rate, self.conf.m_ratio)
             n1 = self.population.N
-            self.population.death(self.conf.d_range, self.surv_penf)
+            self.population.death(1-self.conf.s_range, self.surv_penf)
             n2 = self.population.N
             if full_report: 
                 self.logprint("Done. {0} individuals born, {1} died."\
@@ -743,7 +831,7 @@ class Run:
         self.n_stage += 1
         self.complete = self.dieoff or self.n_stage==self.conf.number_of_stages
         if self.complete and not self.dieoff:
-            self.record.final_update(self.conf.window_size)
+            self.record.finalise()
 
     def execute(self):
         """Execute a run object from start to completion."""
@@ -813,6 +901,7 @@ class Simulation:
             for n in xrange(self.conf.number_of_runs):
                 asyncruns+= [pool.apply_async(execute_run, [self.runs[n],
                     maxfail])]
+            sys.stderr.write("testing 0")
             outruns = [x.get() for x in asyncruns]
             self.runs = outruns
             self.log += "\n".join([x.log for x in self.runs])
@@ -919,44 +1008,74 @@ class Simulation:
             return
         self.avg_record = Record(self.conf)
         rec_list = [x.record for x in self.runs if x.complete and not x.dieoff]
-        rec_list = [r.record for r in rec_list] # Get record dicts
-        # First test that all runs are compatible
-        eq_array_0 = np.array([[len(r["genmap"]), r["chr_len"], r["n_bases"],
-            r["max_ls"], r["maturity"]] for r in rec_list])
-        eq_array_1 = np.array([list(r["d_range"])+list(r["d_range"])+\
-                list(r["snapshot_stages"]) for r in rec_list])
-        eq_array_2 = np.array([r["death_mean"].shape+r["density_surv"].shape+\
-                r["entropy"].shape+r["resources"].shape+r["n1"].shape+\
-                r["s1"].shape+r["age_distribution"].shape for r in rec_list])
-        cm = np.all(np.isclose(eq_array_0, eq_array_0[0])) and \
-                np.all(np.isclose(eq_array_1, eq_array_1[0])) and \
-                np.all(np.isclose(eq_array_2,eq_array_2[0]))
-        if cm: # Test if record item dimensions are concordant
-            sar,rr = self.avg_record.record, rec_list[0].keys()
-            self.logprint("Runs are compatible; generating averaged data.")
-            for key in rr:
-                karray = np.array([r[key] for r in rec_list])
-                sar[key],sar[key+"_SD"] = np.mean(karray, 0),np.std(karray, 0)
-                if isinstance(sar[key],np.ndarray):
-                    if np.all(np.isclose(sar[key], sar[key].astype(int))):
-                            sar[key] = sar[key].astype(int)
-                elif sar[key] == int(sar[key]):
-                    sar[key] = int(sar[key])
-            # Calculate number and % of failed runs explicitly
-            sar["n_runs"] = len(self.runs)
-            sar["n_successes"] = \
-                    sum([x.complete and not x.dieoff for x in self.runs])
-            sar["prev_failed"] = \
-                np.sum([r.record.record["prev_failed"] for r in self.runs])
-            sar["percent_dieoff"] = 100*\
-                    (sar["prev_failed"]+sum([x.dieoff for x in self.runs]))/\
-                    (sar["prev_failed"]+len(self.runs))
-            self.avg_record.record
-            return
-        else:
-            np.set_printoptions(threshold=np.inf)
-            print eq_array_0-eq_array_0[0]
-            print eq_array_1-eq_array_1[0]
-            print eq_array_2-eq_array_2[0]
-            raise ValueError("Cannot generate average run data;"+\
-                    " runs incompatible.")
+        rec_gets = [r.get for r in rec_list] # Get record get methods
+        # Auxiliary functions
+        def test_compatibility():
+            """Test that all records to be averaged have compatible dimensions
+            in all data entries."""
+            eq_array_0 = np.array([[len(r("genmap")), r("chr_len"), r("n_base"),
+                r("max_ls"), r("maturity"), r("n_states"), r("n_neutral"),
+                r("surv_step"), r("repr_step")] for r in rec_gets])
+            eq_array_1 = np.array([list(r("surv_bound"))+list(r("repr_bound"))+\
+                    list(r("snapshot_stages")) for r in rec_gets])
+            eq_array_2 = np.array([r("mean_gt")["s"].shape+r("density")["s"].shape+\
+                    r("entropy_gt")["s"].shape+r("resources").shape+r("n1").shape+\
+                    r("sliding_window_n1").shape+r("age_distribution").shape\
+                    for r in rec_gets])
+            cm = np.all(np.isclose(eq_array_0, eq_array_0[0])) and \
+                    np.all(np.isclose(eq_array_1, eq_array_1[0])) and \
+                    np.all(np.isclose(eq_array_2,eq_array_2[0]))
+            if not cm:
+                np.set_printoptions(threshold=np.inf)
+                print eq_array_0-eq_array_0[0]
+                print eq_array_1-eq_array_1[0]
+                print eq_array_2-eq_array_2[0]
+                raise ValueError("Cannot generate average run data;"+\
+                        " runs incompatible.")
+            else:
+                self.logprint("Runs are compatible; generating averaged data.")
+        def average_entry(key):
+            """Average a given entry across all runs and store under the
+            corresponding key in self.avg_record."""
+            excl = ["snapshot_pops", "prev_failed", "percent_dieoff",
+                    "n_runs", "n_successes"]
+            if key in excl: return
+            k0,sar = rec_gets[0](key), self.avg_record
+            if isinstance(k0, dict):
+                d_out, d_out_sd = {}, {}
+                for k in sorted(k0.keys()):
+                    karray = np.array([r(key)[k] for r in rec_gets])
+                    d_out[k] = np.mean(karray, 0)
+                    d_out_sd[k] = np.std(karray, 0)
+                sar.set(key, d_out)
+                sar.set(key + "_sd", d_out_sd)
+            elif isinstance(k0, np.ndarray) or isinstance(k0, int)\
+                    or isinstance(k0, float):
+                karray = np.array([r(key) for r in rec_gets])
+                sar.set(key, np.mean(karray, 0))
+                sar.set(key + "_sd", np.std(karray, 0))
+                if isinstance(sar.get(key),np.ndarray):
+                    if np.allclose(sar.get(key), sar.get(key).astype(int)):
+                            sar.set("key", sar.get(key).astype(int))
+                elif sar.get(key) == int(sar.get(key)):
+                    sar.set(key,int(sar.get(key)))
+            else:
+                erstr = "Unrecognised entry type: {0}, {1}".format(k0,type(k0))
+                raise ValueError(erstr)
+        def compute_failure():
+            """Explicitly calculate number and percentage of failed runs."""
+            sar = self.avg_record
+            sar.set("n_runs",len(self.runs))
+            sar.set("n_successes", 
+                    sum([x.complete and not x.dieoff for x in self.runs]))
+            fails = [r.record.get("prev_failed") for r in self.runs]
+            failsum = np.sum(fails)
+            sar.set("prev_failed", failsum)
+            sar.set("percent_dieoff", 100*\
+                    (sar.get("prev_failed")+sum([x.dieoff for x in self.runs]))/\
+                    (sar.get("prev_failed")+len(self.runs)))
+        # Procedure
+        test_compatibility() # First test record compatibility
+        keys = rec_list[0].get_keys()
+        for key in keys: average_entry(key)
+        compute_failure()

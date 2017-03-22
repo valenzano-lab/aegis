@@ -107,6 +107,7 @@ tick_size = 7
 ######################
 ### PLOT FUNCTIONS ###
 ######################
+
 # Get and subset colour map
 colormap = plt.cm.YlOrRd
 colors = [colormap(i) for i in np.linspace(0.1, 0.8, L["n_snapshots"])]
@@ -178,12 +179,11 @@ def reproduction():
 
 def pop_res(s1=0, s2=L["n_stages"]):
     """Plot population (blue) and resources (res) in specified stage range."""
-    if L["res_var"]: # based on L["var"], plot either res or pop_size on top
-        l1,l2 = plt.plot(L["resources"][s1:s2+1],"r-",
-                L["population_size"][s1:s2+1],"b-")
-    else: 
-        l2,l1 = plt.plot(L["population_size"][s1:s2+1],"b-",
-                L["resources"][s1:s2+1],"r-")
+    p,r,n = L["population_size"], L["resources"], L["n_stages"]
+    def plot_p(): plt.plot(p[0:n+1], "b-", label="Population")
+    def plot_r(): plt.plot(r[0:n+1], "r-", label="Resources")
+    f1,f2 = [plot_r,plot_p] if L["res_var"] else [plot_p,plot_r]
+    f1(); f2()
     plt.figure(1).legend((l1,l2),("resources","population"),
             "upper right",prop={"size":7})
     plt.title("Resources and population")
@@ -220,11 +220,25 @@ def starvation(s1=0, s2=L["n_stages"]):
 def age_distribution():
     """Plot age_distribution for each snapshot (red = most recent)."""
     for i,j in zip(L["snapshot_stages"]-1,range(L["n_snapshots"])):
-        plt.plot(L["age_distribution"][i], color=colors[j])
-    plt.title("Age distribution")
-    plt.xlabel("age")
-    plt.ylabel("fraction",rotation="vertical")
-    save_close("age_distribution")
+        plt.plot(L["age_distribution"][i]*100, color=colors[j])
+    handles = [mpatches.Patch(color=colors[0], label="snapshot 1"),
+            mpatches.Patch(color="white",label="..."),
+            mpatches.Patch(color=colors[-1],label="snapshot {}".format(lns))]
+    finalise_plot("Distribution of Ages in Population at Snapshot Stages",
+            "Age [stages]", "Proportion of Individuals [%]", 
+            "age_distribution", handles)
+
+def finalise_plot(title, xlabel, ylabel, filename, handles=""):
+    """Set axis and overall titles of a single plot, then save."""
+    plt.title(title, y=1.02)
+    plt.xlabel(xlabel)
+    plt.ylabel(ylabel, rotation="vertical")
+    plt.tight_layout()
+    if handles=="":
+        plt.legend(loc="upper right", prop={"size":10})
+    else:
+        plt.legend(handles=handles, loc="upper right", prop={"size":10})
+    save_close(filename)
 
 # All determines wether all snapshot stages are plotted on a 4x4 figure
 # or just the last is plotted with the recording standard deviation
@@ -315,21 +329,24 @@ def density(plot_all=False):
     (blue) and reproduction (red) loci in the genome. If plot_all, plot all 
     snapshots on a grid; else plot the final snapshot alone."""
     basename = "density"
-    pt,xt,yt = "Genotype density distribution","Genotype","Density"
+    pt = "Distribution of Locus Genotypes"
+    xt = "Locus Genotype [sum of bits]"
+    yt = "Proportion of Loci [%]"
     y_bound = (0,np.around(max(np.max(L["density_surv"]),
         np.max(L["density_repr"])),2))
     def d_plot(ax, nsnap):
-            ax.plot(L["density_surv"][nsnap],"b-")
-            ax.plot(L["density_repr"][nsnap],"r-")
+            ax.plot(L["density_repr"][nsnap],"r-", label="Reproduction")
+            ax.plot(L["density_surv"][nsnap],"b-", label="Survival")
             ax.set_ylim(y_bound)
             ax.yaxis.set_ticks(np.linspace(y_bound[0],y_bound[1],5))
-            ax.tick_params(axis="both",labelsize=7)
+            ax.tick_params(axis="both",labelsize=10)
     if plot_all:
         grid_plot(d_plot, pt, xt, yt, basename)
     else:
         fig, ax = plt.subplots()
         d_plot(ax, L["n_snapshots"]-1)
         plt.title(pt + " (final snapshot only)")
+        plt.legend(loc="upper right",prop={"size":10})
         set_axis_labels(ax, yt, xt, "")
         save_close(basename+"_final")
 

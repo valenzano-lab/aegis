@@ -25,7 +25,7 @@ res_limit = 5000 # Maximum resource value, if variable
 ## STARTING POPULATION PARAMETERS ##
 start_pop = 500 # Starting population size
 age_random = False # Random starting ages; else all start as new adults
-g_dist_s = 0.5 # Propoprtion of 1's in survival loci of initial genomes
+g_dist_s = 0.5 # Proportion of 1's in survival loci of initial genomes
 g_dist_r = g_dist_s #                       reproductive loci
 g_dist_n = g_dist_s #                       neutral loci
 

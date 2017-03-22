@@ -38,7 +38,8 @@ def conf(request):
         db_low, rb_low = np.random.uniform(size=2)
         db_high = db_low + random.uniform(0, 1-db_low)
         rb_high = rb_low + random.uniform(0, 1-rb_low)
-        c.death_bound,c.repr_bound = [db_low, db_high],[rb_low, rb_high]
+        c.death_bound = np.array([db_low, db_high])
+        c.repr_bound = np.array([rb_low, rb_high])
         c.r_rate, c.m_rate, c.m_ratio = [random.random() for x in range(3)]
         c.max_ls = random.randint(20, 99)
         c.maturity = random.randint(5, c.max_ls-2)
@@ -82,7 +83,7 @@ def record(request,conf):
     """Create a record from pop1 as defined in configuration file."""
     spaces = 2 * conf.n_base + 1
     c = copy.deepcopy(conf)
-    c.d_range,c.r_range = np.linspace(1,0,spaces),np.linspace(0,1,spaces)
+    c.s_range,c.r_range = np.linspace(0,1,spaces),np.linspace(0,1,spaces)
     rec = Record(c)
     return rec
 
@@ -121,6 +122,8 @@ def Rc(request, R):
 ### 0: DUMMY RUN ###
 ####################
 
+@pytest.mark.skipif(not runSimulationTests,
+        reason="Not running Simulation class tests.")
 def test_sim_run():
     # Begin by running a dummy simulation and saving the output
     # Also functions as test of output functions
@@ -131,6 +134,8 @@ def test_sim_run():
     os.rename("output.rec", "sample_output.rec")
     os.rename("log.txt", "sample_log.txt")
 
+@pytest.mark.skipif(not runSimulationTests,
+        reason="Not running Simulation class tests.")
 @pytest.fixture(scope="session")
 def run_sim(request):
     """Get pre-run simulation created during test_sim_run."""
@@ -195,7 +200,7 @@ class TestFunctionsConfig:
         """Test that gen_conf correctly generates derived simulation params."""
         # Remove stuff that gets introduced/changed in gen_conf
         c = copy.deepcopy(conf)
-        del c.g_dist, c.genmap, c.chr_len, c.d_range, c.r_range, c.params
+        del c.g_dist, c.genmap, c.chr_len, c.s_range, c.r_range, c.params
         del c.snapshot_stages
         if c.sexual: c.repr_bound[1] /= 2
         crb1 = c.repr_bound[1]
@@ -211,8 +216,8 @@ class TestFunctionsConfig:
                 c.n_neutral
         assert c.chr_len == len(c.genmap) * c.n_base
         assert c.repr_bound[1]/crb1 == 2 if sexvar else 1
-        assert np.array_equal(c.d_range, np.linspace(c.death_bound[1], 
-            c.death_bound[0],2*c.n_base+1))
+        assert np.array_equal(c.s_range, np.linspace(c.surv_bound[0], 
+            c.surv_bound[1],2*c.n_base+1))
         assert np.array_equal(c.r_range, np.linspace(c.repr_bound[0], 
             c.repr_bound[1],2*c.n_base+1))
         assert len(c.snapshot_stages) == c.number_of_snapshots if \
@@ -674,247 +679,304 @@ class TestRecordClass:
 
     def test_init_record(self, record, conf):
         r = record.record
-        n = conf.number_of_snapshots
-        m = conf.number_of_stages
-        w = conf.window_size
+        m,n = conf.number_of_snapshots, conf.number_of_stages
+        l,w = conf.max_ls, conf.window_size
         def assert_sameshape(keys,ref):
             """Test whether all listed record arrays have identical
             shape."""
             for x in keys:
                 assert r[x].shape == ref
                 assert np.all(r[x] == 0)
-        assert (r["genmap"] == conf.genmap).all()
-        assert (r["chr_len"] == np.array([conf.chr_len])).all()
-        assert (r["n_bases"] == np.array([conf.n_base])).all()
-        assert (r["max_ls"] == np.array([conf.max_ls])).all()
-        assert (r["maturity"] == np.array([conf.maturity])).all()
-        assert (r["d_range"] == np.linspace(1,0,2*conf.n_base+1)).all()
-        assert (r["r_range"] == np.linspace(0,1,2*conf.n_base+1)).all()
-        assert (r["snapshot_stages"] == conf.snapshot_stages).all()
-        assert_sameshape(["death_mean", "death_sd", "repr_mean",
-                    "repr_sd", "age_wise_fitness_product",
-                    "junk_age_wise_fitness_product",
-                    "age_wise_fitness_contribution",
-                    "junk_age_wise_fitness_contribution"], (n,conf.max_ls))
-        assert_sameshape(["density_surv", "density_repr"],
-                    (n,2*conf.n_base+1))
-        assert_sameshape(["entropy","junk_death","junk_repr","junk_fitness",
-                    "fitness"], (n,))
-        assert_sameshape(["population_size", "resources", "surv_penf",
-                    "repr_penf"], (m,))
-        assert_sameshape(["age_distribution"],(m,conf.max_ls))
-        assert_sameshape(["n1", "n1_std"], (n,conf.chr_len))
-        assert_sameshape(["s1"], (n, conf.chr_len - w + 1))
+        # Basic run info
+        assert r["dieoff"] == False
+        assert r["prev_failed"] == 0
+        assert r["percent_dieoff"] == 0
+        # Population parameters
+        assert np.array_equal(r["genmap"], conf.genmap)
+        assert np.array_equal(r["genmap_argsort"], np.argsort(conf.genmap))
+        assert np.array_equal(r["chr_len"], np.array([conf.chr_len]))
+        assert np.array_equal(r["n_base"], np.array([conf.n_base]))
+        assert np.array_equal(r["max_ls"], np.array([conf.max_ls]))
+        assert np.array_equal(r["maturity"], np.array([conf.maturity]))
+        assert np.array_equal(r["n_neutral"], np.array([conf.n_neutral]))
+        assert r["sexual"] == conf.sexual
+        # Run parameters
+        assert r["surv_step"] == conf.surv_step
+        assert r["repr_step"] == conf.repr_step
+        assert np.array_equal(r["snapshot_stages"], conf.snapshot_stages)
+        assert np.array_equal(r["n_snapshots"], conf.number_of_snapshots)
+        assert np.array_equal(r["n_stages"], conf.number_of_stages)
+        assert r["res_var"] == conf.res_var
+        assert r["surv_pen"] == conf.surv_pen
+        assert r["repr_pen"] == conf.repr_pen
+        # Recording parameters
+        assert r["window_size"] == conf.window_size
+        assert r["n_states"] == conf.n_states
+        # Probability functions
+        states = [random.choice(xrange(r["n_states"])) for x in xrange(3)]
+        # Empty recording data
+        for k in ["population_size","resources","surv_penf","repr_penf"]:
+            assert np.array_equal(r[k], np.zeros(r["n_stages"]))
+        print r["age_distribution"].shape, (n,l)
+        assert np.array_equal(r["age_distribution"], np.zeros([n,l]))
+        assert r["snapshot_pops"] == [0]*len(r["snapshot_stages"])
+
+    #! TODO: Test p_surv, p_repr methods in Record
+
+    def test_set_get_simple(self, record):
+        """Test methods for storing and retrieving record data."""
+        rstr = ''.join(random.choice(string.ascii_lowercase) for _ in range(10))
+        rnum1 = random.random()
+        rnum2 = random.random()
+        record.set(rstr, rnum1)
+        assert record.record[rstr] == rnum1
+        assert record.get(rstr) == rnum1
+        record.set(rstr, rnum2)
+        assert record.record[rstr] == rnum2
+        assert record.get(rstr) == rnum2
+
+    def test_set_get_row(self, record):
+        """Test get and set methods for multi-row data."""
+        assert True #! TODO: Write this
+    #! TODO: Test get_keys method
 
     # Per-stage updating
 
-    def test_quick_update(self, Rc, P):
+    def test_update_quick(self, Rc, P):
         """Test that every-stage update function records correctly."""
         Rc2 = copy.deepcopy(Rc)
-        Rc2.quick_update(0, P, 100, 1, 1)
-        r = Rc2.record
+        Rc2.update(P, 100, 1, 1, 0, -1)
+        r = Rc2.get
         agedist=np.bincount(P.ages,minlength=P.maxls)/float(P.N)
-        assert r["population_size"][0] == P.N
-        assert r["resources"][0] == 100
-        assert r["surv_penf"][0] == 1
-        assert r["repr_penf"][0] == 1
-        assert (r["age_distribution"][0] == agedist).all()
+        assert r("population_size")[0] == P.N
+        assert r("resources")[0] == 100
+        assert r("surv_penf")[0] == 1
+        assert r("repr_penf")[0] == 1
+        assert np.array_equal(r("age_distribution")[0], agedist)
+        for n in xrange(len(r("snapshot_pops"))):
+            assert r("snapshot_pops")[n] == 0
 
-    def test_full_update(self,record,pop1):
-        """Test if full_update properly calculates statistics for pop1
-        (genomes filled with ones)."""
-        rec = copy.deepcopy(record)
-        rec.full_update(pop1,0)
-        r = rec.record
-        assert  np.isclose(r["death_mean"][0],
-                np.tile(r["d_range"][-1],r["max_ls"])).all()
-        assert np.isclose(r["death_sd"][0], np.zeros(r["max_ls"])).all()
-        assert np.isclose(r["repr_mean"][0],
-                np.append(np.zeros(r["maturity"]),
-                    np.tile(r["r_range"][-1],
-                        r["max_ls"]-r["maturity"]))).all()
-        assert np.isclose(r["repr_sd"][0], np.zeros(r["max_ls"])).all()
-        assert r["density_surv"][0][-1] == 1
-        assert r["density_repr"][0][-1] == 1
-        assert (r["n1"][0] == np.ones(r["chr_len"])).all()
-        assert (r["n1_std"][0] == np.zeros(r["chr_len"])).all()
-        assert r["entropy"][0] == -0
-        assert np.isclose(r["junk_death"][0], r["d_range"][-1])
-        assert np.isclose(r["junk_repr"][0], r["r_range"][-1])
-
-    def test_update(self,Rc,P):
-        """Test that update properly chains quick_update & full_update."""
-        Rc1,Rc2 = copy.deepcopy(Rc), copy.deepcopy(Rc)
-        Rc1.update(P, 100, 1, 1, 0, 0, False)
-        Rc2.quick_update(0, P, 100, 1, 1)
-        r1,r2 = Rc1.record, Rc2.record
-        for k in r1.keys():
-            assert (np.array(r1[k]) == np.array(r2[k])).all()
-        Rc1.update(P, 100, 1, 1, 0, 0, True)
-        Rc2.full_update(P, 0)
-        r1,r2 = Rc1.record, Rc2.record
-        for k in r1.keys():
-            assert (np.array(r1[k]) == np.array(r2[k])).all()
+    def test_update_full(self, Rc, P):
+        """Test that snapshot update function records correctly."""
+        Rc2 = copy.deepcopy(Rc)
+        P2 = P.clone()
+        np.random.shuffle(P2.genmap)
+        np.random.shuffle(P2.ages)
+        np.random.shuffle(P2.genomes)
+        Rc2.update(P2, 200, 2, 2, 0, 0)
+        r = Rc2.get
+        agedist=np.bincount(P2.ages,minlength=P2.maxls)/float(P2.N)
+        # Per-stage factors
+        assert r("population_size")[0] == P2.N
+        assert r("resources")[0] == 200
+        assert r("surv_penf")[0] == 2
+        assert r("repr_penf")[0] == 2
+        assert np.array_equal(r("age_distribution")[0], agedist)
+        for n in xrange(1,len(r("snapshot_pops"))):
+            assert r("snapshot_pops")[n] == 0
+        # Snapshot population
+        p = r("snapshot_pops")[0]
+        assert isinstance(p, Outpop)
+        assert np.array_equal(p.genmap, P2.genmap)
+        assert np.array_equal(p.ages, P2.ages)
+        assert np.array_equal(p.genomes, P2.genomes)
 
     # Test final updating
 
-    def test_age_wise_n1(self,record):
-        """Test if ten consecutive array items are correctly averaged."""
-        rec = copy.deepcopy(record)
-        genmap = rec.record["genmap"]
-        b = rec.record["n_bases"]
-        ix = np.arange(len(genmap))
-        mask = np.tile(np.arange(len(genmap)).reshape((len(ix),1)),b)
-        mask = mask.reshape((1,len(mask)*b))[0]
-        rec.record["mask"] = np.array([mask])
-        print mask.shape
-        assert (rec.age_wise_n1("mask") == ix).all()
+    def static_fill(self, rec_obj, pop_obj):
+        """Auxiliary function: fill a whole record object with the same initial
+        population state."""
+        n,s,c = rec_obj.get("n_stages"), rec_obj.get("snapshot_stages"), 0
+        for x in xrange(n):
+            snapshot = c if x in s else -1
+            rec_obj.update(pop_obj, 100, 1, 1, x, snapshot)
+            c += 1 if x in s else 0
 
-    def test_actual_death_rate(self, Rc):
-        """Test if actual_death_rate returns expected results for
+    def test_compute_densities(self, pop1, record):
+        """Test computation of per-locus and overall genotype distributions and
+        associated statistics during finalisation."""
+        rec = copy.deepcopy(record)
+        self.static_fill(rec, pop1)
+        rec.compute_densities()
+        m,l,b = rec.get("n_snapshots"), rec.get("max_ls"), rec.get("n_states")
+        g,nn,mt = len(rec.get("genmap")), rec.get("n_neutral"), rec.get("maturity")
+        klist = ["density_per_locus", "density", "mean_gt", "var_gt", "entropy_gt"]
+        llist = ['a', 'n', 'r', 's'] # Locus types
+        dims = {"density_per_locus":{"a":[b,m,g],"n":[b,m,nn],"r":[b,m,l-mt],
+            "s":[b,m,l]},
+            "density":{"a":[b,m],"n":[b,m],"r":[b,m],"s":[b,m]},
+            "mean_gt":{"a":[m,g],"n":[m,nn],"r":[m,l-mt],"s":[m,l]},
+            "var_gt":{"a":[m,g],"n":[m,nn],"r":[m,l-mt],"s":[m,l]},
+            "entropy_gt":{"a":m,"n":m,"r":m,"s":m}} # Expected dimensions
+        for k in klist:
+            obj = rec.get(k)
+            assert sorted(obj.keys()) == llist
+            for l in llist:
+                check = np.zeros(dims[k][l])
+                if k in ["density_per_locus", "density"]: 
+                    check[-1] = 1 # All density at maximum value
+                if k == "mean_gt": check[:] = b-1 # All genotypes maximal
+                print k,l
+                print obj[l].shape,check.shape
+                assert np.array_equal(obj[l], check)
+    #! TODO: Add test that this still works when snapshot pops are of different
+    #! sizes
+
+    def test_compute_probabilities(self, pop1, record):
+        """Test computation of survival and reproduction probabilities and
+        fitness statistics during finalisation."""
+        rec = copy.deepcopy(record)
+        self.static_fill(rec, pop1)
+        rec.compute_densities()
+        rec.compute_probabilities()
+        # Setup for probability comparisons
+        r,llist,ps,pr = rec.get, ["repr","surv"], rec.p_surv, rec.p_repr
+        m,ls,mt = r("n_snapshots"),r("max_ls"),r("maturity")
+        ns,nn = r("n_states"),r("n_neutral")
+        klist = ["prob_mean", "prob_var", "junk_mean", "junk_var"]
+        dims = {"prob":{"s":[m,ls],"r":[m,ls-mt]},"junk":{"s":[m,nn],"r":[m,nn]}}
+        vmax = {"repr":pr(ns-1), "surv":ps(ns-1)} # Max repr/surv value
+        def get_ref_array(key, ltype):
+            a,b = k.split("_")
+            dim = dims[a][ltype[0]]
+            return np.tile(vmax[ltype], dim) if b == "mean" else np.zeros(dim)
+        for k in klist:
+            obj = rec.get(k)
+            assert sorted(obj.keys()) == llist
+            for l in llist: assert np.array_equal(obj[l],get_ref_array(k,l))
+        # Fitness / RV comparisons
+        print vmax["repr"], vmax["surv"], vmax["repr"] * vmax["surv"]
+        cs = np.tile(vmax["surv"]**np.arange(ls), [m,1])
+        assert np.allclose(r("cmv_surv"), cs)
+        assert np.allclose(r("junk_cmv_surv"), cs)
+        fit = np.concatenate((np.zeros(mt),np.ones(ls-mt))) * vmax["repr"]
+        assert np.allclose(r("fitness_term"), cs * fit)
+        assert np.allclose(r("junk_fitness_term"), cs * fit)
+        def cumsum_rev(a): return np.fliplr(np.cumsum(np.fliplr(a),1))
+        crf = cumsum_rev(r("fitness_term"))
+        crj = cumsum_rev(r("junk_fitness_term"))
+        #assert np.allclose(r("repr_value"), cumsum_rev(r("fitness_term"))/
+        assert np.allclose(r("repr_value"),crf/r("cmv_surv"))
+        assert np.allclose(r("junk_repr_value"),crj/r("junk_cmv_surv"))
+        for k in ["fitness", "junk_fitness"]:
+            obj = r(k)
+            print k, obj.shape
+            print obj[0]
+        assert np.allclose(r("fitness"), np.sum(r("fitness_term"),1))
+        assert np.allclose(r("junk_fitness"), np.sum(r("junk_fitness_term"),1))
+
+    def test_compute_bits(self, pop1, record):
+        """Test computation of number and variance in bit value along
+        chromosome during finalisation."""
+        rec = copy.deepcopy(record)
+        self.static_fill(rec, pop1)
+        rec.compute_densities()
+        rec.compute_probabilities()
+        rec.compute_bits()
+        r = rec.get
+        m,c,w = r("n_snapshots"),r("chr_len"),r("window_size")
+        assert np.array_equal(r("n1"), np.ones([m,c]))
+        assert np.array_equal(r("n1_var"), np.zeros([m,c]))
+        assert np.array_equal(r("entropy_bits"), np.zeros(m))
+        assert np.array_equal(r("sliding_window_n1"), np.zeros([m,c-w+1]))
+    #! TODO: Add test that this still works when snapshot pops are of different
+    #! sizes
+
+    def test_compute_actual_death(self, Rc):
+        """Test if compute_actual_death stores expected results for
         artificial data."""
         Rc1 = copy.deepcopy(Rc)
-        r = Rc1.record
-        maxls = r["max_ls"][0]
-        r["age_distribution"] = np.tile(1/float(maxls), (3, maxls))
-        r["population_size"] = np.array([maxls*4,maxls*2,maxls])
-        print r["age_distribution"]
-        print r["population_size"]
-        adr = Rc1.actual_death_rate()
-        print adr
+        r = Rc1.get
+        maxls = r("max_ls")[0]
+        Rc1.set("age_distribution", np.tile(1/float(maxls), (3, maxls)))
+        Rc1.set("population_size", np.array([maxls*4,maxls*2,maxls]))
+        Rc1.compute_actual_death()
+        adr = r("actual_death_rate")
         assert (adr[:,:-1] == 0.5).all()
         assert (adr[:,-1] == 1).all()
 
-    def test_final_update(self, pop1, record, conf):
+    def test_finalisation(self, pop1, record, conf):
+        """Test that finalisation correctly applies all expected methods to
+        Record object."""
+        # Copy and fill record
         rec = copy.deepcopy(record)
-        s = conf.number_of_snapshots
-        t = conf.number_of_stages
-        for n in range(s):
-            rec.update(pop1, 100, 1, 1, 0, n, True)
-        for m in range(t):
-            rec.update(pop1, 100, 1, 1, m, 0, False)
-        rec.final_update(conf.window_size)
-        r = rec.record
-        # Predicted age_wise_fitness_contribution array:
-        pf = np.append(np.zeros((s,r["maturity"])),
-                np.ones((s,r["max_ls"]-r["maturity"])),1)
-        # Predicted actual death rate:
-        pad = np.append(np.ones(r["maturity"]-1), np.array([1-pop1.N]))
-        pad = np.append(pad, np.ones(r["max_ls"] - len(pad)))
-        # All fitness terms should be positive
-        assert (r["age_wise_fitness_contribution"] == pf).all()
-        assert (r["junk_age_wise_fitness_contribution"] == pf).all()
-        assert (r["age_wise_fitness_product"] == pf).all()
-        assert (r["junk_age_wise_fitness_product"] == pf).all()
-        assert (r["fitness"] == np.sum(pf,1)).all()
-        assert (r["junk_fitness"] == np.sum(pf,1)).all()
-        assert (r["age_wise_n1"] == 1).all()
-        assert (r["age_wise_n1_std"] == 0).all()
-        assert (r["actual_death_rate"] == pad).all()
-        assert (r["s1"] == 0).all()
+        self.static_fill(rec, pop1)
+        rec2 = copy.deepcopy(rec)
+        # Finalise
+        rec.compute_densities()
+        rec.compute_probabilities()
+        rec.compute_bits()
+        rec.compute_actual_death()
+        rec2.finalise()
+        # Compare method-wise and overall finalisation
+        for k in rec.record.keys():
+            print k
+            o1, o2 = rec.get(k), rec2.get(k)
+            if isinstance(o1, dict):
+                for l in o1.keys():
+                    assert np.array_equal(np.array(o1[l]),np.array(o2[l]))
+            elif k != "snapshot_pops" and not callable(o1):
+                assert np.array_equal(np.array(o1), np.array(o2))
 
     def test_fitness_calc(self, run):
         """Test whether fitness is calculated correctly for various cases."""
-        rec, p = copy.deepcopy(run.record), copy.deepcopy(run.population).toPop()
-        r,s,t = rec.record,run.conf.number_of_snapshots,run.conf.number_of_stages
-        r["sexual"] = False
-        r["d_range"], r["r_range"] = [np.linspace(1,0,2*p.nbase+1)]*2
-        for n in range(s):
-            rec.update(p, 100, 1, 1, 0, n, True)
-        for m in range(t):
-            rec.update(p, 100, 1, 1, m, 0, False)
-        rec1 = copy.deepcopy(rec); r1 = rec1.record; r1["sexual"]= True
-        def gen_death(x): return np.tile(x, (p.N, p.maxls))
-        def gen_repr(x): return np.hstack([np.zeros((p.N, p.maturity)),
-            np.tile(x, (p.N, p.maxls-p.maturity))])
-        def set_means_and_calc(x, y):
-            r["death_mean"],r["repr_mean"] = gen_death(x), gen_repr(y)
-            r1["death_mean"],r1["repr_mean"] = gen_death(x), gen_repr(y)
-            rec.final_update(100)
-            rec1.final_update(100)
-        def assert_fitnesses(a, b):
-            fc,fp = "age_wise_fitness_contribution","age_wise_fitness_product"
-            assert np.array_equal(r["fitness"], np.sum(r[fc],1))
-            assert np.all(r[fp][:,:p.maturity]==0)
-            assert np.all(r[fc][:,:p.maturity]==0)
-            assert np.all(np.isclose(r[fp][:,p.maturity:],a))
-            assert np.all(np.isclose(r[fc][:,p.maturity:],b))
-            for k in ["fitness", "age_wise_fitness_product",
-                    "age_wise_fitness_contribution"]:
-                assert np.all(r[k] >= 0)
-                assert np.all(np.isclose(r[k]/2.0, r1[k]))
-        # Certain reproduction, impossible death
-        set_means_and_calc(0.0, 1.0)
+        rec = copy.deepcopy(run.record)
+        r = rec.get
+        m,l,mt,nn = r("n_snapshots"),r("max_ls"),r("maturity"),r("n_neutral")
+        rec.set("sexual", False)
+        rec.set("surv_bound", [0,1])
+        rec.set("repr_bound", [0,1])
+        assert rec.p_surv(0) == 0
+        assert rec.p_surv(rec.get("n_states")-1) == 1
+        assert rec.p_surv((rec.get("n_states")-1)/2.0) == 0.5
+        self.static_fill(rec, run.population.toPop())
+        rec1 = copy.deepcopy(rec); r1 = rec1.get; rec1.set("sexual", True)
+        def set_means_and_calc(x,y,z):
+            def get_tiles(val,ncol):
+                return np.tile(val*(rec.get("n_states")-1), [m,ncol])
+            s,r,n = get_tiles(x,l), get_tiles(y,l-mt), get_tiles(z,nn)
+            a = np.hstack((s,r,n))
+            d_means = {"s":s,"r":r,"n":n,"a":a}
+            d_vars = {"s":np.zeros(s.shape), "r":np.zeros(r.shape),
+                    "n":np.zeros(n.shape), "a":np.zeros(a.shape)}
+            for R in [rec, rec1]:
+                R.set("mean_gt", d_means)
+                R.set("var_gt", d_vars)
+            rec.compute_probabilities()
+            rec1.compute_probabilities()
+        def assert_fitnesses(fit, junkfit):
+            assert np.array_equal(r("fitness"), np.sum(r("fitness_term"),1))
+            assert np.array_equal(r("junk_fitness"), 
+                    np.sum(r("junk_fitness_term"),1))
+            assert np.all(r("fitness_term")[:,:mt]==0)
+            assert np.all(r("junk_fitness_term")[:,:mt]==0)
+            assert np.all(np.isclose(r("fitness_term")[:,mt:],fit))
+            assert np.all(np.isclose(r("junk_fitness_term")[:,mt:],junkfit))
+            for k in ["fitness", "fitness_term", 
+                    "junk_fitness", "junk_fitness_term"]:
+                assert np.all(r(k) >= 0)
+                assert np.all(np.isclose(r(k)/2.0, r1(k)))
+        # Certain reproduction and survival
+        set_means_and_calc(1.0, 1.0, 1.0)
         assert_fitnesses(1.0, 1.0)
-        # Certain reproduction, random death
-        death_rate = random.random()
-        set_means_and_calc(death_rate, 1.0)
-        assert_fitnesses(1-death_rate,
-                (1-death_rate)**(np.arange(p.maturity,p.maxls)+1)) 
-        # Random reproduction, zero death
+        # Certain reproduction, random survival
+        surv_rate = random.random()
+        set_means_and_calc(surv_rate, 1.0, surv_rate)
+        fits = surv_rate**np.arange(l)[mt:]
+        assert_fitnesses(fits, fits*surv_rate)
+        # Random reproduction, certain survival
         repr_rate = random.random()
-        set_means_and_calc(0.0,repr_rate)
-        assert_fitnesses(repr_rate,repr_rate) 
-        # Random reproduction, certain death
+        fits = repr_rate**(np.arange(l)+1)[mt:]
+        set_means_and_calc(1.0,repr_rate,repr_rate)
+        assert_fitnesses(repr_rate,fits)
+        # Random reproduction, zero survival
         repr_rate = random.random()
-        set_means_and_calc(1.0,repr_rate)
+        set_means_and_calc(0.0,repr_rate, 0.0)
         assert_fitnesses(0,0)
         # Zero reproduction, random death
-        death_rate = random.random()
-        set_means_and_calc(death_rate,0.0)
-        assert_fitnesses(0,0) 
-
-    def test_fitness_calc_junk(self, run):
-        """Same as test_fitness_calc, but for junk fitness."""
-        rec, p = copy.deepcopy(run.record), copy.deepcopy(run.population).toPop()
-        r,s,t = rec.record,run.conf.number_of_snapshots,run.conf.number_of_stages
-        r["sexual"] = False
-        r["d_range"], r["r_range"] = [np.linspace(1,0,2*p.nbase+1)]*2
-        for n in range(s):
-            rec.update(p, 100, 1, 1, 0, n, True)
-        for m in range(t):
-            rec.update(p, 100, 1, 1, m, 0, False)
-        rec1 = copy.deepcopy(rec); r1 = rec1.record; r1["sexual"]= True
-        def gen_death(x): return np.tile(x, r["junk_death"].shape)
-        def gen_repr(x): return np.tile(x, r["junk_repr"].shape)
-        def set_means_and_calc(x, y):
-            r["junk_death"],r["junk_repr"] = gen_death(x), gen_repr(y)
-            r1["junk_death"],r1["junk_repr"] = gen_death(x), gen_repr(y)
-            rec.final_update(100)
-            rec1.final_update(100)
-        def assert_fitnesses(a, b):
-            fc = "junk_age_wise_fitness_contribution"
-            fp = "junk_age_wise_fitness_product"
-            assert np.array_equal(r["junk_fitness"], np.sum(r[fc],1))
-            assert np.all(r[fp][:,:p.maturity]==0)
-            assert np.all(r[fc][:,:p.maturity]==0)
-            assert np.all(np.isclose(r[fp][:,p.maturity:],a))
-            assert np.all(np.isclose(r[fc][:,p.maturity:],b))
-            for k in ["junk_fitness", "junk_age_wise_fitness_product",
-                    "junk_age_wise_fitness_contribution"]:
-                print k
-                assert np.all(r[k] >= 0)
-                assert np.all(np.isclose(r[k]/2.0, r1[k]))
-        # Certain reproduction, impossible death
-        set_means_and_calc(0.0, 1.0)
-        assert_fitnesses(1.0, 1.0)
-        # Certain reproduction, random death
-        death_rate = random.random()
-        set_means_and_calc(death_rate, 1.0)
-        assert_fitnesses(1-death_rate,
-                (1-death_rate)**(np.arange(p.maturity,p.maxls)+1)) 
-        # Random reproduction, zero death
-        repr_rate = random.random()
-        set_means_and_calc(0.0,repr_rate)
-        assert_fitnesses(repr_rate,repr_rate) 
-        # Random reproduction, certain death
-        repr_rate = random.random()
-        set_means_and_calc(1.0,repr_rate)
+        surv_rate = random.random()
+        set_means_and_calc(surv_rate,0.0,0.0)
         assert_fitnesses(0,0)
-        # Zero reproduction, random death
-        death_rate = random.random()
-        set_means_and_calc(death_rate,0.0)
-        assert_fitnesses(0,0) 
 
 @pytest.mark.skipif(not runRunTests,
         reason="Not running Run class tests.")
@@ -934,7 +996,7 @@ class TestRunClass:
         assert run1.verbose == verbose
         assert run1.dieoff == run1.complete == False
         assert run1.n_run == conf.number_of_runs-1
-        assert (run1.record.record["genmap"] == run1.genmap).all()
+        assert (run1.record.get("genmap") == run1.genmap).all()
         # Quick test of correct genmap transition from run -> pop -> record;
         # Population and Record initiation tested more thoroughly elsewhere
 
@@ -1022,9 +1084,10 @@ class TestRunClass:
         assert run1.complete == run1.dieoff
         # Last stage
         run2 = copy.copy(run)
-        run2.n_stage = run2.conf.number_of_stages -1
         run2.population = run2.population.toPop()
-        run2.execute_stage()
+        for n in xrange(run2.conf.number_of_stages): run2.execute_stage()
+        #run2.n_stage = run2.conf.number_of_stages -1
+        #run2.execute_stage()
         assert run2.n_stage == run.conf.number_of_stages
         assert (run2.dieoff == (run2.population.N == 0))
         assert run2.complete
@@ -1046,50 +1109,73 @@ class TestRunClass:
         of birth, death or crisis death."""
         run1 = copy.copy(run)
         z = np.zeros(2*run1.conf.n_base + 1)
-        # full_update uses record.record
-        run1.record.record["d_range"] = np.copy(z)
-        run1.record.record["r_range"] = np.copy(z)
         # growth, death use run.conf
-        run1.conf.d_range, run1.conf.r_range = np.copy(z),np.copy(z)
+        run1.conf.s_range = np.ones(run1.conf.n_states)
+        run1.conf.r_range = np.zeros(run1.conf.n_states)
+        run1.conf.surv_bound = [1,1]
+        run1.conf.repr_bound = [0,0]
         run1.conf.crisis_p,run1.conf.crisis_sv = crisis_p, crisis_sv
         # Other setup
         run1.population.genomes = np.ones(run1.population.genomes.shape).astype(int)
         run1.conf.number_of_stages = 1
+        run1.conf.number_of_snapshots = 1
         run1.conf.snapshot_stages = [0]#!
         run1.conf.res_var = False
         run1.resources = run1.population.N
+        # Update population and record
         run1.population = run1.population.toPop()
+        run1.record = Record(run1.conf)
         # Test masks
-        r = run1.record.record
+        r = run1.record.get
+        ls,mt,ns,nn = r("max_ls"),r("maturity"),r("n_states"),r("n_neutral")
+        cl = r("chr_len")
         old_N = run1.population.N
-        mask = np.zeros(run1.population.maxls)
+        mask = np.zeros([1,ls])
         ad_mask = np.copy(mask) # Age distribution
-        ad_mask[run1.population.maturity] = 1
-        density_mask = np.append(np.zeros(2*run1.conf.n_base),[1])
-        n1_mask = np.ones(run1.population.chrlen)
-        n1_std_mask = np.zeros(run1.population.chrlen)
-        s1_mask = np.zeros(run1.record.record["s1"][0].shape)
+        ad_mask[0,mt] = 1
+        density_mask = np.zeros([ns,1])
+        density_mask[ns-1,0] = 1
+        n1_mask, n1_var_mask = np.ones([1,cl]), np.zeros([1,cl])
+        z = np.zeros(1)
         # Execute
         run1.execute_stage()
-        # record
-        def assert_allequal(keys,test):
-            for x in keys:
-                if isinstance(r[x][0],np.ndarray): 
-                    assert np.array_equal(r[x][0],test)
-                else: assert r[x][0] == test
-        assert_allequal(["surv_penf"], run.surv_penf)
-        assert_allequal(["repr_penf"], run.repr_penf)
-        assert_allequal(["population_size", "resources"], old_N)
-        assert_allequal(["age_distribution"], ad_mask)
-        assert_allequal(["age_wise_fitness_product","death_mean","death_sd",
-            "age_wise_fitness_contribution","junk_age_wise_fitness_product",
-            "junk_age_wise_fitness_contribution","repr_mean","repr_sd"], mask)
-        assert_allequal(["density_surv","density_repr"], density_mask)
-        assert_allequal(["entropy","junk_death","junk_repr","junk_fitness",
-            "fitness"], 0)
-        assert_allequal(["n1"], n1_mask)
-        assert_allequal(["n1_std"], n1_std_mask)
-        assert_allequal(["s1"], s1_mask)
+        sliding_window_mask = np.zeros(r("sliding_window_n1").shape)
+        # Compare output to expectation
+        def ae(x,y): assert np.array_equal(x,y)
+        def e(x,y): assert x == y
+        maps_ae = {"age_distribution":ad_mask, "fitness_term": mask,
+                "junk_fitness_term":mask, "repr_value": mask,
+                "junk_repr_value": mask, "cmv_surv":1-mask,
+                "junk_cmv_surv":1-mask, "n1":n1_mask, "n1_var":n1_var_mask,
+                "sliding_window_n1":sliding_window_mask,
+                #"entropy_bits":z,
+                "fitness":z, "junk_fitness":z}
+        maps_e = {"surv_penf":run.surv_penf, "repr_penf":run.repr_penf,
+                "resources":old_N, "dieoff":False}
+        for k in sorted(maps_ae.keys()): 
+            ae(r(k), maps_ae[k])
+        for k in maps_e.keys(): e(r(k), maps_e[k])
+        ae(r("prob_mean")["surv"], np.ones([1,ls]))
+        ae(r("prob_mean")["repr"], np.zeros([1,ls-mt]))
+        ae(r("junk_mean")["surv"], np.ones([1,nn]))
+        ae(r("junk_mean")["repr"], np.zeros([1,nn]))
+        ae(r("prob_var")["surv"], np.zeros([1,ls]))
+        ae(r("prob_var")["repr"], np.zeros([1,ls-mt]))
+        ae(r("junk_var")["surv"], np.zeros([1,nn]))
+        ae(r("junk_var")["repr"], np.zeros([1,nn]))
+        for q in ["s", "r", "n", "a"]:
+            ae(r("density")[q], density_mask)
+            ae(r("entropy_gt")[q], [0])
+            dpl = r("density_per_locus")[q]
+            for n in xrange(dpl.shape[2]):
+                dl = dpl[:,:,n]
+                print dl.shape, density_mask.shape
+                ae(dl, density_mask)
+        ae(r("mean_gt")["s"], np.tile(ns-1, [1,ls]))
+        ae(r("mean_gt")["r"], np.tile(ns-1, [1,ls-mt]))
+        ae(r("mean_gt")["n"], np.tile(ns-1, [1,nn]))
+        ae(r("mean_gt")["a"], np.tile(ns-1, [1,len(r("genmap"))]))
+        # Density_per_locus...
         # population
         assert np.all(run1.population.ages == run1.population.maturity+1)
         assert run1.resources == old_N
@@ -1192,8 +1278,7 @@ class TestSimulationClass:
             "crisis_p"], float)
         assert_alltype(["sexual", "res_var", "age_random", "surv_pen",
                 "repr_pen"], bool)
-        assert_alltype(["death_bound", "repr_bound", "crisis_stages"],
-                    list)
+        assert_alltype(["death_bound", "repr_bound", "crisis_stages"], np.ndarray)
 
     def test_get_startpop_good(self, S, run_sim):
         """Test that a blank seed returns a list containing a blank string and i
@@ -1244,29 +1329,41 @@ class TestSimulationClass:
         S1.runs = run_sim.runs
         S1.average_records()
         def comp(a, b): assert np.all(np.isclose(a, b))
-        def test_keys(n,m): # n = number of failed runs, m = prev_failed per run
+        def test_keys(n): # n = number of failed runs
             test,ref = S1.avg_record.record,[r.record.record for r in S1.runs[n:]]
             excl = ["prev_failed", "percent_dieoff", "n_runs", "n_successes"]
             avg_keys,l = set(ref[0].keys()) - set(excl), len(S1.runs)
-            print sorted(test.keys())
-            print sorted(ref[0].keys())
-            print sorted(list(avg_keys))
-            for key in avg_keys:
-                comp(test[key], np.mean([r[key] for r in ref],0) )
-                comp(test[key+"_SD"], np.std([r[key] for r in ref],0) )
-            assert test["prev_failed"] == l*m
-            assert np.isclose(test["percent_dieoff"],100*(l*m+n)/(l*m+l))
-            assert test["n_runs"] == l
-            assert test["n_successes"] == l-n
+            for k in avg_keys:
+                el, ks = test[k], k + "_sd"
+                if isinstance(el, dict):
+                    for k2 in el.keys():
+                        comp(test[k][k2], np.mean([r[k][k2] for r in ref], 0))
+                        comp(test[ks][k2], np.std([r[k][k2] for r in ref], 0))
+                elif isinstance(el, np.ndarray) or isinstance(el, int)\
+                        or isinstance(el, float):
+                    comp(test[k], np.mean([r[k] for r in ref],0) )
+                    comp(test[ks], np.std([r[k] for r in ref],0) )
+        def test_compute_failure(n, m): # n=# failed runs, m=prev_failed per run
+            test,l = S1.avg_record.get, len(S1.runs)
+            assert test("n_runs") == l
+            assert test("n_successes") == l-n
+            assert test("prev_failed") == l*m
+            assert np.isclose(test("percent_dieoff"),100*(l*m+n)/(l*m+l))
         S1.average_records()
-        test_keys(0,0)
+        test_keys(0)
+        test_compute_failure(0,0)
         S1.runs[0].dieoff = True
         S1.average_records()
-        test_keys(1,0)
+        test_compute_failure(1,0)
+        print "=========="
+        print [r.record.get("prev_failed") for r in S1.runs]
         for r in S1.runs:
-            r.record.record["prev_failed"] = 1
+            r.record.set("prev_failed", 1)
+        print [r.record.get("prev_failed") for r in S1.runs]
+        print np.sum([r.record.get("prev_failed") for r in S1.runs])
         S1.average_records()
-        test_keys(1,1)
+        print S1.avg_record.get("prev_failed")
+        test_compute_failure(1,1)
 
     def test_logprint_sim(self, S, ran_str):
         """Test logging (and especially newline) functionality."""
@@ -1275,6 +1372,8 @@ class TestSimulationClass:
         S1.logprint(ran_str)
         assert S1.log == ran_str + "\n"
 
+@pytest.mark.skipif(not runSimulationTests,
+        reason="Not running Simulation class tests.")
 def test_post_cleanup():
     """Kill tempfiles made for test. Not really a test at all."""
     os.remove("sample_output.sim")
