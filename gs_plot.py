@@ -242,7 +242,28 @@ def bit_var():
     save_close("5a_bit_var")
 
 # 6: GENOTYPE DENSITY
-def density(plot_all=False):
+def density_overlay_surv():
+    fig, ax = plt.subplots(1)
+    d = L["density"]["s"].T
+    for i in xrange(L["n_snapshots"]):
+        plt.plot(d[i], color=colors[i])
+    axis_labels(ax, "Distribution of survival genotypes at each snapshot",
+            "Genotype sum", "Density")
+    make_legend([colors[0], "white", colors[-1]], 
+            ["Snapshot 1", "...", "Snapshot {}".format(lns)])
+    save_close("6a_density_surv")
+def density_overlay_repr():
+    fig, ax = plt.subplots(1)
+    d = L["density"]["r"].T
+    for i in xrange(L["n_snapshots"]):
+        plt.plot(d[i], color=colors[i])
+    axis_labels(ax, "Distribution of reproduction genotypes at each snapshot",
+            "Genotype sum", "Density")
+    make_legend([colors[0], "white", colors[-1]], 
+            ["Snapshot 1", "...", "Snapshot {}".format(lns)])
+    save_close("6b_density_repr")
+
+def density_grid(plot_all=True):
     """Plot the distribution of genotypes (locus sums) across all survival
     (blue) and reproduction (red) loci in the genome. If plot_all, plot all 
     snapshots on a grid; else plot the final snapshot alone."""
@@ -361,8 +382,8 @@ def plot_all(pop_res_limits, odr_limits):
     genotype_var()
     bit_mean()
     bit_var()
-    #survival()
-    #reproduction()
+    density_overlay_surv()
+    density_overlay_repr()
     #observed_death_rate(odr_limits[0],odr_limits[1])
     #shannon_diversity()
     #fitness()
