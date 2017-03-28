@@ -147,6 +147,19 @@ def make_handles(cols, labels):
 def make_legend(cols, labels, loc="upper right", size=10):
     plt.legend(handles=make_handles(cols, labels), loc=loc, prop={"size":size})
 
+def grid_plot(plot_func, title, xtitle, ytitle, filename):
+    """Reproduce a plot once for each snapshot and arrange on a grid."""
+    x = int(math.sqrt(lns))
+    y = int(math.ceil(lns/float(x)))
+    fig, ax = plt.subplots(x,y,sharex="col",sharey="row")
+    ix = zip(np.sort(np.tile(range(x),x)), np.tile(range(y),y), range(lns))
+    for i,j,k in ix:
+        plot_func(ax[i,j], k)
+    fig.text(0.45,0.03,xtitle,rotation="horizontal",fontsize=12)
+    fig.text(0.03,0.55,ytitle,rotation="vertical",fontsize=12)
+    fig.suptitle(title + " (all snapshots)")
+    save_close(filename+"_all")
+
 # 1: POPULATION & RESOURCES
 def pop_res(limits=[0, L["n_stages"]]):
     """Plot population (blue) and resources (res) in specified stage range."""
@@ -197,139 +210,38 @@ def genotype_sum():
     make_legend([colors[0], "white", colors[-1]], 
             ["Snapshot 1", "...", "Snapshot {}".format(lns)])
     save_close("4_genotype_mean")
+def genotype_var():
+    fig, ax = plt.subplots(1)
+    for i in xrange(L["n_snapshots"]):
+        gt = np.append(L["var_gt"]["s"][i], L["var_gt"]["r"][i])
+        plt.plot(gt, color=colors[i])
+    axis_labels(ax, "Variance in genotype value with age", "Age",
+            "Genotype variance")
+    make_legend([colors[0], "white", colors[-1]], 
+            ["Snapshot 1", "...", "Snapshot {}".format(lns)])
+    save_close("4a_genotype_var")
 
-def age_wise_frequency(plot_all=False):
-    """Plot the mean number of 1's in each locus along the sorted
-    genome map: juvenile survival, mature survival, mature reproduction. If
-    plot_all, plot all snapshots on a grid; else plot the final snapshot
-    along with the accompanying standard deviation."""
-    basename = "age_wise_frequency_1s"
-    mv = (L["maturity"], L["maturity"]) # maturity vertical line
-    rv = (L["max_ls"], L["max_ls"]) # reproduction vertical line
-    def awf_plot(ax,nsnap):
-        nloc = len(L["genmap"])
-        ax.scatter(range(nloc),L["age_wise_n1"][nsnap],c="k",s=7,marker=".")
-        ax.plot(mv, (0,1), "r--")
-        ax.plot(rv, (0,1), "r-")
-        ax.xaxis.set_ticks([0,mv[0],rv[0]])
-        #ax.yaxis.set_ticks([0,1])
-        ax.set_xticklabels([0,mv[0][0],rv[0]],fontsize=tick_size)
-        ax.set_yticklabels(np.linspace(0,1,6),fontsize=tick_size)
-        ax.set_xlim((0,nloc))
-        ax.set_ylim((0,1))
-        return ax
-    if plot_all: #! No SD when plotting all?
-        grid_plot(awf_plot, "Age-wise frequency of 1's (all snapshots)",
-                "Position", "Frequency", basename+"_all")
-    else:
-        fig, ax = plt.subplots(2,sharex=True)
-        awf_plot(ax[0], L["n_snapshots"]-1)
-        # Subplot 1
-        ax[1].plot(L["age_wise_n1_std"][-1], "k-")
-        ax[1].plot(mv, (0,1), "r--")
-        ax[1].plot(rv, (0,1), "r-")
-        ax[1].set_ylim((0,max(L["age_wise_n1_std"][-1])))
-        ax = set_axis_labels(ax, ["frequency","sd"], ["", "age"], "")
-        fig.suptitle("Age-wise frequency of 1's (final snapshot + SD)") #! New name
-        save_close(basename+"_final")
+# 5: BIT VALUE WITH AGE
+def bit_mean():
+    fig, ax = plt.subplots(1)
+    for i in xrange(L["n_snapshots"]):
+        plt.plot(L["n1"][i], color=colors[i])
+    axis_labels(ax, "Mean bit value with along sorted genome", "Bit position",
+            "Average proportion of 1's")
+    make_legend([colors[0], "white", colors[-1]], 
+            ["Snapshot 1", "...", "Snapshot {}".format(lns)])
+    save_close("5_bit_mean")
+def bit_var():
+    fig, ax = plt.subplots(1)
+    for i in xrange(L["n_snapshots"]):
+        plt.plot(L["n1_var"][i], color=colors[i])
+    axis_labels(ax, "Variance bit value with along sorted genome", "Bit position",
+            "Variance in proportion of 1's")
+    make_legend([colors[0], "white", colors[-1]], 
+            ["Snapshot 1", "...", "Snapshot {}".format(lns)])
+    save_close("5a_bit_var")
 
-def survival():
-    """Plot mean and SD of age-wise survival probability, superposing curves
-    from different snapshot stages (red = most recent), as well as most-recent
-    junk values (blue line) and maturity (black vertical line)."""
-    m,x_bound = L["maturity"], (0, L["max_ls"])
-    y_bound = ((1-L["d_range"])[0], (1-L["d_range"])[-1])
-    fig, ax = plt.subplots(2, sharex=True)
-    # Subplot 0 - mean survival
-    for i in range(L["n_snapshots"]):
-        ax[0].plot(1-L["death_mean"][i], color=colors[i])
-    ax[0].plot((m,m),(y_bound[0],1), "k-") # maturity line
-    ax[0].plot(x_bound,(1-L["junk_death"][L["n_snapshots"]-1],
-        1-L["junk_death"][L["n_snapshots"]-1]), "b-") # junk
-    ax[0].set_ylim(y_bound)
-    ax[0].set_xlim(x_bound)
-    # Subplot 1 - SD survival
-    ax[1].plot(L["death_sd"][L["n_snapshots"]-1], color="green")
-    #! Only most recent SD?
-    ax[1].plot((m,m),(0,1), "k-") # maturity line
-    ax[1].set_ylim((0,max(L["death_sd"][L["n_snapshots"]-1])))
-    # no need to set xlim because it's shared with subplot 0
-    ax = set_axis_labels(ax, ["s","s_sd"], ["","age"], "")
-    fig.suptitle("Survival")
-    save_close("survival")
-
-def reproduction():
-    """Plot mean and SD of age-wise reproduction probability, superposing 
-    curves from different snapshot stages (red = most recent), as well as 
-    most-recent junk values (blue line)."""
-    m,x_bound = L["maturity"],(L["maturity"], L["max_ls"])
-    y_bound = ((L["r_range"])[0], (L["r_range"])[-1])
-    fig, ax = plt.subplots(2, sharex=True)
-    # Subplot 0 - mean reproduction
-    for i in range(L["n_snapshots"]):
-        ax[0].plot(L["repr_mean"][i], color=colors[i])
-    ax[0].plot(x_bound,(L["junk_repr"][L["n_snapshots"]-1],
-        L["junk_repr"][L["n_snapshots"]-1]), "b-") # junk
-    ax[0].set_ylim(y_bound)
-    ax[0].set_xlim(x_bound)
-    #ax[0].yaxis.set_ticks(np.linspace(L["r_range"][0],L["r_range"][-1],5))
-    # Subplot 1 - SD reproduction
-    ax[1].plot(L["repr_sd"][L["n_snapshots"]-1], color="green") # SD
-    ax[1].set_ylim((0,max(L["repr_sd"][L["n_snapshots"]-1])))
-    # no need to set xlim because it's shared with subplot 0
-    ax = set_axis_labels(ax, ["r","r_sd"], ["", "age"], "")
-    fig.suptitle("Reproduction")
-    save_close("reproduction")
-
-# All determines wether all snapshot stages are plotted on a 4x4 figure
-# or just the last is plotted with the recording standard deviation
-def frequency(plot_all=False):
-    """Plot the mean frequency of 1's at each bit position along the sorted
-    genome map: juvenile survival, mature survival, mature reproduction. If
-    plot_all, plot all snapshots on a grid; else plot the final snapshot
-    along with the accompanying standard deviation."""
-    basename = "frequency_1s"
-    # Vertical lines (maturity, start of reproduction positions)
-    mv = (L["maturity"]*L["n_bases"],L["maturity"]*L["n_bases"])
-    rv = (L["max_ls"]*L["n_bases"], L["max_ls"]*L["n_bases"])
-    def f_plot(ax,nsnap):
-        ax.scatter(range(L["chr_len"]),L["n1"][nsnap],c="k",s=5,marker=".")
-        ax.plot(mv, (0,1), "r--")
-        ax.plot(rv, (0,1), "r-")
-        ax.xaxis.set_ticks([0,mv[0],rv[0]])
-        ax.set_xticklabels([0,mv[0][0],rv[0]],fontsize=tick_size)
-        ax.set_yticklabels(np.linspace(0,1,6),fontsize=tick_size)
-        ax.set_xlim((0,L["chr_len"]))
-        ax.set_ylim((0,1))
-        return ax
-    if plot_all: #! No SD when plotting all?
-        grid_plot(f_plot, "Frequency of 1's (all snapshots)",
-                "Position", "Frequency", basename+"_all")
-    else:
-        fig, ax = plt.subplots(2,sharex=True)
-        ax[0] = f_plot(ax[0], L["n_snapshots"]-1)
-        # Subplot 1
-        ax[1].plot(L["n1_std"][-1], "k-")
-        ax[1].plot(mv, (0,1), "r--")
-        ax[1].plot(rv, (0,1), "r-")
-        ax[1].set_ylim((0,max(L["n1_std"][-1])))
-        ax = set_axis_labels(ax, ["frequency","sd"], ["", "position"], "")
-        fig.suptitle("Frequency of 1's (Final Snapshot + SD)")
-        save_close(basename+"_final")
-
-def grid_plot(plot_func, title, xtitle, ytitle, filename):
-    """Reproduce a plot once for each snapshot and arrange on a grid."""
-    x = int(math.sqrt(lns))
-    y = int(math.ceil(lns/float(x)))
-    fig, ax = plt.subplots(x,y,sharex="col",sharey="row")
-    ix = zip(np.sort(np.tile(range(x),x)), np.tile(range(y),y), range(lns))
-    for i,j,k in ix:
-        plot_func(ax[i,j], k)
-    fig.text(0.45,0.03,xtitle,rotation="horizontal",fontsize=12)
-    fig.text(0.03,0.55,ytitle,rotation="vertical",fontsize=12)
-    fig.suptitle(title + " (all snapshots)")
-    save_close(filename+"_all")
-
+# 6: GENOTYPE DENSITY
 def density(plot_all=False):
     """Plot the distribution of genotypes (locus sums) across all survival
     (blue) and reproduction (red) loci in the genome. If plot_all, plot all 
@@ -446,6 +358,9 @@ def plot_all(pop_res_limits, odr_limits):
     starvation(pop_res_limits)
     age_distribution()
     genotype_sum()
+    genotype_var()
+    bit_mean()
+    bit_var()
     #survival()
     #reproduction()
     #observed_death_rate(odr_limits[0],odr_limits[1])
