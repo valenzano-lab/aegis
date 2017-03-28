@@ -283,6 +283,8 @@ def fitness():
     fig, ax = plt.subplots(1)
     ax.plot(L["fitness"], "b-")
     axis_labels(ax, "Mean population fitness", "Snapshot", "Fitness")
+    ax.xaxis.set_ticks(range(L["n_snapshots"]))
+    axis_ticks_limits(ax,range(1,L["n_snapshots"]+1),"",(0,L["n_snapshots"]-1),"")
     save_close("7_fitness")
 
 # 8: FITNESS TERM
@@ -317,17 +319,8 @@ def observed_death(width=100):
             ["Snapshot 1", "...", "Snapshot {}".format(lns)])
     save_close("9_observed_death")
 
-def observed_death_old(s1=L["n_stages"]-100, s2=L["n_stages"]):
-    """Plot the age-wise observed death rate for each stage within the
-    specified limits."""
-    #! Change default limits?
-    plt.plot(np.mean(L["actual_death_rate"][s1:s2,:-1],0))
-    plt.ylabel(r"$\mu$", rotation="horizontal")
-    plt.xlabel("Age")
-    plt.title("Observed death rate")
-    save_close("9a_observed_death_old")
-
 # 10: ENTROPY
+# TODO: Pad y axis
 def entropy():
     fig, ax = plt.subplots(2, sharex=True)
     ax[0].plot(L["entropy_bits"], "b-")
@@ -337,6 +330,12 @@ def entropy():
     axis_legend(ax[0], ["blue","red"], 
             ["Entropy in bit values", "Entropy in genotype sums"])
     fig.text(0, 0.5, 'H', va='center', rotation='vertical')
+    ax[0].xaxis.set_ticks(range(L["n_snapshots"]))
+    ax[1].xaxis.set_ticks(range(L["n_snapshots"]))
+    axis_ticks_limits(ax[0],
+            range(1,L["n_snapshots"]+1),"",(0,L["n_snapshots"]-1),"")
+    axis_ticks_limits(ax[1],
+            range(1,L["n_snapshots"]+1),"",(0,L["n_snapshots"]-1),"")
     save_close("10_entropy")
 
 def plot_all(pop_res_limits, odr_limits):
@@ -351,7 +350,6 @@ def plot_all(pop_res_limits, odr_limits):
     fitness()
     fitness_term()
     observed_death()
-    observed_death_old()
     entropy()
     print "done."
 
