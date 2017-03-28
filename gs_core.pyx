@@ -901,7 +901,6 @@ class Simulation:
             for n in xrange(self.conf.number_of_runs):
                 asyncruns+= [pool.apply_async(execute_run, [self.runs[n],
                     maxfail])]
-            sys.stderr.write("testing 0")
             outruns = [x.get() for x in asyncruns]
             self.runs = outruns
             self.log += "\n".join([x.log for x in self.runs])

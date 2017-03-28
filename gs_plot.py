@@ -70,40 +70,6 @@ lns = L["n_snapshots"]
 # plotting variables (not meant for UI)
 tick_size = 7
 
-### FULL LIST OF RECORD ITEMS ###
-#    "n_bases" : number of bases making up one genetic unit
-#    "maturity" : age at which sexual maturity is reached
-#    "gen_map" : genome map for the run
-#    "chr_len" : length of each chromosome in bits
-#    "d_range" : range of possible death probabilities, from max to min
-#    "r_range" : range of possible reproduction probabilities (min->max)
-#    "snapshot_stages" : stages of run at which detailed info recorded
-#    "population_size" : Value of N
-#    "resources" : Resource level
-#    "starvation_factor" : Value of x
-#    "age_distribution" : Proportion of population at each age
-#    "death_mean" : Mean genetic death probability at each age
-#    "death_sd" : SD generic death probability at each age
-#    "actual_death_rate" : per-age stage-to-stage fraction of survivors
-#    "repr_mean" : Mean reproductive probability at each age
-#    "repr_sd" : Mean reproductive probability at each age
-#    "density_surv" : Distribution of number of 1's at survival loci
-#    "density_repr" : Distribution of number of 1's at reproductive loci
-#    "n1" : Average number of 1's at each position along the length of the chromosome
-#    "n1_std" : n1 standard deviation
-#    "age_wise_n1" : n1 averaged in intervals of n_bases
-#    "age_wise_n1_std" : age_wise_n1 standard deviation
-#    "s1" : Sliding-window SD of number of 1's along chromosome
-#    "entropy" : Shannon-Weaver entropy across entire population array
-#    "junk_death" : Average death probability as predicted from neutral locus
-#    "junk_repr"  : Average reproductive probability as predicted from neutral locus
-#    "fitness" : Average population fitness as defined in our article
-#    "age_wise_fitness_product" : fitness calculated as s_i*r_i
-#    "junk_age_wise_fitness_product" : fitness calculated as js_i*jr_i
-#    "age_wise_fitness_contribution" : summands of fitness
-#    "junk_age_wise_fitness_contribution" : summands of junk_fitness
-#! Update this
-
 ######################
 ### PLOT FUNCTIONS ###
 ######################
@@ -113,21 +79,159 @@ colormap = plt.cm.YlOrRd
 colors = [colormap(i) for i in np.linspace(0.1, 0.8, L["n_snapshots"])]
 
 def save_close(name): 
+    plt.tight_layout()
     plt.savefig(os.path.join(O, name + ".png"))
     plt.close()
+def simple_plot_label(main, xlab, ylab):
+    plt.title(main, y=1.02)
+    plt.xlabel(xlab)
+    plt.ylabel(ylab, rotation="vertical")
 
-def set_axis_labels(ax, ylab, xlab, xticks):
-    if not isinstance(ylab, list):
-        ax.set_ylabel(ylab, rotation="vertical")
-        ax.set_xlabel(xlab)
+def ax_iter(ax, function, values, **kwargs):
+    """Given an Axes object, a function name and one or more values, 
+    apply that function to the Axes object with that value (if a single value),
+    or apply it to each subplot in the object with the corresponding value
+    (if a list of values)."""
+    if isinstance(values, list):
+        for n in xrange(len(values)):
+            if values[n] != "": getattr(ax[n], function)(values[n], **kwargs)
+    elif values != "": getattr(ax, function)(values, **kwargs)
+
+def axis_labels(ax, main, xlab, ylab):
+    """Define the main title, x-axes and y-axes of one or more subplots in an 
+    Axes object."""
+    # Main title
+    ax_iter(ax, "set_title", main, y=1.02)
+    ax_iter(ax, "set_xlabel", xlab)
+    ax_iter(ax, "set_ylabel", ylab, rotation="vertical")
+
+def axis_ticks_limits(ax, xticks, yticks, xlim, ylim):
+    """Set the tick positions and axis limits for one or more subplots in an
+    Axes object."""
+    ax_iter(ax, "set_xticklabels", xticks)
+    ax_iter(ax, "set_yticklabels", yticks)
+    ax_iter(ax, "set_xlim", xlim)
+    ax_iter(ax, "set_ylim", ylim)
+
+def label_axes(ax, main, xlab, ylab):
+    """Set the main, x-axis and y-axis labels for an Axes object."""
+    ax.set_title(main, y=1.02)
+    ax.set_xlabel(xlab)
+    ax.set_ylabel(ylab, rotation="vertical")
+
+def simple_plot(plot, legend_labels, main, xlab, ylab, axes, ticks, path):
+    l1,l2 = plot
+    plt.figure(1).legend((l1,l2), legend_labels, "upper right", prop={"size":7})
+    simple_plot_label(main, xlab, ylab)
+    plt.axis(axes)
+    plt.xticks(ticks, map(str, ticks.astype(int)))
+    save_close(path)
+
+def finalise_plot(title, xlabel, ylabel, filename, handles=""):
+    """Set axis and overall titles of a single plot, then save."""
+    simple_plot_label(title, xlabel, ylabel)
+    if handles=="":
+        plt.legend(loc="upper right", prop={"size":10})
     else:
-        for x in xrange(len(ylab)):
-            if ylab[x] != "": 
-                ax[x].set_ylabel(ylab[x], rotation="vertical")
-            if xlab[x] != "":
-                ax[x].set_xlabel(xlab[x])
-    if xticks != "": ax.set_xticklabels(xticks)
-    return ax
+        plt.legend(handles=handles, loc="upper right", prop={"size":10})
+    save_close(filename)
+
+def make_handles(cols, labels):
+    """Generate a list of handles for a figure legend."""
+    if len(cols) != len(labels): 
+        raise ValueError("Inconsistent colour and label inputs.""")
+    handles = [0] * len(cols)
+    for n in xrange(len(cols)):
+        handles[n] = mpatches.Patch(color=cols[n], label=labels[n])
+    return handles
+def make_legend(cols, labels, loc="upper right", size=10):
+    plt.legend(handles=make_handles(cols, labels), loc=loc, prop={"size":size})
+
+# 1: POPULATION & RESOURCES
+def pop_res(limits=[0, L["n_stages"]]):
+    """Plot population (blue) and resources (res) in specified stage range."""
+    s1,s2 = limits
+    p,r,x = L["population_size"][s1:s2+1],L["resources"][s1:s2+1],L["res_var"]
+    fig, ax = plt.subplots(1)
+    if x: ax.plot(r,"r-",p,"b-")
+    if not x: ax.plot(p,"b-",r,"r-")
+    axis_labels(ax, "Resources and population", "Stage", "N")
+    axis_ticks_limits(ax, np.linspace(0,s2-s1,6).astype(int), "", 
+            (s1,s2), (0, max((max(r),max(p)))))
+    make_legend(["blue", "red"], ["population", "resources"])
+    save_close("1_pop_res")
+
+# 2: STARVATION FACTORS
+def starvation(limits=[0, L["n_stages"]]):
+    """Plot starvation (green) and reproduction (magenta) starvation factors
+    in specified stage range."""
+    s1,s2 = limits
+    r,s = L["repr_penf"][s1:s2+1],L["surv_penf"][s1:s2+1]
+    fig, ax = plt.subplots(1)
+    ax.plot(s,"g-",r,"m-")
+    axis_labels(ax, "Starvation factors", "Stage", "Starvation factor")
+    axis_ticks_limits(ax, np.linspace(0,s2-s1,6).astype(int), "", 
+            (s1,s2), (0, max((max(r),max(s)))))
+    make_legend(["green", "magenta"], ["survival","reproduction"])
+    save_close("2_starvation")
+
+# 3: AGE DISTRIBUTIONS
+def age_distribution():
+    """Plot age_distribution for each snapshot (red = most recent)."""
+    fig, ax = plt.subplots(1)
+    for i,j in zip(L["snapshot_stages"],range(L["n_snapshots"])):
+        plt.plot(L["age_distribution"][i]*100, color=colors[j])
+    axis_labels(ax, "Age distribution","Age", "% of individuals")
+    make_legend([colors[0], "white", colors[-1]], 
+            ["Snapshot 1", "...", "Snapshot {}".format(lns)])
+    save_close("3_age_distribution")
+
+# 4: GENOTYPE SUM WITH AGE
+def genotype_sum():
+    fig, ax = plt.subplots(1)
+    for i in xrange(L["n_snapshots"]):
+        gt = np.append(L["mean_gt"]["s"][i], L["mean_gt"]["r"][i])
+        plt.plot(gt, color=colors[i])
+    axis_labels(ax, "Mean genotype value with age", "Age",
+            "Mean genotype(# of 1's in locus)")
+    make_legend([colors[0], "white", colors[-1]], 
+            ["Snapshot 1", "...", "Snapshot {}".format(lns)])
+    save_close("4_genotype_mean")
+
+def age_wise_frequency(plot_all=False):
+    """Plot the mean number of 1's in each locus along the sorted
+    genome map: juvenile survival, mature survival, mature reproduction. If
+    plot_all, plot all snapshots on a grid; else plot the final snapshot
+    along with the accompanying standard deviation."""
+    basename = "age_wise_frequency_1s"
+    mv = (L["maturity"], L["maturity"]) # maturity vertical line
+    rv = (L["max_ls"], L["max_ls"]) # reproduction vertical line
+    def awf_plot(ax,nsnap):
+        nloc = len(L["genmap"])
+        ax.scatter(range(nloc),L["age_wise_n1"][nsnap],c="k",s=7,marker=".")
+        ax.plot(mv, (0,1), "r--")
+        ax.plot(rv, (0,1), "r-")
+        ax.xaxis.set_ticks([0,mv[0],rv[0]])
+        #ax.yaxis.set_ticks([0,1])
+        ax.set_xticklabels([0,mv[0][0],rv[0]],fontsize=tick_size)
+        ax.set_yticklabels(np.linspace(0,1,6),fontsize=tick_size)
+        ax.set_xlim((0,nloc))
+        ax.set_ylim((0,1))
+        return ax
+    if plot_all: #! No SD when plotting all?
+        grid_plot(awf_plot, "Age-wise frequency of 1's (all snapshots)",
+                "Position", "Frequency", basename+"_all")
+    else:
+        fig, ax = plt.subplots(2,sharex=True)
+        awf_plot(ax[0], L["n_snapshots"]-1)
+        # Subplot 1
+        ax[1].plot(L["age_wise_n1_std"][-1], "k-")
+        ax[1].plot(mv, (0,1), "r--")
+        ax[1].plot(rv, (0,1), "r-")
+        ax[1].set_ylim((0,max(L["age_wise_n1_std"][-1])))
+        ax = set_axis_labels(ax, ["frequency","sd"], ["", "age"], "")
+        fig.suptitle("Age-wise frequency of 1's (final snapshot + SD)") #! New name
+        save_close(basename+"_final")
 
 def survival():
     """Plot mean and SD of age-wise survival probability, superposing curves
@@ -177,69 +281,6 @@ def reproduction():
     fig.suptitle("Reproduction")
     save_close("reproduction")
 
-def pop_res(s1=0, s2=L["n_stages"]):
-    """Plot population (blue) and resources (res) in specified stage range."""
-    p,r,n = L["population_size"], L["resources"], L["n_stages"]
-    def plot_p(): plt.plot(p[0:n+1], "b-", label="Population")
-    def plot_r(): plt.plot(r[0:n+1], "r-", label="Resources")
-    f1,f2 = [plot_r,plot_p] if L["res_var"] else [plot_p,plot_r]
-    f1(); f2()
-    plt.figure(1).legend((l1,l2),("resources","population"),
-            "upper right",prop={"size":7})
-    plt.title("Resources and population")
-    plt.xlabel("stage")
-    plt.ylabel("N",rotation="horizontal")
-    plt.axis([s1,s2,0,max(max(L["resources"][s1:s2+1]),
-        max(L["population_size"][s1:s2+1]))])
-    plt.xticks(np.linspace(0,s2-s1,6),
-            map(str,(np.linspace(s1,s2,6)).astype(int)))
-    save_close("pop_res")
-
-def starvation(s1=0, s2=L["n_stages"]):
-    """Plot population (green) and resource (magenta) survival factors
-    in specified stage range."""
-    res_top = max(L["repr_penf"]) > max(L["surv_penf"])
-    if res_top:
-        l1,l2 = plt.plot(L["repr_penf"][s1:s2+1],"m-",
-                L["surv_penf"][s1:s2+1],"g-")
-    else: 
-        l2,l1 = plt.plot(L["repr_penf"][s1:s2+1],"m-",
-                L["surv_penf"][s1:s2+1],"g-")
-    plt.figure(1).legend((l1,l2),("resources","population"),
-            "upper right",prop={"size":7})
-    plt.title("Survival factors")
-    plt.xlabel("Stage")
-    plt.ylabel("Survival factor",rotation="horizontal")
-    plt.axis([s1,s2,0,max(max(L["surv_penf"][s1:s2+1]),
-        max(L["repr_penf"][s1:s2+1]))])
-    plt.xticks(np.linspace(0,s2-s1,6),
-            map(str,(np.linspace(s1,s2,6)).astype(int)))
-    # Add legend
-    save_close("starvation")
-
-def age_distribution():
-    """Plot age_distribution for each snapshot (red = most recent)."""
-    for i,j in zip(L["snapshot_stages"]-1,range(L["n_snapshots"])):
-        plt.plot(L["age_distribution"][i]*100, color=colors[j])
-    handles = [mpatches.Patch(color=colors[0], label="snapshot 1"),
-            mpatches.Patch(color="white",label="..."),
-            mpatches.Patch(color=colors[-1],label="snapshot {}".format(lns))]
-    finalise_plot("Distribution of Ages in Population at Snapshot Stages",
-            "Age [stages]", "Proportion of Individuals [%]", 
-            "age_distribution", handles)
-
-def finalise_plot(title, xlabel, ylabel, filename, handles=""):
-    """Set axis and overall titles of a single plot, then save."""
-    plt.title(title, y=1.02)
-    plt.xlabel(xlabel)
-    plt.ylabel(ylabel, rotation="vertical")
-    plt.tight_layout()
-    if handles=="":
-        plt.legend(loc="upper right", prop={"size":10})
-    else:
-        plt.legend(handles=handles, loc="upper right", prop={"size":10})
-    save_close(filename)
-
 # All determines wether all snapshot stages are plotted on a 4x4 figure
 # or just the last is plotted with the recording standard deviation
 def frequency(plot_all=False):
@@ -288,41 +329,6 @@ def grid_plot(plot_func, title, xtitle, ytitle, filename):
     fig.text(0.03,0.55,ytitle,rotation="vertical",fontsize=12)
     fig.suptitle(title + " (all snapshots)")
     save_close(filename+"_all")
-
-def age_wise_frequency(plot_all=False):
-    """Plot the mean number of 1's in each locus along the sorted
-    genome map: juvenile survival, mature survival, mature reproduction. If
-    plot_all, plot all snapshots on a grid; else plot the final snapshot
-    along with the accompanying standard deviation."""
-    basename = "age_wise_frequency_1s"
-    mv = (L["maturity"], L["maturity"]) # maturity vertical line
-    rv = (L["max_ls"], L["max_ls"]) # reproduction vertical line
-    def awf_plot(ax,nsnap):
-        nloc = len(L["genmap"])
-        ax.scatter(range(nloc),L["age_wise_n1"][nsnap],c="k",s=7,marker=".")
-        ax.plot(mv, (0,1), "r--")
-        ax.plot(rv, (0,1), "r-")
-        ax.xaxis.set_ticks([0,mv[0],rv[0]])
-        #ax.yaxis.set_ticks([0,1])
-        ax.set_xticklabels([0,mv[0][0],rv[0]],fontsize=tick_size)
-        ax.set_yticklabels(np.linspace(0,1,6),fontsize=tick_size)
-        ax.set_xlim((0,nloc))
-        ax.set_ylim((0,1))
-        return ax
-    if plot_all: #! No SD when plotting all?
-        grid_plot(awf_plot, "Age-wise frequency of 1's (all snapshots)",
-                "Position", "Frequency", basename+"_all")
-    else:
-        fig, ax = plt.subplots(2,sharex=True)
-        awf_plot(ax[0], L["n_snapshots"]-1)
-        # Subplot 1
-        ax[1].plot(L["age_wise_n1_std"][-1], "k-")
-        ax[1].plot(mv, (0,1), "r--")
-        ax[1].plot(rv, (0,1), "r-")
-        ax[1].set_ylim((0,max(L["age_wise_n1_std"][-1])))
-        ax = set_axis_labels(ax, ["frequency","sd"], ["", "age"], "")
-        fig.suptitle("Age-wise frequency of 1's (final snapshot + SD)") #! New name
-        save_close(basename+"_final")
 
 def density(plot_all=False):
     """Plot the distribution of genotypes (locus sums) across all survival
@@ -436,20 +442,21 @@ def age_wise_fitness_contribution(plot_all=False):
 def plot_all(pop_res_limits, odr_limits):
     """Generate all plots for the imported Record object."""
     print "Generating plots...",
-    survival()
-    reproduction()
-    pop_res(pop_res_limits[0], pop_res_limits[1])
+    pop_res(pop_res_limits)
+    starvation(pop_res_limits)
     age_distribution()
-    observed_death_rate(odr_limits[0],odr_limits[1])
-    shannon_diversity()
-    fitness()
-    starvation()
-    for x in [True, False]:
-        frequency(x)
-        age_wise_frequency(x)
-        density(x)
-        age_wise_fitness_product(x)
-        age_wise_fitness_contribution(x)
+    genotype_sum()
+    #survival()
+    #reproduction()
+    #observed_death_rate(odr_limits[0],odr_limits[1])
+    #shannon_diversity()
+    #fitness()
+    #for x in [True, False]:
+    #    frequency(x)
+    #    age_wise_frequency(x)
+    #    density(x)
+    #    age_wise_fitness_product(x)
+    #    age_wise_fitness_contribution(x)
     print "done."
 
 ###############
