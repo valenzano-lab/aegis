@@ -75,8 +75,13 @@ tick_size = 7
 ######################
 
 # Get and subset colour map
-colormap = plt.cm.YlOrRd
-colors = [colormap(i) for i in np.linspace(0.1, 0.8, L["n_snapshots"])]
+def get_colours(colourmap, rev=False, start=0.1, stop=0.9, n=L["n_snapshots"]):
+    """Return evenly spaced colours according to a specified colourmap."""
+    refs = np.linspace(start, stop, n)
+    if rev: refs = refs[::-1]
+    return [colourmap(i) for i in refs]
+colors = get_colours(plt.cm.autumn, True)
+colors2 = get_colours(plt.cm.summer, True)
 
 def save_close(name): 
     plt.tight_layout()
@@ -92,18 +97,18 @@ def ax_iter(ax, function, values, **kwargs):
     apply that function to the Axes object with that value (if a single value),
     or apply it to each subplot in the object with the corresponding value
     (if a list of values)."""
-    if isinstance(values, list):
+    if isinstance(values, list) and isinstance(ax, np.ndarray):
         for n in xrange(len(values)):
             if values[n] != "": getattr(ax[n], function)(values[n], **kwargs)
     elif values != "": getattr(ax, function)(values, **kwargs)
 
-def axis_labels(ax, main, xlab, ylab):
+def axis_labels(ax, main, xlab, ylab, xpad=None, ypad=None):
     """Define the main title, x-axes and y-axes of one or more subplots in an 
     Axes object."""
     # Main title
     ax_iter(ax, "set_title", main, y=1.02)
-    ax_iter(ax, "set_xlabel", xlab)
-    ax_iter(ax, "set_ylabel", ylab, rotation="vertical")
+    ax_iter(ax, "set_xlabel", xlab, labelpad=xpad)
+    ax_iter(ax, "set_ylabel", ylab, rotation="vertical", labelpad=ypad)
 
 def axis_ticks_limits(ax, xticks, yticks, xlim, ylim):
     """Set the tick positions and axis limits for one or more subplots in an
@@ -204,69 +209,74 @@ def age_distribution():
             ["Snapshot 2", "...", "Snapshot {}".format(lns)])
     save_close("3_age_distribution")
 
-# 4: GENOTYPE SUM WITH AGE
-def genotype_sum():
-    fig, ax = plt.subplots(1)
+# 4: GENOTYPES WITH AGE
+def genotypes_with_age():
+    # Define values
+    mean, var, maxstate = L["mean_gt"], L["var_gt"], L["n_states"]-1
+    vals_mean = np.hstack((mean["s"],mean["r"]))
+    vals_var = np.hstack((var["s"],var["r"]))
+    ls, mt, nloc = L["max_ls"]-1, L["maturity"], len(L["genmap"])-L["n_neutral"]
+    # Make plots
+    fig, ax = plt.subplots(2)
     for i in xrange(L["n_snapshots"]):
-        gt = np.append(L["mean_gt"]["s"][i], L["mean_gt"]["r"][i])
-        ax.plot(gt, color=colors[i])
-    axis_labels(ax, "Mean genotype value with age", "Age",
-            "Mean genotype(# of 1's in locus)")
-    make_legend([colors[0], "white", colors[-1]], 
+        ax[0].plot(vals_mean[i], color=colors[i])
+        ax[1].plot(vals_var[i], color=colors2[i])
+    for a in ax:
+        a.axvline(mt, color="k") # Maturity line
+        a.axvline(ls, color="k", linestyle="dashed") # Lifespan line
+        a.xaxis.set_ticks([0, mt, ls, nloc-1])
+        axis_ticks_limits(a, [0,mt,ls,ls], "", (0, nloc-1), "")
+    axis_labels(ax[0], "Mean and variance in genotype sum with age", "",
+            "Mean genotype sum")
+    axis_labels(ax[1], "", "Age", "Variance in genotype sum")
+    axis_legend(ax[0], [colors[0], "white", colors[-1]], 
             ["Snapshot 1", "...", "Snapshot {}".format(lns)])
-    save_close("4_genotype_mean")
-def genotype_var():
-    fig, ax = plt.subplots(1)
-    for i in xrange(L["n_snapshots"]):
-        gt = np.append(L["var_gt"]["s"][i], L["var_gt"]["r"][i])
-        ax.plot(gt, color=colors[i])
-    axis_labels(ax, "Variance in genotype value with age", "Age",
-            "Genotype variance")
-    make_legend([colors[0], "white", colors[-1]], 
+    axis_legend(ax[1], [colors2[0], "white", colors2[-1]], 
             ["Snapshot 1", "...", "Snapshot {}".format(lns)])
-    save_close("4a_genotype_var")
+    save_close("4_genotypes_with_age")
 
-# 5: BIT VALUE WITH AGE
-def bit_mean():
-    fig, ax = plt.subplots(1)
+# 4: BIT VALUES  WITH AGE
+def bits_with_age():
+    # Define values
+    vals_mean, vals_var, nb = L["n1"], L["n1_var"], L["n_base"]
+    ls, mt = nb * (L["max_ls"]-1), nb * L["maturity"]
+    nloc = L["chr_len"] - nb * L["n_neutral"]
+    # Make plots
+    fig, ax = plt.subplots(2)
     for i in xrange(L["n_snapshots"]):
-        ax.plot(L["n1"][i], color=colors[i])
-    axis_labels(ax, "Mean bit value with along sorted genome", "Bit position",
-            "Average proportion of 1's")
-    make_legend([colors[0], "white", colors[-1]], 
+        ax[0].plot(vals_mean[i], color=colors[i])
+        ax[1].plot(vals_var[i], color=colors2[i])
+    for a in ax:
+        a.axvline(mt, color="k") # Maturity line
+        a.axvline(ls, color="k", linestyle="dashed") # Lifespan line
+        a.xaxis.set_ticks([0, mt, ls, nloc-1])
+        axis_ticks_limits(a, [0 , mt/nb, ls/nb, ls/nb], "", (0, nloc-1), "")
+    axis_labels(ax[0], "Mean and variance in bit value with age", "",
+            "Mean bit value")
+    axis_labels(ax[1], "", "Age", "Variance in bit value")
+    axis_legend(ax[0], [colors[0], "white", colors[-1]], 
             ["Snapshot 1", "...", "Snapshot {}".format(lns)])
-    save_close("5_bit_mean")
-def bit_var():
-    fig, ax = plt.subplots(1)
-    for i in xrange(L["n_snapshots"]):
-        ax.plot(L["n1_var"][i], color=colors[i])
-    axis_labels(ax, "Variance bit value with along sorted genome", "Bit position",
-            "Variance in proportion of 1's")
-    make_legend([colors[0], "white", colors[-1]], 
+    axis_legend(ax[1], [colors2[0], "white", colors2[-1]], 
             ["Snapshot 1", "...", "Snapshot {}".format(lns)])
-    save_close("5a_bit_var")
+    save_close("5_bits_with_age")
 
 # 6: GENOTYPE DENSITY
-def density_overlay_surv():
-    fig, ax = plt.subplots(1)
-    d = L["density"]["s"].T
+def density_overlay():
+    # Define values
+    s, r = L["density"]["s"].T, L["density"]["r"].T
+    # Make plots
+    fig, ax = plt.subplots(2)
     for i in xrange(L["n_snapshots"]):
-        ax.plot(d[i], color=colors[i])
-    axis_labels(ax, "Distribution of survival genotypes at each snapshot",
-            "Genotype sum", "Density")
-    make_legend([colors[0], "white", colors[-1]], 
+        ax[0].plot(s[i], color=colors[i])
+        ax[1].plot(r[i], color=colors2[i])
+    axis_labels(ax[0], "Genotype distributions at each snapshot", "",
+            "Density (survival loci)")
+    axis_labels(ax[1], "", "Genotype sum", "Density(reproductive loci)")
+    axis_legend(ax[0], [colors[0], "white", colors[-1]], 
             ["Snapshot 1", "...", "Snapshot {}".format(lns)])
-    save_close("6a_density_surv")
-def density_overlay_repr():
-    fig, ax = plt.subplots(1)
-    d = L["density"]["r"].T
-    for i in xrange(L["n_snapshots"]):
-        ax.plot(d[i], color=colors[i])
-    axis_labels(ax, "Distribution of reproduction genotypes at each snapshot",
-            "Genotype sum", "Density")
-    make_legend([colors[0], "white", colors[-1]], 
+    axis_legend(ax[1], [colors2[0], "white", colors2[-1]], 
             ["Snapshot 1", "...", "Snapshot {}".format(lns)])
-    save_close("6b_density_repr")
+    save_close("6_density")
 
 # 7: FITNESS
 def fitness():
@@ -322,14 +332,9 @@ def entropy():
     fig, ax = plt.subplots(2, sharex=True)
     ax[0].plot(L["entropy_bits"], "b-")
     ax[1].plot(L["entropy_gt"]["a"], "r-")
-    axis_labels(ax[0], "Shannon entropy of population genomes", "", " ")
+    axis_labels(ax[0], "Shannon entropy of population genomes", "", " ", ypad=100)
     axis_labels(ax[1], "", "Snapshot", " ")
-    #axis_labels(ax, "Shannon entropy of population genomes at each snapshot", 
-    #        "Snapshot", "")
-    def make_legend(cols, labels, loc="upper right", size=10):
-        ax[0].legend(handles=make_handles(cols, labels), labels=labels, loc=loc, 
-                prop={"size":size})
-    make_legend(["blue","red"], 
+    axis_legend(ax[0], ["blue","red"], 
             ["Entropy in bit values", "Entropy in genotype sums"])
     fig.text(0, 0.5, 'H', va='center', rotation='vertical')
     save_close("10_entropy")
@@ -340,26 +345,14 @@ def plot_all(pop_res_limits, odr_limits):
     pop_res(pop_res_limits)
     starvation(pop_res_limits)
     age_distribution()
-    genotype_sum()
-    genotype_var()
-    bit_mean()
-    bit_var()
-    density_overlay_surv()
-    density_overlay_repr()
+    genotypes_with_age()
+    bits_with_age()
+    density_overlay()
     fitness()
     fitness_term()
     observed_death()
     observed_death_old()
     entropy()
-    #observed_death_rate(odr_limits[0],odr_limits[1])
-    #shannon_diversity()
-    #fitness()
-    #for x in [True, False]:
-    #    frequency(x)
-    #    age_wise_frequency(x)
-    #    density(x)
-    #    age_wise_fitness_product(x)
-    #    age_wise_fitness_contribution(x)
     print "done."
 
 ###############
