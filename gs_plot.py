@@ -271,7 +271,7 @@ def density_overlay():
         ax[1].plot(r[i], color=colors2[i])
     axis_labels(ax[0], "Genotype distributions at each snapshot", "",
             "Density (survival loci)")
-    axis_labels(ax[1], "", "Genotype sum", "Density(reproductive loci)")
+    axis_labels(ax[1], "", "Genotype sum", "Density (reproductive loci)")
     axis_legend(ax[0], [colors[0], "white", colors[-1]], 
             ["Snapshot 1", "...", "Snapshot {}".format(lns)])
     axis_legend(ax[1], [colors2[0], "white", colors2[-1]], 
