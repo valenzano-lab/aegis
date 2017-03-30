@@ -501,7 +501,12 @@ class Record:
         assign("m_ratio", np.array([conf.m_ratio]))
         assign("r_rate", np.array([conf.r_rate]))
         assign("sexual", conf.sexual)
+        assign("start_pop", np.array([conf.start_pop]))
         # Run parameters from config object
+        assign("res_start", np.array([conf.res_start]))
+        assign("res_limit", np.array([conf.res_limit]))
+        assign("res_regen_constant", np.array([conf.R]))
+        assign("res_regen_prop", np.array([conf.V]))
         assign("surv_bound", conf.surv_bound)
         assign("repr_bound", conf.repr_bound)
         assign("surv_step", np.array(conf.surv_step))
@@ -512,6 +517,8 @@ class Record:
         assign("res_var", conf.res_var)
         assign("surv_pen", conf.surv_pen)
         assign("repr_pen", conf.repr_pen)
+        assign("death_inc", np.array([conf.death_inc]))
+        assign("repr_dec", np.array([conf.repr_dec]))
         # Recording parameters from config object
         assign("window_size", conf.window_size)
         assign("n_states", conf.n_states)

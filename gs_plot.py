@@ -176,27 +176,54 @@ def pop_res(limits=[0, L["n_stages"]]):
     """Plot population (blue) and resources (res) in specified stage range."""
     s1,s2 = limits
     p,r,x = L["population_size"][s1:s2+1],L["resources"][s1:s2+1],L["res_var"]
+    cols, labels = ["blue", "red"], ["population", "resources"]
     fig, ax = plt.subplots(1)
-    if x: ax.plot(r,"r-",p,"b-")
-    if not x: ax.plot(p,"b-",r,"r-")
+    if L["res_var"]:
+        ax.plot(r,"r-",p,"b-")
+        if hasattr(L, "res_regen_constant"): 
+            ax.plot(L["res_regen_constant"], "m-")
+            cols += ["magenta"]
+            labels += ["R"]
+    else: ax.plot(p,"b-",r,"r-")
     axis_labels(ax, "Resources and population", "Stage", "N")
     axis_ticks_limits(ax, np.linspace(0,s2-s1,6).astype(int), "", 
             (s1,s2), (0, max((max(r),max(p)))))
-    make_legend(["blue", "red"], ["population", "resources"])
+    make_legend(cols,labels)
     save_close("1_pop_res")
 
 # 2: STARVATION FACTORS
 def starvation(limits=[0, L["n_stages"]]):
     """Plot starvation (green) and reproduction (magenta) starvation factors
     in specified stage range."""
+    is_r, is_s = L["repr_pen"], L["surv_pen"] # Check if starvation occurs
+    if not (is_r or is_s): return
     s1,s2 = limits
-    r,s = L["repr_penf"][s1:s2+1],L["surv_penf"][s1:s2+1]
-    fig, ax = plt.subplots(1)
-    ax.plot(s,"g-",r,"m-")
-    axis_labels(ax, "Starvation factors", "Stage", "Starvation factor")
-    axis_ticks_limits(ax, np.linspace(0,s2-s1,6).astype(int), "", 
-            (s1,s2), (0, max((max(r),max(s)))))
-    make_legend(["green", "magenta"], ["survival","reproduction"])
+    r,s,is_rs = L["repr_penf"][s1:s2+1],L["surv_penf"][s1:s2+1],(is_r and is_s)
+    cols, labels, maxval = [],[], max([max(r),max(s)])
+    suffix = "" if is_rs else " (Survival)" if is_s else " (Reproduction)"
+    main,xlab,ylab="Starvation factors" + suffix, "Stage", "Starvation factor"
+    fig,ax = plt.subplots(is_r + is_s)
+    if is_s:
+        ax_s = ax[0] if is_r else ax
+        ax_s.plot(s,"g-")
+        axis_labels(ax_s, main, "" if is_r else xlab, "" if is_r else ylab)
+        cols += ["green"]
+        labels += ["survival"]
+        axis_ticks_limits(ax_s, "", "", (s1,s2), "")
+        logbase = L["death_inc"] if hasattr(L, "death_inc") else 3
+        ax_s.set_yscale("log", basey=logbase)
+    if is_r:
+        ax_r = ax[1] if is_s else ax
+        ax_r.plot(r, "m-")
+        axis_labels(ax_r, "" if is_s else main, xlab, "" if is_s else ylab)
+        cols += ["magenta"]
+        labels += ["reproduction"]
+        axis_ticks_limits(ax_r, "", "", (s1,s2), "")
+        logbase = L["repr_dec"] if hasattr(L, "repr_dec") else 3
+        ax_r.set_yscale("log", basey=logbase)
+    if is_rs: 
+        axis_legend(ax[0], cols, labels)
+        fig.text(0.05,0.5,ylab,va="center",rotation="vertical")
     save_close("2_starvation")
 
 # 3: AGE DISTRIBUTIONS
@@ -331,46 +358,54 @@ def fitness():
     save_close("7_fitness")
 
 # 8: FITNESS TERM
-def fitness_term():
+def per_age_fitness():
+    """Plot the per-age contribution to average genotypic fitness, equal to the
+    expected number of offspring at that age."""
     fig, ax = plt.subplots(1)
     for i in xrange(L["n_snapshots"]):
         ax.plot(L["fitness_term"][i], color=colors[i])
-    axis_labels(ax, "Age distribution in fitness contributions at each snapshot",
-            "Age", "Fitness term")
+    axis_labels(ax, "Expected number of offspring at each age and snapshot",
+            "Age", "E(# of offspring)")
     make_legend([colors[0], "white", colors[-1]], 
             ["Snapshot 1", "...", "Snapshot {}".format(lns)])
     axis_ticks_limits(ax, "","",(L["maturity"],L["max_ls"]-1),"") # Remove immature
-    save_close("8_fitness_term")
+    save_close("8_per_age_fitness")
 
-def fitness_term_scaled():
+def per_age_fitness_diff():
+    """Plot the log-ratio of observed per-age contribution to fitness against
+    that expected in the absence of ageing."""
     fig, ax = plt.subplots(1)
     mt,ls = L["maturity"].astype(int), L["max_ls"].astype(int)
     r,s = L["prob_mean"]["repr"][:,0][:,np.newaxis], L["prob_mean"]["surv"][:,mt]
-    f,x = L["fitness_term"][:,mt:], np.arange(mt,ls).astype(float)
-    y = 2 if L["sexual"] else 1
-    g = y*f/(r * s ** (x+1)) - 1 # In absence of ageing, should equal 0
+    f_obs,x = L["fitness_term"][:,mt:], np.arange(mt,ls).astype(float)
+    f_exp = (r * s **(x+1)) / (2 if L["sexual"] else 1)
+    g = np.log10(f_obs/f_exp)
     for i in xrange(L["n_snapshots"]):
         ax.plot(g[i], color=colors[i])
-    axis_labels(ax, "Linearised age distribution in fitness contributions",
-            "Age", "Scaled fitness term (G)")
-    make_legend([colors[0], "white", colors[-1]],
-            ["Snapshot 1", "...", "Snapshot {}".format(lns)])
-    save_close("8a_fitness_term_scaled")
+    title = "Log-ratio of observed to expected per-age fitness in the absence of ageing"
+    axis_labels(ax, title, "Age", "$\log_{10}$ $(f_x^{obs}/f_x^{exp})$")
+    ax.xaxis.set_ticks(range(ls-mt-1,0,-10)[::-1])
+    axis_ticks_limits(ax, range(ls-1,mt,-10)[::-1],"",(0,ls-mt-1),"")
+    axis_legend(ax, [colors[0], "white", colors[-1]],
+            ["Snapshot 1", "...", "Snapshot {}".format(lns)], ncol=3)
+    save_close("9_per_age_fitness_diff")
 
-def ageing_measure():
+def ageing_index():
+    """Plot the mean inter-age difference in observed vs expected per-age
+    fitness as an overall measure of population ageing at each snapshot."""
     fig, ax = plt.subplots(1)
     mt,ls = L["maturity"].astype(int), L["max_ls"].astype(int)
     r,s = L["prob_mean"]["repr"][:,0][:,np.newaxis], L["prob_mean"]["surv"][:,mt]
-    f,x = L["fitness_term"][:,mt:], np.arange(mt,ls).astype(float)
-    y = 2 if L["sexual"] else 1
-    g = y*f/(r * s ** (x+1)) - 1 # In absence of ageing, should equal 0
+    f_obs,x = L["fitness_term"][:,mt:], np.arange(mt,ls).astype(float)
+    f_exp = (r * s **(x+1)) / (2 if L["sexual"] else 1)
+    g = np.log10(f_obs/f_exp)
     h = - np.mean(np.diff(g, axis=1), axis=1)
     ax.plot(h, "b-")
     axis_labels(ax, "Measure of degree of ageing shown at each snapshot",
-            "Snapshot", "Ageing measure")
+            "Snapshot", "Ageing index")
     ax.xaxis.set_ticks(range(L["n_snapshots"]))
     axis_ticks_limits(ax,range(1,L["n_snapshots"]+1),"",(0,L["n_snapshots"]-1),"")
-    save_close("8b_ageing_measure")
+    save_close("10_ageing_index")
 
 
 # 9: OBSERVED DEATH RATE
@@ -392,7 +427,7 @@ def observed_death(width=100):
             "Age", "Death rate")
     make_legend([colors[0], "white", colors[-1]], 
             ["Snapshot 1", "...", "Snapshot {}".format(lns)])
-    save_close("9_observed_death")
+    save_close("11_observed_death")
 
 # 10: ENTROPY
 # TODO: Pad y axis
@@ -411,7 +446,7 @@ def entropy():
             range(1,L["n_snapshots"]+1),"",(0,L["n_snapshots"]-1),"")
     axis_ticks_limits(ax[1],
             range(1,L["n_snapshots"]+1),"",(0,L["n_snapshots"]-1),"")
-    save_close("10_entropy")
+    save_close("12_entropy")
 
 def plot_all(pop_res_limits, odr_limits):
     """Generate all plots for the imported Record object."""
@@ -424,9 +459,9 @@ def plot_all(pop_res_limits, odr_limits):
     density_overlay()
     density_difference()
     fitness()
-    fitness_term()
-    fitness_term_scaled()
-    ageing_measure()
+    per_age_fitness()
+    per_age_fitness_diff()
+    ageing_index()
     observed_death()
     entropy()
     print "done."
