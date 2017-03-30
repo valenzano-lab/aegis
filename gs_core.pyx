@@ -601,7 +601,7 @@ class Record:
             from an array of densities."""
             ad_tr = locus_densities.transpose(1,2,0) # [snapshot,locus,genotype]
             # Mean and variance of gt distribution
-            mean_gt = np.sum(ad_tr * gt, 2)
+            mean_gt = np.sum(ad_tr * gt, 2) # [snapshot, locus]
             # Get difference between each potential genotype and the mean at
             # each snapshot/locus
             gt_diff = np.tile(gt, [len(ss),ad_tr.shape[1],1]) - \

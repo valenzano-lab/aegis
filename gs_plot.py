@@ -243,7 +243,7 @@ def genotypes_with_age():
     mean, var, maxstate = L["mean_gt"], L["var_gt"], L["n_states"]-1
     vals_mean = np.hstack((mean["s"],mean["r"]))
     vals_var = np.hstack((var["s"],var["r"]))
-    nt_mean, nt_var = np.mean(mean["n"][-1]), np.var(mean["n"][-1])
+    nt_mean, nt_var = np.mean(mean["n"][-1]), np.mean(var["n"][-1])
     ls, mt, nloc = L["max_ls"]-1, L["maturity"], len(L["genmap"])-L["n_neutral"]
     # Make plots
     fig, ax = plt.subplots(2)
@@ -256,18 +256,14 @@ def genotypes_with_age():
         a.xaxis.set_ticks([0, mt, ls, nloc-1])
         axis_ticks_limits(a, [0,mt,ls,ls], "", (0, nloc-1), "")
     ax[0].axhline(nt_mean, color="m", linestyle="dashed")
-    if L["n_neutral"] > 1:
-        ax[1].axhline(nt_var, color="c", linestyle="dashed")
-        axis_legend(ax[1], [colors2[0], "white", colors2[-1], "cyan"],
-                ["Snapshot 1", "...", "Snapshot {}".format(lns),
-                    "S{} (Neutral)".format(lns)])
-    else:
-        axis_legend(ax[1], [colors2[0], "white", colors2[-1]],
-                ["Snapshot 1", "...", "Snapshot {}".format(lns)])
+    ax[1].axhline(nt_var, color="c", linestyle="dashed")
     axis_labels(ax[0], "Mean and variance in genotype sum with age", "",
             "Mean genotype sum")
     axis_labels(ax[1], "", "Age", "Variance in genotype sum")
     axis_legend(ax[0], [colors[0], "white", colors[-1], "magenta"],
+            ["Snapshot 1", "...", "Snapshot {}".format(lns),
+                "S{} (Neutral)".format(lns)])
+    axis_legend(ax[1], [colors2[0], "white", colors2[-1], "cyan"],
             ["Snapshot 1", "...", "Snapshot {}".format(lns),
                 "S{} (Neutral)".format(lns)])
     save_close("4_genotypes_with_age")
@@ -275,9 +271,11 @@ def genotypes_with_age():
 # 4: BIT VALUES  WITH AGE
 def bits_with_age():
     # Define values
-    vals_mean, vals_var, nb = L["n1"], L["n1_var"], L["n_base"]
-    ls, mt = nb * (L["max_ls"]-1), nb * L["maturity"]
-    nloc = L["chr_len"] - nb * L["n_neutral"]
+    vals_mean, vals_var, nb = L["n1"], L["n1_var"], L["n_base"].astype(int)
+    ls, mt, nn = nb*(L["max_ls"])-1, nb*L["maturity"], nb*L["n_neutral"].astype(int)
+    nloc = L["chr_len"] - nn
+    print nn
+    nt_mean, nt_var = np.mean(vals_mean[-1][-nn:]), np.mean(vals_var[-1][-nn:])
     # Make plots
     fig, ax = plt.subplots(2)
     for i in xrange(L["n_snapshots"]):
@@ -288,17 +286,21 @@ def bits_with_age():
         a.axvline(ls, color="k", linestyle="dashed") # Lifespan line
         a.xaxis.set_ticks([0, mt, ls, nloc-1])
         axis_ticks_limits(a, [0 , mt/nb, ls/nb, ls/nb], "", (0, nloc-1), "")
+    ax[0].axhline(nt_mean, color="m", linestyle="dashed")
+    ax[1].axhline(nt_var, color="c", linestyle="dashed")
     axis_labels(ax[0], "Mean and variance in bit value with age", "",
             "Mean bit value")
     axis_labels(ax[1], "", "Age", "Variance in bit value")
-    axis_legend(ax[0], [colors[0], "white", colors[-1]], 
-            ["Snapshot 1", "...", "Snapshot {}".format(lns)])
-    axis_legend(ax[1], [colors2[0], "white", colors2[-1]], 
-            ["Snapshot 1", "...", "Snapshot {}".format(lns)])
+    axis_legend(ax[0], [colors[0], "white", colors[-1], "magenta"],
+            ["Snapshot 1", "...", "Snapshot {}".format(lns),
+                "S{} (Neutral)".format(lns)])
+    axis_legend(ax[1], [colors2[0], "white", colors2[-1], "cyan"],
+            ["Snapshot 1", "...", "Snapshot {}".format(lns),
+                "S{} (Neutral)".format(lns)])
     save_close("5_bits_with_age")
 
 # 6: GENOTYPE DENSITY
-def density_overlay():
+def density():
     # Define values
     s, r, n = L["density"]["s"].T, L["density"]["r"].T, L["density"]["n"].T
     n_colors = get_colours(plt.cm.Purples)
@@ -337,6 +339,8 @@ def density_difference():
     for i in xrange(L["n_snapshots"]):
         ax[0].plot(s[i], color=colors[i])
         ax[1].plot(r[i], color=colors2[i])
+    ax[0].axhline(0, color="k", linestyle="dashed")
+    ax[1].axhline(0, color="k", linestyle="dashed")
     axis_labels(ax[0], "Difference in genotype distribution from neutral loci",
             "", "$\Delta$ Density (surv)")
     axis_labels(ax[1], "", "", "$\Delta$ Density (repr)")
@@ -346,7 +350,7 @@ def density_difference():
     axis_legend(ax[1], [colors2[0], "white", colors2[-1]], 
             ["Snapshot 1", "...", "Snapshot {}".format(lns)],
             ncol=3)
-    save_close("6a_density_difference")
+    save_close("7_density_difference")
 
 # 7: FITNESS
 def fitness():
@@ -355,7 +359,7 @@ def fitness():
     axis_labels(ax, "Mean population fitness", "Snapshot", "Fitness")
     ax.xaxis.set_ticks(range(L["n_snapshots"]))
     axis_ticks_limits(ax,range(1,L["n_snapshots"]+1),"",(0,L["n_snapshots"]-1),"")
-    save_close("7_fitness")
+    save_close("8_fitness")
 
 # 8: FITNESS TERM
 def per_age_fitness():
@@ -369,7 +373,7 @@ def per_age_fitness():
     make_legend([colors[0], "white", colors[-1]], 
             ["Snapshot 1", "...", "Snapshot {}".format(lns)])
     axis_ticks_limits(ax, "","",(L["maturity"],L["max_ls"]-1),"") # Remove immature
-    save_close("8_per_age_fitness")
+    save_close("9_per_age_fitness")
 
 def per_age_fitness_diff():
     """Plot the log-ratio of observed per-age contribution to fitness against
@@ -382,13 +386,13 @@ def per_age_fitness_diff():
     g = np.log10(f_obs/f_exp)
     for i in xrange(L["n_snapshots"]):
         ax.plot(g[i], color=colors[i])
-    title = "Log-ratio of observed to expected per-age fitness in the absence of ageing"
+    title = "Observed vs expected per-age fitness in the absence of ageing"
     axis_labels(ax, title, "Age", "$\log_{10}$ $(f_x^{obs}/f_x^{exp})$")
     ax.xaxis.set_ticks(range(ls-mt-1,0,-10)[::-1])
     axis_ticks_limits(ax, range(ls-1,mt,-10)[::-1],"",(0,ls-mt-1),"")
     axis_legend(ax, [colors[0], "white", colors[-1]],
             ["Snapshot 1", "...", "Snapshot {}".format(lns)], ncol=3)
-    save_close("9_per_age_fitness_diff")
+    save_close("10_per_age_fitness_diff")
 
 def ageing_index():
     """Plot the mean inter-age difference in observed vs expected per-age
@@ -405,7 +409,7 @@ def ageing_index():
             "Snapshot", "Ageing index")
     ax.xaxis.set_ticks(range(L["n_snapshots"]))
     axis_ticks_limits(ax,range(1,L["n_snapshots"]+1),"",(0,L["n_snapshots"]-1),"")
-    save_close("10_ageing_index")
+    save_close("11_ageing_index")
 
 
 # 9: OBSERVED DEATH RATE
@@ -427,7 +431,7 @@ def observed_death(width=100):
             "Age", "Death rate")
     make_legend([colors[0], "white", colors[-1]], 
             ["Snapshot 1", "...", "Snapshot {}".format(lns)])
-    save_close("11_observed_death")
+    save_close("12_observed_death")
 
 # 10: ENTROPY
 # TODO: Pad y axis
@@ -446,7 +450,7 @@ def entropy():
             range(1,L["n_snapshots"]+1),"",(0,L["n_snapshots"]-1),"")
     axis_ticks_limits(ax[1],
             range(1,L["n_snapshots"]+1),"",(0,L["n_snapshots"]-1),"")
-    save_close("12_entropy")
+    save_close("13_entropy")
 
 def plot_all(pop_res_limits, odr_limits):
     """Generate all plots for the imported Record object."""
@@ -456,7 +460,7 @@ def plot_all(pop_res_limits, odr_limits):
     age_distribution()
     genotypes_with_age()
     bits_with_age()
-    density_overlay()
+    density()
     density_difference()
     fitness()
     per_age_fitness()
