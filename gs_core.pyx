@@ -497,6 +497,9 @@ class Record:
         assign("max_ls", np.array([conf.max_ls]))
         assign("maturity", np.array([conf.maturity]))
         assign("n_neutral", np.array([conf.n_neutral]))
+        assign("m_rate", np.array([conf.m_rate]))
+        assign("m_ratio", np.array([conf.m_ratio]))
+        assign("r_rate", np.array([conf.r_rate]))
         assign("sexual", conf.sexual)
         # Run parameters from config object
         assign("surv_bound", conf.surv_bound)
