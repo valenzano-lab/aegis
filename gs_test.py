@@ -10,10 +10,10 @@ import numpy as np
 import scipy.stats as st
 from scipy.misc import comb
 
-runFunctionConfigTests=True
-runPopulationTests=True
-runRecordTests=True
-runRunTests=True
+runFunctionConfigTests=False
+runPopulationTests=False
+runRecordTests=False
+runRunTests=False
 runSimulationTests=True
 
 ####################
@@ -1380,8 +1380,14 @@ class TestSimulationClass:
         def comp(a, b): assert np.all(np.isclose(a, b))
         def test_keys(n): # n = number of failed runs
             test,ref = S1.avg_record.record,[r.record.record for r in S1.runs[n:]]
-            excl = ["prev_failed", "percent_dieoff", "n_runs", "n_successes"]
-            avg_keys,l = set(ref[0].keys()) - set(excl), len(S1.runs)
+            concat = ["population_size","resources","surv_penf","repr_penf",
+                    "prev_failed", "percent_dieoff",
+                    "population_size_window_mean", "resources_window_mean",
+                    "population_size_window_var", "resources_window_var"]
+            for k in concat:
+                assert np.array_equal(test[k], np.vstack([r[k] for r in ref]))
+            excl = ["snapshot_pops", "n_runs", "n_successes"]
+            avg_keys,l = set(ref[0].keys()) - set(excl) - set(concat), len(S1.runs)
             for k in avg_keys:
                 el, ks = test[k], k + "_sd"
                 if isinstance(el, dict):
@@ -1396,8 +1402,8 @@ class TestSimulationClass:
             test,l = S1.avg_record.get, len(S1.runs)
             assert test("n_runs") == l
             assert test("n_successes") == l-n
-            assert test("prev_failed") == l*m
-            assert np.isclose(test("percent_dieoff"),100*(l*m+n)/(l*m+l))
+            assert test("total_failed") == l*m
+            assert np.isclose(test("percent_dieoff_total"),100*(l*m+n)/(l*m+l))
         S1.average_records()
         test_keys(0)
         test_compute_failure(0,0)

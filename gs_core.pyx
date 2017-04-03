@@ -1055,11 +1055,15 @@ class Simulation:
         def average_entry(key):
             """Average a given entry across all runs and store under the
             corresponding key in self.avg_record."""
-            excl = ["snapshot_pops", "prev_failed", "percent_dieoff",
-                    "n_runs", "n_successes"]
-            if key in excl: return
+            if key in ["snapshot_pops", "n_runs", "n_successes"]: return
             k0,sar = rec_gets[0](key), self.avg_record
-            if isinstance(k0, dict):
+            if key in ["population_size","resources","surv_penf","repr_penf",
+                    "prev_failed", "percent_dieoff",
+                    "population_size_window_mean", "resources_window_mean",
+                    "population_size_window_var", "resources_window_var"]:
+                # Concatenate rather than average
+                sar.set(key,np.vstack([r(key) for r in rec_gets]))
+            elif isinstance(k0, dict):
                 d_out, d_out_sd = {}, {}
                 for k in sorted(k0.keys()):
                     karray = np.array([r(key)[k] for r in rec_gets])
@@ -1088,10 +1092,10 @@ class Simulation:
                     sum([x.complete and not x.dieoff for x in self.runs]))
             fails = [r.record.get("prev_failed") for r in self.runs]
             failsum = np.sum(fails)
-            sar.set("prev_failed", failsum)
-            sar.set("percent_dieoff", 100*\
-                    (sar.get("prev_failed")+sum([x.dieoff for x in self.runs]))/\
-                    (sar.get("prev_failed")+len(self.runs)))
+            sar.set("total_failed", failsum)
+            sar.set("percent_dieoff_total", 100*\
+                    (sar.get("total_failed")+sum([x.dieoff for x in self.runs]))/\
+                    (sar.get("total_failed")+len(self.runs)))
         # Procedure
         test_compatibility() # First test record compatibility
         keys = rec_list[0].get_keys()
