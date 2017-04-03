@@ -10,11 +10,11 @@ import numpy as np
 import scipy.stats as st
 from scipy.misc import comb
 
-runFunctionConfigTests=False
-runPopulationTests=False
+runFunctionConfigTests=True
+runPopulationTests=True
 runRecordTests=True
-runRunTests=False
-runSimulationTests=False
+runRunTests=True
+runSimulationTests=True
 
 ####################
 ### 0: FIXTURES  ###

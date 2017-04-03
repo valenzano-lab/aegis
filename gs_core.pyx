@@ -1039,8 +1039,7 @@ class Simulation:
                     list(r("snapshot_stages")) for r in rec_gets])
             eq_array_2 = np.array([r("mean_gt")["s"].shape+r("density")["s"].shape+\
                     r("entropy_gt")["s"].shape+r("resources").shape+r("n1").shape+\
-                    r("sliding_window_n1").shape+r("age_distribution").shape\
-                    for r in rec_gets])
+                    r("age_distribution").shape for r in rec_gets])
             cm = np.all(np.isclose(eq_array_0, eq_array_0[0])) and \
                     np.all(np.isclose(eq_array_1, eq_array_1[0])) and \
                     np.all(np.isclose(eq_array_2,eq_array_2[0]))
