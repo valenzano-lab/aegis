@@ -10,11 +10,11 @@ import numpy as np
 import scipy.stats as st
 from scipy.misc import comb
 
-runFunctionConfigTests=True
-runPopulationTests=True
+runFunctionConfigTests=False
+runPopulationTests=False
 runRecordTests=True
-runRunTests=True
-runSimulationTests=True
+runRunTests=False
+runSimulationTests=False
 
 ####################
 ### 0: FIXTURES  ###
@@ -50,7 +50,6 @@ def conf(request):
         c.death_inc = random.randint(1, 10)
         c.repr_dec = random.randint(1, 10)
         gm_len = c.max_ls + (c.max_ls - c.maturity) + c.n_neutral
-        c.window_size = random.randint(1, gm_len*c.n_base)
         c.generate()
     return c
 
@@ -680,7 +679,7 @@ class TestRecordClass:
     def test_init_record(self, record, conf):
         r = record.record
         m,n = conf.number_of_snapshots, conf.number_of_stages
-        l,w = conf.max_ls, conf.window_size
+        l = conf.max_ls
         def assert_sameshape(keys,ref):
             """Test whether all listed record arrays have identical
             shape."""
@@ -710,7 +709,7 @@ class TestRecordClass:
         assert r["surv_pen"] == conf.surv_pen
         assert r["repr_pen"] == conf.repr_pen
         # Recording parameters
-        assert r["window_size"] == conf.window_size
+        assert r["windows"] == conf.windows
         assert r["n_states"] == conf.n_states
         # Probability functions
         states = [random.choice(xrange(r["n_states"])) for x in xrange(3)]
@@ -874,11 +873,10 @@ class TestRecordClass:
         rec.compute_probabilities()
         rec.compute_bits()
         r = rec.get
-        m,c,w = r("n_snapshots"),r("chr_len"),r("window_size")
+        m,c = r("n_snapshots"),r("chr_len")
         assert np.array_equal(r("n1"), np.ones([m,c]))
         assert np.array_equal(r("n1_var"), np.zeros([m,c]))
         assert np.array_equal(r("entropy_bits"), np.zeros(m))
-        assert np.array_equal(r("sliding_window_n1"), np.zeros([m,c-w+1]))
     #! TODO: Add test that this still works when snapshot pops are of different
     #! sizes
 
@@ -894,6 +892,59 @@ class TestRecordClass:
         adr = r("actual_death_rate")
         assert (adr[:,:-1] == 0.5).all()
         assert (adr[:,-1] == 1).all()
+
+    def test_get_window(self, pop1, record):
+        """Test window generation on static data with random window size."""
+        # Initialise
+        rec = copy.deepcopy(record)
+        self.static_fill(rec, pop1)
+        rec.compute_densities()
+        rec.compute_probabilities()
+        rec.compute_bits()
+        # Generate windows for 1D and 2D data
+        exp = {"population_size":pop1.N, "n1":1}
+        def test_window(key, wsize, shape, test1=True):
+            w = rec.get_window(key, wsize)
+            assert w.shape == shape
+            if test1: assert np.all(w == exp[key])
+            else: assert np.sum(w) == 0
+            return w
+        for s in "population_size", "n1":
+            x = rec.get(s)
+            dim = len(x.shape)-1
+            # Window right size
+            ws = random.randint(1,x.shape[dim])
+            w_shape = x.shape[:dim] + (x.shape[dim] - ws + 1, ws)
+            w = test_window(s, ws, w_shape)
+            # Window too big - should correct to dimension size
+            w = test_window(s, 1e100, x.shape[:dim] + (0,x.shape[dim]+1), False)
+            # Zero window
+            w = test_window(s, 0, x.shape[:dim] + (x.shape[dim]+1,0), False)
+            assert np.sum(w) == 0
+            # Negative window
+            with pytest.raises(ValueError):
+                w = rec.get_window(s,-1)
+
+    def test_compute_windows(self, pop1, record, conf):
+        """Test generation of particular sliding window record entries on a
+        degenerate population."""
+        # Initialise
+        rec = copy.deepcopy(record)
+        self.static_fill(rec, pop1)
+        rec.compute_densities()
+        rec.compute_probabilities()
+        rec.compute_bits()
+        rec.compute_windows()
+        # Test window entries
+        exp_val = {"population_size":pop1.N,"resources":conf.res_start,"n1":1}
+        for s in ["population_size","resources","n1"]:
+            x,ws = rec.get(s),rec.get("windows")[s]
+            dim = len(x.shape)-1
+            sh = (x.shape[dim]-ws+1,) if x.shape[dim]>ws+1 else (0,)
+            shape = x.shape[:dim] + sh
+            assert np.array_equal(rec.get(s+"_window_var"), np.zeros(shape))
+            assert np.array_equal(rec.get(s+"_window_mean"), 
+                    np.tile(exp_val[s],shape))
 
     def test_finalisation(self, pop1, record, conf):
         """Test that finalisation correctly applies all expected methods to
@@ -1139,7 +1190,6 @@ class TestRunClass:
         z = np.zeros(1)
         # Execute
         run1.execute_stage()
-        sliding_window_mask = np.zeros(r("sliding_window_n1").shape)
         # Compare output to expectation
         def ae(x,y): assert np.array_equal(x,y)
         def e(x,y): assert x == y
@@ -1147,8 +1197,7 @@ class TestRunClass:
                 "junk_fitness_term":mask, "repr_value": mask,
                 "junk_repr_value": mask, "cmv_surv":1-mask,
                 "junk_cmv_surv":1-mask, "n1":n1_mask, "n1_var":n1_var_mask,
-                "sliding_window_n1":sliding_window_mask,
-                #"entropy_bits":z,
+                #"entropy_bits":z, # TODO: Fix this
                 "fitness":z, "junk_fitness":z}
         maps_e = {"surv_penf":run.surv_penf, "repr_penf":run.repr_penf,
                 "resources":old_N, "dieoff":False}
@@ -1273,7 +1322,7 @@ class TestSimulationClass:
         assert_alltype(["number_of_runs", "number_of_stages",
             "number_of_snapshots", "res_start", "R", "res_limit",
             "start_pop", "max_ls", "maturity", "n_base",
-            "death_inc", "repr_dec", "window_size"], int)
+            "death_inc", "repr_dec"], int)
         assert_alltype(["crisis_sv", "V", "r_rate", "m_rate", "m_ratio",
             "crisis_p"], float)
         assert_alltype(["sexual", "res_var", "age_random", "surv_pen",

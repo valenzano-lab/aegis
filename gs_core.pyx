@@ -138,7 +138,7 @@ class Config:
         self.repr_pen = c.repr_pen # Penalise reproduction under starvation?
         self.death_inc = c.death_inc # Rate of death-rate increase under starvation
         self.repr_dec = c.repr_dec # Rate of repr rate decrease under starvation
-        self.window_size = c.window_size # Sliding window size for SD recording
+        self.windows = c.windows # Sliding window size for SD recording
 
     def generate(self):
         """Generate derived configuration parameters from simple ones and
@@ -520,7 +520,7 @@ class Record:
         assign("death_inc", np.array([conf.death_inc]))
         assign("repr_dec", np.array([conf.repr_dec]))
         # Recording parameters from config object
-        assign("window_size", conf.window_size)
+        assign("windows", conf.windows)
         assign("n_states", conf.n_states)
         # Simple data collected at every stage
         n,l = self.record["n_stages"],self.record["max_ls"]
@@ -703,17 +703,10 @@ class Record:
         n1_total = np.mean(n1, 1)
         bit_distr = np.vstack((n1_total,1-n1_total))
         entropy_bits = np.apply_along_axis(st.entropy, 0, bit_distr)
-        # Sliding-window variance in number of 1s along genome
-        d,s,w = n1.ndim-1, len(n1.strides)-1, self.get("window_size")
-        a_shape = n1.shape[:d] + (n1.shape[d] - w + 1, w)
-        a_strd = n1.strides + (n1.strides[s],) # strides
-        sliding_window_n1 = np.std(np.lib.stride_tricks.as_strided(
-            n1, shape=a_shape, strides=a_strd), 2)
         # Set record entries
         self.set("n1", n1)
         self.set("n1_var", n1_var)
         self.set("entropy_bits", entropy_bits)
-        self.set("sliding_window_n1", sliding_window_n1)
 
     def compute_actual_death(self):
         """Compute actual death rate for each age at each stage."""
@@ -727,12 +720,29 @@ class Record:
         self.set("actual_death_rate", 
                 np.append(death, np.ones([death.shape[0], 1]), axis=1))
 
+    def get_window(self, key, wsize):
+        """Obtain sliding windows from a record entry."""
+        x = self.get(key)
+        d,s = x.ndim-1, len(x.strides)-1
+        w = np.min([wsize, x.shape[d] + 1]) # Maximum window size
+        a_shape = x.shape[:d] + (x.shape[d] - w + 1, w)
+        a_strd = x.strides + (x.strides[s],)
+        return np.lib.stride_tricks.as_strided(x, a_shape, a_strd)
+
+    def compute_windows(self):
+        dim = {"population_size":1, "resources":1, "n1":2}
+        for s in ["population_size","resources","n1"]:
+            w = self.get_window(s, self.get("windows")[s])
+            self.set(s + "_window_mean", np.mean(w, dim[s]))
+            self.set(s + "_window_var", np.var(w, dim[s]))
+
     def finalise(self):
         """Calculate additional stats from recorded data of a completed run."""
         self.compute_densities()
         self.compute_probabilities()
         self.compute_bits()
         self.compute_actual_death()
+        self.compute_windows()
 
 class Run:
     """An object representing a single run of a simulation."""

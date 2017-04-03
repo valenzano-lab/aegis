@@ -212,6 +212,8 @@ def starvation(limits=[0, L["n_stages"]]):
         axis_ticks_limits(ax_s, "", "", (s1,s2), "")
         logbase = L["death_inc"] if hasattr(L, "death_inc") else 3
         ax_s.set_yscale("log", basey=logbase)
+        for n in np.unique(L["surv_penf"]): # Check actual values of s-factor
+            ax_s.axhline(n, color="k", linestyle="dashed")
     if is_r:
         ax_r = ax[1] if is_s else ax
         ax_r.plot(r, "m-")
@@ -221,6 +223,8 @@ def starvation(limits=[0, L["n_stages"]]):
         axis_ticks_limits(ax_r, "", "", (s1,s2), "")
         logbase = L["repr_dec"] if hasattr(L, "repr_dec") else 3
         ax_r.set_yscale("log", basey=logbase)
+        for n in np.unique(L["repr_penf"]):
+            ax_s.axhline(n, color="k", linestyle="dashed")
     if is_rs: 
         axis_legend(ax[0], cols, labels)
         fig.text(0.05,0.5,ylab,va="center",rotation="vertical")
@@ -274,7 +278,6 @@ def bits_with_age():
     vals_mean, vals_var, nb = L["n1"], L["n1_var"], L["n_base"].astype(int)
     ls, mt, nn = nb*(L["max_ls"])-1, nb*L["maturity"], nb*L["n_neutral"].astype(int)
     nloc = L["chr_len"] - nn
-    print nn
     nt_mean, nt_var = np.mean(vals_mean[-1][-nn:]), np.mean(vals_var[-1][-nn:])
     # Make plots
     fig, ax = plt.subplots(2)

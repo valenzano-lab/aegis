@@ -43,5 +43,5 @@ surv_pen = True # Survival penalty under starvation
 repr_pen = False # Reproduction penalty under starvation
 death_inc = 3 # Per-stage death rate increase under starvation
 repr_dec = death_inc # Per-stage reproduction rate decrease under starvation
-window_size = 10 # Size of sliding window for recording standard deviation of
-                 # locus genotypes along genomes.
+# Size of sliding windows for recording averaged statistics:
+windows = {"population_size": 1000, "resources":1000, "n1":10}
