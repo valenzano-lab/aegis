@@ -12,9 +12,9 @@ from scipy.misc import comb
 
 runFunctionConfigTests=False
 runPopulationTests=False
-runRecordTests=False
+runRecordTests=True
 runRunTests=False
-runSimulationTests=True
+runSimulationTests=False
 
 ####################
 ### 0: FIXTURES  ###
@@ -890,8 +890,7 @@ class TestRecordClass:
         Rc1.set("population_size", np.array([maxls*4,maxls*2,maxls]))
         Rc1.compute_actual_death()
         adr = r("actual_death_rate")
-        assert (adr[:,:-1] == 0.5).all()
-        assert (adr[:,-1] == 1).all()
+        assert (adr == 0.5).all()
 
     def test_get_window(self, pop1, record):
         """Test window generation on static data with random window size."""

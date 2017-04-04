@@ -714,11 +714,11 @@ class Record:
                 self.get("population_size")[:,None]
         dividend = N_age[1:, 1:]
         divisor = np.copy(N_age[:-1, :-1])
-        divisor[divisor == 0] = 1 # avoid division by zero
+        divisor[divisor == 0] = np.nan # avoid division by zero
         death = 1 - dividend / divisor
+        death[np.isnan(death)] = 0 # Default death rate of 0; TODO: Test alts
         # value for last age is 1
-        self.set("actual_death_rate", 
-                np.append(death, np.ones([death.shape[0], 1]), axis=1))
+        self.set("actual_death_rate", death)
 
     def get_window(self, key, wsize):
         """Obtain sliding windows from a record entry."""
