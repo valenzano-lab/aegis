@@ -86,6 +86,10 @@ colors2 = get_colours(plt.cm.summer, True)
 
 def save_close(name): 
     plt.tight_layout()
+    dirname = os.path.dirname(name)
+    if dirname:
+        dirpath = os.path.join(O,dirname)
+        if not os.path.isdir(dirpath): os.mkdir(dirpath)
     plt.savefig(os.path.join(O, name + ".png"))
     plt.close()
 def simple_plot_label(main, xlab, ylab):
@@ -175,21 +179,26 @@ def grid_plot(plot_func, title, xtitle, ytitle, filename):
 def pop_res(limits=[0, L["n_stages"]]):
     """Plot population (blue) and resources (res) in specified stage range."""
     s1,s2 = limits
-    p,r,x = L["population_size"][s1:s2+1],L["resources"][s1:s2+1],L["res_var"]
+    pop,res = L["population_size"][:,s1:s2+1],L["resources"][:,s1:s2+1]
     cols, labels = ["blue", "red"], ["population", "resources"]
-    fig, ax = plt.subplots(1)
-    if L["res_var"]:
-        ax.plot(r,"r-",p,"b-")
-        if hasattr(L, "res_regen_constant"): 
-            ax.plot(L["res_regen_constant"], "m-")
-            cols += ["magenta"]
-            labels += ["R"]
-    else: ax.plot(p,"b-",r,"r-")
-    axis_labels(ax, "Resources and population", "Stage", "N")
-    axis_ticks_limits(ax, np.linspace(0,s2-s1,6).astype(int), "", 
-            (s1,s2), (0, max((max(r),max(p)))))
-    make_legend(cols,labels)
-    save_close("1_pop_res")
+    main = "Population and resources"
+    def make_pr_plot(nrun, cols, labels):
+        p,r = pop[nrun], res[nrun]
+        fig,ax = plt.subplots(1)
+        if L["res_var"]:
+            ax.plot(r,"r-",p,"b-")
+            if hasattr(L, "res_regen_constant"): 
+                ax.plot(L["res_regen_constant"], "m-")
+                cols += ["magenta"]
+                labels += ["R"]
+        else: ax.plot(p,"b-",r,"r-")
+        axis_labels(ax, main + " (Run {})".format(nrun+1), "Stage", "N")
+        axis_ticks_limits(ax, np.linspace(0,s2-s1,6).astype(int), "", 
+                (s1,s2), (0, max((max(r),max(p)))))
+        make_legend(cols, labels)
+        nzeros = len(str(L["n_runs"]+1))-len(str(nrun+1))
+        save_close("1_pop_res/run"+"0"*nzeros+str(nrun+1))
+    for n in xrange(L["n_runs"]): make_pr_plot(n, cols, labels)
 
 # 2: STARVATION FACTORS
 def starvation(limits=[0, L["n_stages"]]):
@@ -198,37 +207,45 @@ def starvation(limits=[0, L["n_stages"]]):
     is_r, is_s = L["repr_pen"], L["surv_pen"] # Check if starvation occurs
     if not (is_r or is_s): return
     s1,s2 = limits
-    r,s,is_rs = L["repr_penf"][s1:s2+1],L["surv_penf"][s1:s2+1],(is_r and is_s)
-    cols, labels, maxval = [],[], max([max(r),max(s)])
+    rep,sur = L["repr_penf"][:,s1:s2+1],L["surv_penf"][:,s1:s2+1]
+    is_rs = (is_r and is_s)
     suffix = "" if is_rs else " (Survival)" if is_s else " (Reproduction)"
     main,xlab,ylab="Starvation factors" + suffix, "Stage", "Starvation factor"
-    fig,ax = plt.subplots(is_r + is_s)
-    if is_s:
-        ax_s = ax[0] if is_r else ax
-        ax_s.plot(s,"g-")
-        axis_labels(ax_s, main, "" if is_r else xlab, "" if is_r else ylab)
-        cols += ["green"]
-        labels += ["survival"]
-        axis_ticks_limits(ax_s, "", "", (s1,s2), "")
-        logbase = L["death_inc"] if hasattr(L, "death_inc") else 3
-        ax_s.set_yscale("log", basey=logbase)
-        for n in np.unique(L["surv_penf"]): # Check actual values of s-factor
-            ax_s.axhline(n, color="k", linestyle="dashed")
-    if is_r:
-        ax_r = ax[1] if is_s else ax
-        ax_r.plot(r, "m-")
-        axis_labels(ax_r, "" if is_s else main, xlab, "" if is_s else ylab)
-        cols += ["magenta"]
-        labels += ["reproduction"]
-        axis_ticks_limits(ax_r, "", "", (s1,s2), "")
-        logbase = L["repr_dec"] if hasattr(L, "repr_dec") else 3
-        ax_r.set_yscale("log", basey=logbase)
-        for n in np.unique(L["repr_penf"]):
-            ax_s.axhline(n, color="k", linestyle="dashed")
-    if is_rs: 
-        axis_legend(ax[0], cols, labels)
-        fig.text(0.05,0.5,ylab,va="center",rotation="vertical")
-    save_close("2_starvation")
+    def make_st_plot(nrun): # TODO: Can probably make this shorter
+        r,s = rep[nrun], sur[nrun]
+        fig,ax = plt.subplots(is_r + is_s)
+        if is_rs:
+            ax[0].plot(s,"g-")
+            ax[1].plot(r,"m-")
+            axis_labels(ax[0], main, "", "")
+            axis_labels(ax[1], "", xlab, "")
+            cols, labels = ["green", "magenta"],["survival","reproduction"]
+            logbase_s = L["death_inc"] if hasattr(L, "death_inc") else 3
+            logbase_r = L["repr_dec"] if hasattr(L, "repr_dec") else 3
+            ax[0].set_yscale("log", basey=logbase_s)
+            ax[1].set_yscale("log", basey=logbase_r)
+            for n in xrange(len(ax)):
+                axis_ticks_limits(ax[n], "", "", (s1,s2), "")
+            for n in np.unique(L["surv_penf"]): # Check actual values of s-factor
+                ax[0].axhline(n, color="k", linestyle="dashed")
+            for n in np.unique(L["repr_penf"]):
+                ax[1].axhline(n, color="k", linestyle="dashed")
+            axis_legend(ax[0], cols, labels)
+            fig.text(0.05,0.5,ylab,va="center",rotation="vertical")
+        else:
+            ax.plot(s if is_s else r, "g-" if is_s else "m-")
+            axis_labels(ax, main, xlab, ylab)
+            axis_ticks_limits(ax, "", "", (s1,s2), "")
+            if is_s:
+                logbase = L["death_inc"] if hasattr(L, "death_inc") else 3
+            else:
+                logbase = L["repr_dec"] if hasattr(L, "repr_dec") else 3
+            ax.set_yscale("log", basey=logbase)
+            for n in np.unique(L["surv_penf"] if is_s else L["repr_penf"]): 
+                ax.axhline(n, color="k", linestyle="dashed")
+        nzeros = len(str(L["n_runs"]+1))-len(str(nrun+1))
+        save_close("2_starvation/run"+"0"*nzeros+str(nrun+1))
+    for n in xrange(L["n_runs"]): make_st_plot(n)
 
 # 3: AGE DISTRIBUTIONS
 def age_distribution():
