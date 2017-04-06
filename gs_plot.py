@@ -159,6 +159,7 @@ def make_handles(cols, labels):
     for n in xrange(len(cols)):
         handles[n] = mpatches.Patch(color=cols[n], label=labels[n])
     return handles
+
 def make_legend(cols, labels, loc="upper right", size=10):
     plt.legend(handles=make_handles(cols, labels), loc=loc, prop={"size":size})
 
@@ -179,7 +180,12 @@ def grid_plot(plot_func, title, xtitle, ytitle, filename):
 def pop_res(limits=[0, L["n_stages"]]):
     """Plot population (blue) and resources (res) in specified stage range."""
     s1,s2 = limits
-    pop,res = L["population_size"][:,s1:s2+1],L["resources"][:,s1:s2+1]
+    print limits, L["population_size"].shape, L["resources"].shape
+    print L["n_runs"]
+    pop,res,nr = L["population_size"], L["resources"], L["n_runs"]
+    pop = pop[:,s1:s2+1] if nr > 1 else pop[s1:s2+1]
+    res = res[:,s1:s2+1] if nr > 1 else res[s1:s2+1]
+    # TODO: Fix for single run
     cols, labels = ["blue", "red"], ["population", "resources"]
     main = "Population and resources"
     def make_pr_plot(nrun, cols, labels):
@@ -207,7 +213,10 @@ def starvation(limits=[0, L["n_stages"]]):
     is_r, is_s = L["repr_pen"], L["surv_pen"] # Check if starvation occurs
     if not (is_r or is_s): return
     s1,s2 = limits
-    rep,sur = L["repr_penf"][:,s1:s2+1],L["surv_penf"][:,s1:s2+1]
+    rep,sur,nr = L["repr_penf"], L["surv_penf"], L["n_runs"]
+    rep = rep[:,s1:s2+1] if nr > 1 else rep[s1:s2+1]
+    sur = sur[:,s1:s2+1] if nr > 1 else sur[s1:s2+1]
+    # TODO: Fix for single run
     is_rs = (is_r and is_s)
     suffix = "" if is_rs else " (Survival)" if is_s else " (Reproduction)"
     main,xlab,ylab="Starvation factors" + suffix, "Stage", "Starvation factor"
