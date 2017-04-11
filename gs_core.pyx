@@ -714,11 +714,8 @@ class Record:
                 self.get("population_size")[:,None]
         dividend = N_age[1:, 1:]
         divisor = np.copy(N_age[:-1, :-1])
-        divisor[divisor == 0] = np.nan # avoid division by zero
-        death = 1 - dividend / divisor
-        death[np.isnan(death)] = 0 # Default death rate of 0; TODO: Test alts
-        # value for last age is 1
-        self.set("actual_death_rate", death)
+        divisor[divisor == 0] = np.nan # flag division by zero
+        self.set("actual_death_rate", 1 - dividend / divisor)
 
     def get_window(self, key, wsize):
         """Obtain sliding windows from a record entry."""
@@ -743,6 +740,7 @@ class Record:
         self.compute_bits()
         self.compute_actual_death()
         self.compute_windows()
+        self.set("snapshot_pops",0) # TODO: Make this configurable!
 
 class Run:
     """An object representing a single run of a simulation."""
@@ -1067,15 +1065,16 @@ class Simulation:
                 d_out, d_out_sd = {}, {}
                 for k in sorted(k0.keys()):
                     karray = np.array([r(key)[k] for r in rec_gets])
-                    d_out[k] = np.mean(karray, 0)
-                    d_out_sd[k] = np.std(karray, 0)
+                    d_out[k] = np.nanmean(karray, 0) 
+                    d_out_sd[k] = np.nanstd(karray, 0)
+                    # nanmean/nanstd to account for actual death rate nan's
                 sar.set(key, d_out)
                 sar.set(key + "_sd", d_out_sd)
             elif isinstance(k0, np.ndarray) or isinstance(k0, int)\
                     or isinstance(k0, float):
                 karray = np.array([r(key) for r in rec_gets])
-                sar.set(key, np.mean(karray, 0))
-                sar.set(key + "_sd", np.std(karray, 0))
+                sar.set(key, np.nanmean(karray, 0))
+                sar.set(key + "_sd", np.nanstd(karray, 0))
                 if isinstance(sar.get(key),np.ndarray):
                     if np.allclose(sar.get(key), sar.get(key).astype(int)):
                             sar.set("key", sar.get(key).astype(int))

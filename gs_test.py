@@ -10,11 +10,11 @@ import numpy as np
 import scipy.stats as st
 from scipy.misc import comb
 
-runFunctionConfigTests=False
+runFunctionConfigTests=True
 runPopulationTests=False
 runRecordTests=True
 runRunTests=False
-runSimulationTests=False
+runSimulationTests=True
 
 ####################
 ### 0: FIXTURES  ###
@@ -965,6 +965,10 @@ class TestRecordClass:
             if isinstance(o1, dict):
                 for l in o1.keys():
                     assert np.array_equal(np.array(o1[l]),np.array(o2[l]))
+            elif k == "actual_death_rate":
+                o1[np.isnan(o1)] = 0
+                o2[np.isnan(o2)] = 0
+                assert np.array_equal(o1,o2)
             elif k != "snapshot_pops" and not callable(o1):
                 assert np.array_equal(np.array(o1), np.array(o2))
 
@@ -1393,8 +1397,17 @@ class TestSimulationClass:
                     for k2 in el.keys():
                         comp(test[k][k2], np.mean([r[k][k2] for r in ref], 0))
                         comp(test[ks][k2], np.std([r[k][k2] for r in ref], 0))
+                elif k == "actual_death_rate":
+                    meancheck = np.nanmean([r[k] for r in ref],0)
+                    stdcheck = np.nanstd([r[k] for r in ref])
+                    el_sd = test[ks]
+                    for item in [el, el_sd, meancheck, stdcheck]:
+                        item[np.isnan(item)] = 0
+                    comp(el, meancheck)
+                    comp(el_sd, stdcheck)
                 elif isinstance(el, np.ndarray) or isinstance(el, int)\
                         or isinstance(el, float):
+                    if k == "actual_death_rate": el[0]
                     comp(test[k], np.mean([r[k] for r in ref],0) )
                     comp(test[ks], np.std([r[k] for r in ref],0) )
         def test_compute_failure(n, m): # n=# failed runs, m=prev_failed per run

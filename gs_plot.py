@@ -12,6 +12,7 @@ import matplotlib.patches as mpatches
 from matplotlib import ticker
 import argparse,os,math,pyximport; pyximport.install()
 from gs_core import Run, Simulation, Record
+import scipy.stats as st
 
 try:
        import cPickle as pickle
@@ -180,31 +181,36 @@ def grid_plot(plot_func, title, xtitle, ytitle, filename):
 def pop_res(limits=[0, L["n_stages"]]):
     """Plot population (blue) and resources (res) in specified stage range."""
     s1,s2 = limits
-    print limits, L["population_size"].shape, L["resources"].shape
-    print L["n_runs"]
-    pop,res,nr = L["population_size"], L["resources"], L["n_runs"]
+    nr = L["n_runs"] if "n_runs" in L else 1
+    pop,res = L["population_size"], L["resources"]
     pop = pop[:,s1:s2+1] if nr > 1 else pop[s1:s2+1]
     res = res[:,s1:s2+1] if nr > 1 else res[s1:s2+1]
     # TODO: Fix for single run
     cols, labels = ["blue", "red"], ["population", "resources"]
     main = "Population and resources"
-    def make_pr_plot(nrun, cols, labels):
-        p,r = pop[nrun], res[nrun]
+    def make_pr_plot(cols, labels, nrun=-1):
+        p = pop if nrun < 0 else pop[nrun]
+        r = res if nrun < 0 else res[nrun]
         fig,ax = plt.subplots(1)
         if L["res_var"]:
             ax.plot(r,"r-",p,"b-")
-            if hasattr(L, "res_regen_constant"): 
+            if "res_regen_constant" in L:
                 ax.plot(L["res_regen_constant"], "m-")
                 cols += ["magenta"]
                 labels += ["R"]
         else: ax.plot(p,"b-",r,"r-")
-        axis_labels(ax, main + " (Run {})".format(nrun+1), "Stage", "N")
-        axis_ticks_limits(ax, np.linspace(0,s2-s1,6).astype(int), "", 
+        suffix = "" if nrun < 0 else " (Run {}".format(nrun+1)
+        axis_labels(ax, main + suffix, "Stage", "")
+        axis_ticks_limits(ax, np.linspace(0,s2-s1,7).astype(int), "", 
                 (s1,s2), (0, max((max(r),max(p)))))
         make_legend(cols, labels)
-        nzeros = len(str(L["n_runs"]+1))-len(str(nrun+1))
-        save_close("1_pop_res/run"+"0"*nzeros+str(nrun+1))
-    for n in xrange(L["n_runs"]): make_pr_plot(n, cols, labels)
+        if nrun < 0: save_close("1_pop_res")
+        else:
+            nzeros = len(str(L["n_runs"]+1))-len(str(nrun+1))
+            save_close("1_pop_res/run"+"0"*nzeros+str(nrun+1))
+    if nr <= 1: make_pr_plot(cols, labels)
+    else:
+        for n in xrange(L["n_runs"]): make_pr_plot(cols, labels, n)
 
 # 2: STARVATION FACTORS
 def starvation(limits=[0, L["n_stages"]]):
@@ -213,15 +219,17 @@ def starvation(limits=[0, L["n_stages"]]):
     is_r, is_s = L["repr_pen"], L["surv_pen"] # Check if starvation occurs
     if not (is_r or is_s): return
     s1,s2 = limits
-    rep,sur,nr = L["repr_penf"], L["surv_penf"], L["n_runs"]
+    nr = L["n_runs"] if "n_runs" in L else 1
+    rep,sur = L["repr_penf"], L["surv_penf"]
     rep = rep[:,s1:s2+1] if nr > 1 else rep[s1:s2+1]
     sur = sur[:,s1:s2+1] if nr > 1 else sur[s1:s2+1]
     # TODO: Fix for single run
     is_rs = (is_r and is_s)
     suffix = "" if is_rs else " (Survival)" if is_s else " (Reproduction)"
     main,xlab,ylab="Starvation factors" + suffix, "Stage", "Starvation factor"
-    def make_st_plot(nrun): # TODO: Can probably make this shorter
-        r,s = rep[nrun], sur[nrun]
+    def make_st_plot(nrun=-1): # TODO: Can probably make this shorter
+        r = rep if nrun < 0 else rep[nrun]
+        s = sur if nrun < 0 else sur[nrun]
         fig,ax = plt.subplots(is_r + is_s)
         if is_rs:
             ax[0].plot(s,"g-")
@@ -229,8 +237,8 @@ def starvation(limits=[0, L["n_stages"]]):
             axis_labels(ax[0], main, "", "")
             axis_labels(ax[1], "", xlab, "")
             cols, labels = ["green", "magenta"],["survival","reproduction"]
-            logbase_s = L["death_inc"] if hasattr(L, "death_inc") else 3
-            logbase_r = L["repr_dec"] if hasattr(L, "repr_dec") else 3
+            logbase_s = L["death_inc"] if "death_inc" in L else 3
+            logbase_r = L["repr_dec"] if "repr_dec" in L else 3
             ax[0].set_yscale("log", basey=logbase_s)
             ax[1].set_yscale("log", basey=logbase_r)
             for n in xrange(len(ax)):
@@ -246,15 +254,19 @@ def starvation(limits=[0, L["n_stages"]]):
             axis_labels(ax, main, xlab, ylab)
             axis_ticks_limits(ax, "", "", (s1,s2), "")
             if is_s:
-                logbase = L["death_inc"] if hasattr(L, "death_inc") else 3
+                logbase = L["death_inc"] if "death_inc" in L else 3
             else:
-                logbase = L["repr_dec"] if hasattr(L, "repr_dec") else 3
+                logbase = L["repr_dec"] if "repr_dec" in L else 3
             ax.set_yscale("log", basey=logbase)
             for n in np.unique(L["surv_penf"] if is_s else L["repr_penf"]): 
                 ax.axhline(n, color="k", linestyle="dashed")
-        nzeros = len(str(L["n_runs"]+1))-len(str(nrun+1))
-        save_close("2_starvation/run"+"0"*nzeros+str(nrun+1))
-    for n in xrange(L["n_runs"]): make_st_plot(n)
+        if nrun < 0: save_close("2_starvation")
+        else:
+            nzeros = len(str(L["n_runs"]+1))-len(str(nrun+1))
+            save_close("2_starvation/run"+"0"*nzeros+str(nrun+1))
+    if nr <= 1: make_st_plot()
+    else:
+        for n in xrange(L["n_runs"]): make_st_plot(n)
 
 # 3: AGE DISTRIBUTIONS
 def age_distribution():
@@ -287,8 +299,15 @@ def genotypes_with_age():
         axis_ticks_limits(a, [0,mt,ls,ls], "", (0, nloc-1), "")
     ax[0].axhline(nt_mean, color="m", linestyle="dashed")
     ax[1].axhline(nt_var, color="c", linestyle="dashed")
+    #! Temporary messages:
+    vs,vr = mean["s"][-1], np.append(np.zeros(mt), mean["r"][-1])
+    ad = L["age_distribution"][-1]
+    print "Neutral mean: {}\n Neutral variance: {}\n".format(nt_mean,nt_var)
+    print "Exp. surv: {}\n".format(np.sum(vs * ad)/maxstate)
+    print "Exp. repr: {}\n".format(np.sum(vr * ad)/maxstate)
+    
     axis_labels(ax[0], "Mean and variance in genotype sum with age", "",
-            "Mean genotype sum")
+            "mean genotype sum")
     axis_labels(ax[1], "", "Age", "Variance in genotype sum")
     axis_legend(ax[0], [colors[0], "white", colors[-1], "magenta"],
             ["Snapshot 1", "...", "Snapshot {}".format(lns),
@@ -297,6 +316,67 @@ def genotypes_with_age():
             ["Snapshot 1", "...", "Snapshot {}".format(lns),
                 "S{} (Neutral)".format(lns)])
     save_close("4_genotypes_with_age")
+
+def exp_obs_var():
+    """Compare the observed variance in surv/repr genotypes with that expected
+    from theory, given the mean."""
+    # Observed data
+    ls, mt, nloc = L["max_ls"]-1, L["maturity"], len(L["genmap"])-L["n_neutral"]
+    mean = np.hstack((L["mean_gt"]["s"],L["mean_gt"]["r"]))[-1]
+    obs_var = np.hstack((L["var_gt"]["s"],L["var_gt"]["r"]))[-1]
+    # Expected variance from mean
+    n = 2*L["n_base"]
+    p = mean/n
+    exp_var = n * p * (1-p)
+    # Make plot
+    fig, ax = plt.subplots(3)
+    ax[0].plot(obs_var)
+    ax[1].plot(exp_var)
+    ax[2].plot(obs_var-exp_var)
+    # Neutral lines
+    nt_var_obs = np.mean(L["var_gt"]["n"][-1])
+    nt_p = np.mean(L["mean_gt"]["n"][-1])/n
+    nt_var_exp = n * nt_p * (1-nt_p)
+    ax[0].axhline(nt_var_obs, color="c", linestyle="dashed")
+    ax[1].axhline(nt_var_exp, color="c", linestyle="dashed")
+    ax[2].axhline(nt_var_obs-nt_var_exp, color="c", linestyle="dashed")
+    # Vlines and labels
+    for a in ax:
+        a.axvline(mt, color="k") # Maturity line
+        a.axvline(ls, color="k", linestyle="dashed") # Lifespan line
+        a.xaxis.set_ticks([0, mt, ls, nloc-1])
+        axis_ticks_limits(a, [0,mt,ls,ls], "", (0, nloc-1), "")
+    ax[2].axhline(0, color="k", linestyle="dotted") # Zero line
+    axis_labels(ax[0], "Observed and expected genotypic variance with age", "",
+            "Observed variance")
+    axis_labels(ax[1], "", "", "Expected variance")
+    axis_labels(ax[2], "", "Age", "Observed $-$ Expected")
+    save_close("4a_exp_obs_var")
+
+def estimate_selection_pos():
+    """Estimate the purifying selection acting at each age, assuming no
+    selection in favour of lower values."""
+    # Define values
+    mean, var, maxstate = L["mean_gt"], L["var_gt"], L["n_states"]-1
+    vals_mean = np.hstack((mean["s"],mean["r"]))[-1]
+    ls, mt, nloc = L["max_ls"]-1, L["maturity"], len(L["genmap"])-L["n_neutral"]
+    # Calculate c
+    h,m,r = vals_mean/maxstate, L["m_rate"], L["m_ratio"]
+    c = (m*(r*(h-1) + h))/(1-h)
+    # Make plot
+    fig, ax = plt.subplots(1)
+    ax.plot(c)
+    ax.axvline(mt, color="k") # Maturity line
+    ax.axvline(ls, color="k", linestyle="dashed") # Lifespan line
+    ax.xaxis.set_ticks([0, mt, ls, nloc-1])
+    #ax.set_yscale("log", basey=10)
+    axis_ticks_limits(ax, [0,mt,ls,ls], "", (0, nloc-1), "")
+    save_close("4b_estimate_selection")
+
+
+
+
+
 
 # 4: BIT VALUES  WITH AGE
 def bits_with_age():
@@ -357,6 +437,30 @@ def density():
     # Equalise y-axes
     for a in ax: a.set_ylim((0,y_max))
     save_close("6_density")
+
+def exp_obs_density_neutral():
+    # Observed
+    n_obs = L["density"]["n"].T[-1]
+    # Expected (parameters)
+    ns = L["n_states"]
+    dist = st.binom(ns-1, L["m_ratio"]/(1+L["m_ratio"]))
+    n_exp = dist.pmf(np.arange(ns))
+    # Expected from mean
+    nt_mean = np.mean(L["mean_gt"]["n"][-1])
+    dist2 = st.binom(ns-1, nt_mean/(ns-1))
+    n_exp2 = dist2.pmf(np.arange(ns))
+    # Make plot
+    fix, ax = plt.subplots(1)
+    ax.plot(n_obs, "b-", n_obs, "bo")
+    ax.plot(n_exp, "k--", n_exp, "ko")
+    ax.plot(n_exp2, "r--", n_exp2, "ro")
+    axis_labels(ax, "Observed vs expected neutral genotype density",
+            "Genotype sum", "Density")
+    axis_legend(ax, ["blue", "black", "red"], 
+            ["Observed (final snapshot)", "Expected (parameters)", 
+                "Expected (obs. mean)"])
+    save_close("6a_exp_obs_density_neutral")
+
 
 def density_difference():
     # Define values
@@ -443,18 +547,52 @@ def ageing_index():
 
 # 9: OBSERVED DEATH RATE
 def observed_death(width=100):
+    # TODO: Fix this!
     """Plot average observed death rate around each snapshot."""
     # Derive plotting values
     def mean_od(s0,s1): 
-        return np.mean(L["actual_death_rate"][s0:s1,:-1],0)
+        return np.nanmean(L["actual_death_rate"][s0:s1,:-1],0)
     S0 = L["snapshot_stages"] - int(width/2)
     S1 = L["snapshot_stages"] + int(width/2)
     S0[0],S1[0] = 0, width
     S0[-1],S1[-1] = L["n_stages"] - width, L["n_stages"]
     vals = np.array([mean_od(S0[n],S1[n]) for n in xrange(L["n_snapshots"])])
+    # Interpolate nan values
+    vals_filled = np.copy(vals)
+
+    def fill_nan(row, index, ar=vals_filled):
+        """Given a row and a list of columns, will expand those columns until
+        they consist of two numbers flanking a set of np.nan values, then fill
+        the nan's using np.linspace."""
+        # Check index has expected structure
+        nansum = np.sum(np.isnan(ar[row, index]))
+        if nansum == 0: return
+        elif nansum != len(index): 
+            raise ValueError("Input should be a list of adjacent nan indices.")
+        elif np.isnan(ar[row,index[0]-1]):
+            return fill_nan(row, [index[0]-1] + index, ar)
+        elif np.isnan(ar[row,index[-1]+1]):
+            return fill_nan(row, index + [index[-1]+1])
+        else:
+            ar[row,index[0]-1:index[-1]+1] = \
+                    np.linspace(index[0]-1, index[-1]+1, len(index)+2)
+    for row in xrange(len(vals_filled)):
+        while np.sum(np.isnan(vals_filled[row])) > 0:
+            isnan = np.isnan(vals_filled[row])
+            nums = np.nonzero(1-isnan)[0]
+            # 1: Fill in from edges
+            vals_filled[row,nums[-1]:] = vals_filled[row,nums[-1]]
+            vals_filled[row,:nums[0]] = vals_filled[row,nums[0]]
+            # 2: Inner nans
+            isnan = np.isnan(vals_filled[row])
+            nans = np.nonzero(isnan)[0]
+            if len(nans) > 0:
+                fill_nan(row, nans[0])
+
     # Plot values
     fig, ax = plt.subplots(1)
     for i in xrange(L["n_snapshots"]):
+        ax.plot(vals[i], color=colors[i], linestyle="dotted")
         ax.plot(vals[i], color=colors[i])
     axis_labels(ax, "Per-age observed death rate at each snapshot",
             "Age", "Death rate")
@@ -488,8 +626,11 @@ def plot_all(pop_res_limits, odr_limits):
     starvation(pop_res_limits)
     age_distribution()
     genotypes_with_age()
+    exp_obs_var()
+    estimate_selection_pos()
     bits_with_age()
     density()
+    exp_obs_density_neutral()
     density_difference()
     fitness()
     per_age_fitness()
