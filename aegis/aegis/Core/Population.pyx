@@ -1,0 +1,365 @@
+########################################################################
+# AEGIS - Ageing of Evolving Genomes in Silico                         #
+# Module: Core                                                         #
+# Classes: Population, Outpop                                          #
+# Description: A basic simulated population, with ages, genomes,       #
+#   generations, and growth and death methods.                         #
+########################################################################
+
+## PACKAGE IMPORT ##
+from .functions import chance, init_ages, init_genomes, init_generations
+import numpy as np
+
+## CYTHON SETUP ##
+# cython: profile=True
+NPINT = np.int # Integer arrays
+NPFLOAT = np.float # Decimal arrays
+NPBOOL = np.uint8 # Boolean arrays
+ctypedef np.int_t NPINT_t
+ctypedef np.float_t NPFLOAT_t
+ctypedef np.uint8_t NPBOOL_t
+
+# TODO: Remove maximum lifespan
+# TODO: Add init test for correct params keys
+# TODO: Remove age_random from config
+
+cdef class Population:
+    """A simulated population with genomes, ages and generation numbers,
+    capable of undergoing growth and death."""
+    cdef public np.ndarray genmap, ages, genomes, genmap_argsort
+    cdef public int recombine, assort, chrlen, nbase, maxls, maturity, N
+    cdef public str repr_mode
+    #! TODO: Specify array dimensions?
+
+    ## INITIALISATION ##
+
+    def __init__(self, dict params, 
+            np.ndarray[NPINT_t, ndim=1] genmap, 
+            np.ndarray[NPINT_t, ndim=1] ages, 
+            np.ndarray[NPINT_t, ndim=2] genomes,
+            np.ndarray[NPINT_t, ndim=2] generations,
+            ):
+        """Create a new population, either with newly-generated age and genome
+        vectors or inheriting these from a seed."""
+        # Set reproductive parameters
+        self.repr_mode = params["repr_mode"]
+        repr_values = {"sexual":[1,1], "asexual":[0,0],
+                "recombine_only":[1,0], "assort_only":[0,1]}
+        self.recombine, self.assort = repr_values[self.repr_mode]
+        # Set other basic parameters
+        self.n_base = params["n_base"] # Number of bits per locus
+        self.chr_len = params["chr_len"] # Number of bits per chromosome
+        self.maturity = params["maturity"] # Age of maturity (for reproduction)
+        self.max_ls = params["max_ls"] # Maximum lifespan
+        self.g_dist = params["g_dist"] # Proportions of 1's in initial loci
+        self.genmap = genmap # Map of locus identities within chromosome
+        self.genmap_argsort = np.argsort(genmap) # Indices for sorted genmap
+        # Determine ages, genomes, generations if not given
+        if np.array_equal(ages, init_ages()): 
+            ages = np.random.randint(0,self.maxls-1,params["start_pop"])
+        if np.array_equal(genomes, init_genomes()):
+            genomes = self.make_genome_array(
+                    params["start_pop"], params["g_dist"])
+        if np.array_equal(generations, init_generations()):
+            generations = np.repeat(0, params["start_pop"])
+        self.ages = np.copy(ages)
+        self.genomes = np.copy(genomes)
+        self.generations = np.copy(generations)
+        # ! TODO: Add test that ages and genomes are same size (in case of seeding)
+        # Get population size from age array
+        self.N = len(self.ages)
+
+    def make_genome_array(self, start_pop, g_dist):
+        """Generate initial genomes for start_pop individuals according to
+        population parameters, with uniformly-distributed bit values with
+        proportions specified by g_dist."""
+        # Initialise genome array
+        genome_array = np.zeros([start_pop, self.chrlen*2])
+        # Use genome map to determine probability distribution for each locus:
+        loci = {
+            "s":np.nonzero(self.genmap<100)[0],
+            "r":np.nonzero(np.logical_and(self.genmap>=100,self.genmap<200))[0],
+            "n":np.nonzero(self.genmap>=200)[0]
+            }
+        #! TODO: Allow arbitrary value ranges in genmap for different locus types
+        # Set genome array values according to given probabilities:
+        for k in loci.keys():
+            # Identify genome positions corresponding to locus type
+            pos = np.array([range(self.nbase) + x for x in loci[k]*self.nbase])
+            pos = np.append(pos, pos + self.chrlen)
+            # Add values to positions according to appropriate distribution
+            genome_array[:, pos] = chance(g_dist[k], [start_pop, len(pos)])
+        return genome_array.astype(int)
+
+    def params(self):
+        """Get population-initiation parameters from present population."""
+        p_dict = {
+                "repr_mode":self.repr_mode,
+                "chr_len":self.chrlen,
+                "n_base":self.nbase,
+                "max_ls":self.maxls,
+                "maturity":self.maturity
+                }
+        return p_dict
+
+    ## REARRANGEMENT AND COMBINATION ##
+
+    def clone(self):
+        """Generate a new, identical population object."""
+        return Population(self.params(), self.genmap,
+                self.ages, self.genomes, self.generations)
+
+    def attrib_rep(self, function, pop2=""):
+        """Repeat an operation over all relevant attributes, then update N."""
+        for attr in ["ages","genomes","generations"]:
+            val1,val2 = getattr(self,attr), getattr(pop2,attr) if pop2 else ""
+            setattr(self,attr,function(val1,val2) if val2 else function(val1))
+        self.N = len(self.ages)
+
+    def shuffle(self):
+        """Rearrange order of individuals in population."""
+        index = np.arange(self.N)
+        np.random.shuffle(index)
+        self.attrib_rep(lambda(x) return x[index])
+
+    def subtract_members(self,targets):
+        """Remove members from population, according to an index of integers."""
+        self.attrib_rep(lambda(x) return np.delete(x,targets))
+
+    def subset_members(self,targets):
+        """Keep a subset of members and discard the rest, according to an
+        index of booleans (True = keep)."""
+        self.attrib_rep(lambda(x) return x[targets])
+
+    def add_members(self, pop):
+        """Append the individuals from a second population to this one,
+        keeping this one's parameters and genome map."""
+        self.attrib_rep(lambda(x,y) return np.concatenate((x,y), 0))
+
+    def subset_clone(self, targets):
+        """Create a clone population and subset its members."""
+        pop = self.clone()
+        pop.subset_members(targets)
+        return pop
+
+    ## CHROMOSOMES AND LOCI ##
+    #!: TODO: Consider cythonising these functions (they're used a lot now)
+
+    cpdef chrs(self, int reshape):
+        """Return an array containing the first and second chromosomes 
+        of each individual in the population, in either 2D individual/bit
+        or 3D individual/locus/bit configuration."""
+        if not reshape:
+            # [chromosome, individual, bit]
+            return self.genomes.reshape((self.N,2,self.chrlen)
+                    ).transpose((1,0,2))
+        else:
+            # [chromosome, individual, locus, bit]
+            return self.genomes.reshape((self.N,2,len(self.genmap),self.nbase)
+                    ).transpose(1,0,2,3)
+        #! Not happy with the transposition efficiency-wise, but having 
+        # individuals first screws up recombination/assortment in ways I
+        # don't know how to efficiently fix...
+
+    cpdef sorted_loci(self):
+        """Return the sorted locus genotypes of the individuals in the 
+        population, summed within each locus and across chromosomes."""
+        cdef:
+            np.ndarray[NPINT_t, ndim=2] locs
+            np.ndarray[NPINT_t, ndim=4] chrs
+        # Get chromosomes of population, arranged by locus
+        chrx = self.chrs(True) 
+        # Collapse bits into locus sums and add chromosome values together
+        # to get total genotype value for each locus (dim1=indiv, dim2=locus)
+        locs = np.einsum("ijkl->jk", chrx)
+        return locs[:,self.genmap_argsort]
+
+    cpdef surv_loci(self):
+        """Return the sorted survival locus genotypes of each individual in
+        the population."""
+        return self.sorted_loci()[:,:self.maxls]
+
+    cpdef repr_loci(self):
+        """Return the sorted reproduction locus genotypes of each individual in
+        the population."""
+        return self.sorted_loci()[:,self.maxls:(2*self.maxls-self.maturity)]
+
+    def neut_loci(self):
+        """Return the sorted neutral locus genotypes of each individual in
+        the population."""
+        return self.sorted_loci()[:,(2*self.maxls-self.maturity):]
+
+    #! TODO: Fix the above 3 functions to use internal index information,
+    #  rather than assuming a particular hard-coded order
+
+    ## GROWTH AND DEATH ##
+
+    cpdef get_subpop(self, 
+            np.ndarray[NPINT_t, ndim=1] age_bounds, # Age cohorts to consider
+            np.ndarray[NPINT_t, ndim=2] genotypes, # Relevant per-age GT sums
+            np.ndarray[NPFLOAT_t, ndim=1] val_range): # GT:probability map
+        # Get age array for suitably-aged individuals
+        inc = self.ages>=age_bounds[0] && self.ages<=age_bounds[1]
+        ages, genotypes = self.ages[inc], genotypes[inc]
+        # Get relevant genotype sum for each individual of appropriate age
+        gt = np.choose(ages, genotypes.T) # Relevant GT sum for each indiv
+        # Convert to inclusion probabilities and compute inclusion
+        inc_probs = val_range[gt] # Inclusion probability for each indiv
+        return chance(inc_probs, self.N) # Binary array of inclusion statuses
+
+    cpdef get_subpop_old(self, int min_age, int max_age, # Ages of indivs to use
+        int offset, # Offset value to relate ages to genmap values
+        np.ndarray[NPFLOAT_t, ndim=1] val_range): # Genotype:probability map
+        """Select a population subset based on chance defined by genotype."""
+        cdef:
+            int age, locus, g
+            np.ndarray[NPINT_t, ndim=1] which
+            np.ndarray[NPFLOAT_t, ndim=1] inc_probs
+            np.ndarray[NPINT_t, ndim=3] genloc, pop
+            np.ndarray[NPBOOL_t, ndim=1,cast=True] inc
+        g = len(self.genmap)
+        # Probability of each individual being included in subpop (default 0)
+        inc_probs = np.zeros(self.N)
+        # Reshape genome array: [individuals,loci,bits]
+        genloc = np.reshape(self.genomes, (self.N, g*2, self.nbase))
+        # Get inclusion probabilities age-wise:
+        for age in range(min_age, min(max_age, np.max(self.ages)+1)):
+            # Get indices of appropriate locus for that age:
+            locus = np.ndarray.nonzero(self.genmap==(age+offset))[0][0]
+            # Subset to genome positions in required locus, on both chromosomes,
+            # for individuals of correct age
+            which = np.nonzero(self.ages == age)[0]
+            pop = genloc[which][:,[locus, locus+g]]
+            # Determine inclusion probabilities for these individuals based on
+            # their locus genotype and the value range given
+            inc_probs[which] = val_range[np.einsum("ijk->i", pop)]
+        inc = chance(inc_probs, self.N)
+        return inc # Binary array giving inclusion status of each individual
+    #! TODO: Benchmark old vs new get_subpop functions
+
+    cpdef death(self, 
+            np.ndarray[NPFLOAT_t, ndim=1] s_range, # Survival probabilities
+            float penf): # Starvation penalty factor
+        """Select survivors and kill rest of population."""
+        cdef:
+            np.ndarray[NPFLOAT_t, ndim=1] d_range
+            np.ndarray[NPBOOL_t, ndim=1,cast=True] survivors
+        if self.N == 0: return # If no individuals in population, do nothing
+        # Get inclusion probabilities
+        d_range = np.clip((1-s_range)*penf, 0, 1) # Death probs (0 to 1 only)
+        s_range = 1-d_range # Convert back to survival again
+        # Identify survivors and remove others
+        survivors = self.get_subpop([0,self.maxls], self.surv_loci(), s_range)
+        self.subset_members(survivors)
+
+    cpdef growth(self, 
+            np.ndarray[NPFLOAT_t, ndim=1] r_range, # Reprodn probabilities
+            float penf, # Starvation penalty factor
+            float m_rate, # Per-bit mutation rate
+            float m_ratio # Positive/negative mutation ratio
+            float r_rate): # Recombination rate (if recombining)
+        """Generate new mutated children from selected parents."""
+        cdef:
+            np.ndarray[NPBOOL_t, ndim=1,cast=True] which_parents
+            object parents, children
+        if self.N == 0: return # If no individuals in population, do nothing
+        r_range = np.clip(r_range / penf, 0, 1) # Limit to real probabilities
+        parents = self.get_subpop([self.maturity,self.maxls],
+                self.repr_loci(), r_range)
+        # Get children from parents
+        if self.assort and np.sum(parents) == 1: return # Need 2 parents here
+        children = self.subset_clone(parents)
+        if self.recombine: children.recombination(r_rate)
+        if self.assort: children.assortment()
+        children.ages[:] = 0 # Make newborn
+        # Mutate children and add to population
+        children.mutate(m_rate, m_ratio) 
+        self.add_members(children)
+
+    cpdef mutate(self, float m_rate, # Per-bit mutation rate
+            float m_ratio): # Positive/negative mutation ratio
+        """Mutate genomes of population according to stated rates."""
+        cdef:
+            np.ndarray[NPBOOL_t, ndim=2,cast=True] is_0, is_1
+            np.ndarray[NPINT_t, ndim=1] positive_mut, negative_mut
+        if m_rate > 0: # Else do nothing
+            is_0 = self.genomes==0
+            is_1 = np.invert(is_0)
+            positive_mut = chance(m_rate*m_ratio, np.sum(is_0)).astype(int)
+            negative_mut = 1-chance(m_rate, np.sum(is_1))
+            self.genomes[is_0] = positive_mut
+            self.genomes[is_1] = negative_mut
+
+    cpdef recombination(self, float r_rate): # Per-bit recombination rate
+        """Recombine between the two chromosomes of each individual
+        in the population."""
+        cdef:
+            np.ndarray[NPINT_t, ndim=2] r_sites, which_chr
+            np.ndarray[NPINT_t, ndim=3] chrs
+        if (r_rate > 0): # Otherwise do nothing
+            # Randomly generate recombination sites
+            r_sites = chance(r_rate, [self.N, self.chrlen]).astype(int)
+            # Convert into [1,-1]
+            r_sites = np.array([1,-1])[r_sites]
+            # Determine crossover status of each position 
+            # (1 = no crossover, -1 = crossover)
+            which_chr = np.cumprod(r_sites, 1)
+            # Convert to 0 = no crossover, 1 = crossover
+            which_chr = 1 - (which_chr+1)/2
+            # Generate new chromosomes and update genomes
+            chrs = np.copy(self.chrs(0))
+            self.genomes[:,:self.chrlen] = np.choose(which_chr, chrs)
+            self.genomes[:,self.chrlen:] = np.choose(which_chr, chrs[[1,0]])
+
+    def assortment(self):
+        """Pair individuals into breeding pairs and generate children
+        through random assortment."""
+        if self.N % 2 != 0: # If odd number of parents, discard one at random
+            index = random.sample(range(pop.N), 1)
+            self.subtract_members(index)
+        self.shuffle() # Randomly assign mating partners
+        # Randomly assign mating partners:
+        pop.shuffle()
+        # Randomly combine parental chromatids
+        which_pair = np.arange(pop.N/2)*2 # First of each pair (0,2,4,...)
+        which_partner = chance(0.5,pop.N/2) # Member within pair (0 or 1)
+        # Update population chromosomes
+        chrs = np.copy(self.chrs(False))
+        self.genomes[::2,:self.chrlen] = chrs[0,which_pair+which_partner]
+        self.genomes[::2,self.chrlen:] = chrs[1,which_pair+(1-which_partner)]
+        self.subset_members(np.tile([True,False], self.N/2))
+
+class Outpop:
+    """Non-cythonised, pickle-able I/O form of Population class."""
+    def __init__(self, pop):
+        """Generate an Outpop from a Population object."""
+        self.repr_mode = pop.repr_mode
+        self.nbase = pop.nbase
+        self.chrlen = pop.chrlen
+        self.maxls = pop.maxls
+        self.maturity = pop.maturity
+        self.genmap = np.copy(pop.genmap)
+        self.ages = np.copy(pop.ages)
+        self.genomes = np.copy(pop.genomes)
+        self.generations = np.copy(pop.generations)
+        self.N = pop.N
+
+    def params(self):
+        """Report fixed population-intrinsic parameters."""
+        p_dict = {
+                "repr_mode":self.repr_mode,
+                "chr_len":self.chrlen,
+                "n_base":self.nbase,
+                "max_ls":self.maxls,
+                "maturity":self.maturity
+                }
+        return p_dict
+
+    def toPop(self):
+        """Make cythonised Population object from this Outpop."""
+        return Population(self.params(), self.genmap, self.ages, 
+                self.genomes, self.generations)
+
+    def clone(self):
+        """Generate a new, identical Outpop object."""
+        return Outpop(self)
