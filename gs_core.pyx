@@ -246,11 +246,6 @@ cdef class Population:
 
     # Minor methods
 
-    def clone(self):
-        """Generate a new, identical population object."""
-        return Population(self.params(), self.genmap,
-                self.ages, self.genomes)
-
     def increment_ages(self):
         """Age all individuals in population by one stage."""
         self.ages += 1
@@ -265,14 +260,6 @@ cdef class Population:
                 "maturity":self.maturity
                 }
         return p_dict
-
-    cpdef addto(self, object pop):
-        """Append the individuals from a second population to this one,
-        keeping this one's parameters and genome map."""
-        self.ages = np.concatenate((self.ages, pop.ages), 0)
-        self.genomes = np.concatenate((self.genomes, pop.genomes), 0)
-        self.N = len(self.ages)
-        # As it stands cythonising this doesn't make much difference
 
     def chrs(self, reshape=False):
         """Return an array containing the first and second chromosomes 

@@ -9,6 +9,8 @@
 ## PACKAGE IMPORT ##
 from .functions import chance, init_ages, init_genomes, init_generations
 import numpy as np
+cimport numpy as np
+import random
 
 ## CYTHON SETUP ##
 # cython: profile=True
@@ -120,21 +122,25 @@ cdef class Population:
         """Rearrange order of individuals in population."""
         index = np.arange(self.N)
         np.random.shuffle(index)
-        self.attrib_rep(lambda(x) return x[index])
+        def f(x): return x[index]
+        self.attrib_rep(f)
 
     def subtract_members(self,targets):
         """Remove members from population, according to an index of integers."""
-        self.attrib_rep(lambda(x) return np.delete(x,targets))
+        def f(x): return np.delete(x,targets)
+        self.attrib_rep(f)
 
     def subset_members(self,targets):
         """Keep a subset of members and discard the rest, according to an
         index of booleans (True = keep)."""
-        self.attrib_rep(lambda(x) return x[targets])
+        def f(x): return x[targets]
+        self.attrib_rep(f)
 
     def add_members(self, pop):
         """Append the individuals from a second population to this one,
         keeping this one's parameters and genome map."""
-        self.attrib_rep(lambda(x,y) return np.concatenate((x,y), 0))
+        def f(x,y): return np.concatenate((x,y), 0)
+        self.attrib_rep(f)
 
     def subset_clone(self, targets):
         """Create a clone population and subset its members."""
@@ -142,8 +148,17 @@ cdef class Population:
         pop.subset_members(targets)
         return pop
 
+    ## INCREMENT VALUES ##
+
+    def increment_ages(self):
+        """Age all individuals in population by one stage."""
+        self.ages += 1
+
+    def increment_generations(self):
+        """Increase generation of all individuals in population by one."""
+        self.generations += 1
+
     ## CHROMOSOMES AND LOCI ##
-    #!: TODO: Consider cythonising these functions (they're used a lot now)
 
     cpdef chrs(self, int reshape):
         """Return an array containing the first and second chromosomes 
@@ -194,19 +209,6 @@ cdef class Population:
 
     ## GROWTH AND DEATH ##
 
-    cpdef get_subpop(self, 
-            np.ndarray[NPINT_t, ndim=1] age_bounds, # Age cohorts to consider
-            np.ndarray[NPINT_t, ndim=2] genotypes, # Relevant per-age GT sums
-            np.ndarray[NPFLOAT_t, ndim=1] val_range): # GT:probability map
-        # Get age array for suitably-aged individuals
-        inc = self.ages>=age_bounds[0] && self.ages<=age_bounds[1]
-        ages, genotypes = self.ages[inc], genotypes[inc]
-        # Get relevant genotype sum for each individual of appropriate age
-        gt = np.choose(ages, genotypes.T) # Relevant GT sum for each indiv
-        # Convert to inclusion probabilities and compute inclusion
-        inc_probs = val_range[gt] # Inclusion probability for each indiv
-        return chance(inc_probs, self.N) # Binary array of inclusion statuses
-
     cpdef get_subpop_old(self, int min_age, int max_age, # Ages of indivs to use
         int offset, # Offset value to relate ages to genmap values
         np.ndarray[NPFLOAT_t, ndim=1] val_range): # Genotype:probability map
@@ -237,43 +239,59 @@ cdef class Population:
         return inc # Binary array giving inclusion status of each individual
     #! TODO: Benchmark old vs new get_subpop functions
 
+    cpdef get_subpop(self, 
+            np.ndarray[NPINT_t, ndim=1] age_bounds, # Age cohorts to consider
+            np.ndarray[NPINT_t, ndim=2] genotypes, # Relevant per-age GT sums
+            np.ndarray[NPFLOAT_t, ndim=1] val_range): # GT:probability map
+        # Get age array for suitably-aged individuals
+        inc = self.ages>=age_bounds[0] and self.ages<=age_bounds[1]
+        ages, genotypes = self.ages[inc], genotypes[inc]
+        # Get relevant genotype sum for each individual of appropriate age
+        gt = np.choose(ages, genotypes.T) # Relevant GT sum for each indiv
+        # Convert to inclusion probabilities and compute inclusion
+        inc_probs = val_range[gt] # Inclusion probability for each indiv
+        return chance(inc_probs, self.N) # Binary array of inclusion statuses
+
     cpdef death(self, 
             np.ndarray[NPFLOAT_t, ndim=1] s_range, # Survival probabilities
             float penf): # Starvation penalty factor
         """Select survivors and kill rest of population."""
         cdef:
-            np.ndarray[NPFLOAT_t, ndim=1] d_range
+            np.ndarray[NPFLOAT_t, ndim=1] d_range, age_bounds
             np.ndarray[NPBOOL_t, ndim=1,cast=True] survivors
         if self.N == 0: return # If no individuals in population, do nothing
         # Get inclusion probabilities
         d_range = np.clip((1-s_range)*penf, 0, 1) # Death probs (0 to 1 only)
         s_range = 1-d_range # Convert back to survival again
+        age_bounds = np.array([0,self.maxls])
         # Identify survivors and remove others
-        survivors = self.get_subpop([0,self.maxls], self.surv_loci(), s_range)
+        survivors = self.get_subpop(age_bounds, self.surv_loci(), s_range)
         self.subset_members(survivors)
 
     cpdef growth(self, 
             np.ndarray[NPFLOAT_t, ndim=1] r_range, # Reprodn probabilities
             float penf, # Starvation penalty factor
             float m_rate, # Per-bit mutation rate
-            float m_ratio # Positive/negative mutation ratio
+            float m_ratio, # Positive/negative mutation ratio
             float r_rate): # Recombination rate (if recombining)
         """Generate new mutated children from selected parents."""
         cdef:
             np.ndarray[NPBOOL_t, ndim=1,cast=True] which_parents
+            np.ndarray[NPFLOAT_t, ndim=1] age_bounds
             object parents, children
         if self.N == 0: return # If no individuals in population, do nothing
         r_range = np.clip(r_range / penf, 0, 1) # Limit to real probabilities
-        parents = self.get_subpop([self.maturity,self.maxls],
-                self.repr_loci(), r_range)
+        age_bounds = np.array([self.maturity,self.maxls])
+        parents = self.get_subpop(age_bounds, self.repr_loci(), r_range)
         # Get children from parents
         if self.assort and np.sum(parents) == 1: return # Need 2 parents here
         children = self.subset_clone(parents)
         if self.recombine: children.recombination(r_rate)
         if self.assort: children.assortment()
-        children.ages[:] = 0 # Make newborn
         # Mutate children and add to population
         children.mutate(m_rate, m_ratio) 
+        children.increment_generations()
+        children.ages[:] = 0 # Make newborn
         self.add_members(children)
 
     cpdef mutate(self, float m_rate, # Per-bit mutation rate
@@ -315,14 +333,12 @@ cdef class Population:
         """Pair individuals into breeding pairs and generate children
         through random assortment."""
         if self.N % 2 != 0: # If odd number of parents, discard one at random
-            index = random.sample(range(pop.N), 1)
+            index = random.sample(range(self.N), 1)
             self.subtract_members(index)
         self.shuffle() # Randomly assign mating partners
-        # Randomly assign mating partners:
-        pop.shuffle()
         # Randomly combine parental chromatids
-        which_pair = np.arange(pop.N/2)*2 # First of each pair (0,2,4,...)
-        which_partner = chance(0.5,pop.N/2) # Member within pair (0 or 1)
+        which_pair = np.arange(self.N/2)*2 # First of each pair (0,2,4,...)
+        which_partner = chance(0.5,self.N/2) # Member within pair (0 or 1)
         # Update population chromosomes
         chrs = np.copy(self.chrs(False))
         self.genomes[::2,:self.chrlen] = chrs[0,which_pair+which_partner]

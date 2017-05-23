@@ -24,12 +24,6 @@ ctypedef np.uint8_t NPBOOL_t
 # FUNCTIONS #
 #############
 
-rand = st.uniform(0,1) # Uniform random number generator
-def chance(p,n=1):
-    """Generate array (of shape specified by n, where n is either an integer
-    or a tuple of integers) of independent booleans with P(True)=z."""
-    return rand.rvs(n)<p
-
 def get_runtime(starttime, endtime):
     """Convert two datetime.now() outputs into a time difference 
     in human-readable units."""
