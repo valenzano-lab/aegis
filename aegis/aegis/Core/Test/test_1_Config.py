@@ -88,11 +88,17 @@ class TestConfig:
         correctly rejected."""
         if conf.setup == "random": return
         c = copy.deepcopy(conf)
-        c.check()
+        assert c.check()
+        repr_mode_old = c.repr_mode
+        s = string.ascii_lowercase
+        c.repr_mode = ''.join(random.choice(s) for _ in xrange(10))
+        with pytest.raises(ValueError):
+            c.check()
+        c.repr_mode = repr_mode_old
         c.maturity = c.max_ls - 1
         with pytest.raises(ValueError):
             c.check()
-        c.maturity += 1
+        c.maturity -= 1
         c.repr_offset = c.max_ls - 1
         with pytest.raises(ValueError):
             c.check()
@@ -100,6 +106,8 @@ class TestConfig:
         c.neut_offset = c.repr_offset + c.max_ls - 1
         with pytest.raises(ValueError):
             c.check()
+        c.neut_offset += 1
+        assert c.check()
 
     def test_config_getput(self,conf):
         """Test constructors and selectors for Config object."""
