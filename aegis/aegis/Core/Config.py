@@ -27,7 +27,7 @@ class Config:
                 'sexual' (recombination and assortment), 'recombine_only',\
                 'assort_only', or 'asexual' (no recombination or assortment).\
                 [string]")
-        self.mirror("number_of_runs", "The number of runs to be 
+        self.mirror("number_of_runs", "The number of runs to be \
             executed in parallel to generate summary data. [int]")
         self.mirror("number_of_stages", "The number of stages per run. [int]")
         self.mirror("number_of_snapshots", "The number of stages in the run\
@@ -77,6 +77,11 @@ class Config:
         self.mirror("windows", "Width of sliding windows for recording \
                 along-genome variation in bit value and along-run \
                 variation in population size and resource levels.")
+        self.mirror("repr_offset", "Number by which to offset reproductive\
+                loci in genome map (must > maximum lifespan). [int]")
+        self.mirror("neut_offset", "Number by which to offset neutral loci\
+                in genome map (must > repr_offset + max lifespan - maturity).\
+                [int]")
 
     # Constructors and selectors
 
@@ -99,40 +104,62 @@ class Config:
     def generate(self):
         """Generate derived configuration attributes from simple ones and
         add to configuration object."""
-
-        self.g_dist = { # Dictionary of initial proportion of 1's in genome loci
+        # Compute values
+        g_dist_dict = { # Dictionary of initial proportion of 1's in genome loci
                 "s":self.g_dist_s, # Survival
                 "r":self.g_dist_r, # Reproduction
                 "n":self.g_dist_n # Neutral
                 }
-        # Genome map: survival (0 to max), reproduction (maturity to max), neutral
-        self.genmap = np.asarray(range(0,self.max_ls) +\
-                range(self.maturity+100,self.max_ls+100) +\
-                range(200, 200+self.n_neutral))
-        # Map from genmap to ordered loci:
-        self.genmap_argsort = np.argsort(self.genmap)
-        if self.sexual: self.repr_bound *= 2 # x2 fertility rate in sexual case
-        # Length of chromosome in binary units
-        self.chr_len = len(self.genmap) * self.n_base 
-        # Probability ranges for survival and death (linearly-spaced between limits)
-        self.n_states = 2*self.n_base+1
-        self.surv_bound = 1-self.death_bound[::-1] # Min/max survival probs
-        self.repr_step = np.diff(self.repr_bound)/self.n_states
-        self.surv_step = np.diff(self.surv_bound)/self.n_states
-        self.s_range = np.linspace(self.surv_bound[0], 
-                self.surv_bound[1], self.n_states) # min to max surv rate
-        self.r_range = np.linspace(self.repr_bound[0],
-                self.repr_bound[1], self.n_states) # min to max repr rate
-        # Determine snapshot stages (evenly spaced within run):
-        if type(self.number_of_snapshots) is float:
-            self.snapshot_proportion = self.number_of_snapshots
-            self.number_of_snapshots = int(\
-                    self.number_of_snapshots*self.number_of_stages)
-        self.snapshot_stages = np.around(np.linspace(0,
-            self.number_of_stages-1,self.number_of_snapshots),0).astype(int)
-        # Dictionary for population initialisation
-        self.params = {"sexual":self.sexual, 
-                "chr_len":self.chr_len, "n_base":self.n_base,
-                "maturity":self.maturity, "max_ls":self.max_ls,
-                "age_random":self.age_random, 
-                "start_pop":self.start_pop, "g_dist":self.g_dist}
+        self.put("g_dist", g_dist_dict, "Dictionary of values specifying\
+                initial proportion of 1's in each locus type (s/r/n) during\
+                population initialisation. [dict of floats]")
+        genmap = np.asarray(range(0,self.max_ls) +\
+                range(self.maturity+self.repr_offset,
+                    self.max_ls+self.repr_offset)+\
+                range(self.neut_offset, self.neut_offset+self.n_neutral))
+        self.put("genmap", genmap, "Genome map specifying the relative \
+                position of each survival, reproduction and neutral locus \
+                in the genome of each individual. [int array]")
+        self.put("genmap_argsort", np.argsort(self.genmap), "Array specifying\
+                how to sort the genome map (or the genome) to correctly order\
+                the loci (survival 0-maxls, reproduction maturity-maxls, \
+                neutral. [int array]")
+        self.put("chr_len", len(self.genmap) * self.n_base, "Length of one\
+                chromosome in bits. [int]")
+        self.put("n_states", 2*self.n_base+1, "Number of possible genotype \
+                states (from 0 to 2*n_base). [int]")
+        self.put("surv_bound", 1-self.death_bound[::-1], "Min and max \
+                survival rates. [float array].")
+        self.put("surv_step", np.diff(self.surv_bound)/self.n_states,
+                "Difference in survival probability between adjacent \
+                        reproduction genotype values. [float]")
+        self.put("repr_step", np.diff(self.repr_bound)/self.n_states,
+                "Difference in reproduction probability between adjacent \
+                        reproduction genotype values. [float]")
+        self.put("s_range", np.linspace(self.surv_bound[0],self.surv_bound[1],
+            self.n_states), "Survival probability for each genotype sum \
+                    value, linearly spaced. [float array]")
+        self.put("r_range", np.linspace(self.repr_bound[0],self.repr_bound[1],
+            self.n_states), "Reproduction probability for each genotype sum \
+                    value, linearly spaced. [float array]")
+        self.put("snapshot_stages", np.around(
+            np.linspace(0,self.number_of_stages-1,self.number_of_snapshots),
+            0).astype(int), "Stages of a run at which to record detailed \
+                    information about the state of the population. \
+                    [int array]")
+        self.put("params", {
+            "sexual":self.sexual, "chr_len":self.chr_len, "n_base":self.n_base,
+            "maturity":self.maturity, "max_ls":self.max_ls, 
+            "start_pop":self.start_pop, "g_dist":self.g_dist
+            }, "Key information for generating a new population object: \
+                    reproduction mode, chromosome length, bases per \
+                    chromosome, age of maturity, maximum lifespan, \
+                    starting population size, and initial bit value \
+                    distribution. [dict]")
+        if self.repr_mode in ["sexual", "assort_only"]: 
+            # Double fertility in sexual case to control for relative
+            # contribution to offspring
+            self.repr_bound *= 2 
+
+        #! Script for generating new config file with default values,
+        # or data file with default setup in place
