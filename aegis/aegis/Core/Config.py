@@ -96,6 +96,11 @@ class Config:
     def check(self):
         """Confirm that population parameters are compatible before
         starting simulation."""
+        states = ['asexual','recombine_only','assort_only','sexual']
+        if self.repr_mode not in states:
+            s0 = "Invalid reproductive mode: '{}'.".format(self.repr_mode)
+            s1 = " Must be one of: {}.".format(", ".join(states))
+            raise ValueError(s0 + s1)
         if self.maturity > self.max_ls - 2:
             s = "Age of maturity must be at least 2 less than max lifespan."
             raise ValueError(s)
@@ -105,6 +110,7 @@ class Config:
         if self.neut_offset - self.repr_offset < self.max_ls:
             s = "Difference between offset values must be >= max lifespan."
             raise ValueError(s)
+        return True
 
     # Constructors and selectors
 
@@ -185,7 +191,8 @@ class Config:
             "repr_mode":self.repr_mode, "chr_len":self.chr_len,
             "n_base":self.n_base, "maturity":self.maturity,
             "max_ls":self.max_ls, "start_pop":self.start_pop,
-            "g_dist":self.g_dist
+            "g_dist":self.g_dist, "repr_offset":self.repr_offset,
+            "neut_offset":self.neut_offset
             }, "Key information for generating a new population object: \
                     reproduction mode, chromosome length, bases per \
                     chromosome, age of maturity, maximum lifespan, \
