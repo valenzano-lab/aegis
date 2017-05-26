@@ -1,9 +1,11 @@
 ########################################################################
 # AEGIS - Ageing of Evolving Genomes in Silico                         #
 # Module: Core                                                         #
-# Classes: Config                                                      #
+# Classes: Infodict, Config                                            #
 # Description: Simulation configuration information imported from a    #
-#   config file and saved as a Python object for use by other classes. #
+#   config file and saved as a dictionary-like object for use by other #
+#   classes. The dictionary keys are linked to both values and         #
+#   information entries for identifying the function of each entry.    #
 ########################################################################
 
 ## PACKAGE IMPORT ##
@@ -11,18 +13,122 @@ import numpy as np
 
 ## CLASS ##
 
-class Config:
+class Infodict:
+    """Dictionary-like object in which each element is associated to
+    both a value and an information string describing its purpose,
+    and in which selecting for lists/arrays of keys returns 
+    corresponding lists/arrays of values."""
+
+    def __init__(self): 
+        self.__valdict__ = {}
+        self.__infdict__ = {}
+
+    # Constructors
+
+    def put(self, key, value, info):
+        """Set a key's value and description simultaneously."""
+        self.__valdict__[key] = value
+        self.__infdict__[key] = info
+
+    def __put_single__(self, key, value, mode):
+        """Change the value/infostring of an existing key,
+        preventing naive setting of new items wihout both parts."""
+        indict = self.__valdict__ if mode == "val" else self.__infdict__
+        if key in self.keys():
+            indict[key] = value
+        else:
+            errstr = "Infodict keys must have both a value and an info-string;"
+            errstr += " use .put() to specify both simultaneously."
+            raise SyntaxError(errstr)
+
+    def put_value(self, key, value):
+        """Change the value of an existing key while preventing
+        naive setting of new items without an infostring."""
+        self.__put_single__(key, value, "val")
+
+    def put_info(self, key, info):
+        """Change the infostring of an existing key while preventing
+        naive setting of new items without a value."""
+        self.__put_single__(key, value, "inf")
+            
+    def __setitem__(self, key, value): self.put_value(key, value)
+
+    # Single selectors
+
+    def __get__(self, key, mode):
+        """Get the value/infostring associated with a single key."""
+        outdict = self.__valdict__ if mode == "val" else self.__infdict__
+        return outdict[key]
+
+    def get_value(self, key):
+        """Get the value associated with a single key."""
+        return self.__get__(key, "val")
+
+    def get_info(self, key):
+        """Get the infostring associated with a single key."""
+        return self.__get__(key, "inf")
+
+    # Multiple selectors
+
+    def __gets__(self, keys, mode):
+        """Get the values/infostrings of one or more keys, returning
+        the result as a list or array if multiple keys are given."""
+        if type(keys) is list or type(keys) is np.ndarray:
+            vallist = [self.__get__(k, mode) for k in keys]
+            return vallist if type(keys) is list else np.array(vallist)
+        else:
+            return self.__get__(keys, mode)
+
+    def get_values(self, keys):
+        """Get the values of one or more keys, returning the result
+        as a list or array if multiple keys are given."""
+        return self.__gets__(keys, "val")
+
+    def get_infos(self, keys):
+        """Get the infostrings of one or more keys, returning the result
+        as a list or array if multiple keys are given."""
+        return self.__gets__(keys, "inf")
+
+    def __getitem__(self, keys): return self.get_values(keys)
+
+    # Item deletion
+
+    def delete_item(self, key):
+        """Remove a key, along with its value and infostring."""
+        del self.__valdict__[key], self.__infdict__[key]
+
+    def __delitem__(self, key): self.delete_item(key)
+
+    # Redirect basic dictionary methods
+    def keys(self): return self.__infdict__.keys()
+    def values(self): return self.__valdict__.values()
+    def infos(self): return self.__infdict__.values()
+    def has_key(self): return self.__infdict__.has_key()
+    #! Finish this
+
+    def subdict(self, keys, asdict=True):
+        """Return a dictionary or infodict containing a specified 
+        subset of this object's keys."""
+        valdict = {k: self.get_value(k) for k in keys}
+        if asdict: return valdict
+        infdict = {k: self.get_info(k) for k in keys}
+        child = Infodict()
+        child.__valdict__ = valdict
+        child.__infdict__ = infdict
+        return child 
+
+class Config(Infodict):
     """Object derived from imported config module."""
 
     def __init__(self, c):
         """Import basic attributes from a config-file object and set data
         descriptors."""
-        # First check that maturity, max_ls anh offset values are compatible
+        self.__valdict__ = {}
+        self.__infdict__ = {}
         def mirror(name, infostring):
             """Set a data element's value from the attribute of the same name
             in c, while also setting its description."""
             self.put(name, getattr(c,name), infostring)
-        self.info_dict = {} # Dictionary for element information
         ## Set data elements and information ##
         # Reproductive mode
         mirror("repr_mode", "The reproductive mode of the population:\
@@ -97,36 +203,21 @@ class Config:
         """Confirm that population parameters are compatible before
         starting simulation."""
         states = ['asexual','recombine_only','assort_only','sexual']
-        if self.repr_mode not in states:
-            s0 = "Invalid reproductive mode: '{}'.".format(self.repr_mode)
+        if self["repr_mode"] not in states:
+            s0 = "Invalid reproductive mode: '{}'.".format(self["repr_mode"])
             s1 = " Must be one of: {}.".format(", ".join(states))
+            print self.get_values(["repr_mode", "repr_mode"])
             raise ValueError(s0 + s1)
-        if self.maturity > self.max_ls - 2:
+        if self["maturity"] > self["max_ls"] - 2:
             s = "Age of maturity must be at least 2 less than max lifespan."
             raise ValueError(s)
-        if self.repr_offset < self.max_ls:
+        if self["repr_offset"] < self["max_ls"]:
             s = "Offset for reproductive loci must be >= max lifespan."
             raise ValueError(s)
-        if self.neut_offset - self.repr_offset < self.max_ls:
+        if self["neut_offset"] - self["repr_offset"] < self["max_ls"]:
             s = "Difference between offset values must be >= max lifespan."
             raise ValueError(s)
         return True
-
-    # Constructors and selectors
-
-    def put(self, name, value, infostring):
-        """Set a data element's value and description simultaneously."""
-        setattr(self, name, value)
-        self.info_dict[name] = infostring
-
-    def get_value(self, key):
-        """Get the value of an attribute (equivalent to calling that attribute
-        directly."""
-        return getattr(self, key)
-
-    def get_info(self, key):
-        """Get the description accompanying an attribute."""
-        return self.info_dict[key]
 
     # Generate derived attributes
 
@@ -137,63 +228,62 @@ class Config:
         self.check()
         # Genome structure
         g_dist_dict = { # Dictionary of initial proportion of 1's in genome loci
-                "s":self.g_dist_s, # Survival
-                "r":self.g_dist_r, # Reproduction
-                "n":self.g_dist_n # Neutral
+                "s":self["g_dist_s"], # Survival
+                "r":self["g_dist_r"], # Reproduction
+                "n":self["g_dist_n"] # Neutral
                 }
         self.put("g_dist", g_dist_dict, "Dictionary of values specifying\
                 initial proportion of 1's in each locus type (s/r/n) during\
                 population initialisation. [dict of floats]")
         genmap = np.concatenate([
-            np.arange(self.max_ls),
-            np.arange(self.maturity,self.max_ls) + self.repr_offset,
-            np.arange(self.n_neutral) + self.neut_offset], 0)
+            np.arange(self["max_ls"]),
+            np.arange(self["maturity"],self["max_ls"]) + self["repr_offset"],
+            np.arange(self["n_neutral"]) + self["neut_offset"]], 0)
         self.put("genmap", genmap, "Genome map specifying the relative \
                 position of each survival, reproduction and neutral locus \
                 in the genome of each individual. [int array]")
-        self.put("genmap_argsort", np.argsort(self.genmap), "Array specifying\
+        self.put("genmap_argsort", np.argsort(self["genmap"]), "Array specifying\
                 how to sort the genome map (or the genome) to correctly order\
                 the loci (survival 0-maxls, reproduction maturity-maxls, \
                 neutral. [int array]")
-        self.put("chr_len", len(self.genmap) * self.n_base, "Length of one\
+        self.put("chr_len", len(self["genmap"]) * self["n_base"], "Length of one\
                 chromosome in bits. [int]")
-        self.put("n_states", 2*self.n_base+1, "Number of possible genotype \
+        self.put("n_states", 2*self["n_base"]+1, "Number of possible genotype \
                 states (from 0 to 2*n_base). [int]")
         # Survival and reproduction
-        self.death_bound = np.array(self.death_bound)
-        self.repr_bound = np.array(self.repr_bound)
-        if self.repr_mode in ["sexual", "assort_only"]: 
+        self["death_bound"] = np.array(self["death_bound"])
+        self["repr_bound"] = np.array(self["repr_bound"])
+        if self["repr_mode"] in ["sexual", "assort_only"]: 
             # Double fertility in sexual case to control for relative
             # contribution to offspring
-            self.repr_bound *= 2 
-        self.put("surv_bound", 1-self.death_bound[::-1], "Min and max \
+            self["repr_bound"] *= 2 
+        self.put("surv_bound", 1-self["death_bound"][::-1], "Min and max \
                 survival rates. [float array].")
-        self.put("surv_step", np.diff(self.surv_bound)/(self.n_states-1),
+        self.put("surv_step", np.diff(self["surv_bound"])/(self["n_states"]-1),
                 "Difference in survival probability between adjacent \
                         reproduction genotype values. [float]")
-        self.put("repr_step", np.diff(self.repr_bound)/(self.n_states-1),
+        self.put("repr_step", np.diff(self["repr_bound"])/(self["n_states"]-1),
                 "Difference in reproduction probability between adjacent \
                         reproduction genotype values. [float]")
-        self.put("s_range", np.linspace(self.surv_bound[0],self.surv_bound[1],
-            self.n_states), "Survival probability for each genotype sum \
-                    value, linearly spaced. [float array]")
-        self.put("r_range", np.linspace(self.repr_bound[0],self.repr_bound[1],
-            self.n_states), "Reproduction probability for each genotype sum \
-                    value, linearly spaced. [float array]")
+        self.put("s_range", np.linspace(self["surv_bound"][0],
+            self["surv_bound"][1], self["n_states"]), "Survival probability \
+                    for each genotype sum value, linearly spaced. \
+                    [float array]")
+        self.put("r_range", np.linspace(self["repr_bound"][0],
+            self["repr_bound"][1], self["n_states"]), "Reproduction \
+                    probability for each genotype sum value, linearly spaced. \
+                    [float array]")
         # Snapshot stages
         self.put("snapshot_stages", np.around(
-            np.linspace(0,self.number_of_stages-1,self.number_of_snapshots),
-            0).astype(int), "Stages of a run at which to record detailed \
-                    information about the state of the population. \
-                    [int array]")
+            np.linspace(0,self["number_of_stages"]-1,
+                self["number_of_snapshots"]), 0).astype(int), "Stages of a \
+                        run at which to record detailed information about \
+                        the state of the population. [int array]")
         # Params dict
-        self.put("params", {
-            "repr_mode":self.repr_mode, "chr_len":self.chr_len,
-            "n_base":self.n_base, "maturity":self.maturity,
-            "max_ls":self.max_ls, "start_pop":self.start_pop,
-            "g_dist":self.g_dist, "repr_offset":self.repr_offset,
-            "neut_offset":self.neut_offset
-            }, "Key information for generating a new population object: \
+        self.put("params", self.subdict(
+            ["repr_mode", "chr_len", "n_base", "maturity", "start_pop",
+                "max_ls", "g_dist", "repr_offset", "neut_offset"]),
+            "Key information for generating a new population object: \
                     reproduction mode, chromosome length, bases per \
                     chromosome, age of maturity, maximum lifespan, \
                     starting population size, and initial bit value \

@@ -16,31 +16,31 @@ class TestPopulation:
         rtol = 0.02
         x = random.random()
         c = copy.deepcopy(conf)
-        c.params["g_dist"] = {"s":x,"r":x,"n":x}
-        #c.params["start_pop"] = 2000
-        #c.params["g_dist"] = {"s":x,"r":x,"n":x}
-        pop = Population(c.params, c.genmap, init_ages(),
+        c["params"]["g_dist"] = {"s":x,"r":x,"n":x}
+        #c["params"]["start_pop"] = 2000
+        #c["params"]["g_dist"] = {"s":x,"r":x,"n":x}
+        pop = Population(c["params"], c["genmap"], init_ages(),
                 init_genomes(), init_generations())
         #print np.mean(pop_b.ages)
         #print abs(np.mean(pop_b.ages)-pop_b.maxls/2)
         # Check basic parameters
-        assert pop.repr_mode == c.params["repr_mode"]
-        assert pop.chr_len == c.params["chr_len"]
-        assert pop.n_base == c.params["n_base"]
-        assert pop.max_ls == c.params["max_ls"]
-        assert pop.maturity == c.params["maturity"]
-        assert pop.g_dist == c.params["g_dist"]
-        assert pop.repr_offset == c.params["repr_offset"]
-        assert pop.neut_offset == c.params["neut_offset"]
-        assert np.array_equal(pop.genmap, c.genmap)
-        assert np.array_equal(pop.genmap_argsort, c.genmap_argsort)
+        assert pop.repr_mode == c["params"]["repr_mode"]
+        assert pop.chr_len == c["params"]["chr_len"]
+        assert pop.n_base == c["params"]["n_base"]
+        assert pop.max_ls == c["params"]["max_ls"]
+        assert pop.maturity == c["params"]["maturity"]
+        assert pop.g_dist == c["params"]["g_dist"]
+        assert pop.repr_offset == c["params"]["repr_offset"]
+        assert pop.neut_offset == c["params"]["neut_offset"]
+        assert np.array_equal(pop.genmap, c["genmap"])
+        assert np.array_equal(pop.genmap_argsort, c["genmap_argsort"])
         # Check reproductive state
         recombine = pop.repr_mode in ['sexual','recombine_only']
         assort = pop.repr_mode in ['sexual','assort_only']
         assert pop.recombine == recombine
         assert pop.assort == assort
         # Check population state
-        assert pop.N == c.params["start_pop"]
+        assert pop.N == c["params"]["start_pop"]
         assert np.isclose(np.mean(pop.genomes), x, atol=0.02)
         assert np.isclose(np.mean(pop.ages), np.mean(np.arange(pop.max_ls)),
                 atol = 2.5)
@@ -50,18 +50,18 @@ class TestPopulation:
         """Test that population is generated correctly when ages and/or
         genomes are provided."""
         # Set up test values
-        if conf.setup == "random": return
+        if conf["setup"] == "random": return
         c = copy.deepcopy(conf)
         x = random.random()
-        ages_r = np.random.randint(0, 10, c.params["start_pop"])
+        ages_r = np.random.randint(0, 10, c["params"]["start_pop"])
         genomes_r = chance(1-x**2, 
-                (c.params["start_pop"],c.params["chr_len"])).astype(int)
-        generations_r = np.random.randint(0, 10, c.params["start_pop"])
+                (c["params"]["start_pop"],c["params"]["chr_len"])).astype(int)
+        generations_r = np.random.randint(0, 10, c["params"]["start_pop"])
         x = random.random()
-        c.params["g_dist"] = {"s":x,"r":x,"n":x}
+        c["params"]["g_dist"] = {"s":x,"r":x,"n":x}
         # Initialise populations
         def pop(ages, genomes, generations):
-            return Population(c.params, c.genmap, ages, genomes, generations)
+            return Population(c["params"], c["genmap"], ages, genomes, generations)
         pops = [pop(ages_r, genomes_r, generations_r),
                 pop(ages_r, genomes_r, init_generations()),
                 pop(ages_r, init_genomes(), generations_r),
@@ -72,21 +72,21 @@ class TestPopulation:
                 pop(init_ages(), init_genomes(), init_generations())]
         # Check params as for default state
         for pop in pops:
-            assert pop.repr_mode == c.params["repr_mode"]
-            assert pop.chr_len == c.params["chr_len"]
-            assert pop.n_base == c.params["n_base"]
-            assert pop.max_ls == c.params["max_ls"]
-            assert pop.maturity == c.params["maturity"]
-            assert pop.g_dist == c.params["g_dist"]
-            assert pop.repr_offset == c.params["repr_offset"]
-            assert pop.neut_offset == c.params["neut_offset"]
-            assert np.array_equal(pop.genmap, c.genmap)
-            assert np.array_equal(pop.genmap_argsort, c.genmap_argsort)
+            assert pop.repr_mode == c["params"]["repr_mode"]
+            assert pop.chr_len == c["params"]["chr_len"]
+            assert pop.n_base == c["params"]["n_base"]
+            assert pop.max_ls == c["params"]["max_ls"]
+            assert pop.maturity == c["params"]["maturity"]
+            assert pop.g_dist == c["params"]["g_dist"]
+            assert pop.repr_offset == c["params"]["repr_offset"]
+            assert pop.neut_offset == c["params"]["neut_offset"]
+            assert np.array_equal(pop.genmap, c["genmap"])
+            assert np.array_equal(pop.genmap_argsort, c["genmap_argsort"])
             recombine = pop.repr_mode in ['sexual','recombine_only']
             assort = pop.repr_mode in ['sexual','assort_only']
             assert pop.recombine == recombine
             assert pop.assort == assort
-            assert pop.N == c.params["start_pop"]
+            assert pop.N == c["params"]["start_pop"]
         # Check ages
         for n in [0,1,2,3]: 
             assert np.array_equal(ages_r, pops[n].ages)
