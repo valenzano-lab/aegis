@@ -104,7 +104,11 @@ cdef class Population:
                 "chr_len":self.chr_len,
                 "n_base":self.n_base,
                 "max_ls":self.max_ls,
-                "maturity":self.maturity
+                "maturity":self.maturity,
+                "g_dist":self.g_dist,
+                "repr_offset":self.repr_offset,
+                "neut_offset":self.neut_offset
+
                 }
         return p_dict
 
@@ -272,7 +276,7 @@ cdef class Population:
         survivors = self.get_subpop(age_bounds, self.surv_loci(), s_range)
         self.subset_members(survivors)
 
-    cpdef growth(self, 
+    cpdef make_children(self, 
             np.ndarray[NPFLOAT_t, ndim=1] r_range, # Reprodn probabilities
             float penf, # Starvation penalty factor
             float m_rate, # Per-bit mutation rate
@@ -296,6 +300,17 @@ cdef class Population:
         children.mutate(m_rate, m_ratio) 
         children.increment_generations()
         children.ages[:] = 0 # Make newborn
+        return children
+
+    cpdef growth(self,
+            np.ndarray[NPFLOAT_t, ndim=1] r_range, # Reprodn probabilities
+            float penf, # Starvation penalty factor
+            float m_rate, # Per-bit mutation rate
+            float m_ratio, # Positive/negative mutation ratio
+            float r_rate): # Recombination rate (if recombining)
+        """Generate new mutated children from selected parents."""
+        cdef object children
+        children = self.make_children(r_range, penf, m_rate, m_ratio, r_rate)
         self.add_members(children)
 
     cpdef mutate(self, float m_rate, # Per-bit mutation rate

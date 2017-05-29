@@ -6,6 +6,16 @@ import numpy as np
 from test_1_Config import conf 
 # (will run descendent tests for all parameterisations)
 
+##############
+## FIXTURES ##
+##############
+
+@pytest.fixture()
+def pop(request, conf):
+    """Create a sample population from the default configuration."""
+    return Population(conf["params"], conf["genmap"], init_ages(),
+            init_genomes(), init_generations())
+
 class TestPopulation:
     """Test population object methods."""
 
@@ -106,3 +116,38 @@ class TestPopulation:
         for n in [1,3,5,7]:
             assert not np.array_equal(generations_r, pops[n].generations)
             assert np.all(pops[n].generations == 0)
+
+    def test_popgen_independence(self, pop, conf):
+        #if conf["setup"] == "random": return
+        """Test that generating a population from another and then manipulating
+        the cloned population does not affect original (important for
+        reproduction)."""
+        P1 = pop.clone()
+        P2 = Population(P1.params(), P1.genmap, P1.ages, P1.genomes,
+                P1.generations)
+        P3 = Population(P1.params(), P1.genmap, P1.ages[:100], 
+                P1.genomes[:100], P1.generations[:100])
+        P4 = Population(P3.params(), P3.genmap, P3.ages, P3.genomes,
+                P3.generations)
+        P2.mutate(0.5, 1)
+        P4.mutate(0.5, 1)
+        # Test ages
+        assert np.array_equal(pop.ages, P1.ages)
+        assert np.array_equal(pop.ages, P2.ages)
+        assert np.array_equal(pop.ages[:100], P3.ages)
+        assert np.array_equal(pop.ages[:100], P4.ages)
+        # Test genomes
+        assert np.array_equal(pop.genomes, P1.genomes)
+        assert np.array_equal(pop.genomes[:100], P3.genomes)
+        assert pop.genomes.shape == P2.genomes.shape
+        assert pop.genomes[:100].shape == P4.genomes.shape
+        assert not np.array_equal(pop.genomes, P2.genomes)
+        assert not np.array_equal(pop.genomes[:100], P4.genomes)
+
+    def test_params(self, pop, conf):
+        """Test that params returns (at least) the
+        required information."""
+        p = pop.params()
+        for k in p.keys():
+            a,b = getattr(pop, k), p[k]
+            assert np.array_equal(a,b) if type(a) is np.ndarray else a == b

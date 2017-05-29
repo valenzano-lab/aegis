@@ -49,7 +49,7 @@ class Infodict:
     def put_info(self, key, info):
         """Change the infostring of an existing key while preventing
         naive setting of new items without a value."""
-        self.__put_single__(key, value, "inf")
+        self.__put_single__(key, info, "inf")
             
     def __setitem__(self, key, value): self.put_value(key, value)
 
@@ -73,9 +73,10 @@ class Infodict:
     def __gets__(self, keys, mode):
         """Get the values/infostrings of one or more keys, returning
         the result as a list or array if multiple keys are given."""
-        if type(keys) is list or type(keys) is np.ndarray:
-            vallist = [self.__get__(k, mode) for k in keys]
-            return vallist if type(keys) is list else np.array(vallist)
+        if type(keys) in [list, np.ndarray, tuple] and len(keys) > 1:
+            return [self.__get__(k, mode) for k in keys]
+        elif type(keys) in [list, np.ndarray, tuple]:
+            return self.__get__(keys[0], mode)
         else:
             return self.__get__(keys, mode)
 
@@ -89,7 +90,7 @@ class Infodict:
         as a list or array if multiple keys are given."""
         return self.__gets__(keys, "inf")
 
-    def __getitem__(self, keys): return self.get_values(keys)
+    def __getitem__(self, *keys): return self.get_values(keys[0])
 
     # Item deletion
 
@@ -103,7 +104,10 @@ class Infodict:
     def keys(self): return self.__infdict__.keys()
     def values(self): return self.__valdict__.values()
     def infos(self): return self.__infdict__.values()
-    def has_key(self): return self.__infdict__.has_key()
+    def has_key(self, key): return self.__infdict__.has_key(key)
+    def __eq__(self, infodict): 
+        return self.__valdict__ == infodict.__valdict__ and \
+                self.__infdict__ == infodict.__infdict__
     #! Finish this
 
     def subdict(self, keys, asdict=True):

@@ -1,6 +1,10 @@
-from aegis.Core import Config
+from aegis.Core import Infodict, Config
 import pytest,importlib,types,random,copy,string
 import numpy as np
+
+##############
+## FIXTURES ##
+##############
 
 @pytest.fixture(params=["import", "random", "random"])
 def conf(request):
@@ -55,6 +59,119 @@ def conf(request):
     c.generate()
     return c
 
+####################
+## INFODICT TESTS ##
+####################
+
+def ranstr(m,n=10):
+    """Generate m random n-letter lowercase ASCII strings."""
+    r,s = random.choice, string.ascii_lowercase
+    l = [''.join(r(s) for _ in xrange(n)) for _ in xrange(m)]
+    return l
+
+
+class TestInfodict:
+
+    def test_infodict_init(self):
+        x = Infodict()
+        assert True #! ...
+
+    def test_infodict_getput(self):
+        """Test basic constructors and selectors for Infodict object."""
+        # Set up random inputs
+        keystr0, valstr0, infstr0 = ranstr(3)
+        # Test basic put/get methods
+        i = Infodict()
+        i.put(keystr0, valstr0, infstr0)
+        assert i.get_value(keystr0) == valstr0
+        assert i.get_info(keystr0) == infstr0
+        assert i[keystr0] == valstr0
+        # Test single puts on existing key
+        keystr1, valstr1, infstr1 = ranstr(3)
+        i.put_value(keystr0,valstr1)
+        i.put_info(keystr0,infstr1)
+        assert i.get_value(keystr0) == valstr1
+        assert i.get_info(keystr0) == infstr1
+        assert i[keystr0] == valstr1
+        i[keystr0] = infstr1
+        assert i[keystr0] == infstr1
+        # Test single puts on new key
+        with pytest.raises(SyntaxError):
+            i.put_value(keystr1,valstr1)
+        with pytest.raises(SyntaxError):
+            i.put_info(keystr1,infstr1)
+        with pytest.raises(SyntaxError):
+            i[keystr1] = valstr1
+        # Test multiple-get methods
+        i.put(keystr0, valstr0, infstr0)
+        i.put(keystr1, valstr1, infstr1)
+        assert i.get_values([keystr0,keystr1]) == [valstr0,valstr1]
+        assert i.get_infos([keystr0,keystr1]) == [infstr0,infstr1]
+        assert i[keystr0,keystr1,keystr0] == [valstr0,valstr1,valstr0]
+
+    def test_infodict_dictmethods(self):
+        """Test that dictionary methods like keys(), values() etc still work
+        as expected for Infodicts."""
+        keystr0, valstr0, infstr0 = ranstr(3)
+        keystr1, valstr1, infstr1 = ranstr(3)
+        i = Infodict()
+        # keys(), values(), infos()
+        i.put(keystr0, valstr0, infstr0)
+        assert i.keys() == [keystr0]
+        assert i.values() == [valstr0]
+        assert i.infos() == [infstr0]
+        assert i.has_key(keystr0)
+        assert not i.has_key(keystr1)
+        i.put(keystr1, valstr1, infstr1)
+        assert sorted(i.keys()) == sorted([keystr0, keystr1])
+        assert sorted(i.values()) == sorted([valstr0, valstr1])
+        assert sorted(i.infos()) == sorted([infstr0, infstr1])
+        assert i.has_key(keystr0)
+        assert i.has_key(keystr1)
+        # equality
+        j = Infodict()
+        j.put(keystr0, valstr0, infstr0)
+        j.put(keystr1, valstr1, infstr1)
+        assert i == i and i == j and j == j
+        #! Update as more dict methods added to Infodict
+
+    def test_infodict_delete(self):
+        keystr0, valstr0, infstr0 = ranstr(3)
+        keystr1, valstr1, infstr1 = ranstr(3)
+        i = Infodict()
+        i.put(keystr0, valstr0, infstr0)
+        i.put(keystr1, valstr1, infstr1)
+        i.delete_item(keystr1)
+        assert i.keys() == [keystr0]
+        assert i.values() == [valstr0]
+        assert i.infos() == [infstr0]
+        assert i.has_key(keystr0)
+        assert not i.has_key(keystr1)
+        i.put(keystr1, valstr1, infstr1)
+        del i[keystr0]
+        assert i.keys() == [keystr1]
+        assert i.values() == [valstr1]
+        assert i.infos() == [infstr1]
+        assert i.has_key(keystr1)
+        assert not i.has_key(keystr0)
+
+    def test_infodict_subdict(self):
+        # Setup
+        keystr0, valstr0, infstr0 = ranstr(3)
+        keystr1, valstr1, infstr1 = ranstr(3)
+        keystr2, valstr2, infstr2 = ranstr(3)
+        i = Infodict()
+        i.put(keystr0, valstr0, infstr0)
+        i.put(keystr1, valstr1, infstr1)
+        i.put(keystr2, valstr2, infstr2)
+        j = Infodict()
+        j.put(keystr1, valstr1, infstr1)
+        j.put(keystr2, valstr2, infstr2)
+        # Test
+        assert i.subdict([keystr0,keystr2]) == \
+                {keystr0:valstr0, keystr2:valstr2}
+        assert i.subdict([keystr1,keystr2],False) == j
+
 class TestConfig:
 
     def test_config_init(self, conf):
@@ -108,20 +225,6 @@ class TestConfig:
             c.check()
         c["neut_offset"] += 1
         assert c.check()
-
-    def test_config_getput(self,conf):
-        """Test constructors and selectors for Config object."""
-        if conf["setup"] == "random": return
-        # Set up random inputs
-        s = string.ascii_lowercase
-        keystr = ''.join(random.choice(s) for _ in xrange(10))
-        valstr = ''.join(random.choice(s) for _ in xrange(10))
-        infostr = ''.join(random.choice(s) for _ in xrange(10))
-        # Perform tests
-        c = copy.deepcopy(conf)
-        c.put(keystr, valstr, infostr)
-        assert c.get_value(keystr) == valstr
-        assert c.get_info(keystr) == infostr
 
     def test_config_generate(self, conf):
         """Test that gen_conf correctly generates derived simulation params."""
