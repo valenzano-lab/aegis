@@ -16,8 +16,8 @@ def pop(request, conf):
     return Population(conf["params"], conf["genmap"], init_ages(),
             init_genomes(), init_generations())
 
-class TestPopulation:
-    """Test population object methods."""
+class TestPopulationInit:
+    """Test Population object methods relating to initialisation."""
 
     # Initialisation
     def test_init_population_blank(self, conf):
@@ -143,11 +143,40 @@ class TestPopulation:
         assert pop.genomes[:100].shape == P4.genomes.shape
         assert not np.array_equal(pop.genomes, P2.genomes)
         assert not np.array_equal(pop.genomes[:100], P4.genomes)
+    
+    #! TODO: Tests for individual parts of initialisation
 
-    def test_params(self, pop, conf):
-        """Test that params returns (at least) the
-        required information."""
-        p = pop.params()
-        for k in p.keys():
-            a,b = getattr(pop, k), p[k]
-            assert np.array_equal(a,b) if type(a) is np.ndarray else a == b
+    def test_make_genome_array(self, pop):
+        """Test that genome array is of the correct size and that
+        the loci are distributed correctly."""
+        precision = 0.05
+        # Set up population
+        pop2 = pop.clone()
+        pop2.N = 1000
+        # Define testing function
+        def test_mga(genmap):
+            loci = {
+                "s":np.nonzero(genmap<pop2.repr_offset)[0],
+                "r":np.nonzero(np.logical_and(genmap>=pop2.repr_offset,
+                    genmap<pop2.neut_offset))[0],
+                "n":np.nonzero(genmap>=pop2.neut_offset)[0]
+                }
+            pop2.genmap = genmap
+            gd = dict([(x,random.random()) for x in ["s","r","n"]])
+            pop2.g_dist = gd
+            ga = pop2.make_genome_array()
+            assert ga.shape == (pop2.N, 2*pop2.chr_len)
+            b = pop2.n_base
+            for k in loci.keys():
+                pos = np.array([range(b) + x for x in loci[k]*b])
+                pos = np.append(pos, pos + pop2.chr_len)
+                tstat = abs(np.mean(ga[:,pos])-gd[k])
+                assert tstat < precision
+        # First with simple linear genmap, then with shuffled form
+        genmap1 = np.concatenate((np.arange(25), 
+            np.arange(24) + pop2.repr_offset,
+            np.arange(5) + pop2.neut_offset), 0)
+        genmap2 = np.copy(genmap1)
+        random.shuffle(genmap2)
+        test_mga(genmap1)
+        test_mga(genmap2)

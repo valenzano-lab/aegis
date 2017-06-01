@@ -45,12 +45,24 @@ cdef class Population:
             ):
         """Create a new population, either with newly-generated age and genome
         vectors or inheriting these from a seed."""
-        # Set reproductive parameters
+        self.set_genmap(genmap) # Define genome map
+        self.set_attributes(params) # Define population parameters
+        self.set_initial_size(params, ages, genomes, generations) # Define size
+        self.fill(ages, genomes, generations) # Generate individuals
+
+    def set_genmap(self, np.ndarray[NPINT_t, ndim=1] genmap):
+        """Set Population genome map from an input array."""
+        self.genmap = genmap # Map of locus identities within chromosome
+        self.genmap_argsort = np.argsort(genmap) # Indices for sorted genmap
+
+    def set_attributes(self, dict params):
+        """Set Population attributes from a parameter dictionary."""
+        # Set reproductive mode
         self.repr_mode = params["repr_mode"]
         repr_values = {"sexual":[1,1], "asexual":[0,0],
                 "recombine_only":[1,0], "assort_only":[0,1]}
         self.recombine, self.assort = repr_values[self.repr_mode]
-        # Set other basic parameters
+        # Set other attributes
         self.chr_len = params["chr_len"] # Number of bits per chromosome
         self.maturity = params["maturity"] # Age of maturity (for reproduction)
         self.max_ls = params["max_ls"] # Maximum lifespan
@@ -58,29 +70,62 @@ cdef class Population:
         self.g_dist = params["g_dist"] # Proportions of 1's in initial loci
         self.repr_offset = params["repr_offset"] # Genmap offset for repr loci
         self.neut_offset = params["neut_offset"] # Genmap offset for neut loci
-        self.genmap = genmap # Map of locus identities within chromosome
-        self.genmap_argsort = np.argsort(genmap) # Indices for sorted genmap
-        # Determine ages, genomes, generations if not given
-        if np.array_equal(ages, init_ages()): 
-            ages = np.random.randint(0,self.max_ls-1,params["start_pop"])
-        if np.array_equal(genomes, init_genomes()):
-            genomes = self.make_genome_array(
-                    params["start_pop"], params["g_dist"])
-        if np.array_equal(generations, init_generations()):
-            generations = np.repeat(0, params["start_pop"])
+
+    def set_initial_size(self, dict params, 
+            np.ndarray[NPINT_t, ndim=1] ages,
+            np.ndarray[NPINT_t, ndim=2] genomes,
+            np.ndarray[NPINT_t, ndim=1] generations,
+            ):
+        """Determine population size from initial inputs."""
+        new_ages = np.array_equal(ages, init_ages())
+        new_genomes = np.array_equal(genomes, init_genomes())
+        new_generations = np.array_equal(generations, init_generations())
+        if not new_ages:
+            if not new_genomes and len(ages) != len(genomes):
+                errstr = "Size mismatch between age and genome arrays."
+                raise ValueError(errstr)
+            if not new_generations and len(ages) != len(generations):
+                errstr = "Size mismatch between age and generation arrays."
+                raise ValueError(errstr)
+            self.N = len(ages)
+        elif not new_genomes:
+            if not new_generations and len(genomes) != len(generations):
+                errstr = "Size mismatch between genome and generation arrays."
+                raise ValueError(errstr)
+            self.N = len(genomes)
+        elif not new_generations:
+            self.N = len(generations)
+        else:
+            self.N = params["start_pop"]
+
+    def fill(self, 
+            np.ndarray[NPINT_t, ndim=1] ages,
+            np.ndarray[NPINT_t, ndim=2] genomes,
+            np.ndarray[NPINT_t, ndim=1] generations,
+            ):
+        """Fill a new Population object with individuals based on input
+        age, genome and generation arrays."""
+        # Test for new vs seeded values
+        new_ages = np.array_equal(ages, init_ages())
+        new_genomes = np.array_equal(genomes, init_genomes())
+        new_generations = np.array_equal(generations, init_generations())
+        # Specify individual value arrays
+        if new_ages:
+            ages = np.random.randint(0,self.max_ls-1,self.N)
+        if new_genomes:
+            genomes = self.make_genome_array()
+        if new_generations:
+            generations = np.repeat(0, self.N)
         self.ages = np.copy(ages)
         self.genomes = np.copy(genomes)
         self.generations = np.copy(generations)
-        # ! TODO: Add test that ages and genomes are same size (in case of seeding)
-        # Get population size from age array
-        self.N = len(self.ages)
 
-    def make_genome_array(self, start_pop, g_dist):
+    def make_genome_array(self):
         """Generate initial genomes for start_pop individuals according to
         population parameters, with uniformly-distributed bit values with
-        proportions specified by g_dist."""
+        proportions specified by self.g_dist."""
         # Initialise genome array
-        genome_array = np.zeros([start_pop, self.chr_len*2])
+        genome_array = np.zeros([self.N, self.chr_len*2])
         # Use genome map to determine probability distribution for each locus:
         loci = {
             "s":np.nonzero(self.genmap<self.repr_offset)[0],
@@ -94,8 +139,11 @@ cdef class Population:
             pos = np.array([range(self.n_base) + x for x in loci[k]*self.n_base])
             pos = np.append(pos, pos + self.chr_len)
             # Add values to positions according to appropriate distribution
-            genome_array[:, pos] = chance(g_dist[k], [start_pop, len(pos)])
+            genome_array[:, pos] = chance(self.g_dist[k], [self.N, len(pos)])
         return genome_array.astype(int)
+
+
+    ## REARRANGEMENT AND COMBINATION ## #! TODO: Cythonise these methods?
 
     def params(self):
         """Get population-initiation parameters from present population."""
@@ -108,11 +156,8 @@ cdef class Population:
                 "g_dist":self.g_dist,
                 "repr_offset":self.repr_offset,
                 "neut_offset":self.neut_offset
-
                 }
         return p_dict
-
-    ## REARRANGEMENT AND COMBINATION ##
 
     def clone(self):
         """Generate a new, identical population object."""
@@ -123,7 +168,7 @@ cdef class Population:
         """Repeat an operation over all relevant attributes, then update N."""
         for attr in ["ages","genomes","generations"]:
             val1,val2 = getattr(self,attr), getattr(pop2,attr) if pop2 else ""
-            setattr(self,attr,function(val1,val2) if val2 else function(val1))
+            setattr(self,attr,function(val1) if val2=="" else function(val1,val2))
         self.N = len(self.ages)
 
     def shuffle(self):
@@ -133,22 +178,22 @@ cdef class Population:
         def f(x): return x[index]
         self.attrib_rep(f)
 
-    def subtract_members(self,targets):
-        """Remove members from population, according to an index of integers."""
-        def f(x): return np.delete(x,targets)
-        self.attrib_rep(f)
-
     def subset_members(self,targets):
         """Keep a subset of members and discard the rest, according to an
         index of booleans (True = keep)."""
         def f(x): return x[targets]
         self.attrib_rep(f)
 
+    def subtract_members(self,targets):
+        """Remove members from population, according to an index of integers."""
+        def f(x): return np.delete(x,targets)
+        self.attrib_rep(f)
+
     def add_members(self, pop):
         """Append the individuals from a second population to this one,
         keeping this one's parameters and genome map."""
         def f(x,y): return np.concatenate((x,y), 0)
-        self.attrib_rep(f)
+        self.attrib_rep(f, pop)
 
     def subset_clone(self, targets):
         """Create a clone population and subset its members."""
