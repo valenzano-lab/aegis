@@ -10,7 +10,7 @@
 from .functions import chance, init_ages, init_genomes, init_generations
 import numpy as np
 cimport numpy as np
-import random
+import random, copy
 
 ## CYTHON SETUP ##
 # cython: profile=True
@@ -52,7 +52,7 @@ cdef class Population:
 
     def set_genmap(self, np.ndarray[NPINT_t, ndim=1] genmap):
         """Set Population genome map from an input array."""
-        self.genmap = genmap # Map of locus identities within chromosome
+        self.genmap = np.copy(genmap) # Map of locus identities
         self.genmap_argsort = np.argsort(genmap) # Indices for sorted genmap
 
     def set_attributes(self, dict params):
@@ -67,7 +67,8 @@ cdef class Population:
         self.maturity = params["maturity"] # Age of maturity (for reproduction)
         self.max_ls = params["max_ls"] # Maximum lifespan
         self.n_base = params["n_base"] # Number of bits per locus
-        self.g_dist = params["g_dist"] # Proportions of 1's in initial loci
+        self.g_dist = copy.deepcopy(
+                params["g_dist"]) # Proportions of 1's in initial loci
         self.repr_offset = params["repr_offset"] # Genmap offset for repr loci
         self.neut_offset = params["neut_offset"] # Genmap offset for neut loci
 

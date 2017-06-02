@@ -19,7 +19,66 @@ def pop(request, conf):
 class TestPopulationInit:
     """Test Population object methods relating to initialisation."""
 
-    # Initialisation
+    def test_set_genmap(self, pop):
+        """Test setting a population's genome map from a genmap array."""
+        # Test basic setting
+        pop2 = pop.clone()
+        gm2 = np.copy(pop.genmap) + 1
+        random.shuffle(gm2)
+        pop2.set_genmap(gm2)
+        assert np.array_equal(pop2.genmap, gm2)
+        assert np.array_equal(pop2.genmap_argsort, np.argsort(gm2))
+        assert not np.array_equal(pop2.genmap, pop.genmap)
+        assert not np.array_equal(pop2.genmap_argsort, pop.genmap_argsort)
+        # Test independence
+        gm2[0] = -1
+        assert not np.array_equal(pop2.genmap, gm2)
+
+    def test_set_attributes_general(self, pop, conf):
+        """Test inheritance of Population attributes from a params
+        dictionary, and independence of these values after cloning."""
+        pop2 = pop.clone()
+        # Permute parameter values (other than g_dist or repr_mode)
+        for a in pop.params().keys():
+            if a in ["repr_mode","g_dist"]: continue
+            setattr(pop2, a, getattr(pop2, a) + random.randint(1,11))
+        # Permute g_dist
+        for k in pop.g_dist.keys():
+            pop2.g_dist[k] = pop2.g_dist[k] * random.random()/2
+            assert pop2.g_dist[k] != pop.g_dist[k]
+        # Permute repr_mode
+        all_modes = ["sexual", "asexual", "assort_only", "recombine_only"]
+        poss_modes = list(set(all_modes) - set([pop.repr_mode]))
+        pop2.repr_mode = random.choice(poss_modes)
+        # Check inheritance
+        pop3 = pop.clone()
+        pop3.set_attributes(pop2.params())
+        for a in pop.params().keys():
+            if type(getattr(pop, a)) is np.ndarray:
+                assert np.array_equal(getattr(pop2, a), getattr(pop3, a))
+                assert not np.array_equal(getattr(pop, a), getattr(pop3, a))
+            else:
+                assert getattr(pop2, a) == getattr(pop3, a)
+                assert getattr(pop, a) != getattr(pop3, a)
+
+    def test_set_attributes_recombine_assort(self, pop):
+        pop2 = pop.clone()
+        pop3 = pop.clone()
+        # Check setting of .recombine and .assort
+        pop3.recombine, pop3.assort = False, False
+        pop2.repr_mode = "sexual"
+        pop3.set_attributes(pop2.params())
+        assert [pop3.recombine, pop3.assort] == [True, True]
+        pop2.repr_mode = "recombine_only"
+        pop3.set_attributes(pop2.params())
+        assert [pop3.recombine, pop3.assort] == [True, False]
+        pop2.repr_mode = "assort_only"
+        pop3.set_attributes(pop2.params())
+        assert [pop3.recombine, pop3.assort] == [False, True]
+        pop2.repr_mode = "asexual"
+        pop3.set_attributes(pop2.params())
+        assert [pop3.recombine, pop3.assort] == [False, False]
+
     def test_init_population_blank(self, conf):
         """Test that population parameters are correct for random and
         nonrandom ages, assuming that genome generation is correct."""
