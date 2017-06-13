@@ -62,6 +62,8 @@ class TestPopulationInit:
                 assert getattr(pop, a) != getattr(pop3, a)
 
     def test_set_attributes_recombine_assort(self, pop):
+        """Test correct assignment of recombine and assort attributes
+        from reproductive mode."""
         pop2 = pop.clone()
         pop3 = pop.clone()
         # Check setting of .recombine and .assort
@@ -79,41 +81,97 @@ class TestPopulationInit:
         pop3.set_attributes(pop2.params())
         assert [pop3.recombine, pop3.assort] == [False, False]
 
-    def test_init_population_blank(self, conf):
-        """Test that population parameters are correct for random and
-        nonrandom ages, assuming that genome generation is correct."""
-        rtol = 0.02
-        x = random.random()
-        c = copy.deepcopy(conf)
-        c["params"]["g_dist"] = {"s":x,"r":x,"n":x}
-        #c["params"]["start_pop"] = 2000
-        #c["params"]["g_dist"] = {"s":x,"r":x,"n":x}
-        pop = Population(c["params"], c["genmap"], init_ages(),
+    def test_initial_size_compatible(self, pop, conf):
+        """Test that initial population size is computed correctly
+        under different valid conditions."""
+        # New pop with altered members and size
+        pop2 = pop.clone()
+        drop = random.sample(xrange(pop2.N), random.randrange(20))
+        pop2.subtract_members(drop)
+        pop2.N = 0
+        # State 1: all new
+        p = copy.deepcopy(conf["params"])
+        p["start_pop"] += random.randint(1,20)
+        pop2.set_initial_size(p, init_ages(),
                 init_genomes(), init_generations())
-        #print np.mean(pop_b.ages)
-        #print abs(np.mean(pop_b.ages)-pop_b.maxls/2)
-        # Check basic parameters
-        assert pop.repr_mode == c["params"]["repr_mode"]
-        assert pop.chr_len == c["params"]["chr_len"]
-        assert pop.n_base == c["params"]["n_base"]
-        assert pop.max_ls == c["params"]["max_ls"]
-        assert pop.maturity == c["params"]["maturity"]
-        assert pop.g_dist == c["params"]["g_dist"]
-        assert pop.repr_offset == c["params"]["repr_offset"]
-        assert pop.neut_offset == c["params"]["neut_offset"]
-        assert np.array_equal(pop.genmap, c["genmap"])
-        assert np.array_equal(pop.genmap_argsort, c["genmap_argsort"])
-        # Check reproductive state
-        recombine = pop.repr_mode in ['sexual','recombine_only']
-        assort = pop.repr_mode in ['sexual','assort_only']
-        assert pop.recombine == recombine
-        assert pop.assort == assort
-        # Check population state
-        assert pop.N == c["params"]["start_pop"]
-        assert np.isclose(np.mean(pop.genomes), x, atol=0.02)
-        assert np.isclose(np.mean(pop.ages), np.mean(np.arange(pop.max_ls)),
-                atol = 2.5)
-        assert np.all(pop.generations == 0)
+        assert pop2.N == p["start_pop"]
+        # State 2: none new
+        pop2.N = 0
+        pop2.set_initial_size(pop.params(), pop.ages, pop.genomes,
+                pop.generations)
+        assert pop2.N == pop.N
+        # State 3: two new
+        pop3 = pop.clone()
+        n3 = pop3.N
+        drop = random.sample(xrange(pop3.N), random.randrange(10))
+        pop3.subtract_members(drop)
+        pop2.N = 0
+        pop2.set_initial_size(pop3.params(), pop3.ages,
+                init_genomes(), init_generations())
+        assert pop2.N == n3 - len(drop)
+        n3 = pop3.N
+        drop = random.sample(xrange(pop3.N), random.randrange(10))
+        pop3.subtract_members(drop)
+        pop2.N = 0
+        pop2.set_initial_size(pop3.params(), init_ages(),
+                pop3.genomes, init_generations())
+        assert pop2.N == n3 - len(drop)
+        n3 = pop3.N
+        drop = random.sample(xrange(pop3.N), random.randrange(10))
+        pop3.subtract_members(drop)
+        pop2.N = 0
+        pop2.set_initial_size(pop3.params(), init_ages(),
+                init_genomes(), pop3.generations)
+        assert pop2.N == n3 - len(drop)
+        # State 4: one new
+        pop4 = pop.clone()
+        n4 = pop4.N
+        drop = random.sample(xrange(pop4.N), random.randrange(10))
+        pop4.subtract_members(drop)
+        pop2.N = 0
+        pop2.set_initial_size(pop4.params(), pop4.ages,
+                pop4.genomes, init_generations())
+        assert pop2.N == n4 - len(drop)
+        n4 = pop4.N
+        drop = random.sample(xrange(pop4.N), random.randrange(10))
+        pop4.subtract_members(drop)
+        pop2.N = 0
+        pop2.set_initial_size(pop4.params(), pop4.ages,
+                init_genomes(), pop4.generations)
+        assert pop2.N == n4 - len(drop)
+        n4 = pop4.N
+        drop = random.sample(xrange(pop4.N), random.randrange(10))
+        pop4.subtract_members(drop)
+        pop2.N = 0
+        pop2.set_initial_size(pop4.params(), init_ages(),
+                pop4.genomes, pop4.generations)
+        assert pop2.N == n4 - len(drop)
+
+    def test_initial_size_compatible(self, pop, conf):
+        """Test that set_initial_size returns an appropriate error
+        when incompatible data is given."""
+        # New pop with altered members and size
+        pop2 = pop.clone()
+        drop = random.sample(xrange(pop2.N), random.randrange(20))
+        pop2.subtract_members(drop)
+        pop2.N = 0
+        pop3 = pop.clone()
+        def rsp3(n): return random.sample(xrange(pop3.N), n)
+        pop3.ages = np.delete(pop3.ages, rsp3(1), 0)
+        pop3.genomes = np.delete(pop3.genomes, rsp3(2), 0)
+        pop3.generations = np.delete(pop3.generations, rsp3(3), 0)
+        with pytest.raises(ValueError):
+            pop2.set_initial_size(pop3.params(), pop3.ages, pop3.genomes,
+                    init_generations())
+        with pytest.raises(ValueError):
+            pop2.set_initial_size(pop3.params(), pop3.ages, init_genomes(),
+                    pop3.generations)
+        with pytest.raises(ValueError):
+            pop2.set_initial_size(pop3.params(), init_ages(), pop3.genomes,
+                    pop3.generations)
+        with pytest.raises(ValueError):
+            pop2.set_initial_size(pop3.params(), pop3.ages, pop3.genomes,
+                    pop3.generations)
 
     def test_init_population_nonblank(self, conf):
         """Test that population is generated correctly when ages and/or

@@ -187,7 +187,7 @@ cdef class Population:
 
     def subtract_members(self,targets):
         """Remove members from population, according to an index of integers."""
-        def f(x): return np.delete(x,targets)
+        def f(x): return np.delete(x,targets, 0)
         self.attrib_rep(f)
 
     def add_members(self, pop):

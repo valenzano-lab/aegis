@@ -125,11 +125,14 @@ class TestPopulationReComb:
         i = random.sample(xrange(pop.N), n) # Individuals to be removed
         # Apply to new population
         pop2 = pop.clone()
+        print n
+        print pop2.N
         pop2.subtract_members(i)
+        print pop2.N
         # Check result
         for a in ["ages", "genomes", "generations"]:
             print a
-            assert np.array_equal(np.delete(getattr(pop, a), i),
+            assert np.array_equal(np.delete(getattr(pop, a), i, 0),
                     getattr(pop2,a))
 
     def test_add_members(self, pop):
