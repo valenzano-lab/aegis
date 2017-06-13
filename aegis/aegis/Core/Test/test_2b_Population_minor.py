@@ -16,7 +16,11 @@ class TestPopulationReComb:
         required information."""
         #if conf["setup"] == "random": return
         p = pop.params()
-        for k in p.keys():
+        K = p.keys()
+        for s in ["repr_mode", "chr_len", "n_base", "max_ls", "maturity",
+                "g_dist", "repr_offset", "neut_offset"]:
+            assert s in K
+        for k in K:
             a,b = getattr(pop, k), p[k]
             assert np.array_equal(a,b) if type(a) is np.ndarray else a == b
 

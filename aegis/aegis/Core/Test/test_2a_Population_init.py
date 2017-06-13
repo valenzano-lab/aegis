@@ -147,7 +147,7 @@ class TestPopulationInit:
                 pop4.genomes, pop4.generations)
         assert pop2.N == n4 - len(drop)
 
-    def test_initial_size_compatible(self, pop, conf):
+    def test_initial_size_compatible(self, pop):
         """Test that set_initial_size returns an appropriate error
         when incompatible data is given."""
         # New pop with altered members and size
@@ -173,11 +173,11 @@ class TestPopulationInit:
             pop2.set_initial_size(pop3.params(), pop3.ages, pop3.genomes,
                     pop3.generations)
 
-    def test_init_population_nonblank(self, conf):
-        """Test that population is generated correctly when ages and/or
-        genomes are provided."""
-        # Set up test values
-        if conf["setup"] == "random": return
+    def test_fill(self, conf):
+        """Test that Population.fill correctly reads in member data
+        when provided and generates them otherwise."""
+        # Set up random test inputs
+        #if conf["setup"] == "random": return
         c = copy.deepcopy(conf)
         x = random.random()
         ages_r = np.random.randint(0, 10, c["params"]["start_pop"])
@@ -197,30 +197,13 @@ class TestPopulationInit:
                 pop(init_ages(), genomes_r, init_generations()),
                 pop(init_ages(), init_genomes(), generations_r),
                 pop(init_ages(), init_genomes(), init_generations())]
-        # Check params as for default state
-        for pop in pops:
-            assert pop.repr_mode == c["params"]["repr_mode"]
-            assert pop.chr_len == c["params"]["chr_len"]
-            assert pop.n_base == c["params"]["n_base"]
-            assert pop.max_ls == c["params"]["max_ls"]
-            assert pop.maturity == c["params"]["maturity"]
-            assert pop.g_dist == c["params"]["g_dist"]
-            assert pop.repr_offset == c["params"]["repr_offset"]
-            assert pop.neut_offset == c["params"]["neut_offset"]
-            assert np.array_equal(pop.genmap, c["genmap"])
-            assert np.array_equal(pop.genmap_argsort, c["genmap_argsort"])
-            recombine = pop.repr_mode in ['sexual','recombine_only']
-            assort = pop.repr_mode in ['sexual','assort_only']
-            assert pop.recombine == recombine
-            assert pop.assort == assort
-            assert pop.N == c["params"]["start_pop"]
         # Check ages
         for n in [0,1,2,3]: 
             assert np.array_equal(ages_r, pops[n].ages)
         for n in [4,5,6,7]:
             assert not np.array_equal(ages_r, pops[n].ages)
             assert np.isclose(np.mean(pops[n].ages),
-                    np.mean(np.arange(pops[n].max_ls)), atol=2.5)
+                    np.mean(np.arange(pops[n].max_ls)), atol=3)
         # Check genomes
         for n in [0,1,4,5]:
             assert np.array_equal(genomes_r, pops[n].genomes)
@@ -233,6 +216,31 @@ class TestPopulationInit:
         for n in [1,3,5,7]:
             assert not np.array_equal(generations_r, pops[n].generations)
             assert np.all(pops[n].generations == 0)
+
+    def test_population_init(self, pop):
+        """Test that Population.__init__ applies the correct methods..."""
+        pop2 = pop.clone()
+        # Delete everything
+        del pop2.genmap, pop2.genmap_argsort
+        pop2.repr_mode, pop2.recombine, pop2.assort = ["",-1,-1]
+        pop2.chr_len, pop2.maturity, pop2.max_ls, pop2.n_base = [0,0,0,0]
+        pop2.g_dist = {}
+        pop2.repr_offset, pop2.neut_offset, pop2.N = [0,0,0]
+        del pop2.ages, pop2.genomes, pop2.generations
+        # Refill
+        pop2.set_genmap(pop.genmap)
+        pop2.set_attributes(pop.params())
+        pop2.set_initial_size(pop.params(), pop.ages, 
+                pop.genomes, pop.generations)
+        pop2.fill(pop.ages, pop.genomes, pop.generations)
+        # Test that pop2 and pop are identical
+        for a in dir(pop):
+            print(a)
+            if callable(getattr(pop, a)): continue # Skip functions
+            if type(getattr(pop, a)) is np.ndarray:
+                assert np.array_equal(getattr(pop, a), getattr(pop2, a))
+            else:
+                assert getattr(pop, a) == getattr(pop2, a)
 
     def test_popgen_independence(self, pop, conf):
         #if conf["setup"] == "random": return
