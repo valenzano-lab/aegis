@@ -191,3 +191,7 @@ class TestPopulationIncrement:
         P2 = pop.clone()
         P2.increment_generations()
         assert np.array_equal(pop.generations+1, P2.generations)
+
+class TestPopulationLoci:
+    """Test methods of Population object relating to obtaining and 
+    manipulated lists of chromosomes and loci."""
