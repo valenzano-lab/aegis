@@ -144,7 +144,7 @@ class Record(Infodict):
         minval, maxval, limit = np.min(gt), np.max(gt), 2*self["n_base"]
         if minval < 0:
             raise ValueError("Invalid genotype value: {}".format(minval))
-        if maxval > 2*limit:
+        if maxval > limit:
             raise ValueError("Invalid genotype value: {}".format(maxval))
         p_min,p_max = np.array(bound).astype(float)
         return p_min + (p_max - p_min)*gt/limit

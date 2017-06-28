@@ -2,13 +2,27 @@ from aegis.Core import Infodict, Config, Population, Record
 import pytest,importlib,types,random,copy,string
 import numpy as np
 
-from test_1_Config import conf 
+##############
+## FIXTURES ##
+##############
+
+from test_1_Config import conf
+from test_2a_Population_init import pop
+
+@pytest.fixture()
+def rec(request, conf):
+    """Create a sample population from the default configuration."""
+    return Record(conf)
+
+###########
+## TESTS ##
+###########
 
 class TestRecord:
     """Test Record object initialisation and methods."""
 
-    def test_record_init(self, conf):
-        R = Record(conf)
+    def test_record_init(self, conf, rec):
+        R = copy.deepcopy(rec)
         # Conf param entries should be inherited in Record
         for k in conf.keys():
             assert np.array_equal(R[k], np.array(conf[k]))
@@ -48,4 +62,44 @@ class TestRecord:
                 "resources_window_mean", "resources_window_var",
                 "n1_window_mean", "n1_window_var")
 
+    def test_p_calc(self,rec):
+        """Test that p_calc returns the correct results under trivial and
+        non-trivial cases, and returns value errors when appropriate."""
+        bound = sorted([random.random(), random.random()])
+        size0 = random.randint(10,50)
+        size1 = random.randint(10,50)
+        maxval = rec["n_states"]-1
+        # Simple 1D arrays
+        assert np.array_equal(rec.p_calc(np.zeros(size0), bound),
+                np.tile(bound[0], size0))
+        assert np.array_equal(rec.p_calc(np.tile(maxval, size0), bound),
+                np.tile(bound[1], size0))
+        # Simple 2D arrays
+        assert np.array_equal(rec.p_calc(np.zeros([size0,size1]), bound),
+                np.tile(bound[0], [size0,size1]))
+        assert np.array_equal(rec.p_calc(np.tile(maxval,[size0,size1]), bound),
+                np.tile(bound[1], [size0,size1]))
+        # Random 2D arrays
+        inval = random.choice(xrange(rec["n_states"]))
+        inarray = np.tile(inval,[size0,size1])
+        outarray = rec.p_calc(inarray, bound)
+        exparray = bound[0] + (bound[1]-bound[0])*inarray/maxval
+        print inarray.shape, outarray.shape, exparray.shape
+        assert np.allclose(outarray, exparray)
+        # Failure modes
+        with pytest.raises(ValueError):
+            rec.p_calc(np.tile(random.randint(-1,-100), [size0, size1]), bound)
+        with pytest.raises(ValueError):
+            rec.p_calc(np.tile(maxval+random.randint(1,100), [size0, size1]), bound)
 
+    def test_p_surv_repr(self, rec):
+        """Test that p_surv and p_repr return results equivalent to calling
+        p_calc with the appropriate value ranges."""
+        size0 = random.randint(10,50)
+        size1 = random.randint(10,50)
+        inval = random.choice(xrange(rec["n_states"]))
+        inarray = np.tile(inval,[size0,size1])
+        assert np.array_equal(rec.p_surv(inarray),
+                rec.p_calc(inarray, rec["surv_bound"]))
+        assert np.array_equal(rec.p_repr(inarray),
+                rec.p_calc(inarray, rec["repr_bound"]))
