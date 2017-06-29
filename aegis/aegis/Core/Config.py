@@ -200,6 +200,10 @@ class Config(Infodict):
         mirror("windows", "Width of sliding windows for recording \
                 along-genome variation in bit value and along-run \
                 variation in population size and resource levels. [dict]")
+        # Output mode
+        mirror("output_mode", "Level of information to retain in simulation\
+                output: 0 = records only, 1 = records + final population,\
+                2 = records + all snapshot populations. [int]")
         self.check()
 
     # Check for invalid config construction

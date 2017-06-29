@@ -10,6 +10,8 @@ number_of_snapshots = 20 # Points in run at which to record detailed data
 repr_mode = 'sexual' # sexual, asexual, assort_only or recombine_only
 res_start = 1000 # Starting resource value
 res_var = True # Resources vary with population and time; else constant
+output_mode = 1 # 0 = return records only, 1 = return records + final pop,
+                # 2 = return records + all snapshot populations
 
 ## RESOURCE PARAMETERS ##
 V = 1.1 # Geometric resource regrowth factor, if variable
