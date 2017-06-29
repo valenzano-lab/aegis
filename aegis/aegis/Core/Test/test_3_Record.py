@@ -1,4 +1,4 @@
-from aegis.Core import Infodict, Config, Population, Record
+from aegis.Core import Infodict, Config, Population, Outpop, Record
 import pytest,importlib,types,random,copy,string
 import numpy as np
 
@@ -20,6 +20,8 @@ def rec(request, conf):
 
 class TestRecord:
     """Test Record object initialisation and methods."""
+
+    ## INITIALISATION ##
 
     def test_record_init(self, conf, rec):
         R = copy.deepcopy(rec)
@@ -45,7 +47,7 @@ class TestRecord:
         assert np.array_equal(R["repr_penf"], a0)
         assert np.array_equal(R["age_distribution"], a1)
         # Snapshot population placeholders
-        assert R["snapshot_pops"] == [0]*R["number_of_snapshots"]
+        assert R["snapshot_pops"] == [0]*R["number_of_snapshots"][0]
         # Empty names for final computation
         def iszero(*names):
             for name in names: assert R[name] == 0
@@ -61,6 +63,8 @@ class TestRecord:
         iszero("population_size_window_mean", "population_size_window_var",
                 "resources_window_mean", "resources_window_var",
                 "n1_window_mean", "n1_window_var")
+
+    ## PROBABILITIES ##
 
     def test_p_calc(self,rec):
         """Test that p_calc returns the correct results under trivial and
@@ -103,3 +107,45 @@ class TestRecord:
                 rec.p_calc(inarray, rec["surv_bound"]))
         assert np.array_equal(rec.p_repr(inarray),
                 rec.p_calc(inarray, rec["repr_bound"]))
+
+    ## PER-STAGE RECORDING ##
+
+    def test_update_quick(self, rec, pop):
+        """Test that every-stage update function records correctly."""
+        rec2 = copy.deepcopy(rec)
+        r = rec2.get_value
+        rec2.update(pop, 100, 1, 1, 0, -1)
+        agedist=np.bincount(pop.ages,minlength=pop.max_ls)/float(pop.N)
+        assert r("resources")[0] == 100
+        assert r("population_size")[0] == pop.N
+        assert r("surv_penf")[0] == 1
+        assert r("repr_penf")[0] == 1
+        assert np.array_equal(r("age_distribution")[0], agedist)
+        for n in xrange(len(r("snapshot_pops"))):
+            assert r("snapshot_pops")[n] == 0
+
+    def test_update_full(self, rec, pop):
+        """Test that snapshot update function records correctly."""
+        rec2 = copy.deepcopy(rec)
+        pop2 = pop.clone()
+        np.random.shuffle(pop2.genmap)
+        np.random.shuffle(pop2.ages)
+        np.random.shuffle(pop2.genomes)
+        rec2.update(pop2, 200, 2, 2, 0, 0)
+        r = rec2.get_value
+        agedist=np.bincount(pop2.ages,minlength=pop2.max_ls)/float(pop2.N)
+        # Per-stage factors
+        assert r("population_size")[0] == pop2.N
+        assert r("resources")[0] == 200
+        assert r("surv_penf")[0] == 2
+        assert r("repr_penf")[0] == 2
+        assert np.array_equal(r("age_distribution")[0], agedist)
+        for n in xrange(1,len(r("snapshot_pops"))):
+            assert r("snapshot_pops")[n] == 0
+        # Snapshot population
+        p = r("snapshot_pops")[0]
+        assert isinstance(p, Outpop)
+        assert np.array_equal(p.genmap, pop2.genmap)
+        assert np.array_equal(p.ages, pop2.ages)
+        assert np.array_equal(p.genomes, pop2.genomes)
+        assert np.array_equal(p.generations, pop2.generations)

@@ -10,6 +10,7 @@
 ## PACKAGE IMPORT ##
 import numpy as np
 from .Config import Infodict
+from .Population import Population, Outpop
 
 ## CLASS ##
 
@@ -40,18 +41,18 @@ class Record(Infodict):
         # Arrays for per-stage data entry
         a0 = np.zeros(self["number_of_stages"])
         a1 = np.zeros([self["number_of_stages"],self["max_ls"]])
-        self.put("population_size", a0,
+        self.put("population_size", np.copy(a0),
                 "Size of population at each stage.")
-        self.put("resources", a0,
+        self.put("resources", np.copy(a0),
                 "Number of resources available at each stage.")
-        self.put("surv_penf", a0,
+        self.put("surv_penf", np.copy(a0),
                 "Survival penalty due to starvation at each stage.")
-        self.put("repr_penf", a0,
+        self.put("repr_penf", np.copy(a0),
                 "Reproduction penalty due to starvation at each stage.")
-        self.put("age_distribution", a1,
+        self.put("age_distribution", np.copy(a1),
                 "Proportion of population in each age group at each stage.")
         # Space for saving population state for each snapshot
-        self.put("snapshot_pops", [0]*self["number_of_snapshots"],
+        self.put("snapshot_pops", [0]*self["number_of_snapshots"][0],
                 "Complete population state at each snapshot stage.")
         # Initialise arrays for data entry
         def putzero(name, infstr): self.put(name, 0, infstr)

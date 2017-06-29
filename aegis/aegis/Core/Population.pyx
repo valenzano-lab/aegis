@@ -415,10 +415,13 @@ class Outpop:
     def __init__(self, pop):
         """Generate an Outpop from a Population object."""
         self.repr_mode = pop.repr_mode
-        self.n_base = pop.n_base
         self.chr_len = pop.chr_len
+        self.n_base = pop.n_base
         self.max_ls = pop.max_ls
         self.maturity = pop.maturity
+        self.g_dist = pop.g_dist
+        self.repr_offset = pop.repr_offset
+        self.neut_offset = pop.neut_offset
         self.genmap = np.copy(pop.genmap)
         self.ages = np.copy(pop.ages)
         self.genomes = np.copy(pop.genomes)
@@ -426,13 +429,16 @@ class Outpop:
         self.N = pop.N
 
     def params(self):
-        """Report fixed population-intrinsic parameters."""
+        """Get population-initiation parameters from present population."""
         p_dict = {
                 "repr_mode":self.repr_mode,
                 "chr_len":self.chr_len,
                 "n_base":self.n_base,
                 "max_ls":self.max_ls,
-                "maturity":self.maturity
+                "maturity":self.maturity,
+                "g_dist":self.g_dist,
+                "repr_offset":self.repr_offset,
+                "neut_offset":self.neut_offset
                 }
         return p_dict
 
