@@ -10,7 +10,7 @@ from test_1_Config import conf
 ## FIXTURES ##
 ##############
 
-@pytest.fixture()
+@pytest.fixture(scope="module")
 def pop(request, conf):
     """Create a sample population from the default configuration."""
     return Population(conf["params"], conf["genmap"], init_ages(),

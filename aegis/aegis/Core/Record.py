@@ -9,6 +9,7 @@
 
 ## PACKAGE IMPORT ##
 import numpy as np
+import scipy.stats as st
 from .Config import Infodict
 from .Population import Population, Outpop
 
@@ -82,6 +83,10 @@ class Record(Infodict):
         putzero("junk_cmv_surv", "Cumulative survival probability from \
                 age 0 to age n at each snapshot, based on average over \
                 neutral loci.")
+        putzero("mean_repr", "True mean reproductive probability at each age,\
+                including juvenile ages, adjusted for sexuality.")
+        putzero("junk_repr", "Junk mean reproductive probability at each age,\
+                including juvenile ages, adjusted for sexuality.")
         putzero("prob_mean", "Mean probability of survival/reproduction\
                 at each age at each snapshot, \
                 based on corresponding locus genotypes")
@@ -182,14 +187,14 @@ class Record(Infodict):
         """Compute normalised distributions of sum genotypes for each locus in
         the genome at each snapshot, for survival, reproduction, neutral and 
         all loci."""
-        gt = np.arange(self["n_states"])
+        l,m,ns = self["max_ls"], self["maturity"], self["n_states"]
         loci_all = np.array([p.toPop().sorted_loci() \
                 for p in self["snapshot_pops"]])
         loci = {"s":np.array([L[:,:l] for L in loci_all]),
                 "r":np.array([L[:,l:(2*l-m)] for L in loci_all]),
                 "n":np.array([L[:,(2*l-m):] for L in loci_all]), "a":loci_all}
         def density(x):
-            bins = np.bincount(x,minlength=gt)
+            bins = np.bincount(x,minlength=len(ns))
             return bins/float(sum(bins))
         density_per_locus = {}
         for k in ["s","r","n","a"]: # Survival, reproductive, neutral, all
@@ -212,20 +217,20 @@ class Record(Infodict):
     def compute_genotype_mean_var(self):
         """Compute the mean and variance in genotype sums at each locus
         and snapshot."""
-        ss,gt = self["snapshot_states"],np.arange(self["n_states"])
+        ss,gt = self["snapshot_stages"],np.arange(self["n_states"])
         mean_gt_dict, var_gt_dict = {}, {}
         for k in ["s","r","n","a"]: # Survival, reproductive, neutral, all
             dl = self["density_per_locus"][k]
             dl_tr = dl.transpose(1,2,0) #[snapshot,locus,genotype]
-            mean_gt = np.sum(ad_tr * gt, 2) # [snapshot, locus]
+            mean_gt = np.sum(dl_tr * gt, 2) # [snapshot, locus]
             # Get difference between each potential genotype and the mean at
             # each snapshot/locus, then compute variance
-            gt_diff = np.tile(gt, [len(ss),ad_tr.shape[1],1]) - \
+            gt_diff = np.tile(gt, [len(ss),dl_tr.shape[1],1]) - \
                     np.repeat(mean_gt[:,:,np.newaxis], len(gt), axis=2)
-            var_gt = np.sum(ad_tr * (gt_diff**2), 2) # [snapshot, locus]
+            var_gt = np.sum(dl_tr * (gt_diff**2), 2) # [snapshot, locus]
             mean_gt_dict[k],var_gt_dict[k] = mean_gt,var_gt
-        self["mean_gt"] = mean_gt
-        self["var_gt"] = var_gt
+        self["mean_gt"] = mean_gt_dict
+        self["var_gt"] = var_gt_dict
 
     # SURVIVAL/REPRODUCTION PROBABILITIES, FITNESS, AND REPRODUCTIVE VALUE
 
@@ -269,7 +274,8 @@ class Record(Infodict):
         cmv_surv[:,1:] = np.cumprod(self["prob_mean"]["surv"],1)[:,:-1]
         #! Ideally should calculate this separately for each neutral locus,
         #! rather than taking the average
-        junk_cmv_surv = np.mean(junk_mean["surv"],1)[:,np.newaxis]**np.arange(l)
+        junk_cmv_surv = \
+            np.mean(self["junk_mean"]["surv"],1)[:,np.newaxis]**np.arange(l)
         self["cmv_surv"] = cmv_surv
         self["junk_cmv_surv"] = junk_cmv_surv
 
@@ -278,13 +284,16 @@ class Record(Infodict):
         probabilities, for downstream computation of fitness and
         reproductive value."""
         sex = self["repr_mode"] in ["sexual", "assort_only"]
+        # True values
         mean_repr = np.zeros(self["prob_mean"]["surv"].shape)
-        mean_repr[:,m:] = self["prob_mean"]["repr"]
+        mean_repr[:,self["maturity"]:] = self["prob_mean"]["repr"]
         mean_repr /= 2.0 if sex else 1.0
-        junk_repr = np.zeros(self["junk_mean"]["surv"].shape)
-        junk_repr[:,m:] = np.mean(self["junk_mean"]["repr"],1)[:,np.newaxis]
-        junk_repr /= 2.0 if sex else 1.0 #! TODO: Check this
         self["mean_repr"] = mean_repr
+        # Junk values
+        q = np.mean(self["prob_mean"]["repr"], 1)
+        junk_repr = np.tile(q[:,np.newaxis], [1,self["max_ls"]])
+        junk_repr[:,:self["maturity"]] = 0
+        junk_repr /= 2.0 if sex else 1.0 #! TODO: Check this
         self["junk_repr"] = junk_repr
 
     def compute_fitness(self):
@@ -308,7 +317,7 @@ class Record(Infodict):
         # E(future offspring at age x| survival to age x)
         repr_value = cumsum_rev(self["fitness_term"])/self["cmv_surv"]
         junk_repr_value = cumsum_rev(self["junk_fitness_term"])/\
-                self["junk_cmv_term"]
+                self["junk_cmv_surv"]
         self["repr_value"] = repr_value
         self["junk_repr_value"] = junk_repr_value
 
@@ -323,7 +332,7 @@ class Record(Infodict):
         l,m,b = self["max_ls"], self["maturity"], self["n_base"]
         # Reshape genomes to stack chromosomes
         # [snapshot, individual, bit]
-        stacked_chrs = [p.toPop().genomes.reshape(p.N*2,p.chrlen) \
+        stacked_chrs = [p.toPop().genomes.reshape(p.N*2,p.chr_len) \
                 for p in self["snapshot_pops"]]
         # Compute order of bits in genome map
         order = np.ndarray.flatten(
@@ -403,7 +412,7 @@ class Record(Infodict):
         self.compute_entropies()
         self.compute_actual_death()
         self.compute_windows()
-        # Process/remove snapshot pops as appropriate
+        # Remove snapshot pops as appropriate
         if self["output_mode"] > 0:
             self["final_pop"] = self["snapshot_pops"][-1]
         if self["output_mode"] < 2:

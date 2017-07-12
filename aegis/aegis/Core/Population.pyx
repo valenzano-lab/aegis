@@ -116,7 +116,7 @@ cdef class Population:
         if new_genomes:
             genomes = self.make_genome_array()
         if new_generations:
-            generations = np.repeat(0, self.N)
+            generations = np.repeat(0L, self.N)
         self.ages = np.copy(ages)
         self.genomes = np.copy(genomes)
         self.generations = np.copy(generations)

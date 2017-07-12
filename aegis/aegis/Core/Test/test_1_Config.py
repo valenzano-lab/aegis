@@ -6,7 +6,7 @@ import numpy as np
 ## FIXTURES ##
 ##############
 
-@pytest.fixture(params=["import", "random", "random"])
+@pytest.fixture(params=["import", "random", "random"], scope="module")
 def conf(request):
     """Create a default configuration object."""
     c_import = importlib.import_module("config_test")
