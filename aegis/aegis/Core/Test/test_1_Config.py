@@ -41,9 +41,9 @@ def conf(request):
         # Resources and starvation
         c["res_start"] = random.randint(500,2000)
         c["res_var"] = random.choice([True, False])
-        c["res_limit"] = random.randint(3000,10000)
-        c["V"] = random.randrange(10)/10.0 + random.randint(1,3)
-        c["R"] = random.randint(500,2000)
+        c["res_limit"] = random.randint(5000,10000)
+        c["V"] = random.uniform(1,3)
+        c["R"] = random.randint(500,1000)
         c["surv_pen"] = random.choice([True, False])
         c["repr_pen"] = random.choice([True, False])
         c["death_inc"] = random.randint(1, 10)
@@ -68,7 +68,6 @@ def ranstr(m,n=10):
     r,s = random.choice, string.ascii_lowercase
     l = [''.join(r(s) for _ in xrange(n)) for _ in xrange(m)]
     return l
-
 
 class TestInfodict:
 

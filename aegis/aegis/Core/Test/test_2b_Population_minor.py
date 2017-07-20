@@ -195,3 +195,35 @@ class TestPopulationIncrement:
 class TestPopulationLoci:
     """Test methods of Population object relating to obtaining and 
     manipulated lists of chromosomes and loci."""
+
+    def test_chrs(self, pop):
+        pop2 = pop.clone()
+        g,c1,c2 = pop2.genomes, pop2.chrs(0), pop2.chrs(1)
+        # Check shapes
+        assert c1.shape == (2, pop2.N, pop2.chr_len)
+        assert c2.shape == (2, pop2.N, len(pop2.genmap), pop2.n_base)
+        # Simple individual/bit version
+        assert np.array_equal(g[:,:pop2.chr_len], c1[0])
+        assert np.array_equal(g[:,pop2.chr_len:], c1[1])
+        # Reshaped individual/locus/bit version
+        for locus in xrange(len(pop2.genmap)):
+            bits = np.arange(pop2.n_base) + locus*pop2.n_base
+            assert np.array_equal(g[:,bits],c2[0,:,locus,:])
+            assert np.array_equal(g[:,bits + pop2.chr_len],c2[1,:,locus,:])
+
+    def test_sorted_loci(self, pop):
+        pop2 = pop.clone()
+        c,l = pop2.chrs(1), pop2.sorted_loci()
+        c2 = np.sum(np.sum(c, 3), 0) # Sum over loci and chromosomes
+        assert l.shape == c2.shape
+        c3 = c2[:,pop2.genmap_argsort] # Sort loci by genmap position
+        assert np.array_equal(l, c3)
+
+    def test_loci_subsets(self, pop):
+        """Test functionality of surv_loci, repr_loci and neut_loci
+        subsetting methods, given correct sorted_loci functionality."""
+        g,l = np.sort(pop.genmap), pop.sorted_loci()
+        assert np.array_equal(l[:,g<=pop.repr_offset], pop.surv_loci())
+        assert np.array_equal(l[:,g>=pop.neut_offset], pop.neut_loci())
+        assert np.array_equal(l[:,np.logical_and(g>= pop.repr_offset,
+            g<pop.neut_offset)], pop.repr_loci())

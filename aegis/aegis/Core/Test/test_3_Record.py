@@ -111,14 +111,14 @@ class TestRecord:
         size1 = random.randint(10,50)
         maxval = rec["n_states"]-1
         # Simple 1D arrays
-        assert np.array_equal(rec.p_calc(np.zeros(size0), bound),
+        assert np.allclose(rec.p_calc(np.zeros(size0), bound),
                 np.tile(bound[0], size0))
-        assert np.array_equal(rec.p_calc(np.tile(maxval, size0), bound),
+        assert np.allclose(rec.p_calc(np.tile(maxval, size0), bound),
                 np.tile(bound[1], size0))
         # Simple 2D arrays
-        assert np.array_equal(rec.p_calc(np.zeros([size0,size1]), bound),
+        assert np.allclose(rec.p_calc(np.zeros([size0,size1]), bound),
                 np.tile(bound[0], [size0,size1]))
-        assert np.array_equal(rec.p_calc(np.tile(maxval,[size0,size1]), bound),
+        assert np.allclose(rec.p_calc(np.tile(maxval,[size0,size1]), bound),
                 np.tile(bound[1], [size0,size1]))
         # Random 2D arrays
         inval = random.choice(xrange(rec["n_states"]))

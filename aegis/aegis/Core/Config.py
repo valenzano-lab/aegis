@@ -10,6 +10,7 @@
 
 ## PACKAGE IMPORT ##
 import numpy as np
+import copy
 
 ## CLASS ##
 
@@ -19,7 +20,7 @@ class Infodict:
     and in which selecting for lists/arrays of keys returns 
     corresponding lists/arrays of values."""
 
-    def __init__(self): 
+    def __init__(self):
         self.__valdict__ = {}
         self.__infdict__ = {}
 
@@ -105,10 +106,22 @@ class Infodict:
     def values(self): return self.__valdict__.values()
     def infos(self): return self.__infdict__.values()
     def has_key(self, key): return self.__infdict__.has_key(key)
-    def __eq__(self, infodict): 
-        return self.__valdict__ == infodict.__valdict__ and \
-                self.__infdict__ == infodict.__infdict__
+    def __eq__(self, other):
+        if isinstance(other, self.__class__):
+            return self.__valdict__ == other.__valdict__ and \
+                    self.__infdict__ == other.__infdict__
+        return NotImplemented
+    def __ne__(self, other):
+        if isinstance(other, self.__class__): return not self.__eq__(other)
+        return NotImplemented
+    def __hash__(self):
+        return hash(tuple(sorted(self.__valdict__.items() + \
+                self.__infdict__.items())))
+    def copy(self): return copy.deepcopy(self)
+
     #! Finish this
+
+    # Copy method
 
     def subdict(self, keys, asdict=True):
         """Return a dictionary or infodict containing a specified 
@@ -262,8 +275,8 @@ class Config(Infodict):
         self["death_bound"] = np.array(self["death_bound"])
         self["repr_bound"] = np.array(self["repr_bound"])
         if self["repr_mode"] in ["sexual", "assort_only"]: 
-            # Double fertility in sexual case to control for relative
-            # contribution to offspring
+        # Double fertility in sexual case to control for relative
+        # contribution to offspring
             self["repr_bound"] *= 2 
         self.put("surv_bound", 1-self["death_bound"][::-1], "Min and max \
                 survival rates. [float array].")

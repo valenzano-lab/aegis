@@ -67,8 +67,7 @@ cdef class Population:
         self.maturity = params["maturity"] # Age of maturity (for reproduction)
         self.max_ls = params["max_ls"] # Maximum lifespan
         self.n_base = params["n_base"] # Number of bits per locus
-        self.g_dist = copy.deepcopy(
-                params["g_dist"]) # Proportions of 1's in initial loci
+        self.g_dist = params["g_dist"].copy() # Proportions of 1's in initial loci
         self.repr_offset = params["repr_offset"] # Genmap offset for repr loci
         self.neut_offset = params["neut_offset"] # Genmap offset for neut loci
 
@@ -206,11 +205,30 @@ cdef class Population:
 
     def increment_ages(self):
         """Age all individuals in population by one stage."""
-        self.ages += 1
+        self.ages += 1L
 
     def increment_generations(self):
         """Increase generation of all individuals in population by one."""
-        self.generations += 1
+        self.generations += 1L
+
+    ## COMPARISON ##
+
+    def eq_ages(self, other):
+        if isinstance(other, self.__class__): 
+            return np.array_equal(self.ages, other.ages)
+        return NotImplemented
+    def eq_genomes(self, other):
+        if isinstance(other, self.__class__): 
+            return np.array_equal(self.genomes, other.genomes)
+        return NotImplemented
+    def eq_generations(self, other):
+        if isinstance(other, self.__class__): 
+            return np.array_equal(self.generations, other.generations)
+        return NotImplemented
+    def eq_params(self, other):
+        if isinstance(other, self.__class__): 
+            return self.params() == other.params()
+        return NotImplemented
 
     ## CHROMOSOMES AND LOCI ##
 
@@ -298,20 +316,25 @@ cdef class Population:
             np.ndarray[NPINT_t, ndim=2] genotypes, # Relevant per-age GT sums
             np.ndarray[NPFLOAT_t, ndim=1] val_range): # GT:probability map
         # Get age array for suitably-aged individuals
-        inc = self.ages>=age_bounds[0] and self.ages<=age_bounds[1]
-        ages, genotypes = self.ages[inc], genotypes[inc]
+        ages = np.clip(self.ages - age_bounds[0], 0, np.diff(age_bounds)-1)
+        genotypes = genotypes
         # Get relevant genotype sum for each individual of appropriate age
-        gt = np.choose(ages, genotypes.T) # Relevant GT sum for each indiv
+        gt = genotypes[np.arange(len(ages)), ages]
         # Convert to inclusion probabilities and compute inclusion
-        inc_probs = val_range[gt] # Inclusion probability for each indiv
-        return chance(inc_probs, self.N) # Binary array of inclusion statuses
+        inc_probs = val_range[gt]
+        subpop = chance(inc_probs, self.N) # Binary array of inclusion statuses
+        # Subset by age boundaries and return
+        inc = np.logical_and(self.ages>=age_bounds[0],
+                self.ages<age_bounds[1])
+        return subpop * inc
 
     cpdef death(self, 
             np.ndarray[NPFLOAT_t, ndim=1] s_range, # Survival probabilities
             float penf): # Starvation penalty factor
         """Select survivors and kill rest of population."""
         cdef:
-            np.ndarray[NPFLOAT_t, ndim=1] d_range, age_bounds
+            np.ndarray[NPFLOAT_t, ndim=1] d_range
+            np.ndarray[NPINT_t, ndim=1] age_bounds
             np.ndarray[NPBOOL_t, ndim=1,cast=True] survivors
         if self.N == 0: return # If no individuals in population, do nothing
         # Get inclusion probabilities
@@ -331,21 +354,23 @@ cdef class Population:
         """Generate new mutated children from selected parents."""
         cdef:
             np.ndarray[NPBOOL_t, ndim=1,cast=True] which_parents
-            np.ndarray[NPFLOAT_t, ndim=1] age_bounds
+            np.ndarray[NPINT_t, ndim=1] age_bounds
             object parents, children
-        if self.N == 0: return # If no individuals in population, do nothing
+        if self.N == 0:# If no individuals in population, do nothing
+            return self.subset_clone(np.zeros(self.N).astype(bool))
         r_range = np.clip(r_range / penf, 0, 1) # Limit to real probabilities
         age_bounds = np.array([self.maturity,self.max_ls])
         parents = self.get_subpop(age_bounds, self.repr_loci(), r_range)
         # Get children from parents
-        if self.assort and np.sum(parents) == 1: return # Need 2 parents here
+        if self.assort and np.sum(parents) == 1: # Need 2 parents here
+            return self.subset_clone(np.zeros(self.N).astype(bool))
         children = self.subset_clone(parents)
         if self.recombine: children.recombination(r_rate)
         if self.assort: children.assortment()
         # Mutate children and add to population
         children.mutate(m_rate, m_ratio) 
         children.increment_generations()
-        children.ages[:] = 0 # Make newborn
+        children.ages[:] = 0L # Make newborn
         return children
 
     cpdef growth(self,
@@ -397,17 +422,23 @@ cdef class Population:
     def assortment(self):
         """Pair individuals into breeding pairs and generate children
         through random assortment."""
+        if self.N == 1:
+            raise ValueError("Cannot perform assortment with a single parent.")
         if self.N % 2 != 0: # If odd number of parents, discard one at random
             index = random.sample(range(self.N), 1)
             self.subtract_members(index)
         self.shuffle() # Randomly assign mating partners
         # Randomly combine parental chromatids
         which_pair = np.arange(self.N/2)*2 # First of each pair (0,2,4,...)
-        which_partner = chance(0.5,self.N/2) # Member within pair (0 or 1)
+        which_partner = chance(0.5,self.N/2)*1 # Member within pair (0 or 1)
+        parent_0 = which_pair + which_partner # Parent 0
+        parent_1 = which_pair + (1-which_partner) # Parent 1
+        which_chr_0 = chance(0.5,self.N/2)*1 # Chromosome from parent 0
+        which_chr_1 = chance(0.5,self.N/2)*1 # Chromosome from parent 1
         # Update population chromosomes
         chrs = np.copy(self.chrs(False))
-        self.genomes[::2,:self.chr_len] = chrs[0,which_pair+which_partner]
-        self.genomes[::2,self.chr_len:] = chrs[1,which_pair+(1-which_partner)]
+        self.genomes[::2,:self.chr_len] = chrs[which_chr_0, parent_0]
+        self.genomes[::2,self.chr_len:] = chrs[which_chr_1, parent_1]
         self.subset_members(np.tile([True,False], self.N/2))
 
 class Outpop:

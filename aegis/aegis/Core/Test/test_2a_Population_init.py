@@ -179,6 +179,7 @@ class TestPopulationInit:
         # Set up random test inputs
         #if conf["setup"] == "random": return
         c = copy.deepcopy(conf)
+        c["start_pop"] *= 10
         x = random.random()
         ages_r = np.random.randint(0, 10, c["params"]["start_pop"])
         genomes_r = chance(1-x**2, 
@@ -202,8 +203,8 @@ class TestPopulationInit:
             assert np.array_equal(ages_r, pops[n].ages)
         for n in [4,5,6,7]:
             assert not np.array_equal(ages_r, pops[n].ages)
-            assert np.isclose(np.mean(pops[n].ages),
-                    np.mean(np.arange(pops[n].max_ls)), atol=3)
+            m = np.mean(pops[n].ages)/np.mean(np.arange(pops[n].max_ls))
+            assert np.isclose(m, 1, atol=0.1)
         # Check genomes
         for n in [0,1,4,5]:
             assert np.array_equal(genomes_r, pops[n].genomes)
