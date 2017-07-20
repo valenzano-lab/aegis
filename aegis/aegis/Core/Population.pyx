@@ -211,25 +211,6 @@ cdef class Population:
         """Increase generation of all individuals in population by one."""
         self.generations += 1L
 
-    ## COMPARISON ##
-
-    def eq_ages(self, other):
-        if isinstance(other, self.__class__): 
-            return np.array_equal(self.ages, other.ages)
-        return NotImplemented
-    def eq_genomes(self, other):
-        if isinstance(other, self.__class__): 
-            return np.array_equal(self.genomes, other.genomes)
-        return NotImplemented
-    def eq_generations(self, other):
-        if isinstance(other, self.__class__): 
-            return np.array_equal(self.generations, other.generations)
-        return NotImplemented
-    def eq_params(self, other):
-        if isinstance(other, self.__class__): 
-            return self.params() == other.params()
-        return NotImplemented
-
     ## CHROMOSOMES AND LOCI ##
 
     cpdef chrs(self, int reshape):
@@ -271,7 +252,7 @@ cdef class Population:
         the population."""
         return self.sorted_loci()[:,self.max_ls:(2*self.max_ls-self.maturity)]
 
-    def neut_loci(self):
+    cpdef neut_loci(self):
         """Return the sorted neutral locus genotypes of each individual in
         the population."""
         return self.sorted_loci()[:,(2*self.max_ls-self.maturity):]

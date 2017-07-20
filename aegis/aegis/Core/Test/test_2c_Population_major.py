@@ -386,7 +386,3 @@ class TestPopulationGrowth:
         p.growth(r_range, 1, 0, 1, 0)
         assert p.N == pop.N + c.N
         # TODO: Do this with non-degenerate reproduction probability?:
-        
-
-        p0, p1 = pop.clone(), pop.clone()
-
