@@ -194,11 +194,13 @@ class Record(Infodict):
                 "r":np.array([L[:,l:(2*l-m)] for L in loci_all]),
                 "n":np.array([L[:,(2*l-m):] for L in loci_all]), "a":loci_all}
         def density(x):
-            bins = np.bincount(x,minlength=len(ns))
+            bins = np.bincount(x,minlength=ns)
             return bins/float(sum(bins))
         density_per_locus = {}
         for k in ["s","r","n","a"]: # Survival, reproductive, neutral, all
             # dim0 = snapshot, dim1 = genotype, dim2 = age
+            for n in xrange(len(loci)):
+                d = np.apply_along_axis(density,0,loci[k][n])
             out = np.array([np.apply_along_axis(density,0,x) for x in loci[k]])
             # dim0 = genotype, dim1 = snapshot, dim2 = locus
             density_per_locus[k] = out.transpose(1,0,2)

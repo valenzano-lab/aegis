@@ -136,27 +136,32 @@ class TestRun:
         run1.update_starvation_factors()
         assert run1.surv_penf == 1.0
         assert run1.repr_penf == 1.0
-#
-#    def test_execute_stage_functionality(self, run):
-#        """Test basic functional operation of test_execute_stage, ignoring
-#        status reporting."""
-#        # Normal
-#        run1 = run.copy()
-#        run1.population = run1.population.toPop()
-#        run2.population = run2.population.toPop()
-#        run1.execute_stage()
-#        assert run1.n_stage == run.n_stage + 1
-#        assert run1.n_snap == run.n_snap + 1
-#        assert (run1.dieoff == (run1.population.N == 0))
-#        assert run1.complete == run1.dieoff
-#        run1.execute_stage()
-#        assert run1.n_stage == run.n_stage + 2
-#        assert run1.n_snap == run.n_snap + 1
-#        assert (run1.dieoff == (run1.population.N == 0))
-#        assert run1.complete == run1.dieoff
-#        #! TODO: Add tests of age incrementation, record updating, growth, death
-#        # Last stage
-#        for n in xrange(run2.conf["number_of_stages"]): run2.execute_stage()
+
+    def test_execute_stage_functionality(self, run):
+        """Test basic functional operation of test_execute_stage, ignoring
+        status reporting."""
+        # Normal
+        run1 = run.copy()
+        run1.population = run1.population.toPop()
+        run1.execute_stage()
+        assert run1.n_stage == run.n_stage + 1
+        assert run1.n_snap == run.n_snap + 1
+        assert (run1.dieoff == (run1.population.N == 0))
+        assert run1.complete == run1.dieoff
+        run1.execute_stage()
+        assert run1.n_stage == run.n_stage + 2
+        assert run1.n_snap == run.n_snap + 1
+        assert (run1.dieoff == (run1.population.N == 0))
+        assert run1.complete == run1.dieoff
+        #! TODO: Add tests of age incrementation, record updating, growth, death
+        # Last stage
+        run2 = run.copy()
+        run2.population = run2.population.toPop()
+        print run2.conf["number_of_stages"], run2.conf["number_of_snapshots"]
+        print run2.population.n_base, run2.population.chr_len, run2.population.max_ls
+        for n in xrange(run2.conf["number_of_stages"]): 
+            run2.execute_stage()
+            print run2.population.N
 #        assert run2.n_stage == run.conf["number_of_stages"]
 #        assert run2.n_snap == run.conf["number_of_snapshots"]
 #        assert (run2.dieoff == (run2.population.N == 0))

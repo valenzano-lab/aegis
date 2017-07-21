@@ -341,14 +341,19 @@ class TestPopulationGrowth:
 
     def test_make_children_solo(self, pop):
         """Test that make_children correctly does nothing when given an
-        empty population."""
+        empty population, under assorting reproductive modes, and returns
+        exactly one child otherwise."""
         p = pop.clone()
         p.shuffle()
         p.subtract_members(xrange(p.N)) # Leave no parents
         r_range = np.linspace(0.01, 0.99, 2*pop.n_base+1)
-        c = p.make_children(r_range, 1, 0, 1, 0)
-        assert p.N == 1
-        assert c.N == 0
+        modes = ["sexual", "asexual", "recombine_only", "assort_only"]
+        exp = [0, 1, 1, 0]
+        for n in xrange(len(modes)):
+            p.repr_mode = modes[n]
+            p.set_attributes(p.params())
+            c = p.make_children(r_range, 1, 0, 1, 0)
+            assert c.N == exp[n]
 
     def test_make_children_solo(self, pop):
         """Test that make_children correctly does nothing when given a
