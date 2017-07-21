@@ -16,7 +16,7 @@ def conf(request):
         # Run parameters
         c["number_of_runs"] = random.randint(1,5)
         c["number_of_stages"] = random.randint(50,400)
-        c["number_of_snapshots"] = random.randint(1,20)
+        c["number_of_snapshots"] = random.randint(5,20)
         c["start_pop"] = random.randint(200,1000)
         # Reproductive mode
         c["repr_mode"] = random.choice(
