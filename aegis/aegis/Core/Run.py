@@ -131,7 +131,6 @@ class Run:
         self.n_stage += 1
         self.complete = self.dieoff or self.n_stage==self.conf["number_of_stages"]
         if self.complete and not self.dieoff:
-            print "---"
             self.record.finalise()
         #! TODO: What about if dieoff?
 

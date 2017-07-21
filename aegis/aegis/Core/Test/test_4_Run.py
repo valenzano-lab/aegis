@@ -157,26 +157,32 @@ class TestRun:
         # Last stage
         run2 = run.copy()
         run2.population = run2.population.toPop()
-        print run2.conf["number_of_stages"], run2.conf["number_of_snapshots"]
-        print run2.population.n_base, run2.population.chr_len, run2.population.max_ls
-        for n in xrange(run2.conf["number_of_stages"]): 
+        print run2.conf["snapshot_stages"]
+        print run2.n_stage, run2.n_snap
+        n = 0
+        while n < run2.conf["number_of_stages"] and not run2.dieoff:
             run2.execute_stage()
-            print run2.population.N
-#        assert run2.n_stage == run.conf["number_of_stages"]
-#        assert run2.n_snap == run.conf["number_of_snapshots"]
-#        assert (run2.dieoff == (run2.population.N == 0))
-#        assert run2.complete
-#        # Dead
-#        run3 = run.copy()
-#        run3.population = run3.population.toPop()
-#        run3.population.N = 0
-#        run3.population.ages = np.array([])
-#        run3.population.genomes = np.array([[],[]])
-#        run3.execute_stage()
-#        assert run3.n_stage == run.n_stage + 1
-#        assert run3.n_snap == run.n_snap
-#        assert run3.dieoff and run3.complete
-#
+            n += 1
+        assert (run2.dieoff == (run2.population.N == 0))
+        if not run2.dieoff:
+            assert run2.n_stage == run.conf["number_of_stages"]
+            assert run2.n_snap == run.conf["number_of_snapshots"]
+        else:
+            print run2.n_stage, run2.conf["snapshot_stages"]
+            assert run2.n_snap == 1+np.max(
+                    np.nonzero(run2.conf["snapshot_stages"]<=run2.n_stage)[0])
+        assert run2.complete
+        # Dead
+        run3 = run.copy()
+        run3.population = run3.population.toPop()
+        run3.population.N = 0
+        run3.population.ages = np.array([])
+        run3.population.genomes = np.array([[],[]])
+        run3.execute_stage()
+        assert run3.n_stage == run.n_stage + 1
+        assert run3.n_snap == run.n_snap
+        assert run3.dieoff and run3.complete
+
     #! TODO: Add test for status reporting?
     #! TODO: Add test for Run.execute
 
