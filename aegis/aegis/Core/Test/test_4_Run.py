@@ -1,5 +1,5 @@
 from aegis.Core import Infodict, Config, Population, Outpop, Record, Run
-from aegis.Core import chance, init_ages, init_genomes, init_generations
+from aegis.Core import chance, init_ages, init_genomes, init_generations, deepeq
 import pytest,importlib,types,random,copy,string
 import numpy as np
 
@@ -160,9 +160,8 @@ class TestRun:
         print run2.conf["snapshot_stages"]
         print run2.n_stage, run2.n_snap
         n = 0
-        while n < run2.conf["number_of_stages"] and not run2.dieoff:
+        while not run2.complete:
             run2.execute_stage()
-            n += 1
         assert (run2.dieoff == (run2.population.N == 0))
         if not run2.dieoff:
             assert run2.n_stage == run.conf["number_of_stages"]
@@ -182,9 +181,9 @@ class TestRun:
         assert run3.n_stage == run.n_stage + 1
         assert run3.n_snap == run.n_snap
         assert run3.dieoff and run3.complete
+        #! TODO: Add test for status reporting?
 
-    #! TODO: Add test for status reporting?
-    #! TODO: Add test for Run.execute
+    #! TODO: Add test for Run.execute (that will actually run...)
 
     def test_logprint_run(self, run, ran_str):
         """Test logging (and especially newline) functionality."""

@@ -8,6 +8,7 @@
 
 ## PACKAGE IMPORT ##
 from .functions import chance, init_ages, init_genomes, init_generations
+from .Config import deepeq
 import numpy as np
 cimport numpy as np
 import random, copy
@@ -462,3 +463,19 @@ class Outpop:
     def clone(self):
         """Generate a new, identical Outpop object."""
         return Outpop(self)
+
+    # Comparison methods
+
+    def __eq__(self, other):
+        if not isinstance(other, self.__class__): return NotImplemented
+        return np.array_equal(self.genomes, other.genomes) and \
+                np.array_equal(self.ages, other.ages) and \
+                np.array_equal(self.generations, other.generations)# and \
+                #deepeq(self.params(), other.params())
+        return NotImplemented
+    def __ne__(self, other):
+        if isinstance(other, self.__class__): return not self.__eq__(other)
+        return NotImplemented
+    def __hash__(self):
+        return hash(tuple(self.ages, self.genomes, self.generations, 
+            self.params()))

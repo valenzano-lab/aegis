@@ -9,7 +9,7 @@
 ## PACKAGE IMPORT ##
 import numpy as np
 import scipy.stats as st
-import copy
+import copy, datetime, time
 from .functions import chance, init_ages, init_genomes, init_generations
 from .Config import Infodict
 from .Population import Population, Outpop
@@ -147,6 +147,7 @@ class Run:
         # Execute stages until completion
         while not self.complete:
             self.execute_stage()
+            print self.population.N
         self.population = Outpop(self.population) # Convert back to Outpop
         # Compute end time and announce run end
         self.endtime = datetime.datetime.now()

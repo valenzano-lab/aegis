@@ -12,6 +12,34 @@
 import numpy as np
 import copy
 
+## AUXILIARY FUNCTIONS ##
+
+def deepeq(dict1, dict2, verbose=False):
+    """Compare two dictionaries element-wise according to the types of
+    their constituent values."""
+    if sorted(dict1.keys()) != sorted(dict2.keys()): # First check keys
+        if verbose: 
+            print "Non-shared keys:"
+            print set(dict1.keys()).difference(set(dict2.keys()))
+            print set(dict2.keys()).difference(set(dict1.keys()))
+        return False # First check keys
+    for k in dict1.keys():
+        if verbose: print k
+        v1, v2 = dict1[k], dict2[k]
+        if type(v1) is not type(v2): 
+            if verbose: print "Type mismatch!"
+            return False
+        elif isinstance(v1, dict):
+            if not deepeq(v1, v2): 
+                if verbose: print v1, v2
+                return False
+        elif isinstance(v1, np.ndarray):
+            if not np.allclose(v1, v2): 
+                if verbose: print v1, v2
+                return False
+        elif v1 != v2: return False
+    return True
+
 ## CLASS ##
 
 class Infodict:
@@ -106,10 +134,18 @@ class Infodict:
     def values(self): return self.__valdict__.values()
     def infos(self): return self.__infdict__.values()
     def has_key(self, key): return self.__infdict__.has_key(key)
+
+    # Comparison and equality
+    def eq_infs(self, other):
+        if not isinstance(other, self.__class__): return NotImplemented
+        return self.__infdict__ == other.__infdict__
+    def eq_vals(self, other):
+        if not isinstance(other, self.__class__): return NotImplemented
+        return deepeq(self.__valdict__, other.__valdict__)
+
     def __eq__(self, other):
         if isinstance(other, self.__class__):
-            return self.__valdict__ == other.__valdict__ and \
-                    self.__infdict__ == other.__infdict__
+            return self.eq_infs(other) and self.eq_vals(other)
         return NotImplemented
     def __ne__(self, other):
         if isinstance(other, self.__class__): return not self.__eq__(other)

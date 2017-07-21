@@ -192,7 +192,6 @@ class TestRecord:
     def test_compute_locus_density(self, rec1, rec2):
         """Test that compute_locus_density performs correctly for a
         genome filled with 1's.""" #! TODO: How about in a normal case?
-        print rec1["number_of_snapshots"], rec1["max_ls"], rec1["n_states"]
         rec1.compute_locus_density()
         m,l,b = rec1["number_of_snapshots"], rec1["max_ls"], rec1["n_states"]
         g,nn,mt = len(rec1["genmap"]), rec1["n_neutral"], rec1["maturity"]
