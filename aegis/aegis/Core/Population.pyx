@@ -422,6 +422,11 @@ cdef class Population:
         self.genomes[::2,:self.chr_len] = chrs[which_chr_0, parent_0]
         self.genomes[::2,self.chr_len:] = chrs[which_chr_1, parent_1]
         self.subset_members(np.tile([True,False], self.N/2))
+ 
+    # Startpop method
+
+    def __startpop__(self, pop_number):
+        return Outpop(self).__startpop__(pop_number)
 
 class Outpop:
     """Non-cythonised, pickle-able I/O form of Population class."""
@@ -479,3 +484,10 @@ class Outpop:
     def __hash__(self):
         return hash(tuple(self.ages, self.genomes, self.generations, 
             self.params()))
+
+    # Startpop method
+
+    def __startpop__(self, pop_number):
+        msg = "Setting seed directly from imported population."
+        pop = self
+        return (pop, msg)

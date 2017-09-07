@@ -74,7 +74,6 @@ class TestRecord:
         # Check basic run info
         assert np.array_equal(R["dieoff"], np.array(False))
         assert np.array_equal(R["prev_failed"], np.array(0))
-        assert np.array_equal(R["percent_dieoff"], np.array(0))
         # Per-stage data entry
         a0 = np.zeros(R["number_of_stages"])
         a1 = np.zeros([R["number_of_stages"],R["max_ls"]])

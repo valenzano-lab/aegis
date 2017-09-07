@@ -51,9 +51,10 @@ except OSError:
     exit("Error: Specified simulation directory does not exist.")
 
 with warnings.catch_warnings(DeprecationWarning):
-    sim = Simulation(args.c, args.s, args.S, args.r, args.verbose)
-    sim.execute(int(args.t), int(args.m))
-    sim.finalise(args.o, args.l)
+    sim = Simulation(args.c, args.s, args.S, args.r, args.o, args.m, 
+            args.verbose)
+    sim.execute(int(args.t))
+    sim.finalise(args.l)
 
 if args.profile:
     pr.create_stats()

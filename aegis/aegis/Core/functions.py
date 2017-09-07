@@ -56,8 +56,8 @@ def timediff(starttime, endtime):
         if report: outstr += "{0} {1}{2}".format(g, unit, after[n])
     return outstr
 
-def get_runtime(starttime, endtime):
+def get_runtime(starttime, endtime, prefix = "Total runtime"):
     """Compute the runtime of a process from the start and end times
     and print the output as a human-readable string."""
     runtime = timediff(starttime, endtime)
-    return "Total runtime: {}.".format(runtime)
+    return "{}: {}.".format(prefix, runtime)

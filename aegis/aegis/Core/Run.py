@@ -11,6 +11,7 @@ import numpy as np
 import scipy.stats as st
 import copy, datetime, time
 from .functions import chance, init_ages, init_genomes, init_generations
+from .functions import get_runtime
 from .Config import Infodict
 from .Population import Population, Outpop
 from .Record import Record
@@ -127,37 +128,54 @@ class Run:
                         .format(n1-n0,n1-n2))
         # Update run status
         self.dieoff = self.record["dieoff"] = (self.population.N == 0)
-        self.record["percent_dieoff"] = self.dieoff*100.0
         self.n_stage += 1
         self.complete = self.dieoff or self.n_stage==self.conf["number_of_stages"]
         if self.complete and not self.dieoff:
             self.record.finalise()
         #! TODO: What about if dieoff?
 
-    def execute(self):
-        """Execute a run object from start to completion."""
+    def execute_attempt(self):
+        """Execute a single run attempt from start to completion or failure."""
         self.population = self.population.toPop() # Convert from Outpop
         # Compute starting time and announce run start
-        if not hasattr(self, "starttime"): 
-            self.starttime = datetime.datetime.now()
-        runstart = time.strftime('%X %x', time.localtime())
+        if not hasattr(self, "starttime"): self.starttime = timenow(False)
         f,r = self.record["prev_failed"]+1, self.n_run
         a = "run {0}, attempt {1}".format(r,f) if f>1 else "run {0}".format(r)
-        self.logprint("Beginning {0} at {1}.".format(a, runstart))
+        self.logprint("Beginning {0} at {1}.".format(a, timenow(True)))
         # Execute stages until completion
         while not self.complete:
             self.execute_stage()
             print self.population.N
         self.population = Outpop(self.population) # Convert back to Outpop
         # Compute end time and announce run end
-        self.endtime = datetime.datetime.now()
-        runend = time.strftime('%X %x', time.localtime())
+        self.endtime = timenow(False)
         b = "Extinction" if self.dieoff else "Completion"
         self.logprint("{0} at {1}. Final population: {2}"\
-                .format(b, runend, self.population.N))
+                .format(b, timenow(True), self.population.N))
         if f>0 and not self.dieoff: 
             self.logprint("Total attempts required: {0}.".format(f))
         # return self.record ?
+
+    def execute(self):
+        """Execute the run, repeating until either an attempt is
+        successful or the maximum number of failures is reached."""
+        if self.conf["max_fail"] > 1: save_state = self.copy()
+        self.execute_attempt()
+        if self.dieoff:
+            nfail = save_state.record["prev_failed"] + 1
+            self.logprint("Run failed. Total failures = {}.".format(nfail))
+            if nfail >= self.conf["max_fail"]: # Accept failure and terminate
+                self.logprint("Failure limit reached. Accepting failed run.")
+                self.logprint(get_runtime(self.starttime, self.endtime))
+            else: # Reset to saved state (except for log and prev_failed)
+                save_state.record["prev_failed"] = nfail
+                save_state.log = self.log + "\n"
+                attrs = vars(save_state)
+                for key in attrs: # Revert everything else
+                    setattr(self, key, attrs[key]) 
+                #! TODO: Test that this does not change start time
+                return self.execute()
+        self.logprint(get_runtime(self.starttime, self.endtime))
 
     def logprint(self, message):
         """Print message to stdout and save in log object."""
@@ -176,3 +194,13 @@ class Run:
     def copy(self):
         return copy.deepcopy(self)
 
+    # __startpop__ method
+
+    def __startpop__(self, pop_number):
+            if self.record["final_pop"] != 0 or pop_number >= 0:
+                msg = "Setting seed from embedded Record of Run object."
+                return self.record.__startpop__(pop_number)
+            else:
+                msg = "Setting seed from current Run population."
+                pop = self.population
+            return (pop, msg)

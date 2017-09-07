@@ -6,10 +6,6 @@ cimport numpy as np
 import scipy.stats as st
 import importlib, operator, time, os, random, datetime, copy, multiprocessing
 import sys
-try:
-       import cPickle as pickle
-except:
-       import pickle
 
 # Cython data types for numpy
 NPINT = np.int # Integer arrays
@@ -23,31 +19,6 @@ ctypedef np.uint8_t NPBOOL_t
 #############
 # FUNCTIONS #
 #############
-
-def execute_run(run, maxfail):
-    """Execute a simulation run, handling and recording failed runs
-    as appropriate."""
-    if maxfail>0: blank_run = copy.deepcopy(run)
-    run.execute()
-    if maxfail>0 and run.dieoff:
-        nfail = blank_run.record.get("prev_failed")
-        if nfail >= maxfail - 1:
-            run.logprint("Total failures = {0}.".format(nfail+1))
-            run.logprint("Failure limit reached. Accepting failed run.")
-            run.logprint(get_runtime(run.starttime, run.endtime))
-            return run
-        nfail += 1
-        run.logprint("Run failed. Total failures = {0}. Repeating..."\
-                .format(nfail))
-        blank_run.record.set("prev_failed", nfail)
-        def divplus1(x): return (x*100)/(x+1)
-        blank_run.record.set("percent_dieoff",
-                divplus1(blank_run.record.get("prev_failed")))
-        blank_run.log = run.log + "\n"
-        blank_run.starttime = run.starttime
-        return execute_run(blank_run, maxfail)
-    run.logprint(get_runtime(run.starttime, run.endtime))
-    return run
 
 class Simulation:
     """An object representing a simulation, as defined by a config file."""
@@ -73,34 +44,6 @@ class Simulation:
             self.log += "\n".join([x.log for x in self.runs])
         finally:
             lock.release()
-
-    def finalise(self, file_pref, log_pref):
-        """Finish recording and save output files."""
-        self.average_records()
-        self.endtime = datetime.datetime.now()
-        simend = time.strftime('%X %x', time.localtime())+"."
-        self.logprint("\nSimulation completed at "+simend)
-        self.logprint(get_runtime(self.starttime, self.endtime))
-        self.logprint("Saving output and exiting.\n")
-        sim_file = open(file_pref + ".sim", "wb")
-        log_file = open(log_pref + ".txt", "w")
-        rec_file = open(file_pref + ".rec", "wb")
-        try:
-            log_file.write(self.log)
-            pickle.dump(self, sim_file)
-            if hasattr(self, "avg_record"):
-                pickle.dump(self.avg_record, rec_file)
-            else:
-                pickle.dump(self.runs[0].record, rec_file)
-        finally:
-            sim_file.close()
-            log_file.close()
-            rec_file.close()
-
-    def logprint(self, message):
-        """Print message to stdout and save in log object."""
-        print message
-        self.log += message+"\n"
 
     def average_records(self):
         if len(self.runs) == 1: 

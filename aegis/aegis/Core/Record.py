@@ -36,9 +36,6 @@ class Record(Infodict):
                 "Boolean specifying whether run ended in extinction.")
         self.put("prev_failed", np.array(0),
                 "Number of run repeats before this one that ended in dieoff.")
-        self.put("percent_dieoff", np.array(0),
-                "Number of all run repeats (including this one) that ended\
-                        in dieoff.")
         # Arrays for per-stage data entry
         a0 = np.zeros(self["number_of_stages"])
         a1 = np.zeros([self["number_of_stages"],self["max_ls"]])
@@ -420,3 +417,22 @@ class Record(Infodict):
         if self["output_mode"] < 2:
             self["snapshot_pops"] = 0
 
+    # __startpop__ method
+    
+    def __startpop__(self, pop_number):
+            if pop_number < 0 and isinstance(self["final_pop"], Population):
+                msg = "Setting seed from final population in Record."
+                pop = self["final_pop"]
+            elif pop_number < 0:
+                msg = "Failed to set seed from final population in Record; {}"
+                msg = msg.format("(no such population).")
+                pop = ValueError
+            elif pop_number >= self["number_of_snapshots"]:
+                msg = "Seed number ({0}) greater than highest snapshot ({1})."
+                msg = msg.format(pop_number, self["number_of_snapshots"]-1)
+                pop = ValueError
+            else:
+                msg = "Setting seed from specified snapshot population ({})."
+                msg = msg.format(pop_number)
+                pop = self["snapshot_pops"][pop_number]
+            return (pop, msg)

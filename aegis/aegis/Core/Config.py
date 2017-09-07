@@ -195,6 +195,7 @@ class Config(Infodict):
         mirror("number_of_snapshots", "The number of stages in the run\
                 at which to save detailed data (evenly distributed). [int]")
         mirror("start_pop", "Population size at stage 0. [int]")
+        mirror("max_fail", "Maximum number of failed attempts per run. [int]")
         # Death and reproduction
         mirror("death_bound", "Min and max death rates. [float array]")
         mirror("repr_bound", "Min and max reproduction rates.\
@@ -250,6 +251,7 @@ class Config(Infodict):
                 along-genome variation in bit value and along-run \
                 variation in population size and resource levels. [dict]")
         # Output mode
+        mirror("output_prefix", "Prefix for output file names. [str]")
         mirror("output_mode", "Level of information to retain in simulation\
                 output: 0 = records only, 1 = records + final population,\
                 2 = records + all snapshot populations. [int]")
