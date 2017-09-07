@@ -28,3 +28,4 @@ class TestFunctions:
         assert np.array_equal(init_genomes(), np.array([[-1],[-1]]))
         assert np.array_equal(init_generations(), np.array([-1]))
 
+#! TODO: Test time functions

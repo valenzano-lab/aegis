@@ -24,21 +24,6 @@ ctypedef np.uint8_t NPBOOL_t
 # FUNCTIONS #
 #############
 
-def get_runtime(starttime, endtime):
-    """Convert two datetime.now() outputs into a time difference 
-    in human-readable units."""
-    runtime = endtime - starttime
-    days = runtime.days
-    hours = runtime.seconds/3600
-    minutes = runtime.seconds/60 - hours*60
-    seconds = runtime.seconds - minutes*60 - hours*3600
-    delta = "Total runtime: "
-    if days != 0: delta += "{d} days, ".format(d=days)
-    if hours != 0: delta += "{h} hours, ".format(h=hours)
-    if minutes != 0: delta += "{m} minutes, ".format(m=minutes)
-    delta += "{s} seconds.".format(s=seconds)
-    return delta
-
 def execute_run(run, maxfail):
     """Execute a simulation run, handling and recording failed runs
     as appropriate."""
@@ -64,27 +49,8 @@ def execute_run(run, maxfail):
     run.logprint(get_runtime(run.starttime, run.endtime))
     return run
 
-class Run:
-    """An object representing a single run of a simulation."""
-
 class Simulation:
     """An object representing a simulation, as defined by a config file."""
-
-    def __init__(self, config_file, seed, seed_n, report_n, verbose):
-        self.starttime = datetime.datetime.now()
-        simstart = time.strftime('%X %x', time.localtime())+".\n"
-        self.log = ""
-        self.logprint("\nBeginning simulation at "+simstart)
-        self.logprint("Working directory: "+os.getcwd())
-        self.get_conf(config_file)
-        self.conf.generate()
-        self.get_startpop(seed, seed_n)
-        self.report_n, self.verbose = report_n, verbose
-        self.logprint("Initialising runs...")
-        y,x = (len(self.startpop) == 1), xrange(self.conf.number_of_runs)
-        self.runs = [Run(self.conf, self.startpop[0 if y else n], n,
-            self.report_n, self.verbose) for n in x]
-        self.logprint("Runs initialised. Executing...\n")
 
     def execute(self, nproc=-1, maxfail=10):
         """Execute all runs."""
@@ -107,72 +73,6 @@ class Simulation:
             self.log += "\n".join([x.log for x in self.runs])
         finally:
             lock.release()
-
-    def get_conf(self, file_name):
-        """Import specified configuration file for simulation."""
-        try:
-            conf = importlib.import_module(file_name)
-        except ImportError:
-            print "No such file in simulation directory: " + file_name
-            q = raw_input(
-                    "Enter correct config file name, or skip to abort: ")
-            if q == "":
-                exit("Aborting: no valid configuration file given.")
-            else:
-                return self.get_conf(q)
-        self.conf = Config(conf)
-
-    def get_startpop(self, seed="", pop_number=-1):
-        """Import any seed simulation (or return blank)."""
-        if seed == "":
-            self.logprint("Seed: None.")
-            self.startpop = [""]
-            return
-        p = "all populations" if pop_number==-1 else "population "+str(pop_number)
-        if isinstance(seed, Simulation):
-            status = "Seeding {0} directly from Simulation object."
-            simobj = seed
-        else:
-            try:
-                # Make sure includes extension (default "sim")
-                seed += ".sim" if os.path.splitext(seed)[1] == "" else ""
-                status = "Seed: "+seed+", {0}."
-                simfile = open(seed, "rb")
-                simobj = pickle.load(simfile) # import simulation object
-            except IOError:
-                print "No such seed file: " + seed
-                q = raw_input(
-                        "Enter correct path to seed file, or skip to abort: ")
-                if q == "": exit("Aborting.")
-                r = raw_input("Enter population seed number, or enter -1 to \
-                        seed all populations, or skip to abort.")
-                if r == "": exit("Aborting.")
-                return self.get_startpop(q, r)
-        nruns = len(simobj.runs)
-        if pop_number == -1:
-            # -1 = seed all populations to equivalent runs in new sim
-            if nruns != self.conf.number_of_runs:
-                message = "Number of runs in seed file ({0}) ".format(nruns)
-                message += "does not match current configuration ({0} runs)."\
-                        .format(self.conf.number_of_runs)
-                raise IndexError(message)
-            self.logprint(status.format("all populations"))
-            self.startpop = [r.population for r in simobj.runs]
-        else:
-            if pop_number >= nruns:
-                print "Population seed number out of range. Possible \
-                        values: 0 to {0}".format(nruns-1)
-                q = raw_input("Enter a new population number, or enter -1 \
-                        to seed all populations, or skip to abort.")
-                while q not in range(-1, nruns): 
-                    # Repeat until valid input given
-                    if q == "": exit("Aborting.")
-                    q = raw_input("Please enter a valid integer from -1 \
-                            to {0}, or skip to abort.".format(nruns-1))
-                return self.get_startpop(seed, q)
-            self.logprint(status.format("population {0}".format(pop_number)))
-            self.startpop = [simobj.runs[pop_number].population]
-        return
 
     def finalise(self, file_pref, log_pref):
         """Finish recording and save output files."""

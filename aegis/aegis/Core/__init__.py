@@ -4,5 +4,3 @@ from .Population import Population, Outpop
 from .Config import Config, Infodict, deepeq
 from .Record import Record
 from .Run import Run
-#import numpy as np
-#import scipy.stats as st
