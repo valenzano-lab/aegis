@@ -430,7 +430,7 @@ cdef class Population:
             r_sites = np.array([1,-1])[r_sites]
             # Determine crossover status of each position (1 = no crossover,
             # -1 = crossover)
-            which_chr = np.cumprod(r_sites, 1)
+            which_chr = np.cumprod(r_sites, 1) # this eliminates double switches
             # Convert to 0 = no crossover, 1 = crossover
             which_chr = 1 - (which_chr+1)/2
             # Generate new chromosomes and update genomes
@@ -449,11 +449,15 @@ cdef class Population:
             pop.N -= 1
         # Randomly assign mating partners:
         pop.shuffle()
+        # NOTE: could just pop last out if N%2 != 0 since we shuffle anyway
         # Randomly combine parental chromatids
         chrs = np.copy(pop.chrs())
         which_pair = np.arange(pop.N/2)*2 # First pair member (0,2,4,...)
         which_partner = chance(0.5,pop.N/2) # Member within pair (0 or 1)
         # Update population
+        # NOTE: doesn't this reduce 4 possible permutations of chromosomes to two
+        # since e.g. individual_1: A-B, individual_2: C-D
+        # then possible outcomes: A-D and C-B, but what about A-C and B-D?
         pop.genomes[::2,:self.chrlen] = chrs[0,which_pair+which_partner]
         pop.genomes[::2,self.chrlen:] = chrs[1,which_pair+(1-which_partner)]
         pop.genomes = pop.genomes[::2]
@@ -513,7 +517,8 @@ class Record:
         assign("window_size", conf.window_size)
         assign("n_states", conf.n_states)
         # Simple data collected at every stage
-        n,l = self.record["n_stages"],self.record["max_ls"]
+        # NOTE: added int transformation here
+        n,l = int(self.record["n_stages"]),int(self.record["max_ls"])
         set_keys(["population_size","resources","surv_penf","repr_penf"],n)
         set_keys(["age_distribution"],[n,l])
         # Save population at each snapshot
@@ -566,7 +571,8 @@ class Record:
         """During finalisation, compute per-age and overall genotype density
         distributions for different types of loci at each snapshot, along with
         mean, variance and entropy in genotype sum."""
-        l,m,b = self.get("max_ls"), self.get("maturity"), self.get("n_base")
+        # NOTE: one-member arrays can't be converted to index
+        l,m,b = self.get("max_ls")[0], self.get("maturity")[0], self.get("n_base")[0]
         ad,ss = self.get("age_distribution"), self.get("snapshot_stages")
         gt = np.arange(self.get("n_states"))
         # 0: Auxiliary functions:
@@ -576,15 +582,15 @@ class Record:
             def density(x):
                 bins = np.bincount(x,minlength=self.get("n_states"))
                 return bins/float(sum(bins))
-            # dim1 = snapshot, dim2 = genotype, dim3 = age
+            # NOTE: dim1 = snapshot, dim2 = genotype (#1's for that index), dim3 = locus
             out = np.array([np.apply_along_axis(density,0,x) for x in loci])
-            # dim1 = genotype, dim2 = snapshot, dim3 = locus
+            # NOTE: dim1 = genotype (#1's for that index), dim2 = snapshot, dim3 = locus
             return out.transpose(1,0,2)
         def total_density(locus_densities):
             """Compute an overall density distribution from an array of
             per-locus distributions."""
             collapsed = np.sum(locus_densities, 2)
-            # dim1 = genotype, dim2 = snapshot
+            # NOTE: dim1 = genotype (see above), dim2 = snapshot
             return collapsed/np.sum(collapsed, 0)
         def get_mean_var_gt(locus_densities):
             """Get the per-locus mean and variance of a genotype distribution
@@ -622,7 +628,8 @@ class Record:
         """During finalisation, compute mean and variance in survival and 
         reproduction probability at each snapshot, along with the resulting
         fitness and reproductive value."""
-        l,m,b = self.get("max_ls"), self.get("maturity"), self.get("n_base")
+        # NOTE: one-member arrays can't be converted to index
+        l,m,b = self.get("max_ls")[0], self.get("maturity")[0], self.get("n_base")[0]
         # Simple surv/repr probabilities
         mean_gt, var_gt = self.get("mean_gt"), self.get("var_gt")
         prob_mean, prob_var, junk_mean, junk_var = {},{},{},{}
@@ -981,7 +988,7 @@ class Simulation:
         simend = time.strftime('%X %x', time.localtime())+"."
         self.logprint("\nSimulation completed at "+simend)
         self.logprint(get_runtime(self.starttime, self.endtime))
-        self.logprint("Saving output and exiting.\n")
+        self.logprint("Saving output and exiting.")
         sim_file = open(file_pref + ".sim", "wb")
         log_file = open(log_pref + ".txt", "w")
         rec_file = open(file_pref + ".rec", "wb")
