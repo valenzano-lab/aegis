@@ -438,6 +438,33 @@ cdef class Population:
             self.genomes[:,:self.chrlen] = np.choose(which_chr, chrs)
             self.genomes[:,self.chrlen:] = np.choose(which_chr, chrs[[1,0]])
 
+#    def assortment(self):
+#        """Pair individuals into breeding pairs and generate children
+#        through random assortment."""
+#        pop = self.clone()
+#        # Must be even number of parents; if odd, discard one at random:
+#        if pop.N%2 != 0:
+#            ix = random.sample(range(pop.N), 1)
+#            pop.genomes = np.delete(pop.genomes, ix, 0)
+#            pop.N -= 1
+#        # Randomly assign mating partners:
+#        pop.shuffle()
+#        # NOTE: could just pop last out if N%2 != 0 since we shuffle anyway
+#        # Randomly combine parental chromatids
+#        chrs = np.copy(pop.chrs())
+#        which_pair = np.arange(pop.N/2)*2 # First pair member (0,2,4,...)
+#        which_partner = chance(0.5,pop.N/2) # Member within pair (0 or 1)
+#        # Update population
+#        # NOTE: doesn't this reduce 4 possible permutations of chromosomes to two
+#        # since e.g. individual_1: A-B, individual_2: C-D
+#        # then possible outcomes: A-D and C-B, but what about A-C and B-D?
+#        pop.genomes[::2,:self.chrlen] = chrs[0,which_pair+which_partner]
+#        pop.genomes[::2,self.chrlen:] = chrs[1,which_pair+(1-which_partner)]
+#        pop.genomes = pop.genomes[::2]
+#        pop.ages = pop.ages[::2] # Doesn't really matter, will be zero'd
+#        pop.N /= 2
+#        return(pop)
+
     def assortment(self):
         """Pair individuals into breeding pairs and generate children
         through random assortment."""
@@ -449,17 +476,16 @@ cdef class Population:
             pop.N -= 1
         # Randomly assign mating partners:
         pop.shuffle()
-        # NOTE: could just pop last out if N%2 != 0 since we shuffle anyway
         # Randomly combine parental chromatids
         chrs = np.copy(pop.chrs())
         which_pair = np.arange(pop.N/2)*2 # First pair member (0,2,4,...)
         which_partner = chance(0.5,pop.N/2) # Member within pair (0 or 1)
+        which_chr = chance(0.5,pop.N/2)*1 # Member within pair (0 or 1)
         # Update population
-        # NOTE: doesn't this reduce 4 possible permutations of chromosomes to two
-        # since e.g. individual_1: A-B, individual_2: C-D
-        # then possible outcomes: A-D and C-B, but what about A-C and B-D?
         pop.genomes[::2,:self.chrlen] = chrs[0,which_pair+which_partner]
-        pop.genomes[::2,self.chrlen:] = chrs[1,which_pair+(1-which_partner)]
+        # naive fix
+        for i in range(pop.N/2):
+            pop.genomes[i*2,self.chrlen:] = chrs[which_chr[i],(which_pair+(1-which_partner))[i]]
         pop.genomes = pop.genomes[::2]
         pop.ages = pop.ages[::2] # Doesn't really matter, will be zero'd
         pop.N /= 2
