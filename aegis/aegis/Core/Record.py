@@ -23,8 +23,8 @@ class Record(Infodict):
         """Import run parameters from a Config object and prepare for
         further data input."""
         # Inherit run parameters from Config object
-        self.__valdict__ = conf.__valdict__
-        self.__infdict__ = conf.__infdict__
+        self.__valdict__ = conf.__valdict__.copy()
+        self.__infdict__ = conf.__infdict__.copy()
         for k in self.keys(): # Put numeric data in arrays #!: Why?
             if type(self[k]) in [int, float]: 
                 self[k] = np.array([self[k]]) #! Check required data is there
