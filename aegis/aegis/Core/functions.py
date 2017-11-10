@@ -52,7 +52,7 @@ def timediff(starttime, endtime):
     after = [", ", ", ", " and ", ""]
     for n in xrange(len(units)):
         g = getattr(time, units[n])
-        if g!= 0: report=True
+        report = (g != 0)
         if report: outstr += "{0} {1}{2}".format(g, unit, after[n])
     return outstr
 
