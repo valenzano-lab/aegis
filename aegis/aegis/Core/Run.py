@@ -11,8 +11,8 @@ import numpy as np
 import scipy.stats as st
 import copy, datetime, time
 from .functions import chance, init_ages, init_genomes, init_generations
-from .functions import get_runtime
-from .Config import Infodict
+from .functions import timenow, timediff, get_runtime
+from .Config import Infodict, Config, deepeq
 from .Population import Population, Outpop
 from .Record import Record
 
@@ -145,7 +145,7 @@ class Run:
         # Execute stages until completion
         while not self.complete:
             self.execute_stage()
-            print self.population.N
+            #print self.population.N
         self.population = Outpop(self.population) # Convert back to Outpop
         # Compute end time and announce run end
         self.endtime = timenow(False)
@@ -204,3 +204,19 @@ class Run:
                 msg = "Setting seed from current Run population."
                 pop = self.population
             return (pop, msg)
+
+    # Comparison methods
+
+    def __eq__(self, other):
+        if not isinstance(other, self.__class__): return NotImplemented
+        return deepeq(vars(self), vars(other))
+        #for a in ["log", "conf", "surv_penf", "other_penf", "resources",
+        #        "genmap", "population", "n_stage", "n_snap", "n_run"
+        return NotImplemented
+
+    def __ne__(self, other):
+        if isinstance(other, self.__class__): return not self.__eq__(other)
+        return NotImplemented
+
+    def __hash__(self):
+        return hash(vars(self))
