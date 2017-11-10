@@ -9,9 +9,9 @@
 ## PACKAGE IMPORT ##
 import numpy as np
 import scipy.stats as st
-import copy, datetime, time, os
+import copy, datetime, time, os, importlib, inspect, numbers
 from .functions import chance, init_ages, init_genomes, init_generations
-from .functions import timenow, timediff
+from .functions import timenow, timediff, get_runtime
 from .Config import Infodict, Config
 from .Population import Population, Outpop
 from .Record import Record
@@ -34,21 +34,34 @@ class Simulation:
         self.logprint("Working directory: "+os.getcwd())
         self.get_conf(config_file)
         self.conf.generate()
-        self.get_startpop(seed, seed_n)
+        if isinstance(self.conf["random_seed"], numbers.Number):
+            random.seed(self.cong["random_seed"])
         self.report_n, self.verbose = report_n, verbose
-        self.logprint("Initialising runs...")
-        y,x = (len(self.startpop) == 1), xrange(self.conf["number_of_runs"])
-        self.runs = [Run(self.conf, self.startpop[0 if y else n], n,
-            self.report_n, self.maxfail, self.verbose) for n in x]
-        self.logprint("Runs initialised.\n")
+        self.get_startpop(seed, seed_n)
+        self.init_runs()
 
     def get_conf(self, file_name):
         """Import specified configuration file for simulation."""
         try:
             conf = importlib.import_module(file_name)
+            self.conf = Config(conf)
         except ImportError:
-            print "No such file in simulation directory: " + file_name
-        self.conf = Config(conf)
+            s = "No such file in simulation directory: " + file_name
+            self.abort(ImportError, s)
+
+    def get_seed(self, seed_path):
+        """Import a population seed from a pickled AEGIS object."""
+        try:
+            self.logprint("Reading seed population from {}".format(seed_path))
+            infile = open(seed_path, "rb")
+            obj = pickle.load(infile)
+            self.logprint("Import succeeded. Seed type = {}".format(type(obj)))
+            return obj
+        except IOError:
+            s = "Seed import failed: no such file or directory."
+            self.abort(IOError, s)
+        finally:
+            infile.close()
 
     def get_startpop(self, seed="", pop_number=-1):
         """Import a population seed from a pickled AEGIS object, or
@@ -59,16 +72,7 @@ class Simulation:
             self.startpop = [""]
             return
         # Otherwise, import seed object and act based on type
-        try:
-            self.logprint("Reading seed population from {}".format(seed))
-            infile = open(seed, "rb")
-            obj = pickle.load(infile)
-            self.logprint("Import succeeded. Seed type = {}".format(type(obj)))
-        except IOError:
-            s = "Seed import failed: no such file or directory."
-            self.abort(IOError, s)
-        finally:
-            infile.close()
+        obj = self.get_seed(seed)
         # Obtain Population object based on type of imported object
         self.set_startpop(obj, pop_number)
 
@@ -77,7 +81,7 @@ class Simulation:
         # Dispatch to __startpop__ method of input object
         if hasattr(obj, "__startpop__"):
             pop, msg = obj.__startpop__(pop_number)
-            if issubclass(pop, Exception):
+            if inspect.isclass(pop) and issubclass(pop, Exception):
                 self.abort(pop, msg)
             else:
                 self.logprint(msg)
@@ -86,6 +90,15 @@ class Simulation:
             msg = "No method for extracting seed from object type: {}"
             msg = msg.format(type(obj))
             self.abort(ValueError, msg)
+
+        # TODO: Require pop_number to be an integer.
+
+    def init_runs(self):
+        self.logprint("Initialising runs...")
+        y,x = (len(self.startpop) == 1), xrange(self.conf["number_of_runs"])
+        self.runs = [Run(self.conf, self.startpop[0 if y else n], n,
+            self.report_n, self.verbose) for n in x]
+        self.logprint("Runs initialised.\n")
 
     # __startpop__ METHOD
 
@@ -118,7 +131,7 @@ class Simulation:
         """Print an error message to the Simulation log, then abort."""
         self.log += "\n{0}: {1}\n".format(errtype.__name__, message)
         self.endtime = timenow(False)
-        self.log += "\nSimulation terminated{}.".format(timenow()))
+        self.log += "\nSimulation terminated{}.".format(timenow())
         self.logsave()
         raise errtype(message)
 
@@ -148,10 +161,10 @@ class Simulation:
         def save(obj, filename):
             try:
                 f = open(filename, "wb")
-                pickle.dump(pop, f)
+                pickle.dump(obj, f)
             finally:
                 f.close()
-        def outro(otype): self.logprint("{} saved.".format(otype).capitalize()
+        def outro(otype): self.logprint("{} saved.".format(otype).capitalize())
         # Saving output
         if self.conf["output_mode"] >= 2: # Save all snapshot pops
             dirname = intro("snapshot populations", "populations/snapshots")
@@ -192,8 +205,12 @@ class Simulation:
         self.save_output()
         outend = timenow(False)
         self.logprint("Output complete at {}.".format(timenow(True)))
-        self.logprint(get_runtime(outstart, outend, "Time for output")
+        self.logprint(get_runtime(outstart, outend, "Time for output"))
         # Finish and terminate
         self.logprint(get_runtime(self.starttime, self.endtime,
             "Total runtime (including output)"))
         self.logprint("Exiting.\n")
+
+    # OTHER
+
+    def copy(self): return copy.deepcopy(self)
