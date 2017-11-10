@@ -3,15 +3,15 @@
 ################################################
 
 ## CORE PARAMETERS ##
-
+random_seed = "" # If numeric, sets random seed to that value before execution
 output_prefix = "output" # Prefix for output files within simulation directory
 number_of_runs = 2 # Total number of independent runs
-number_of_stages = 20 # Total number of stages per run
-number_of_snapshots = 10 # Points in run at which to record detailed data
+number_of_stages = 10 # Total number of stages per run
+number_of_snapshots = 5 # Points in run at which to record detailed data
 repr_mode = 'sexual' # sexual, asexual, assort_only or recombine_only
 res_start = 1000 # Starting resource value
 res_var = True # Resources vary with population and time; else constant
-output_mode = 1 # 0 = return records only, 1 = return records + final pop
+output_mode = 1 # 0 = return records only, 1 = return records + final pop,
                 # 2 = return records + all snapshot populations
 max_fail = 10 # Maximum number of failed attempts tolerated for each run
 
