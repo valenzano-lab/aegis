@@ -475,8 +475,8 @@ class Outpop:
         if not isinstance(other, self.__class__): return NotImplemented
         return np.array_equal(self.genomes, other.genomes) and \
                 np.array_equal(self.ages, other.ages) and \
-                np.array_equal(self.generations, other.generations)# and \
-                #deepeq(self.params(), other.params())
+                np.array_equal(self.generations, other.generations) and \
+                deepeq(self.params(), other.params())
         return NotImplemented
     def __ne__(self, other):
         if isinstance(other, self.__class__): return not self.__eq__(other)
