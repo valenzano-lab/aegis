@@ -13,6 +13,24 @@ import numpy as np
 import copy
 
 ## AUXILIARY FUNCTIONS ##
+def deepkey(key, dict1, dict2, verbose=False):
+    """Compare the values linked to a given key in two dictionaries
+    according to the types of those values."""
+    if verbose: 
+        print key,
+    v1, v2 = dict1[key], dict2[key]
+    if type(v1) is not type(v2): 
+        if verbose: print "Type mismatch!"
+        return False
+    elif isinstance(v1, dict):
+        if not deepeq(v1, v2): 
+            if verbose: print v1, v2
+            return False
+    elif isinstance(v1, np.ndarray):
+        if not np.allclose(v1, v2): 
+            if verbose: print v1, v2
+            return False
+    elif v1 != v2: return False
 
 def deepeq(dict1, dict2, verbose=False):
     """Compare two dictionaries element-wise according to the types of
@@ -24,20 +42,7 @@ def deepeq(dict1, dict2, verbose=False):
             print set(dict2.keys()).difference(set(dict1.keys()))
         return False # First check keys
     for k in dict1.keys():
-        if verbose: print k
-        v1, v2 = dict1[k], dict2[k]
-        if type(v1) is not type(v2): 
-            if verbose: print "Type mismatch!"
-            return False
-        elif isinstance(v1, dict):
-            if not deepeq(v1, v2): 
-                if verbose: print v1, v2
-                return False
-        elif isinstance(v1, np.ndarray):
-            if not np.allclose(v1, v2): 
-                if verbose: print v1, v2
-                return False
-        elif v1 != v2: return False
+        deepkey(k, dict1, dict2, verbose)
     return True
 
 ## CLASS ##
@@ -155,8 +160,6 @@ class Infodict:
                 self.__infdict__.items())))
     def copy(self): return copy.deepcopy(self)
 
-    #! Finish this
-
     # Copy method
 
     def subdict(self, keys, asdict=True):
@@ -183,6 +186,8 @@ class Config(Infodict):
             in c, while also setting its description."""
             self.put(name, getattr(c,name), infostring)
         ## Set data elements and information ##
+        mirror("random_seed", "If numeric, sets random seed to that value\
+                before executing simulation; otherwise, no seed is set.")
         # Reproductive mode
         mirror("repr_mode", "The reproductive mode of the population:\
                 'sexual' (recombination and assortment), 'recombine_only',\
