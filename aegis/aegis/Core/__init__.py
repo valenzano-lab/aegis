@@ -4,3 +4,4 @@ from .Population import Population, Outpop
 from .Config import Config, Infodict, deepeq
 from .Record import Record
 from .Run import Run
+from .Simulation import Simulation
