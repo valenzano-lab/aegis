@@ -4,7 +4,7 @@ import pytest, random, copy
 import numpy as np
 
 # Import fixtures
-from test_1_Config import conf 
+from test_1_Config import conf, conf_path
 from test_2a_Population_init import pop
 
 precision = 0.02
@@ -340,30 +340,39 @@ class TestPopulationGrowth:
             assert np.isclose(c2.N/n, exp2, atol=precision*2)
 
     def test_make_children_solo(self, pop):
-        """Test that make_children correctly does nothing when given an
-        empty population, under assorting reproductive modes, and returns
-        exactly one child otherwise."""
+        """Test that make_children correctly does nothing when given 
+        exactly one parent, under assorting reproductive modes, and 
+        returns exactly one child otherwise."""
         p = pop.clone()
         p.shuffle()
-        p.subtract_members(xrange(p.N)) # Leave no parents
-        r_range = np.linspace(0.01, 0.99, 2*pop.n_base+1)
+        p.subtract_members(xrange(1,p.N)) # Leave one parent
+        p.ages[:] = p.maturity # make sure it's an adult
+        assert p.N == 1
+        r_range = np.linspace(1,1, 2*pop.n_base+1)
         modes = ["sexual", "asexual", "recombine_only", "assort_only"]
         exp = [0, 1, 1, 0]
         for n in xrange(len(modes)):
+            print modes[n]
             p.repr_mode = modes[n]
             p.set_attributes(p.params())
+            assert p.repr_mode == modes[n]
             c = p.make_children(r_range, 1, 0, 1, 0)
             assert c.N == exp[n]
 
-    def test_make_children_solo(self, pop):
-        """Test that make_children correctly does nothing when given a
-        single parent."""
+    def test_make_children_zero(self, pop):
+        """Test that make_children correctly does nothing when given an
+        empty population of parents."""
         p = pop.clone()
-        p.shuffle()
-        p.subtract_members(xrange(1,p.N)) # Leave only one parent
-        r_range = np.linspace(0.01, 0.99, 2*pop.n_base+1)
-        c = p.make_children(r_range, 1, 0, 1, 0)
-        assert c.N == 0
+        p.subtract_members(xrange(p.N)) # Leave no parents
+        assert p.N == 0
+        r_range = np.linspace(1,1, 2*pop.n_base+1)
+        modes = ["sexual", "asexual", "recombine_only", "assort_only"]
+        for n in xrange(len(modes)):
+            p.repr_mode = modes[n]
+            p.set_attributes(p.params())
+            assert p.repr_mode == modes[n]
+            c = p.make_children(r_range, 1, 0, 1, 0)
+            assert c.N == 0
 
     def test_make_children_extreme_starvation(self, pop):
         """Confirm that death() handles extreme starvation factors

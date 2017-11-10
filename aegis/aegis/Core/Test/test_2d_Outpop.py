@@ -3,7 +3,7 @@ from aegis.Core import chance, init_ages, init_genomes, init_generations
 import pytest, random, copy
 import numpy as np
 
-from test_1_Config import conf 
+from test_1_Config import conf, conf_path
 from test_2a_Population_init import pop
 # (will run descendent tests for all parameterisations)
 

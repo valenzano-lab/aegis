@@ -3,12 +3,12 @@ from aegis.Core import chance, init_ages, init_genomes, init_generations
 import pytest, random, copy
 import numpy as np
 
-from test_1_Config import conf 
-# (will run descendent tests for all parameterisations)
-
 ##############
 ## FIXTURES ##
 ##############
+
+from test_1_Config import conf, conf_path 
+# (will run descendent tests for all parameterisations)
 
 @pytest.fixture(scope="module")
 def pop(request, conf):
