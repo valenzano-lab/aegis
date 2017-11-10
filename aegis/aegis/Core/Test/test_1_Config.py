@@ -6,13 +6,18 @@ import numpy as np
 ## FIXTURES ##
 ##############
 
+@pytest.fixture(scope="module")
+def conf_path(request):
+    return "config_test"
+
 @pytest.fixture(params=["import", "random", "random"], scope="module")
-def conf(request):
+def conf(request, conf_path):
     """Create a default configuration object."""
-    c_import = importlib.import_module("config_test")
+    c_import = importlib.import_module(conf_path)
     c = Config(c_import)
     c.put("setup", request.param, "Method of fixture generation.")
     if request.param == "random": # Randomise config parameters
+        # TODO: Add seed value here?
         # Run parameters
         c["number_of_runs"] = random.randint(1,5)
         c["number_of_stages"] = random.randint(50,400)
@@ -71,9 +76,10 @@ def ranstr(m,n=10):
 
 class TestInfodict:
 
-    def test_infodict_init(self):
-        x = Infodict()
-        assert True #! ...
+    #! TODO: Implement this
+#    def test_infodict_init(self):
+#        x = Infodict()
+#        assert True #! ...
 
     def test_infodict_getput(self):
         """Test basic constructors and selectors for Infodict object."""
