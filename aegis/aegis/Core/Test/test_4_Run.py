@@ -11,7 +11,7 @@ import numpy as np
 ## FIXTURES ##
 ##############
 
-from test_1_Config import conf
+from test_1_Config import conf, conf_path
 from test_2a_Population_init import pop
 from test_3_Record import rec, pop1, rec1
 
@@ -29,6 +29,9 @@ def ran_str(request, scope="module"):
 ###########
 ## TESTS ##
 ###########
+
+# TODO: Test seeding
+
 class TestRun:
 
     @pytest.mark.parametrize("report_n, verbose",

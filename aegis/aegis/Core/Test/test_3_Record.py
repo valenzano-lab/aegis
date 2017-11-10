@@ -21,7 +21,7 @@ def static_fill(rec_obj, pop_obj):
 ## FIXTURES ##
 ##############
 
-from test_1_Config import conf
+from test_1_Config import conf, conf_path
 from test_2a_Population_init import pop
 
 @pytest.fixture(scope="module")
@@ -47,9 +47,6 @@ def rec1(request, rec, pop1):
 def rec2(request, rec1):
     """Record filled with initial state of pop1."""
     return copy.deepcopy(rec1)
-
-
-
 
 ###########
 ## TESTS ##
