@@ -38,12 +38,17 @@ class Run:
             self.population.g_dist = self.conf["g_dist"]
             self.population.repr_offset = self.conf["repr_offset"]
             self.population.neut_offset = self.conf["neut_offset"]
+            # NOTE subdict is an Infodict method, not value attribute
+            # shouldn't it be called as self.conf.subdict(_key_list_)?
             self.conf["params"] = self.conf["subdict"](
                     ["repr_mode", "chr_len", "n_base", "maturity", "start_pop",
                         "max_ls", "g_dist", "repr_offset", "neut_offset"])
         else:
+            # NOTE why is this neccesary? can't we convert it to Outpop only right
+            # after Run completion? (I understand this is needed in order for
+            # Simulation to be able to save it.)
             self.population = Outpop(Population(self.conf["params"],
-                self.conf["genmap"], init_ages(), init_genomes(), 
+                self.conf["genmap"], init_ages(), init_genomes(),
                 init_generations()))
         self.n_stage = 0
         self.n_snap = 0
@@ -55,13 +60,20 @@ class Run:
         self.verbose = verbose
 
     def update_resources(self):
-        """If resources are variable, update them based on current 
+        """If resources are variable, update them based on current
         population."""
         if self.conf["res_var"]: # Else do nothing
             k = 1 if self.population.N > self.resources else self.conf["V"]
             new_res = int((self.resources-self.population.N)*k + self.conf["R"])
             self.resources = np.clip(new_res, 0, self.conf["res_limit"])
 
+    # NOTE WARNING: this is conceptually different from the old method since
+    # now resources can never be lesser than self.conf["R"]? what do you mean by
+    # checking "if r < 0" when r is a user-defined constant?
+    #
+    # if you mean that this method should be written in a way that we can do:
+    # def starving: return self.population.N > self.resources
+    # than I agree, but I think this as it is is wrong
     def update_resources_new(self):
         """Simpler, more intuitive resource updating."""
         if self.conf["res_var"]: # Else do nothing
@@ -82,7 +94,7 @@ class Run:
         if self.starving():
             if self.conf["surv_pen"]: self.surv_penf *= self.conf["death_inc"]
             if self.conf["repr_pen"]: self.repr_penf *= self.conf["repr_dec"]
-        else: 
+        else:
             self.surv_penf = 1.0
             self.repr_penf = 1.0
 
@@ -114,7 +126,7 @@ class Run:
                     "Starvation factors = {0} (survival), {1} (reproduction)."\
                             .format(self.surv_penf,self.repr_penf))
             # Reproduction and death
-            if full_report: 
+            if full_report:
                 self.logprint("Calculating reproduction and death...")
             n0 = self.population.N
             self.population.growth(self.conf["r_range"], self.repr_penf,
@@ -123,7 +135,7 @@ class Run:
             n1 = self.population.N
             self.population.death(self.conf["s_range"], self.surv_penf)
             n2 = self.population.N
-            if full_report: 
+            if full_report:
                 self.logprint("Done. {0} individuals born, {1} died."\
                         .format(n1-n0,n1-n2))
         # Update run status
@@ -152,7 +164,7 @@ class Run:
         b = "Extinction" if self.dieoff else "Completion"
         self.logprint("{0} at {1}. Final population: {2}"\
                 .format(b, timenow(True), self.population.N))
-        if f>0 and not self.dieoff: 
+        if f>0 and not self.dieoff:
             self.logprint("Total attempts required: {0}.".format(f))
         # return self.record ?
 
@@ -172,7 +184,7 @@ class Run:
                 save_state.log = self.log + "\n"
                 attrs = vars(save_state)
                 for key in attrs: # Revert everything else
-                    setattr(self, key, attrs[key]) 
+                    setattr(self, key, attrs[key])
                 #! TODO: Test that this does not change start time
                 return self.execute()
         self.logprint(get_runtime(self.starttime, self.endtime))
@@ -185,7 +197,7 @@ class Run:
         nspace_stg = len(str(self.conf["number_of_stages"]-1))\
                 -len(str(self.n_stage))
         # Create string
-        lstr = "RUN {0}{1} | STAGE {2}{3} | {4}".format(" "*nspace_run, 
+        lstr = "RUN {0}{1} | STAGE {2}{3} | {4}".format(" "*nspace_run,
                 self.n_run, " "*nspace_stg, self.n_stage, message)
         print lstr
         self.log += lstr+"\n"

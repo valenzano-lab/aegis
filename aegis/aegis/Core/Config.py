@@ -16,18 +16,18 @@ import copy
 def deepkey(key, dict1, dict2, verbose=False):
     """Compare the values linked to a given key in two dictionaries
     according to the types of those values."""
-    if verbose: 
+    if verbose:
         print key,
     v1, v2 = dict1[key], dict2[key]
-    if type(v1) is not type(v2): 
+    if type(v1) is not type(v2):
         if verbose: print "Type mismatch!"
         return False
     elif isinstance(v1, dict):
-        if not deepeq(v1, v2): 
+        if not deepeq(v1, v2):
             if verbose: print v1, v2
             return False
     elif isinstance(v1, np.ndarray):
-        if not np.allclose(v1, v2): 
+        if not np.allclose(v1, v2):
             if verbose: print v1, v2
             return False
     elif v1 != v2: return False
@@ -36,7 +36,7 @@ def deepeq(dict1, dict2, verbose=False):
     """Compare two dictionaries element-wise according to the types of
     their constituent values."""
     if sorted(dict1.keys()) != sorted(dict2.keys()): # First check keys
-        if verbose: 
+        if verbose:
             print "Non-shared keys:"
             print set(dict1.keys()).difference(set(dict2.keys()))
             print set(dict2.keys()).difference(set(dict1.keys()))
@@ -50,7 +50,7 @@ def deepeq(dict1, dict2, verbose=False):
 class Infodict:
     """Dictionary-like object in which each element is associated to
     both a value and an information string describing its purpose,
-    and in which selecting for lists/arrays of keys returns 
+    and in which selecting for lists/arrays of keys returns
     corresponding lists/arrays of values."""
 
     def __init__(self):
@@ -84,7 +84,7 @@ class Infodict:
         """Change the infostring of an existing key while preventing
         naive setting of new items without a value."""
         self.__put_single__(key, info, "inf")
-            
+
     def __setitem__(self, key, value): self.put_value(key, value)
 
     # Single selectors
@@ -163,7 +163,7 @@ class Infodict:
     # Copy method
 
     def subdict(self, keys, asdict=True):
-        """Return a dictionary or infodict containing a specified 
+        """Return a dictionary or infodict containing a specified
         subset of this object's keys."""
         valdict = {k: self.get_value(k) for k in keys}
         if asdict: return valdict
@@ -171,11 +171,12 @@ class Infodict:
         child = Infodict()
         child.__valdict__ = valdict
         child.__infdict__ = infdict
-        return child 
+        return child
 
 class Config(Infodict):
     """Object derived from imported config module."""
 
+    # NOTE what provides "c" to __init__? shouldn't it be passed to Config?
     def __init__(self, c):
         """Import basic attributes from a config-file object and set data
         descriptors."""
@@ -317,10 +318,10 @@ class Config(Infodict):
         # Survival and reproduction
         self["death_bound"] = np.array(self["death_bound"])
         self["repr_bound"] = np.array(self["repr_bound"])
-        if self["repr_mode"] in ["sexual", "assort_only"]: 
+        if self["repr_mode"] in ["sexual", "assort_only"]:
         # Double fertility in sexual case to control for relative
         # contribution to offspring
-            self["repr_bound"] *= 2 
+            self["repr_bound"] *= 2
         self.put("surv_bound", 1-self["death_bound"][::-1], "Min and max \
                 survival rates. [float array].")
         self.put("surv_step", np.diff(self["surv_bound"])/(self["n_states"]-1),

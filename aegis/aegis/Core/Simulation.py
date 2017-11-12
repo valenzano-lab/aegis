@@ -34,6 +34,7 @@ class Simulation:
         self.logprint("Working directory: "+os.getcwd())
         self.get_conf(config_file)
         self.conf.generate()
+        # NOTE what does this do? "cong" should be "conf"
         if isinstance(self.conf["random_seed"], numbers.Number):
             random.seed(self.cong["random_seed"])
         self.report_n, self.verbose = report_n, verbose
@@ -138,9 +139,9 @@ class Simulation:
     # EXECUTION
 
     def execute_series(self):
-        """Execute simulation runs in series, with no external 
+        """Execute simulation runs in series, with no external
         parallelisation."""
-        for n in xrange(self.conf["number_of_runs"]): 
+        for n in xrange(self.conf["number_of_runs"]):
             self.runs[n].execute()
 
     def execute(self):

@@ -235,7 +235,7 @@ cdef class Population:
         population, summed within each locus and across chromosomes."""
         cdef:
             np.ndarray[NPINT_t, ndim=2] locs
-            np.ndarray[NPINT_t, ndim=4] chrs
+            np.ndarray[NPINT_t, ndim=4] chrs # NOTE shouldn't this be chrx?
         # Get chromosomes of population, arranged by locus
         chrx = self.chrs(True) 
         # Collapse bits into locus sums and add chromosome values together
@@ -299,13 +299,16 @@ cdef class Population:
             np.ndarray[NPFLOAT_t, ndim=1] val_range): # GT:probability map
         # Get age array for suitably-aged individuals
         ages = np.clip(self.ages - age_bounds[0], 0, np.diff(age_bounds)-1)
-        genotypes = genotypes
+        genotypes = genotypes # NOTE this is obsolete
         # Get relevant genotype sum for each individual of appropriate age
+        # NOTE len(age)=pop.N, so why not just use that?
         gt = genotypes[np.arange(len(ages)), ages]
         # Convert to inclusion probabilities and compute inclusion
         inc_probs = val_range[gt]
         subpop = chance(inc_probs, self.N) # Binary array of inclusion statuses
         # Subset by age boundaries and return
+        # COMMENT: we can't subset by age boundaries before this point because
+        # we need the output to be of length pop.N
         inc = np.logical_and(self.ages>=age_bounds[0],
                 self.ages<age_bounds[1])
         return subpop * inc
@@ -340,6 +343,8 @@ cdef class Population:
             object parents, children
         if self.N == 0:# If no individuals in population, do nothing
             return self.subset_clone(np.zeros(self.N).astype(bool))
+        # NOTE this is obsolete since x in (0,1) implies x/y in (0,1) for all y > 1
+        # meaning if everything else well written and input ok, then obsolete
         r_range = np.clip(r_range / penf, 0, 1) # Limit to real probabilities
         age_bounds = np.array([self.maturity,self.max_ls])
         parents = self.get_subpop(age_bounds, self.repr_loci(), r_range)
@@ -412,6 +417,10 @@ cdef class Population:
         self.shuffle() # Randomly assign mating partners
         # Randomly combine parental chromatids
         which_pair = np.arange(self.N/2)*2 # First of each pair (0,2,4,...)
+        # NOTE this is shuffling the second time? we can leave out this chance call?
+        # could just do:
+        # parent_0 = np.arange(self.N/2)*2
+        # parent_1 = parent_0 + 1
         which_partner = chance(0.5,self.N/2)*1 # Member within pair (0 or 1)
         parent_0 = which_pair + which_partner # Parent 0
         parent_1 = which_pair + (1-which_partner) # Parent 1
