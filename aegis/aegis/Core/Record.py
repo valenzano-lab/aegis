@@ -6,12 +6,15 @@
 #   the course of a simulation, as well as methods for computing       #
 #   more advanced statistics from that information.                    #
 ########################################################################
+# TODO: add generation and parental-age recording 
+# TODO: convert some output into pandas data frames for easier plotting
 
 ## PACKAGE IMPORT ##
 import numpy as np
 import scipy.stats as st
 from .Config import Infodict
 from .Population import Population, Outpop
+import copy
 
 ## CLASS ##
 
@@ -396,6 +399,11 @@ class Record(Infodict):
 
     def finalise(self):
         """Calculate additional stats from recorded data of a completed run."""
+        # Subset age distributions to snapshot stages for plotting
+        self.put("snapshot_age_distribution", 
+                self["age_distribution"][self["snapshot_stages"]],
+                "Distribution of ages in the population at each snapshot stage."
+                )
         # Genotype distributions and statistics
         self.compute_locus_density()
         self.compute_total_density()
@@ -437,3 +445,7 @@ class Record(Infodict):
                 msg = msg.format(pop_number)
                 pop = self["snapshot_pops"][pop_number]
             return (pop, msg)
+
+    # copy method
+
+    def copy(self): return copy.deepcopy(self)
