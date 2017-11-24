@@ -1,7 +1,7 @@
 import pyximport; pyximport.install()
-from .functions import chance, init_ages, init_genomes, init_generations
-from .Population import Population, Outpop
-from .Config import Config, Infodict, deepeq
-from .Record import Record
-from .Run import Run
-from .Simulation import Simulation
+from aegis.Core.functions import chance, init_ages, init_genomes, init_generations
+from aegis.Core.Population import Population, Outpop
+from aegis.Core.Config import Config, Infodict, deepeq
+from aegis.Core.Record import Record
+from aegis.Core.Run import Run
+from aegis.Core.Simulation import Simulation

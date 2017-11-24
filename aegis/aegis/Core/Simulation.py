@@ -36,7 +36,7 @@ class Simulation:
         self.conf.generate()
         # NOTE what does this do? "cong" should be "conf"
         if isinstance(self.conf["random_seed"], numbers.Number):
-            random.seed(self.cong["random_seed"])
+            random.seed(self.conf["random_seed"])
         self.report_n, self.verbose = report_n, verbose
         self.get_startpop(seed, seed_n)
         self.init_runs()
