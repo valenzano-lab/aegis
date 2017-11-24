@@ -9,7 +9,12 @@ setup(name='aegis',
         zip_safe=False, #?
         setup_requires=['pytest-runner'],
         tests_require=['pytest'],
-        install_requires=[], #! Set dependencies
+        install_requires=[
+            'numpy>=1.13.3',
+            'scipy>=0.19.1',
+            'python-dateutil>=2.6.1'
+            # add plotting package
+            ],
         # Medadata for upload to PyPI
         author='Will Bradshaw & Dario Valenzano',
         author_email='wbradshaw@age.mpg.de',
