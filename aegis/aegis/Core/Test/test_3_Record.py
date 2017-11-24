@@ -1,4 +1,5 @@
 from aegis.Core import Infodict, Config, Population, Outpop, Record
+from aegis.Core.Config import deepeq, deepkey
 import pytest,importlib,types,random,copy,string
 import numpy as np
 
@@ -61,6 +62,8 @@ class TestRecord:
         R = copy.deepcopy(rec)
         # Conf param entries should be inherited in Record
         for k in conf.keys():
+            print k, R[k], np.array(conf[k])
+            assert deepkey(k, R, conf, True)
             assert np.array_equal(R[k], np.array(conf[k]))
             assert R.get_info(k) == conf.get_info(k)
         # R and V successfully renamed
@@ -80,7 +83,7 @@ class TestRecord:
         assert np.array_equal(R["repr_penf"], a0)
         assert np.array_equal(R["age_distribution"], a1)
         # Snapshot population placeholders
-        assert R["snapshot_pops"] == [0]*R["number_of_snapshots"][0]
+        assert R["snapshot_pops"] == [0]*R["number_of_snapshots"]
         # Empty names for final computation
         def iszero(*names):
             for name in names: assert R[name] == 0
@@ -334,7 +337,7 @@ class TestRecord:
         artificial data."""
         rec1.compute_actual_death()
         r = copy.deepcopy(rec1)
-        maxls = r["max_ls"][0]
+        maxls = r["max_ls"]
         r["age_distribution"] = np.tile(1/float(maxls), (3, maxls))
         r["population_size"] = np.array([maxls*4,maxls*2,maxls])
         r.compute_actual_death()
@@ -362,7 +365,7 @@ class TestRecord:
             w_shape = x.shape[:dim] + (x.shape[dim] - ws + 1, ws)
             w = test_window(s, ws, w_shape)
             # Window too big - should correct to dimension size
-            w = test_window(s, 1e100, x.shape[:dim] + (0,x.shape[dim]+1), False)
+            w = test_window(s, int(1e100), x.shape[:dim] + (0,x.shape[dim]+1), False)
             # Zero window
             w = test_window(s, 0, x.shape[:dim] + (x.shape[dim]+1,0), False)
             # Negative window

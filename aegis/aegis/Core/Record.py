@@ -25,9 +25,9 @@ class Record(Infodict):
         # Inherit run parameters from Config object
         self.__valdict__ = conf.__valdict__.copy()
         self.__infdict__ = conf.__infdict__.copy()
-        for k in self.keys(): # Put numeric data in arrays #!: Why?
-            if type(self[k]) in [int, float]: 
-                self[k] = np.array([self[k]]) #! Check required data is there
+        #for k in self.keys(): # Put numeric data in arrays #!: Why?
+        #    if type(self[k]) in [int, float]: 
+        #        self[k] = np.array([self[k]]) #! Check required data is there
         # Clearer name for R and V parameters
         self.put("res_regen_constant", self.get_value("R"), self.get_info("R"))
         self.put("res_regen_prop", self.get_value("V"), self.get_info("V"))
@@ -50,7 +50,7 @@ class Record(Infodict):
         self.put("age_distribution", np.copy(a1),
                 "Proportion of population in each age group at each stage.")
         # Space for saving population state for each snapshot
-        self.put("snapshot_pops", [0]*self["number_of_snapshots"][0],
+        self.put("snapshot_pops", [0]*self["number_of_snapshots"],
                 "Complete population state at each snapshot stage.")
         # Initialise arrays for data entry
         def putzero(name, infstr): self.put(name, 0, infstr)
@@ -382,6 +382,7 @@ class Record(Infodict):
         w = np.min([wsize, x.shape[d] + 1]) # Maximum window size
         a_shape = x.shape[:d] + (x.shape[d] - w + 1, w)
         a_strd = x.strides + (x.strides[s],)
+        print a_shape, a_strd
         return np.lib.stride_tricks.as_strided(x, a_shape, a_strd)
 
     def compute_windows(self):

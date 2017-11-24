@@ -31,6 +31,7 @@ def deepkey(key, dict1, dict2, verbose=False):
             if verbose: print v1, v2
             return False
     elif v1 != v2: return False
+    return True
 
 def deepeq(dict1, dict2, verbose=False):
     """Compare two dictionaries element-wise according to the types of
