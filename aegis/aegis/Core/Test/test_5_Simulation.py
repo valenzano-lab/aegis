@@ -1,7 +1,7 @@
 from aegis.Core import Infodict, Config, Population, Outpop
 from aegis.Core import Record, Run, Simulation
 from aegis.Core import chance, init_ages, init_genomes, init_generations, deepeq
-import pytest, importlib, types, random, copy, string, tempfile, os, shutil
+import pytest, imp, types, random, copy, string, tempfile, os, shutil
 import numpy as np
 try:
        import cPickle as pickle
@@ -47,13 +47,13 @@ class TestSimulationInit:
     def test_get_conf_degen(self, sim, ran_str):
         """Confirm that AEGIS raises an error if given an invalid
         config file path."""
-        with pytest.raises(ImportError):
+        with pytest.raises(IOError):
             sim.get_conf(ran_str)
 
     def test_get_conf_good(self, sim, conf_path):
         """Test that get_conf correctly imports parameters from
         the specified path."""
-        c = importlib.import_module(conf_path)
+        c = imp.load_source('ConfFile', conf_path)
         s = sim.copy()
         del s.conf
         s.get_conf(conf_path)
@@ -255,7 +255,7 @@ class TestSimulationFinalisation:
         # Set-up
         s = sim.copy()
         outpref = os.path.join(tempfile.gettempdir(), ran_str)
-        outdir = outpref + "_output"
+        outdir = outpref + "_files"
         s.conf["output_prefix"] = outpref
         s.conf["output_mode"] = output_mode
         s.init_runs()
