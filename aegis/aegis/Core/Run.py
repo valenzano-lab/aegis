@@ -192,9 +192,9 @@ class Run:
     def logprint(self, message):
         """Print message to stdout and save in log object."""
         # Compute numbers of spaces to keep all messages aligned
-        nspace_run = len(str(self.conf["number_of_runs"]-1))-\
-                len(str(self.n_run))
-        nspace_stg = len(str(self.conf["number_of_stages"]-1))\
+        nspace_run = len(str(self.conf["number_of_runs"]-1))\
+                -len(str(self.n_run))
+        nspace_stg = len(str(self.conf["number_of_stages"]))\
                 -len(str(self.n_stage))
         # Create string
         lstr = "RUN {0}{1} | STAGE {2}{3} | {4}".format(" "*nspace_run,

@@ -9,7 +9,7 @@
 ## PACKAGE IMPORT ##
 import numpy as np
 import scipy.stats as st
-import copy, datetime, time, os, importlib, inspect, numbers
+import copy, datetime, time, os, importlib, inspect, numbers, shutil
 from .functions import chance, init_ages, init_genomes, init_generations
 from .functions import timenow, timediff, get_runtime
 from .Config import Infodict, Config
@@ -158,6 +158,8 @@ class Simulation:
         def intro(otype, suffix):
             self.logprint("Saving {}...".format(otype))
             dirname = self.conf["output_prefix"] + "_output/{}".format(suffix)
+            if os.path.exists(dirname): # Overwrite existing output
+                    shutil.rmtree(dirname)
             os.makedirs(dirname)
             return(dirname)
         def save(obj, filename):
@@ -209,7 +211,7 @@ class Simulation:
         self.logprint("Output complete at {}.".format(timenow(True)))
         self.logprint(get_runtime(outstart, outend, "Time for output"))
         # Finish and terminate
-        self.logprint(get_runtime(self.starttime, self.endtime,
+        self.logprint(get_runtime(self.starttime, outend,
             "Total runtime (including output)"))
         self.logprint("Exiting.\n")
 
