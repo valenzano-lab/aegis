@@ -201,6 +201,10 @@ class Config(Infodict):
         mirror("number_of_stages", "The number of stages per run. [int]")
         mirror("number_of_snapshots", "The number of stages in the run\
                 at which to save detailed data (evenly distributed). [int]")
+        mirror("path_to_seed_file", "Path to simulation seed file. [str]")
+#        mirror("seed_run_n", "Run number in seed file from which to take seed \
+#                population (default: seed each run with the corresponding seed run)\
+#                . [int]")
         mirror("start_pop", "Population size at stage 0. [int]")
         mirror("max_fail", "Maximum number of failed attempts per run. [int]")
         # Death and reproduction

@@ -27,7 +27,7 @@ class Simulation:
 
     # INITIALISATION
 
-    def __init__(self, config_file, seed, seed_n, report_n, verbose):
+    def __init__(self, config_file, report_n, verbose):
         """Initialise the simulation and report starting information."""
         self.starttime, self.log = timenow(False), ""
         self.logprint("\nBeginning simulation {}.".format(timenow()))
@@ -38,7 +38,8 @@ class Simulation:
         if isinstance(self.conf["random_seed"], numbers.Number):
             random.seed(self.conf["random_seed"])
         self.report_n, self.verbose = report_n, verbose
-        self.get_startpop(seed, seed_n)
+        #self.get_startpop(self.conf["path_to_seed_file"], self.conf["seed_run_n"])
+        self.get_startpop(self.conf["path_to_seed_file"])
         self.init_runs()
 
     def get_conf(self, file_name):

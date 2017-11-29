@@ -27,7 +27,8 @@ from test_4_Run import run, ran_str
 def sim(request, conf_path):
     """Generate an unseeded Simulation object from the default config
     test file."""
-    return Simulation(conf_path, "", 0, 100, False)
+    #return Simulation(conf_path, "", 0, 100, False)
+    return Simulation(conf_path, 100, False)
 
 ###########
 ## TESTS ##
@@ -41,7 +42,7 @@ class TestSimulationInit:
         match, in the case that both were imported from conf_path."""
         if conf["setup"] == "import":
             sim.conf.put("setup", "import", "Method of fixture generation.")
-            assert sim.conf == conf 
+            assert sim.conf == conf
 
     def test_get_conf_degen(self, sim, ran_str):
         """Confirm that AEGIS raises an error if given an invalid
@@ -50,7 +51,7 @@ class TestSimulationInit:
             sim.get_conf(ran_str)
 
     def test_get_conf_good(self, sim, conf_path):
-        """Test that get_conf correctly imports parameters from 
+        """Test that get_conf correctly imports parameters from
         the specified path."""
         c = importlib.import_module(conf_path)
         s = sim.copy()
@@ -97,7 +98,7 @@ class TestSimulationInit:
     # TODO: Add tests for setting startpops from Record, Run and
     #       Simulation objects
 #    def test_set_startpop(self, sim, opop, pop, rec, rec1, run):
-#        """Test set_startpop functionality for different classes and 
+#        """Test set_startpop functionality for different classes and
 #        parameter values."""
 #        print vars(sim)
 #        print sim.startpop
@@ -106,7 +107,7 @@ class TestSimulationInit:
 #        with pytest.raises(ValueError):
 #            sim.set_startpop(rec, -1)
 #        with pytest.raises(ValueError):
-#            sim.set_startpop(rec, rec["number_of_snapshots"]+1) 
+#            sim.set_startpop(rec, rec["number_of_snapshots"]+1)
 #        ao.uao.eoe
 #        # 4: Run
 #        sim.set_startpop(run, -1)
@@ -202,7 +203,7 @@ class TestSimulationExecution:
         """Test serial execution of simulation is equivalent to
         separately executing each run."""
         s = sim.copy()
-        for r in s.runs: 
+        for r in s.runs:
             assert r.n_stage == 0
             assert not r.complete
         s.execute_series()

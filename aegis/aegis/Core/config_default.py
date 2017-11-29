@@ -8,6 +8,15 @@ output_prefix = "output" # Prefix for output files within simulation directory
 number_of_runs = 2 # Total number of independent runs
 number_of_stages = 10 # Total number of stages per run
 number_of_snapshots = 5 # Points in run at which to record detailed data
+# TODO does it need to be absolute?
+path_to_seed_file = "" # Path to simulation seed file, if no seed then ""
+    # see README for which parameters are inherited from seed, which are
+    # defined anew in this config file
+
+# NOTE we only output pop files now so this has no usage
+#seed_run_n = -1 # Run number in seed file from which to take seed population
+                # default=-1: seed each run with the corresponding seed run
+
 repr_mode = 'sexual' # sexual, asexual, assort_only or recombine_only
 res_start = 1000 # Starting resource value
 res_var = True # Resources vary with population and time; else constant

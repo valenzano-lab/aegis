@@ -18,13 +18,13 @@ parser.add_argument('dir', help="path to simulation directory")
 #parser.add_argument('-l', metavar="<str>", default="log",
 #        help="prefix of simulation log file (default: log)")
 
-parser.add_argument('-s', default="",
-        help="path to simulation seed file (default: no seed)")
-parser.add_argument('-S', default=-1,
-        help="Run number in seed file from which to take seed population\
-                (default: seed each run with the corresponding seed run)")
 
-# NOTE not implemented on PACKAGE branch
+# NOTE moved to config file
+#parser.add_argument('-s', default="",
+#        help="path to simulation seed file (default: no seed)")
+#parser.add_argument('-S', default=-1,
+#        help="Run number in seed file from which to take seed population\
+#                (default: seed each run with the corresponding seed run)")
 #parser.add_argument('-m', type=int, metavar="<int>", default=10,
 #        help="maximum number of failed runs to repeat before accepting result"\
 #                +" (default: 10)")
@@ -46,9 +46,6 @@ if args.profile:
     pr = cProfile.Profile()
     pr.enable() # start profiling
 
-if args.s != "":
-    args.s = os.path.abspath(args.s) # Get abspath before changing dir
-
 #Change to simulation directory
 try:
     #sys.path.remove(os.getcwd()) # NOTE produces an error now
@@ -60,7 +57,7 @@ except OSError:
 with warnings.catch_warnings(DeprecationWarning):
     #sim = Simulation(args.c, args.s, args.S, args.r, args.o, args.m,
     #        args.verbose)
-    sim = Simulation(args.c, args.s, args.S, args.r, args.verbose)
+    sim = Simulation(args.c, args.r, args.verbose)
     # NOTE call without arguments
     #sim.execute(int(args.t)) 
     sim.execute()

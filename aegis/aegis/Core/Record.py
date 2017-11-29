@@ -385,7 +385,7 @@ class Record(Infodict):
         w = np.min([wsize, x.shape[d] + 1]) # Maximum window size
         a_shape = x.shape[:d] + (x.shape[d] - w + 1, w)
         a_strd = x.strides + (x.strides[s],)
-        print a_shape, a_strd
+        #print a_shape, a_strd
         return np.lib.stride_tricks.as_strided(x, a_shape, a_strd)
 
     def compute_windows(self):
