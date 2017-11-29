@@ -1,5 +1,5 @@
 from aegis.Core import Infodict, Config
-import pytest,importlib,types,random,copy,string
+import pytest,importlib,types,random,copy,string,os
 import numpy as np
 
 ##############
@@ -8,13 +8,14 @@ import numpy as np
 
 @pytest.fixture(scope="module")
 def conf_path(request):
-    return "config_test"
+    dirpath = os.path.dirname(os.path.realpath(__file__))
+    filepath = os.path.join(dirpath, "config_test.py")
+    return filepath
 
 @pytest.fixture(params=["import", "random", "random"], scope="module")
 def conf(request, conf_path):
     """Create a default configuration object."""
-    c_import = importlib.import_module(conf_path)
-    c = Config(c_import)
+    c = Config(conf_path)
     c.put("setup", request.param, "Method of fixture generation.")
     if request.param == "random": # Randomise config parameters
         # TODO: Add seed value here?
@@ -204,6 +205,8 @@ class TestConfig:
             else:
                 errstr = "Unexpected config element type: "
                 raise TypeError(errstr + str(type(attr)))
+
+    # TODO: Add test for read_config_file
 
     def test_config_check(self,conf):
         """Test that configurations with incompatible genome parameters are

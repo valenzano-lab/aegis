@@ -10,7 +10,7 @@
 
 ## PACKAGE IMPORT ##
 import numpy as np
-import copy
+import copy, imp
 
 ## AUXILIARY FUNCTIONS ##
 def deepkey(key, dict1, dict2, verbose=False):
@@ -177,12 +177,12 @@ class Infodict:
 class Config(Infodict):
     """Object derived from imported config module."""
 
-    # NOTE what provides "c" to __init__? shouldn't it be passed to Config?
-    def __init__(self, c):
-        """Import basic attributes from a config-file object and set data
+    def __init__(self, filepath):
+        """Import basic attributes from a config file and set data
         descriptors."""
         self.__valdict__ = {}
         self.__infdict__ = {}
+        c = imp.load_source('ConfFile', filepath)
         def mirror(name, infostring):
             """Set a data element's value from the attribute of the same name
             in c, while also setting its description."""

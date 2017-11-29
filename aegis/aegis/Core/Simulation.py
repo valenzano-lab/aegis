@@ -45,8 +45,7 @@ class Simulation:
     def get_conf(self, file_name):
         """Import specified configuration file for simulation."""
         try:
-            conf = importlib.import_module(file_name)
-            self.conf = Config(conf)
+            self.conf = Config(file_name)
         except ImportError:
             s = "No such file in simulation directory: " + file_name
             self.abort(ImportError, s)
@@ -157,7 +156,7 @@ class Simulation:
         # Auxiliary functions
         def intro(otype, suffix):
             self.logprint("Saving {}...".format(otype))
-            dirname = self.conf["output_prefix"] + "_output/{}".format(suffix)
+            dirname = self.conf["output_prefix"] + "_files/{}".format(suffix)
             if os.path.exists(dirname): # Overwrite existing output
                     shutil.rmtree(dirname)
             os.makedirs(dirname)
