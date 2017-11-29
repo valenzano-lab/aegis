@@ -233,7 +233,7 @@ class TestRecord:
                 assert np.array_equal(obj[l], check)
 
     def test_compute_surv_repr_probabilities_true(self, rec1):
-        """Test that compute_surv_repr_probabilities_true performs 
+        """Test that compute_surv_repr_probabilities_true performs
         correctly for a genome filled with 1's.""" #! TODO: How about in a normal case?
         rec1.compute_surv_repr_probabilities_true()
         # Define parameters
@@ -249,7 +249,7 @@ class TestRecord:
             assert np.array_equal(rec1["prob_var"][l], np.zeros(dims[l]))
 
     def test_surv_repr_probabilities_junk(self, rec1):
-        """Test that compute_surv_repr_probabilities_junk performs 
+        """Test that compute_surv_repr_probabilities_junk performs
         correctly for a genome filled with 1's.""" #! TODO: How about in a normal case?
         rec1.compute_surv_repr_probabilities_junk()
         # Define parameters
@@ -294,7 +294,7 @@ class TestRecord:
         # Update record
         rec1.compute_fitness()
         # Test vs expectation
-        assert np.allclose(rec1["fitness_term"], 
+        assert np.allclose(rec1["fitness_term"],
                 rec1["cmv_surv"]*rec1["mean_repr"])
         assert np.allclose(rec1["junk_fitness_term"],
                 rec1["junk_cmv_surv"]*rec1["junk_repr"])
@@ -322,7 +322,7 @@ class TestRecord:
         assert np.array_equal(rec1["n1_var"], np.zeros([m,c]))
 
     def test_compute_entropies(self, rec1):
-        """Test computation of per-bit and per-locus entropy in a 
+        """Test computation of per-bit and per-locus entropy in a
         population, for a genome filled with 1's."""
         rec1.compute_entropies()
         # Define parameters
@@ -386,7 +386,7 @@ class TestRecord:
             sh = (x.shape[dim]-ws+1,) if x.shape[dim]>ws+1 else (0,)
             shape = x.shape[:dim] + sh
             assert np.array_equal(rec1[s+"_window_var"], np.zeros(shape))
-            assert np.array_equal(rec1[s+"_window_mean"], 
+            assert np.array_equal(rec1[s+"_window_mean"],
                     np.tile(exp_val[s],shape))
 
     def test_finalise(self, rec1, rec2):
@@ -400,7 +400,7 @@ class TestRecord:
         assert type(rec2["actual_death_rate"]) is np.ndarray
         for k in rec2.keys():
             print k
-            if k in ["snapshot_pops", "final_pop"]: continue
+            if k in ["snapshot_pops", "final_pop", "snapshot_age_distribution"]: continue
             o1, o2 = rec1[k], rec2[k]
             if k == "actual_death_rate":
                 assert o1.shape == o2.shape

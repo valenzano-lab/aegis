@@ -6,7 +6,7 @@
 #   the course of a simulation, as well as methods for computing       #
 #   more advanced statistics from that information.                    #
 ########################################################################
-# TODO: add generation and parental-age recording 
+# TODO: add generation and parental-age recording
 # TODO: convert some output into pandas data frames for easier plotting
 
 ## PACKAGE IMPORT ##
@@ -29,13 +29,13 @@ class Record(Infodict):
         self.__valdict__ = conf.__valdict__.copy()
         self.__infdict__ = conf.__infdict__.copy()
         #for k in self.keys(): # Put numeric data in arrays #!: Why?
-        #    if type(self[k]) in [int, float]: 
+        #    if type(self[k]) in [int, float]:
         #        self[k] = np.array([self[k]]) #! Check required data is there
         # Clearer name for R and V parameters
         self.put("res_regen_constant", self.get_value("R"), self.get_info("R"))
         self.put("res_regen_prop", self.get_value("V"), self.get_info("V"))
         # Basic run info
-        self.put("dieoff", np.array(False), 
+        self.put("dieoff", np.array(False),
                 "Boolean specifying whether run ended in extinction.")
         self.put("prev_failed", np.array(0),
                 "Number of run repeats before this one that ended in dieoff.")
@@ -147,7 +147,7 @@ class Record(Infodict):
 
     # CALCULATING PROBABILITIES
     def p_calc(self, gt, bound):
-        """Derive a probability array from a genotype array and list of 
+        """Derive a probability array from a genotype array and list of
         max/min values."""
         minval, maxval, limit = np.min(gt), np.max(gt), 2*self["n_base"]
         if minval < 0:
@@ -164,7 +164,7 @@ class Record(Infodict):
         return self.p_calc(gt, self["repr_bound"])
 
     # PER-STAGE RECORDING
-    def update(self, population, resources, surv_penf, repr_penf, n_stage, 
+    def update(self, population, resources, surv_penf, repr_penf, n_stage,
             n_snap=-1):
         """Record per-stage data (population size, age distribution, resources,
         and survival penalties), plus, if on a snapshot stage, the population
@@ -185,7 +185,7 @@ class Record(Infodict):
 
     def compute_locus_density(self):
         """Compute normalised distributions of sum genotypes for each locus in
-        the genome at each snapshot, for survival, reproduction, neutral and 
+        the genome at each snapshot, for survival, reproduction, neutral and
         all loci."""
         l,m,ns = self["max_ls"], self["maturity"], self["n_states"]
         loci_all = np.array([p.toPop().sorted_loci() \
@@ -299,7 +299,7 @@ class Record(Infodict):
         self["junk_repr"] = junk_repr
 
     def compute_fitness(self):
-        """Compute true and junk per-age and total fitness for each 
+        """Compute true and junk per-age and total fitness for each
         snapshot."""
         # Per-age fitness contribution = P(survival to x) x P(repr at x)
         f = self["cmv_surv"] * self["mean_repr"]
@@ -400,7 +400,8 @@ class Record(Infodict):
     def finalise(self):
         """Calculate additional stats from recorded data of a completed run."""
         # Subset age distributions to snapshot stages for plotting
-        self.put("snapshot_age_distribution", 
+        # TODO test this in record test for finalise
+        self.put("snapshot_age_distribution",
                 self["age_distribution"][self["snapshot_stages"]],
                 "Distribution of ages in the population at each snapshot stage."
                 )
@@ -427,7 +428,7 @@ class Record(Infodict):
             self["snapshot_pops"] = 0
 
     # __startpop__ method
-    
+
     def __startpop__(self, pop_number):
             if pop_number < 0 and isinstance(self["final_pop"], Population):
                 msg = "Setting seed from final population in Record."
