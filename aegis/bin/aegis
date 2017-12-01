@@ -4,15 +4,19 @@
 import argparse,os,sys,warnings,pyximport; pyximport.install()
 import aegis
 
-parser = argparse.ArgumentParser(description='Run the genome ageing \
-        simulation.')
-parser.add_argument('script', help="AEGIS script to run") # TODO: Add more information here
-parser.add_argument('infile', help="path to input file")
+parser = argparse.ArgumentParser(description='Run the genome ageing simulation.',\
+        formatter_class=argparse.RawTextHelpFormatter)
+# TODO: add README and instruct the user to read it on the webpage before running
+parser.add_argument('script', help="AEGIS script to run:\n\
+    run - run the simulation with the config file specified in\n\
+          infile\n\
+    getconfig - copies the default config file to infile")
+parser.add_argument('infile', help="path to input config file")
 parser.add_argument('-m', '--module', metavar='<str>', default="Core",
         help="AEGIS module to use for simulation run (default: 'Core')")
 parser.add_argument('-v', '--verbose', action="store_true",
-        help="display full information at each report stage \
-                (default: only starting population)")
+        help="display full information at each report stage\n\
+    (default: only starting population)")
 parser.add_argument('-r', type=int, metavar="<int>", default=100,
         help="report information every <int> stages (default: 100)")
 #parser.add_argument('-p', '--profile', action="store_true",
