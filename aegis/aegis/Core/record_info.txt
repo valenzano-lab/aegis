@@ -136,8 +136,8 @@ params                          ['g_dist','repr_offset','neut_offset','repr_mode
 ################                #####
 # dict objects #                shape
 ################                #####
-density['a']                    (n_states,number_of_snapshots)
-density_per_locus['a']          (n_states,number_of_snapshots,number_of_loci)
+density['a']                    (number_of_snapshots,n_states)
+density_per_locus['a']          (number_of_snapshots,number_of_loci,n_states)
 mean_gt['a']                    (number_of_snapshots,number_of_loci)
 var_gt['a']                     (number_of_snapshots,number_of_loci)
 entropy_gt['?']                 (number_of_snapshots)
