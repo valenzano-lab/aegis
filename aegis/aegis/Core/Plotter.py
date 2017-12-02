@@ -5,7 +5,7 @@
 # Description: Wrapper object that takes and stores a passed Record    #
 #   object and implements plotting methods on it.                      #
 ########################################################################
-# TODO: 
+# TODO:
 # - Formatting code (e.g. theme_bw)
 # - Overlaying/averaging multiple runs
 # - Restore code for limits
@@ -58,33 +58,44 @@ class Plotter:
         source = source if source else self.record
         arr = source[key]
         values = np.arange(arr.shape[dim]) # Set of possible co-ord values
-        shape = [int(np.prod(arr.shape[dim+1:])), 
+        shape = [int(np.prod(arr.shape[dim+1:])),
                 int(np.prod(arr.shape[:dim+1]))/arr.shape[dim]]
         return np.tile(values, shape).T.flatten().astype(int)
 
-    def make_dataframe(self, keys, dimlabels, source=""):
+    def make_dataframe(self, keys, dimlabels, subkeys="", source=""):
         """Convert one or more Record entries into a data-frame, with
         columns for the corresponding key, the value, and the
         co-ordinates in the entry array."""
+        # check subkeys valid
+        if subkeys:
+            if not isinstance(subkeys, list):
+                raise TypeError("subkeys is of invalid type: {}".format(type(subkeys)))
+            elif not all(isinstance(k, str) for k in subkeys):
+                raise TypeError("subkeys elements are of invalid type: {}".format(type(subkeys[0])))
+
         source = source if source else self.record
         df = pd.DataFrame()
         for key in keys:
             val = source[key]
             if isinstance(val, dict):
                 df = df.append(self.make_dataframe(val.keys(),
-                    dimlabels, val))
+                    dimlabels, "", val))
             else:
                 ddict = {"key":key,"value":val.flatten()}
                 for n in xrange(len(dimlabels)):
                     ddict[dimlabels[n]] = self.get_flattened_coords(
                             key, n, source)
                 df = df.append(pd.DataFrame(ddict))
-        return df
 
-    def solo_plot(self, keys, dimlabels, geoms, overlay=False):
+        if subkeys:
+            return df[df.key.isin(subkeys)]
+        else:
+            return df
+
+    def solo_plot(self, keys, dimlabels, geoms, subkeys="", overlay=False):
         """Create a single plot, either of multiple data series (overlay=False)
         or of overlayed slices of a single series (overlay=True)."""
-        data = self.make_dataframe(keys, dimlabels)
+        data = self.make_dataframe(keys, dimlabels, subkeys)
         if overlay: data[dimlabels[0]] = data[dimlabels[0]].astype(str)
         plot = ggplot.ggplot(data, ggplot.aes(x=dimlabels[int(overlay)],
             y="value", color = dimlabels[0] if overlay else "key"))
@@ -92,10 +103,10 @@ class Plotter:
             plot += getattr(ggplot, "geom_"+g)()
         return plot
 
-    def grid_plot(self, keys, dimlabels, facet, geoms):
+    def grid_plot(self, keys, dimlabels, facet, geoms, subkeys=""):
         """Create a grid of plots, showing corresponding slices of one
         or more data series (e.g. at different time points."""
-        data = self.make_dataframe(keys, dimlabels)
+        data = self.make_dataframe(keys, dimlabels, subkeys="")
         xlabel = dimlabels[1] if dimlabels[0] == facet else dimlabels[0]
         plot = ggplot.ggplot(data, ggplot.aes(x=xlabel, y="value",
             color = "key")) + ggplot.facet_wrap(facet)
@@ -110,7 +121,7 @@ class Plotter:
         return self.solo_plot(keys, ["stage"], ["step"])
 
     def snapshot_trace(self, keys):
-        """Simple per-snapshot line + point trace for specified Record 
+        """Simple per-snapshot line + point trace for specified Record
         keys"""
         return self.solo_plot(keys, ["snapshot"], ["line","point"])
 
@@ -154,5 +165,3 @@ class Plotter:
         # TODO: To get this to work, will need subkey ability (like for
         # plot_density) and the ability to apply some sort of transformation
         # to the data
-
-
