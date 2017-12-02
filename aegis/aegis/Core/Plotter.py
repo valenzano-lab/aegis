@@ -50,47 +50,72 @@ class Plotter:
             self.plots[n].save(outpath)
 
 
-    def get_flattened_coords(self, key, dim, source=""):
+    def get_flattened_coords(self, dim, arr):
         """Given an array and a dimension, returns the original
         co-ordinate in that dimension of each element in a flattened
         version of the input array."""
-        # Import data and verify dimensions
-        source = source if source else self.record
-        arr = source[key]
         values = np.arange(arr.shape[dim]) # Set of possible co-ord values
         shape = [int(np.prod(arr.shape[dim+1:])),
                 int(np.prod(arr.shape[:dim+1]))/arr.shape[dim]]
         return np.tile(values, shape).T.flatten().astype(int)
 
-    def make_dataframe(self, keys, dimlabels, subkeys="", source=""):
-        """Convert one or more Record entries into a data-frame, with
+    def make_dataframe(self, keys, dimlabels, subkeys="", snapshot="", source=""):
+        """
+        Convert one or more Record entries into a data-frame, with
         columns for the corresponding key, the value, and the
-        co-ordinates in the entry array."""
+        co-ordinates in the entry array.
+
+                     subkeys <list> - if entry is a dictionary, this determines
+                                      which keys will be included in the data frame
+               snapshot <int/'all'> - if entry has snapshot dimension, this
+                                      determines which respecting indices will be
+                                      included in the data frame
+        source <dict/numpy.ndarray> - self.record by default
+        """
+
         # check subkeys valid
         if subkeys:
             if not isinstance(subkeys, list):
-                raise TypeError("subkeys is of invalid type: {}".format(type(subkeys)))
+                raise TypeError("subkeys is of invalid type: {}".\
+                        format(type(subkeys)))
             elif not all(isinstance(k, str) for k in subkeys):
-                raise TypeError("subkeys elements are of invalid type: {}".format(type(subkeys[0])))
+                raise TypeError("subkeys elements are of invalid type: {}".\
+                        format(type(subkeys[0])))
+        # check snapshot valid and set it
+        if not isinstance(snapshot,str) and not isinstance(snapshot,int):
+            raise ValueError("Invalid snapshot value: {}".format(snapshot))
+        elif snapshot == "all":
+            snapshot = -1
+        elif snapshot == "":
+            snapshot = self.record["number_of_snapshots"]-1
+        elif snapshot < -1 or snapshot >= self.record["number_of_snapshots"]:
+            raise ValueError("Invalid snapshot value: {}".format(snapshot))
+        # set source
+        source = source if isinstance(source,dict) or isinstance(source,np.ndarray)\
+                else self.record
 
-        source = source if source else self.record
+        # build data frame
         df = pd.DataFrame()
         for key in keys:
+
             val = source[key]
+            # if dictionary
             if isinstance(val, dict):
-                df = df.append(self.make_dataframe(val.keys(),
-                    dimlabels, "", val))
+                subkeys = val.keys() if not subkeys else subkeys
+                df = df.append(self.make_dataframe(subkeys, dimlabels,
+                    "", snapshot, val))
+
+            # if numpy.ndarray
             else:
-                ddict = {"key":key,"value":val.flatten()}
+                if self.record["number_of_snapshots"] in val.shape and snapshot>-1:
+                    val = val[snapshot]
+                    dimlabels = dimlabels[1:]
+                ddict = {"key":key, "value":val.flatten()}
                 for n in xrange(len(dimlabels)):
-                    ddict[dimlabels[n]] = self.get_flattened_coords(
-                            key, n, source)
+                    ddict[dimlabels[n]] = self.get_flattened_coords(n, val)
                 df = df.append(pd.DataFrame(ddict))
 
-        if subkeys:
-            return df[df.key.isin(subkeys)]
-        else:
-            return df
+        return df
 
     def solo_plot(self, keys, dimlabels, geoms, subkeys="", overlay=False):
         """Create a single plot, either of multiple data series (overlay=False)
@@ -165,3 +190,4 @@ class Plotter:
         # TODO: To get this to work, will need subkey ability (like for
         # plot_density) and the ability to apply some sort of transformation
         # to the data
+
