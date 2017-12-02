@@ -195,12 +195,12 @@ class TestRecord:
         m,l,b = rec1["number_of_snapshots"], rec1["max_ls"], rec1["n_states"]
         g,nn,mt = len(rec1["genmap"]), rec1["n_neutral"], rec1["maturity"]
         llist = ["a","n","r","s"]
-        dims = {"a":[b,m,g],"n":[b,m,nn],"r":[b,m,l-mt], "s":[b,m,l]}
+        dims = {"a":[m,g,b],"n":[m,nn,b],"r":[m,l-mt,b], "s":[m,l,b]}
         obj = rec1["density_per_locus"]
         assert sorted(obj.keys()) == llist
         for l in llist:
             check = np.zeros(dims[l])
-            check[-1] = 1
+            check[:,:,-1] = 1
             assert np.array_equal(obj[l], check)
 
     def test_compute_total_density(self, rec1):
@@ -212,8 +212,8 @@ class TestRecord:
         obj = rec1["density"]
         assert sorted(obj.keys()) == llist
         for l in llist:
-            check = np.zeros([b,m])
-            check[-1] = 1
+            check = np.zeros([m,b])
+            check[:,-1] = 1
             assert np.array_equal(obj[l], check)
 
     def test_compute_genotype_mean_var(self, rec1):
