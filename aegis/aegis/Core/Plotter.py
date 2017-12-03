@@ -10,6 +10,8 @@
 # - Overlaying/averaging multiple runs
 # - Restore code for limits
 # - Write tests
+# - add titles, axis labels, snapshot info...
+# - add missing plots
 
 import numpy as np, pandas as pd, ggplot, os, shutil
 try:
@@ -25,21 +27,33 @@ class Plotter:
         rfile = open(record, "rb")
         try:
             self.record = pickle.load(rfile)
-            self.plot_methods = ["plot_population_resources",\
-                                 "plot_starvation",\
-                                 "plot_fitness",\
+            self.plot_methods = [#"plot_population_resources",\
+                                 #"plot_starvation",\
+                                 #"plot_fitness",\
+                                 #"plot_entropy_gt",\
+                                 #"plot_entropy_bits",\
+                                 #"plot_age_distribution",\
+                                 #"plot_density_per_locus",\
+                                 #"plot_per_age_fitness",\
+                                 #"plot_density",\
+                                 "plot_mean_gt",\
+                                 "plot_var_gt",\
                                  "plot_entropy_gt",\
-                                 "plot_entropy_bits",\
-                                 "plot_age_distribution",\
-                                 "plot_per_age_fitness"
+                                 "plot_repr_value"
                                  ]
-            self.plot_names = ["0_pop-res",\
-                               "0_starvation",\
-                               "0_fitness",\
-                               "0_plot_entropy_gt",\
-                               "0_plot_entropy_bits",\
-                               "0_age_distribution",\
-                               "0_plot_per_age_fitness"
+            self.plot_names = [#"pop-res",\
+                               #"starvation",\
+                               #"fitness",\
+                               #"plot_entropy_gt",\
+                               #"plot_entropy_bits",\
+                               #"age_distribution",\
+                               #"density_per_locus",\
+                               #"per_age_fitness",\
+                               #"density",\
+                               "mean_gt",\
+                               "var_gt",\
+                               "entropy_gt",\
+                               "repr_value"
                                ]
             self.plots = []
         finally:
@@ -89,10 +103,11 @@ class Plotter:
         # check subkeys valid
         if subkeys:
             if not isinstance(subkeys, list):
-                raise TypeError("subkeys is of invalid type: {}".\
+                raise TypeError("subkeys is of invalid type: {}. Must be list.".\
                         format(type(subkeys)))
             elif not all(isinstance(k, str) for k in subkeys):
-                raise TypeError("subkeys elements are of invalid type: {}".\
+                raise TypeError("subkeys elements are of invalid type: {}. Must be\
+                        string".\
                         format(type(subkeys[0])))
         # check snapshot valid and set it
         if not isinstance(snapshot,str) and not isinstance(snapshot,int):
@@ -120,13 +135,12 @@ class Plotter:
 
             # if numpy.ndarray
             else:
-                if self.record["number_of_snapshots"] in val.shape and snapshot>-1:
-                    val = val[snapshot]
-                    dimlabels = dimlabels[1:]
                 ddict = {"key":key, "value":val.flatten()}
                 for n in xrange(len(dimlabels)):
                     ddict[dimlabels[n]] = self.get_flattened_coords(n, val)
                 df = df.append(pd.DataFrame(ddict))
+                if self.record["number_of_snapshots"] in val.shape and snapshot>-1:
+                    df = df[df.snapshot == snapshot]
 
         return df
 
@@ -138,6 +152,7 @@ class Plotter:
         """Create a single plot, either of multiple data series (overlay=False)
         or of overlayed slices of a single series (overlay=True)."""
         data = self.make_dataframe(keys, dimlabels, subkey, snapshot)
+        #print data
         #dimlabels = data.columns.tolist()
         #if "key" in dimlabels: dimlabels.remove("key")
         if overlay: data[dimlabels[0]] = data[dimlabels[0]].astype(str)
@@ -161,16 +176,25 @@ class Plotter:
     ##############
     # plot types #
     ##############
-    # TODO make these work with new make_dataframe
 
     def stage_trace(self, keys):
         """Simple per-stage line trace for specified Record keys."""
         return self.solo_plot(keys, ["stage"], "stage", ["step"])
 
     def snapshot_trace(self, keys, subkey=""):
-        """Simple per-snapshot line + point trace for specified Record keys"""
+        """Simple per-snapshot line + point trace for specified Record keys."""
         return self.solo_plot(keys, ["snapshot"], "snapshot", ["line","point"],\
                 subkey, "all")
+
+    def age_trace(self, keys, geoms, snapshot=""):
+        """Simple per-age trace for specified Record keys for specified snapshot.
+        (defualt: last snapshot)"""
+        if snapshot == "all":
+            raise ValueError("Invalid snapshot value: 'all'. Use \
+                    age_overlay instead.")
+        return self.solo_plot(keys, ["snapshot","age"], "age", geoms, "", snapshot)
+
+    # TODO add age_overlay (wrg to snapshot)
 
     def snapshot_overlay(self, keys, dimlabel, subkey=""):
         """Per-snapshot overlay line plot of a single Record key."""
@@ -201,6 +225,30 @@ class Plotter:
     def plot_entropy_bits(self):
         return self.snapshot_trace(["entropy_bits"])
 
+    #############
+    # age_trace #
+    #############
+    def plot_repr_value(self):
+        return self.age_trace(["repr_value"], ["point","line"])
+
+    def plot_junk_repr_value(self):
+        return self.age_trace(["junk_repr_value"], ["point","line"])
+
+    def plot_mean_repr(self):
+        return self.age_trace(["mean_repr"], ["point","line"])
+
+    def plot_junk_repr(self):
+        return self.age_trace(["junk_repr"], ["point","line"])
+
+    def plot_cmv_surv(self):
+        return self.age_trace(["cmv_surv"], ["point","line"])
+
+    def plot_fitness_term(self):
+        return self.age_trace(["fitness_term"], ["point","line"])
+
+    def plot_junk_fitness_term(self):
+        return self.age_trace(["junk_fitness_term"], ["point","line"])
+
     ####################
     # snapshot_overlay #
     ####################
@@ -213,15 +261,42 @@ class Plotter:
     ############
     # specific #
     ############
-    def plot_density(self):
-        return self.grid_plot(["density"], ["genotype", "snapshot"],\
-                "snapshot", ["line"])
-        # TODO: Enable plotting density overlays of single locus type
-        # ("subkeys" argument to make_dataframe?)
 
-    def plot_mean_gt(self):
-        return self.grid_plot(["mean_gt"], ["snapshot","age"], "snapshot",\
-                ["point"])
-        # TODO: To get this to work, will need subkey ability (like for
-        # plot_density) and the ability to apply some sort of transformation
-        # to the data
+    # dictionaries
+    # TODO why do I get that this function is not defined if I use it below?
+    def check_asrn(key):
+        if subkey not in ['a','s','r','n']:
+            raise ValueError("Invalid key value: {}".format(subkey))
+
+    def plot_density_per_locus(self, subkey="a", snapshot=""):
+        """
+        subkey: 'a','s','r','n'.
+        snapshot: last by default
+        """
+        #check_asrn(subkey)
+        return self.solo_plot(["density_per_locus"], ["snapshot", "locus", \
+                "genotype"], "locus", ["point"], list(subkey), snapshot)
+
+    def plot_density(self, subkey="a", snapshot=""):
+        """
+        subkey: 'a','s','r','n'.
+        snapshot: last by default
+        """
+        #check_asrn(subkey)
+        return self.solo_plot(["density"], ["snapshot", "genotype"], "genotype",\
+                ["point","line"], list(subkey),snapshot)
+
+    def plot_mean_gt(self, subkey="a", snapshot=""):
+        #check_asrn(subkey)
+        return self.solo_plot(["mean_gt"], ["snapshot", "locus"], "locus",\
+                ["point"], list(subkey),snapshot)
+
+    def plot_var_gt(self, subkey="a", snapshot=""):
+        #check_asrn(subkey)
+        return self.solo_plot(["var_gt"], ["snapshot", "locus"], "locus",\
+                ["point"], list(subkey),snapshot)
+
+    def plot_entropy_gt(self, subkey="a"):
+        #check_asrn(subkey)
+        return self.solo_plot(["entropy_gt"], ["snapshot"], "snapshot",\
+                ["point"], list(subkey), "all")
