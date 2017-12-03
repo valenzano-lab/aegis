@@ -25,8 +25,22 @@ class Plotter:
         rfile = open(record, "rb")
         try:
             self.record = pickle.load(rfile)
-            self.plot_methods = ["plot_population_resources"]
-            self.plot_names = ["0_pop-res"]
+            self.plot_methods = ["plot_population_resources",\
+                                 "plot_starvation",\
+                                 "plot_fitness",\
+                                 "plot_entropy_gt",\
+                                 "plot_entropy_bits",\
+                                 "plot_age_distribution",\
+                                 "plot_per_age_fitness"
+                                 ]
+            self.plot_names = ["0_pop-res",\
+                               "0_starvation",\
+                               "0_fitness",\
+                               "0_plot_entropy_gt",\
+                               "0_plot_entropy_bits",\
+                               "0_age_distribution",\
+                               "0_plot_per_age_fitness"
+                               ]
             self.plots = []
         finally:
             rfile.close()
@@ -49,7 +63,6 @@ class Plotter:
             outpath = os.path.join(outdir, self.plot_names[n] + ".png")
             self.plots[n].save(outpath)
 
-
     def get_flattened_coords(self, dim, arr):
         """Given an array and a dimension, returns the original
         co-ordinate in that dimension of each element in a flattened
@@ -69,7 +82,7 @@ class Plotter:
                                       which keys will be included in the data frame
                snapshot <int/'all'> - if entry has snapshot dimension, this
                                       determines which respecting indices will be
-                                      included in the data frame
+                                      included in the data frame (defualt: last)
         source <dict/numpy.ndarray> - self.record by default
         """
 
@@ -117,21 +130,27 @@ class Plotter:
 
         return df
 
-    def solo_plot(self, keys, dimlabels, geoms, subkeys="", overlay=False):
+    ##################
+    # plot functions #
+    ##################
+    def solo_plot(self, keys, dimlabels, xaxis, geoms, subkey="", snapshot="",\
+            overlay=False):
         """Create a single plot, either of multiple data series (overlay=False)
         or of overlayed slices of a single series (overlay=True)."""
-        data = self.make_dataframe(keys, dimlabels, subkeys)
+        data = self.make_dataframe(keys, dimlabels, subkey, snapshot)
+        #dimlabels = data.columns.tolist()
+        #if "key" in dimlabels: dimlabels.remove("key")
         if overlay: data[dimlabels[0]] = data[dimlabels[0]].astype(str)
-        plot = ggplot.ggplot(data, ggplot.aes(x=dimlabels[int(overlay)],
-            y="value", color = dimlabels[0] if overlay else "key"))
+        plot = ggplot.ggplot(data, ggplot.aes(x=xaxis,
+            y="value", color = "snapshot" if overlay else "key"))
         for g in geoms:
             plot += getattr(ggplot, "geom_"+g)()
         return plot
 
-    def grid_plot(self, keys, dimlabels, facet, geoms, subkeys=""):
+    def grid_plot(self, keys, dimlabels, facet, geoms, subkey=""):
         """Create a grid of plots, showing corresponding slices of one
         or more data series (e.g. at different time points."""
-        data = self.make_dataframe(keys, dimlabels, subkeys="")
+        data = self.make_dataframe(keys, dimlabels, subkey)
         xlabel = dimlabels[1] if dimlabels[0] == facet else dimlabels[0]
         plot = ggplot.ggplot(data, ggplot.aes(x=xlabel, y="value",
             color = "key")) + ggplot.facet_wrap(facet)
@@ -139,21 +158,28 @@ class Plotter:
             plot += getattr(ggplot, "geom_"+g)()
         return plot
 
-    # Plot types
+    ##############
+    # plot types #
+    ##############
+    # TODO make these work with new make_dataframe
 
     def stage_trace(self, keys):
         """Simple per-stage line trace for specified Record keys."""
-        return self.solo_plot(keys, ["stage"], ["step"])
+        return self.solo_plot(keys, ["stage"], "stage", ["step"])
 
-    def snapshot_trace(self, keys):
-        """Simple per-snapshot line + point trace for specified Record
-        keys"""
-        return self.solo_plot(keys, ["snapshot"], ["line","point"])
+    def snapshot_trace(self, keys, subkey=""):
+        """Simple per-snapshot line + point trace for specified Record keys"""
+        return self.solo_plot(keys, ["snapshot"], "snapshot", ["line","point"],\
+                subkey, "all")
 
-    def snapshot_overlay(self, key, dimlabel):
+    def snapshot_overlay(self, keys, dimlabel, subkey=""):
         """Per-snapshot overlay line plot of a single Record key."""
-        return self.solo_plot([key], ["snapshot", dimlabel], ["line"], True)
+        return self.solo_plot(keys, ["snapshot", dimlabel], dimlabel, ["line"],\
+                subkey, "all", True)
 
+    ###############
+    # stage_trace #
+    ###############
     def plot_population_resources(self):
         # TODO: enable swapping order of series for constant v variable resources
         # TODO: Set limits at object level?
@@ -163,14 +189,11 @@ class Plotter:
         # TODO: plot y-axis in log-space of base matching starvation increment
         return self.stage_trace(["surv_penf","repr_penf"])
 
-    def plot_age_distribution(self):
-        return self.snapshot_overlay(["snapshot_age_distribution"], "age")
-
+    ##################
+    # snapshot_trace #
+    ##################
     def plot_fitness(self):
         return self.snapshot_trace(["fitness", "junk_fitness"])
-
-    def plot_per_age_fitness(self):
-        return self.snapshot_overlay(["fitness_term"], "age")
 
     def plot_entropy_gt(self):
         return self.snapshot_trace(["entropy_gt"])
@@ -178,16 +201,27 @@ class Plotter:
     def plot_entropy_bits(self):
         return self.snapshot_trace(["entropy_bits"])
 
+    ####################
+    # snapshot_overlay #
+    ####################
+    def plot_age_distribution(self):
+        return self.snapshot_overlay(["snapshot_age_distribution"], "age")
+
+    def plot_per_age_fitness(self):
+        return self.snapshot_overlay(["fitness_term"], "age")
+
+    ############
+    # specific #
+    ############
     def plot_density(self):
-        return self.grid_plot(["density"], ["genotype", "snapshot"],
+        return self.grid_plot(["density"], ["genotype", "snapshot"],\
                 "snapshot", ["line"])
         # TODO: Enable plotting density overlays of single locus type
         # ("subkeys" argument to make_dataframe?)
 
     def plot_mean_gt(self):
-        return self.grid_plot(["mean_gt"], ["snapshot","age"], "snapshot",
+        return self.grid_plot(["mean_gt"], ["snapshot","age"], "snapshot",\
                 ["point"])
         # TODO: To get this to work, will need subkey ability (like for
         # plot_density) and the ability to apply some sort of transformation
         # to the data
-
