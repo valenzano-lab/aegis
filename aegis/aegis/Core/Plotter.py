@@ -27,33 +27,39 @@ class Plotter:
         rfile = open(record, "rb")
         try:
             self.record = pickle.load(rfile)
-            self.plot_methods = [#"plot_population_resources",\
-                                 #"plot_starvation",\
-                                 #"plot_fitness",\
-                                 #"plot_entropy_gt",\
-                                 #"plot_entropy_bits",\
-                                 #"plot_age_distribution",\
-                                 #"plot_density_per_locus",\
-                                 #"plot_per_age_fitness",\
-                                 #"plot_density",\
+            self.plot_methods = ["plot_population_resources",\
+                                 "plot_starvation",\
+                                 "plot_fitness",\
+                                 "plot_fitness_term",\
+                                 "plot_fitness_term_overlay",\
+                                 "plot_entropy_gt",\
+                                 "plot_entropy_bits",\
+                                 "plot_age_distribution",\
+                                 "plot_density_per_locus",\
+                                 "plot_density",\
                                  "plot_mean_gt",\
                                  "plot_var_gt",\
                                  "plot_entropy_gt",\
-                                 "plot_repr_value"
+                                 "plot_repr_value",\
+                                 "plot_mean_repr",\
+                                 "plot_cmv_surv",\
                                  ]
-            self.plot_names = [#"pop-res",\
-                               #"starvation",\
-                               #"fitness",\
-                               #"plot_entropy_gt",\
-                               #"plot_entropy_bits",\
-                               #"age_distribution",\
-                               #"density_per_locus",\
-                               #"per_age_fitness",\
-                               #"density",\
+            self.plot_names = ["pop-res",\
+                               "starvation",\
+                               "fitness",\
+                               "fitness_term",\
+                               "per_fitness_term_overlay",\
+                               "plot_entropy_gt",\
+                               "plot_entropy_bits",\
+                               "age_distribution",\
+                               "density_per_locus",\
+                               "density",\
                                "mean_gt",\
                                "var_gt",\
                                "entropy_gt",\
-                               "repr_value"
+                               "repr_value",\
+                               "mean_repr",\
+                               "cmv_surv",\
                                ]
             self.plots = []
         finally:
@@ -173,10 +179,15 @@ class Plotter:
             plot += getattr(ggplot, "geom_"+g)()
         return plot
 
+    # auxiliary functions #
+    # TODO check_asrn
+    # TODO add snapshot info to graphic
+    # TODO add title
+    # TODO add vertical line
+
     ##############
     # plot types #
     ##############
-
     def stage_trace(self, keys):
         """Simple per-stage line trace for specified Record keys."""
         return self.solo_plot(keys, ["stage"], "stage", ["step"])
@@ -229,38 +240,36 @@ class Plotter:
     # age_trace #
     #############
     def plot_repr_value(self):
-        return self.age_trace(["repr_value"], ["point","line"])
-
-    def plot_junk_repr_value(self):
-        return self.age_trace(["junk_repr_value"], ["point","line"])
+        return self.age_trace(["repr_value","junk_repr_value"], ["point","line"])
 
     def plot_mean_repr(self):
-        return self.age_trace(["mean_repr"], ["point","line"])
-
-    def plot_junk_repr(self):
-        return self.age_trace(["junk_repr"], ["point","line"])
+        return self.age_trace(["mean_repr","junk_repr"], ["point","line"])
 
     def plot_cmv_surv(self):
-        return self.age_trace(["cmv_surv"], ["point","line"])
+        return self.age_trace(["cmv_surv","junk_cmv_surv"], ["point","line"])
 
     def plot_fitness_term(self):
-        return self.age_trace(["fitness_term"], ["point","line"])
-
-    def plot_junk_fitness_term(self):
-        return self.age_trace(["junk_fitness_term"], ["point","line"])
+        return self.age_trace(["fitness_term","junk_fitness_term"], ["point",\
+                "line"])
 
     ####################
     # snapshot_overlay #
     ####################
+    # TODO should we also plot age_distribution averaged over a window around
+    # snapshot stage?
     def plot_age_distribution(self):
         return self.snapshot_overlay(["snapshot_age_distribution"], "age")
 
-    def plot_per_age_fitness(self):
+    def plot_fitness_term_overlay(self):
         return self.snapshot_overlay(["fitness_term"], "age")
 
     ############
     # specific #
     ############
+
+    # TODO actual death rate - do we average and how?
+
+    # TODO n1, n1_var
 
     # dictionaries
     # TODO why do I get that this function is not defined if I use it below?
@@ -268,6 +277,9 @@ class Plotter:
         if subkey not in ['a','s','r','n']:
             raise ValueError("Invalid key value: {}".format(subkey))
 
+    # TODO what should be the x-axis?
+    # now it prints all 21 y values for locus x on (x,y)
+    # plot it agains index (like what I draw on paper)
     def plot_density_per_locus(self, subkey="a", snapshot=""):
         """
         subkey: 'a','s','r','n'.
