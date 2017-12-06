@@ -10,8 +10,9 @@
 # - Overlaying/averaging multiple runs
 # - Restore code for limits
 # - Write tests
-# - add titles, axis labels, snapshot info...
 # - add missing plots
+
+# TODO averaging: function separate from make_dataframe
 
 import numpy as np, pandas as pd, ggplot, os, shutil
 try:
@@ -43,6 +44,8 @@ class Plotter:
                                  "plot_repr_value",\
                                  "plot_mean_repr",\
                                  "plot_cmv_surv",\
+                                 "plot_n1",\
+                                 "plot_n1_var"
                                  ]
             self.plot_names = ["pop-res",\
                                "starvation",\
@@ -60,6 +63,8 @@ class Plotter:
                                "repr_value",\
                                "mean_repr",\
                                "cmv_surv",\
+                               "n1",\
+                               "n1_var"
                                ]
             self.plots = []
         finally:
@@ -83,6 +88,7 @@ class Plotter:
             outpath = os.path.join(outdir, self.plot_names[n] + ".png")
             self.plots[n].save(outpath)
 
+    # TODO check if pandas.melt does a better job with this
     def get_flattened_coords(self, dim, arr):
         """Given an array and a dimension, returns the original
         co-ordinate in that dimension of each element in a flattened
@@ -154,20 +160,36 @@ class Plotter:
     # plot functions #
     ##################
     def solo_plot(self, keys, dimlabels, xaxis, geoms, subkey="", snapshot="",\
-            overlay=False):
+            overlay=False, title = ""):
         """Create a single plot, either of multiple data series (overlay=False)
         or of overlayed slices of a single series (overlay=True)."""
         data = self.make_dataframe(keys, dimlabels, subkey, snapshot)
         #print data
         #dimlabels = data.columns.tolist()
         #if "key" in dimlabels: dimlabels.remove("key")
+        # check snapshot valid and set it
+        if not isinstance(snapshot,str) and not isinstance(snapshot,int):
+            raise ValueError("Invalid snapshot value: {}".format(snapshot))
+        elif snapshot == "all":
+            snapshot = -1
+        elif snapshot == "":
+            snapshot = self.record["number_of_snapshots"]-1
+        elif snapshot < -1 or snapshot >= self.record["number_of_snapshots"]:
+            raise ValueError("Invalid snapshot value: {}".format(snapshot))
+
+        # add snapshot info to title
+        if snapshot>-1:
+            title += "\n(snapshot: {})".format(snapshot) # +1?
+
         if overlay: data[dimlabels[0]] = data[dimlabels[0]].astype(str)
         plot = ggplot.ggplot(data, ggplot.aes(x=xaxis,
             y="value", color = "snapshot" if overlay else "key"))
         for g in geoms:
             plot += getattr(ggplot, "geom_"+g)()
+        plot += ggplot.labs(title=title)
         return plot
 
+    # TODO make this work and make use of it
     def grid_plot(self, keys, dimlabels, facet, geoms, subkey=""):
         """Create a grid of plots, showing corresponding slices of one
         or more data series (e.g. at different time points."""
@@ -179,38 +201,34 @@ class Plotter:
             plot += getattr(ggplot, "geom_"+g)()
         return plot
 
-    # auxiliary functions #
-    # TODO check_asrn
-    # TODO add snapshot info to graphic
-    # TODO add title
-    # TODO add vertical line
-
     ##############
     # plot types #
     ##############
-    def stage_trace(self, keys):
+    def stage_trace(self, keys, title=""):
         """Simple per-stage line trace for specified Record keys."""
-        return self.solo_plot(keys, ["stage"], "stage", ["step"])
+        return self.solo_plot(keys, ["stage"], "stage", ["step"], "", "", False,\
+                title)
 
-    def snapshot_trace(self, keys, subkey=""):
+    def snapshot_trace(self, keys, subkey="", title=""):
         """Simple per-snapshot line + point trace for specified Record keys."""
         return self.solo_plot(keys, ["snapshot"], "snapshot", ["line","point"],\
-                subkey, "all")
+                subkey, "all", False, title)
 
-    def age_trace(self, keys, geoms, snapshot=""):
+    def age_trace(self, keys, geoms, snapshot="", title=""):
         """Simple per-age trace for specified Record keys for specified snapshot.
         (defualt: last snapshot)"""
         if snapshot == "all":
             raise ValueError("Invalid snapshot value: 'all'. Use \
                     age_overlay instead.")
-        return self.solo_plot(keys, ["snapshot","age"], "age", geoms, "", snapshot)
+        return self.solo_plot(keys, ["snapshot","age"], "age", geoms, "", snapshot,\
+                False, title)
 
-    # TODO add age_overlay (wrg to snapshot)
+    # TODO add age_overlay (regarding snapshots)
 
-    def snapshot_overlay(self, keys, dimlabel, subkey=""):
+    def snapshot_overlay(self, keys, dimlabel, subkey="", title=""):
         """Per-snapshot overlay line plot of a single Record key."""
         return self.solo_plot(keys, ["snapshot", dimlabel], dimlabel, ["line"],\
-                subkey, "all", True)
+                subkey, "all", True, title)
 
     ###############
     # stage_trace #
@@ -218,39 +236,42 @@ class Plotter:
     def plot_population_resources(self):
         # TODO: enable swapping order of series for constant v variable resources
         # TODO: Set limits at object level?
-        return self.stage_trace(["population_size", "resources"])
+        return self.stage_trace(["population_size", "resources"], "Population and resources")
 
     def plot_starvation(self):
         # TODO: plot y-axis in log-space of base matching starvation increment
-        return self.stage_trace(["surv_penf","repr_penf"])
+        return self.stage_trace(["surv_penf","repr_penf"], "Survival and reproduction penalty factors upon starvation")
 
     ##################
     # snapshot_trace #
     ##################
     def plot_fitness(self):
-        return self.snapshot_trace(["fitness", "junk_fitness"])
+        return self.snapshot_trace(["fitness", "junk_fitness"], "", "Fitness")
 
     def plot_entropy_gt(self):
-        return self.snapshot_trace(["entropy_gt"])
+        return self.snapshot_trace(["entropy_gt"], "", "")
 
     def plot_entropy_bits(self):
-        return self.snapshot_trace(["entropy_bits"])
+        return self.snapshot_trace(["entropy_bits"], "", "")
 
     #############
     # age_trace #
     #############
     def plot_repr_value(self):
-        return self.age_trace(["repr_value","junk_repr_value"], ["point","line"])
+        return self.age_trace(["repr_value","junk_repr_value"], ["point","line"], \
+                "", "Reproduction value")
 
     def plot_mean_repr(self):
-        return self.age_trace(["mean_repr","junk_repr"], ["point","line"])
+        return self.age_trace(["mean_repr","junk_repr"], ["point","line"],\
+                "", "Genome-encoded reproduction rate")
 
     def plot_cmv_surv(self):
-        return self.age_trace(["cmv_surv","junk_cmv_surv"], ["point","line"])
+        return self.age_trace(["cmv_surv","junk_cmv_surv"], ["point","line"],\
+                "", "Cumulative genome-encoded survival rate")
 
     def plot_fitness_term(self):
         return self.age_trace(["fitness_term","junk_fitness_term"], ["point",\
-                "line"])
+                "line"], "", "Fitness term")
 
     ####################
     # snapshot_overlay #
@@ -258,24 +279,45 @@ class Plotter:
     # TODO should we also plot age_distribution averaged over a window around
     # snapshot stage?
     def plot_age_distribution(self):
-        return self.snapshot_overlay(["snapshot_age_distribution"], "age")
+        return self.snapshot_overlay(["snapshot_age_distribution"], "age", "",\
+                "Age distribution")
 
     def plot_fitness_term_overlay(self):
-        return self.snapshot_overlay(["fitness_term"], "age")
+        return self.snapshot_overlay(["fitness_term"], "age", "",\
+                "Fitness term overlay")
 
     ############
     # specific #
     ############
 
-    # TODO actual death rate - do we average and how?
+    # arrays
+    # TODO actual death rate - how do we average over stages?
 
-    # TODO n1, n1_var
+    def plot_n1(self, snapshot=""):
+        plot = self.solo_plot(["n1"], ["snapshot","bit"], "bit", ["point"],\
+                "", snapshot, False, "Distribution of 1's per bit")
+        surv_repr = self.record["max_ls"]*self.record["n_base"]
+        repr_neut = (2*self.record["max_ls"]-self.record["maturity"])\
+                *self.record["n_base"]
+        plot += ggplot.geom_vline(x=[surv_repr, repr_neut], color = "black",\
+                linetype="dashed")
+        return plot
+
+    def plot_n1_var(self, snapshot=""):
+        plot = self.solo_plot(["n1_var"], ["snapshot","bit"], "bit", ["point"],\
+                "", snapshot, False, "Variation of distribution of 1's per bit")
+        surv_repr = self.record["max_ls"]*self.record["n_base"]
+        repr_neut = (2*self.record["max_ls"]-self.record["maturity"])\
+                *self.record["n_base"]
+        plot += ggplot.geom_vline(x=[surv_repr, repr_neut], color = "black",\
+                linetype="dashed")
+        return plot
 
     # dictionaries
-    # TODO why do I get that this function is not defined if I use it below?
-    def check_asrn(key):
-        if subkey not in ['a','s','r','n']:
-            raise ValueError("Invalid key value: {}".format(subkey))
+    # auxuliary funtion
+    def check_asrn(self, key):
+        if key not in ['a','s','r','n']:
+            raise ValueError("Invalid key value: {}".format(key))
 
     # TODO what should be the x-axis?
     # now it prints all 21 y values for locus x on (x,y)
@@ -285,30 +327,45 @@ class Plotter:
         subkey: 'a','s','r','n'.
         snapshot: last by default
         """
-        #check_asrn(subkey)
+        self.check_asrn(subkey)
         return self.solo_plot(["density_per_locus"], ["snapshot", "locus", \
-                "genotype"], "locus", ["point"], list(subkey), snapshot)
+                "genotype"], "locus", ["point"], list(subkey), snapshot, False,\
+                "")
 
     def plot_density(self, subkey="a", snapshot=""):
         """
         subkey: 'a','s','r','n'.
         snapshot: last by default
         """
-        #check_asrn(subkey)
+        self.check_asrn(subkey)
         return self.solo_plot(["density"], ["snapshot", "genotype"], "genotype",\
-                ["point","line"], list(subkey),snapshot)
+                ["point","line"], list(subkey), snapshot, False,\
+                "Density")
 
     def plot_mean_gt(self, subkey="a", snapshot=""):
-        #check_asrn(subkey)
-        return self.solo_plot(["mean_gt"], ["snapshot", "locus"], "locus",\
-                ["point"], list(subkey),snapshot)
+        self.check_asrn(subkey)
+        plot = self.solo_plot(["mean_gt"], ["snapshot", "locus"], "locus",\
+                ["point"], list(subkey), snapshot, False,\
+                "")
+        surv_repr = self.record["max_ls"]
+        repr_neut = (2*self.record["max_ls"]-self.record["maturity"])
+        plot += ggplot.geom_vline(x=[surv_repr, repr_neut], color = "black",\
+                linetype="dashed")
+        return plot
 
     def plot_var_gt(self, subkey="a", snapshot=""):
-        #check_asrn(subkey)
-        return self.solo_plot(["var_gt"], ["snapshot", "locus"], "locus",\
-                ["point"], list(subkey),snapshot)
+        self.check_asrn(subkey)
+        plot = self.solo_plot(["var_gt"], ["snapshot", "locus"], "locus",\
+                ["point"], list(subkey), snapshot, False,\
+                "")
+        surv_repr = self.record["max_ls"]
+        repr_neut = (2*self.record["max_ls"]-self.record["maturity"])
+        plot += ggplot.geom_vline(x=[surv_repr, repr_neut], color = "black",\
+                linetype="dashed")
+        return plot
 
     def plot_entropy_gt(self, subkey="a"):
-        #check_asrn(subkey)
+        self.check_asrn(subkey)
         return self.solo_plot(["entropy_gt"], ["snapshot"], "snapshot",\
-                ["point"], list(subkey), "all")
+                ["point"], list(subkey), "all", False,\
+                "")
