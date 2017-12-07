@@ -28,43 +28,45 @@ class Plotter:
         rfile = open(record, "rb")
         try:
             self.record = pickle.load(rfile)
-            self.plot_methods = ["plot_population_resources",\
-                                 "plot_starvation",\
-                                 "plot_fitness",\
-                                 "plot_fitness_term",\
-                                 "plot_fitness_term_overlay",\
-                                 "plot_entropy_gt",\
-                                 "plot_entropy_bits",\
-                                 "plot_age_distribution",\
-                                 "plot_density_per_locus",\
-                                 "plot_density",\
-                                 "plot_mean_gt",\
-                                 "plot_var_gt",\
-                                 "plot_entropy_gt",\
-                                 "plot_repr_value",\
-                                 "plot_mean_repr",\
-                                 "plot_cmv_surv",\
-                                 "plot_n1",\
-                                 "plot_n1_var"
+            self.plot_methods = [#"plot_population_resources",\
+                                 #"plot_starvation",\
+                                 #"plot_fitness",\
+                                 #"plot_fitness_term",\
+                                 #"plot_fitness_term_overlay",\
+                                 #"plot_entropy_gt",\
+                                 #"plot_entropy_bits",\
+                                 #"plot_age_distribution",\
+                                 #"plot_density_per_locus",\
+                                 #"plot_density",\
+                                 #"plot_mean_gt",\
+                                 #"plot_var_gt",\
+                                 #"plot_entropy_gt",\
+                                 #"plot_repr_value",\
+                                 #"plot_mean_repr",\
+                                 #"plot_cmv_surv",\
+                                 #"plot_n1",\
+                                 #"plot_n1_var",\
+                                 "plot_actual_death_rate"
                                  ]
-            self.plot_names = ["pop-res",\
-                               "starvation",\
-                               "fitness",\
-                               "fitness_term",\
-                               "per_fitness_term_overlay",\
-                               "plot_entropy_gt",\
-                               "plot_entropy_bits",\
-                               "age_distribution",\
-                               "density_per_locus",\
-                               "density",\
-                               "mean_gt",\
-                               "var_gt",\
-                               "entropy_gt",\
-                               "repr_value",\
-                               "mean_repr",\
-                               "cmv_surv",\
-                               "n1",\
-                               "n1_var"
+            self.plot_names = [#"pop-res",\
+                               #"starvation",\
+                               #"fitness",\
+                               #"fitness_term",\
+                               #"per_fitness_term_overlay",\
+                               #"plot_entropy_gt",\
+                               #"plot_entropy_bits",\
+                               #"age_distribution",\
+                               #"density_per_locus",\
+                               #"density",\
+                               #"mean_gt",\
+                               #"var_gt",\
+                               #"entropy_gt",\
+                               #"repr_value",\
+                               #"mean_repr",\
+                               #"cmv_surv",\
+                               #"n1",\
+                               #"n1_var",\
+                               "actual_death_rate"
                                ]
             self.plots = []
         finally:
@@ -155,6 +157,20 @@ class Plotter:
                     df = df[df.snapshot == snapshot]
 
         return df
+
+    def dataframe_mean(self, df, key1, key2, key3, window):
+        """
+        Firstly select only rows of dataframe for which column key3 is in window.
+        Group dataframe by columns key1.
+        Get the mean of the groups for the key1 column.
+        Return a pandas.DataFrame."
+        """
+        for key in [key1, key2, key3]:
+            if not isinstance(key, str):
+                raise ValueError("Invalid key value: {}".format(snapshot))
+        if not isinstance(window,list):
+                raise ValueError("Invalid windows value: {}".format(snapshot))
+        return df[df[key3].isin(window)].groupby(key1)[key2].mean().reset_index()
 
     ##################
     # plot functions #
@@ -369,3 +385,32 @@ class Plotter:
         return self.solo_plot(["entropy_gt"], ["snapshot"], "snapshot",\
                 ["point"], list(subkey), "all", False,\
                 "")
+
+    def plot_actual_death_rate(self, window_size=100):
+        # TODO check window size is OK
+        windows = [range(window_size)]
+        window_size /= 2
+        for s in self.record["snapshot_stages"][1:-1]:
+            windows += [range(s-window_size,s+window_size)]
+        windows += [range(self.record["number_of_stages"]-\
+                window_size, self.record["number_of_stages"])]
+
+        #print np.array(windows)
+        data = self.make_dataframe(["actual_death_rate"], ["stage","age"])
+
+        mean_data = pd.DataFrame()
+        for i in range(len(windows)):
+            x = self.dataframe_mean(data,"age","value","stage",windows[i])
+            #x["snapshot_stage"] = self.record["snapshot_stages"][i]
+            x["snapshot_stage"] = i
+            mean_data = mean_data.append(x)
+
+        print mean_data
+        print mean_data.shape
+        mean_data["snapshot_stage"] = mean_data["snapshot_stage"].astype(str)
+        plot = ggplot.ggplot(mean_data, ggplot.aes(x="age",
+            y="value", color = "snapshot_stage"))
+        #plot += ggplot.geom_point()
+        plot += ggplot.geom_line()
+        plot += ggplot.labs(title="Actual death rate")
+        return plot
