@@ -28,45 +28,51 @@ class Plotter:
         rfile = open(record, "rb")
         try:
             self.record = pickle.load(rfile)
-            self.plot_methods = [#"plot_population_resources",\
-                                 #"plot_starvation",\
-                                 #"plot_fitness",\
-                                 #"plot_fitness_term",\
-                                 #"plot_fitness_term_overlay",\
-                                 #"plot_entropy_gt",\
-                                 #"plot_entropy_bits",\
-                                 #"plot_age_distribution",\
-                                 #"plot_density_per_locus",\
-                                 #"plot_density",\
-                                 #"plot_mean_gt",\
-                                 #"plot_var_gt",\
-                                 #"plot_entropy_gt",\
-                                 #"plot_repr_value",\
-                                 #"plot_mean_repr",\
-                                 #"plot_cmv_surv",\
-                                 #"plot_n1",\
-                                 #"plot_n1_var",\
-                                 "plot_actual_death_rate"
+            self.plot_methods = ["plot_population_resources",\
+                                 "plot_starvation",\
+                                 "plot_fitness",\
+                                 "plot_fitness_term",\
+                                 "plot_fitness_term_overlay",\
+                                 "plot_entropy_gt",\
+                                 "plot_entropy_bits",\
+                                 "plot_age_distribution",\
+                                 "plot_density_per_locus",\
+                                 "plot_density",\
+                                 "plot_mean_gt",\
+                                 "plot_var_gt",\
+                                 "plot_entropy_gt",\
+                                 "plot_repr_value",\
+                                 "plot_mean_repr",\
+                                 "plot_cmv_surv",\
+                                 "plot_n1",\
+                                 "plot_n1_var",\
+                                 "plot_actual_death_rate",\
+                                 "plot_density_snap_overlay",\
+                                 "plot_repr_value_snap_overlay",\
+                                 "plot_cmv_surv_snap_overlay"
                                  ]
-            self.plot_names = [#"pop-res",\
-                               #"starvation",\
-                               #"fitness",\
-                               #"fitness_term",\
-                               #"per_fitness_term_overlay",\
-                               #"plot_entropy_gt",\
-                               #"plot_entropy_bits",\
-                               #"age_distribution",\
-                               #"density_per_locus",\
-                               #"density",\
-                               #"mean_gt",\
-                               #"var_gt",\
-                               #"entropy_gt",\
-                               #"repr_value",\
-                               #"mean_repr",\
-                               #"cmv_surv",\
-                               #"n1",\
-                               #"n1_var",\
-                               "actual_death_rate"
+            self.plot_names = ["pop-res",\
+                               "starvation",\
+                               "fitness",\
+                               "fitness_term",\
+                               "per_fitness_term_overlay",\
+                               "plot_entropy_gt",\
+                               "plot_entropy_bits",\
+                               "age_distribution",\
+                               "density_per_locus",\
+                               "density",\
+                               "mean_gt",\
+                               "var_gt",\
+                               "entropy_gt",\
+                               "repr_value",\
+                               "mean_repr",\
+                               "cmv_surv",\
+                               "n1",\
+                               "n1_var",\
+                               "actual_death_rate",\
+                               "density_overlay",\
+                               "repr_value_overlay",\
+                               "cmv_surv_overlay"
                                ]
             self.plots = []
         finally:
@@ -239,7 +245,7 @@ class Plotter:
         return self.solo_plot(keys, ["snapshot","age"], "age", geoms, "", snapshot,\
                 False, title)
 
-    # TODO add age_overlay (regarding snapshots)
+    # TODO add age_trace_overlay (regarding snapshots)
 
     def snapshot_overlay(self, keys, dimlabel, subkey="", title=""):
         """Per-snapshot overlay line plot of a single Record key."""
@@ -252,7 +258,7 @@ class Plotter:
     def plot_population_resources(self):
         # TODO: enable swapping order of series for constant v variable resources
         # TODO: Set limits at object level?
-        return self.stage_trace(["population_size", "resources"], "Population and resources")
+        return self.stage_trace(["resources","population_size"], "Population and resources")
 
     def plot_starvation(self):
         # TODO: plot y-axis in log-space of base matching starvation increment
@@ -302,12 +308,20 @@ class Plotter:
         return self.snapshot_overlay(["fitness_term"], "age", "",\
                 "Fitness term overlay")
 
+    def plot_density_snap_overlay(self):
+        return self.snapshot_overlay(["density"], "genotype", ["a"], "Density")
+
+    def plot_repr_value_snap_overlay(self):
+        return self.snapshot_overlay(["repr_value"], "age", "", "Reproduction value")
+
+    def plot_cmv_surv_snap_overlay(self):
+        return self.snapshot_overlay(["cmv_surv"], "age", "", "Cumulative survival")
+
     ############
     # specific #
     ############
 
     # arrays
-    # TODO actual death rate - how do we average over stages?
 
     def plot_n1(self, snapshot=""):
         plot = self.solo_plot(["n1"], ["snapshot","bit"], "bit", ["point"],\
@@ -362,7 +376,7 @@ class Plotter:
         self.check_asrn(subkey)
         plot = self.solo_plot(["mean_gt"], ["snapshot", "locus"], "locus",\
                 ["point"], list(subkey), snapshot, False,\
-                "")
+                "Mean genotype value")
         surv_repr = self.record["max_ls"]
         repr_neut = (2*self.record["max_ls"]-self.record["maturity"])
         plot += ggplot.geom_vline(x=[surv_repr, repr_neut], color = "black",\
@@ -373,7 +387,7 @@ class Plotter:
         self.check_asrn(subkey)
         plot = self.solo_plot(["var_gt"], ["snapshot", "locus"], "locus",\
                 ["point"], list(subkey), snapshot, False,\
-                "")
+                "Genotype value variance")
         surv_repr = self.record["max_ls"]
         repr_neut = (2*self.record["max_ls"]-self.record["maturity"])
         plot += ggplot.geom_vline(x=[surv_repr, repr_neut], color = "black",\
@@ -387,7 +401,10 @@ class Plotter:
                 "")
 
     def plot_actual_death_rate(self, window_size=100):
-        # TODO check window size is OK
+        # check window size is OK
+        if window_size*(self.record["number_of_snapshots"]+1) > \
+                self.record["number_of_stages"]:
+            raise ValueError("Window size is too big; overlap.")
         windows = [range(window_size)]
         window_size /= 2
         for s in self.record["snapshot_stages"][1:-1]:
@@ -395,7 +412,6 @@ class Plotter:
         windows += [range(self.record["number_of_stages"]-\
                 window_size, self.record["number_of_stages"])]
 
-        #print np.array(windows)
         data = self.make_dataframe(["actual_death_rate"], ["stage","age"])
 
         mean_data = pd.DataFrame()
@@ -405,8 +421,6 @@ class Plotter:
             x["snapshot_stage"] = i
             mean_data = mean_data.append(x)
 
-        print mean_data
-        print mean_data.shape
         mean_data["snapshot_stage"] = mean_data["snapshot_stage"].astype(str)
         plot = ggplot.ggplot(mean_data, ggplot.aes(x="age",
             y="value", color = "snapshot_stage"))
