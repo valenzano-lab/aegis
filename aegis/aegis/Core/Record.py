@@ -198,13 +198,13 @@ class Record(Infodict):
             return bins/float(sum(bins))
         density_per_locus = {}
         for k in ["s","r","n","a"]: # Survival, reproductive, neutral, all
-            # dim0 = snapshot, dim1 = genotype, dim2 = locus
-            for n in xrange(len(loci)):
-                d = np.apply_along_axis(density,0,loci[k][n])
+            # loci[k]: dim0 = snapshot, dim1 = genotype, dim2 = locus
+# NOTE following two lines are obsolete
+#            for n in xrange(len(loci)):
+#                d = np.apply_along_axis(density,0,loci[k][n])
             out = np.array([np.apply_along_axis(density,0,x) for x in loci[k]])
-            # dim0 = genotype, dim1 = snapshot, dim2 = locus
-            # NOTE dim0 = snapshot, dim1 = locus, dim2 = genotype
             density_per_locus[k] = out.transpose(0,2,1)
+            # now: dim0 = snapshot, dim1 = locus, dim2 = genotype
         self["density_per_locus"] = density_per_locus
 
     def compute_total_density(self):
@@ -212,12 +212,10 @@ class Record(Infodict):
         pre-computed per-locus distributions."""
         density = {}
         for k in ["s","r","n","a"]: # Survival, reproductive, neutral, all
-            # NOTE
             collapsed = np.sum(self["density_per_locus"][k], 1).T
-            #collapsed = np.sum(self["density_per_locus"][k], 2)
-            # dim0 = genotype, dim1 = snapshot
-            # NOTE transposed
+            # collapsed: dim0 = genotype, dim1 = snapshot
             density[k] = (collapsed/np.sum(collapsed, 0)).T
+            # density[k]:dim0 = snapshot, dim1 = genotype
         self["density"] = density
 
     def compute_genotype_mean_var(self):
@@ -226,15 +224,13 @@ class Record(Infodict):
         ss,gt = self["snapshot_stages"],np.arange(self["n_states"])
         mean_gt_dict, var_gt_dict = {}, {}
         for k in ["s","r","n","a"]: # Survival, reproductive, neutral, all
-            # NOTE dim0 = genotype, dim1 = snapshot, dim2 = locus
-            dl = self["density_per_locus"][k].transpose(2,0,1)
-            dl_tr = dl.transpose(1,2,0) #[snapshot,locus,genotype]
-            mean_gt = np.sum(dl_tr * gt, 2) # [snapshot, locus]
+            dl = self["density_per_locus"][k] #[snapshot,locus,genotype]
+            mean_gt = np.sum(dl * gt, 2) # [snapshot, locus]
             # Get difference between each potential genotype and the mean at
             # each snapshot/locus, then compute variance
-            gt_diff = np.tile(gt, [len(ss),dl_tr.shape[1],1]) - \
+            gt_diff = np.tile(gt, [len(ss),dl.shape[1],1]) - \
                     np.repeat(mean_gt[:,:,np.newaxis], len(gt), axis=2)
-            var_gt = np.sum(dl_tr * (gt_diff**2), 2) # [snapshot, locus]
+            var_gt = np.sum(dl * (gt_diff**2), 2) # [snapshot, locus]
             mean_gt_dict[k],var_gt_dict[k] = mean_gt,var_gt
         self["mean_gt"] = mean_gt_dict
         self["var_gt"] = var_gt_dict
