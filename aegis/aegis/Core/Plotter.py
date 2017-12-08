@@ -49,7 +49,9 @@ class Plotter:
                                  "plot_actual_death_rate",\
                                  "plot_density_snap_overlay",\
                                  "plot_repr_value_snap_overlay",\
-                                 "plot_cmv_surv_snap_overlay"
+                                 "plot_cmv_surv_snap_overlay",\
+                                 "plot_n1_mean_sliding_window",\
+                                 "plot_n1_var_sliding_window"
                                  ]
             self.plot_names = ["pop-res",\
                                "starvation",\
@@ -72,7 +74,9 @@ class Plotter:
                                "actual_death_rate",\
                                "density_overlay",\
                                "repr_value_overlay",\
-                               "cmv_surv_overlay"
+                               "cmv_surv_overlay",\
+                               "n1_mean_sliding_window",\
+                               "n1_var_sliding_window"
                                ]
             self.plots = []
         finally:
@@ -173,9 +177,9 @@ class Plotter:
         """
         for key in [key1, key2, key3]:
             if not isinstance(key, str):
-                raise ValueError("Invalid key value: {}".format(snapshot))
+                raise ValueError("Invalid key value: {}".format(key))
         if not isinstance(window,list):
-                raise ValueError("Invalid windows value: {}".format(snapshot))
+                raise ValueError("Invalid window value: {}".format(window))
         return df[df[key3].isin(window)].groupby(key1)[key2].mean().reset_index()
 
     ##################
@@ -333,9 +337,31 @@ class Plotter:
                 linetype="dashed")
         return plot
 
+    def plot_n1_mean_sliding_window(self, snapshot=''):
+        plot = self.solo_plot(["n1_window_mean"], ["snapshot","bit"], "bit",\
+                ["point"], "", snapshot, False,\
+                "Mean distribution of 1's per bit (sliding window: {} bits)".format(self.record["windows"]["n1"]))
+        surv_repr = self.record["max_ls"]*self.record["n_base"]
+        repr_neut = (2*self.record["max_ls"]-self.record["maturity"])\
+                *self.record["n_base"]
+        plot += ggplot.geom_vline(x=[surv_repr, repr_neut], color = "black",\
+                linetype="dashed")
+        return plot
+
     def plot_n1_var(self, snapshot=""):
         plot = self.solo_plot(["n1_var"], ["snapshot","bit"], "bit", ["point"],\
                 "", snapshot, False, "Variation of distribution of 1's per bit")
+        surv_repr = self.record["max_ls"]*self.record["n_base"]
+        repr_neut = (2*self.record["max_ls"]-self.record["maturity"])\
+                *self.record["n_base"]
+        plot += ggplot.geom_vline(x=[surv_repr, repr_neut], color = "black",\
+                linetype="dashed")
+        return plot
+
+    def plot_n1_var_sliding_window(self, snapshot=''):
+        plot = self.solo_plot(["n1_window_var"], ["snapshot","bit"], "bit",\
+                ["point"], "", snapshot, False,\
+                "Variation of distribution of 1's per bit (sliding window: {} bits)".format(self.record["windows"]["n1"]))
         surv_repr = self.record["max_ls"]*self.record["n_base"]
         repr_neut = (2*self.record["max_ls"]-self.record["maturity"])\
                 *self.record["n_base"]
@@ -397,7 +423,7 @@ class Plotter:
     def plot_entropy_gt(self, subkey="a"):
         self.check_asrn(subkey)
         return self.solo_plot(["entropy_gt"], ["snapshot"], "snapshot",\
-                ["point"], list(subkey), "all", False,\
+                ["point","line"], list(subkey), "all", False,\
                 "")
 
     def plot_actual_death_rate(self, window_size=100):

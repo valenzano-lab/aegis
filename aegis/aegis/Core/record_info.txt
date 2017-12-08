@@ -108,12 +108,12 @@ repr_bound                      (2,)
 surv_bound                      (2,)
 surv_step                       (1,)
 repr_step                       (1,)
-population_size_window_mean     (???,)
-resources_window_mean           (???,)
-resources_window_var            ?
-n1_window_mean                  (number_of_snapshots,???)
+population_size_window_mean     ?
 population_size_window_var      ?
-n1_window_var                   ?
+resources_window_mean           ?
+resources_window_var            ?
+n1_window_mean                  (number_of_snapshots,number_of_loci-windows["n1"]+1)
+n1_window_var                   (number_of_snapshots,number_of_loci-windows["n1"]+1)
 prev_failed                     ?
 
 ##########                      ####
