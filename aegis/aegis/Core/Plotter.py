@@ -26,55 +26,63 @@ class Plotter:
         rfile = open(record, "rb")
         try:
             self.record = pickle.load(rfile)
-            self.plot_methods = ["plot_population_resources",\
-                                 "plot_starvation",\
-                                 "plot_fitness",\
-                                 "plot_fitness_term",\
-                                 "plot_fitness_term_overlay",\
-                                 "plot_entropy_gt",\
-                                 "plot_entropy_bits",\
-                                 "plot_age_distribution",\
-                                 "plot_density_per_locus",\
-                                 "plot_density",\
-                                 "plot_mean_gt",\
-                                 "plot_var_gt",\
-                                 "plot_entropy_gt",\
-                                 "plot_repr_value",\
-                                 "plot_mean_repr",\
-                                 "plot_cmv_surv",\
+            self.plot_methods = [#"plot_population_resources",\
+                                 #"plot_starvation",\
+                                 #"plot_fitness",\
+                                 #"plot_fitness_term",\
+                                 #"plot_fitness_term_overlay",\
+                                 #"plot_entropy_gt",\
+                                 #"plot_entropy_bits",\
+                                 #"plot_age_distribution",\
+                                 #"plot_density_per_locus",\
+                                 #"plot_density",\
+                                 #"plot_mean_gt",\
+                                 #"plot_var_gt",\
+                                 #"plot_entropy_gt",\
+                                 #"plot_repr_value",\
+                                 #"plot_mean_repr",\
+                                 #"plot_cmv_surv",\
                                  "plot_n1",\
                                  "plot_n1_var",\
-                                 "plot_actual_death_rate",\
-                                 "plot_density_snap_overlay",\
-                                 "plot_repr_value_snap_overlay",\
-                                 "plot_cmv_surv_snap_overlay",\
+                                 #"plot_actual_death_rate",\
+                                 #"plot_density_snap_overlay",\
+                                 #"plot_repr_value_snap_overlay",\
+                                 #"plot_cmv_surv_snap_overlay",\
                                  "plot_n1_mean_sliding_window",\
-                                 "plot_n1_var_sliding_window"
+                                 "plot_n1_var_sliding_window",\
+                                 "plot_n1_grid",\
+                                 "plot_n1_mean_sliding_window_grid",\
+                                 "plot_n1_var_grid",\
+                                 "plot_n1_var_sliding_window_grid"
                                  ]
-            self.plot_names = ["pop-res",\
-                               "starvation",\
-                               "fitness",\
-                               "fitness_term",\
-                               "per_fitness_term_overlay",\
-                               "plot_entropy_gt",\
-                               "plot_entropy_bits",\
-                               "age_distribution",\
-                               "density_per_locus",\
-                               "density",\
-                               "mean_gt",\
-                               "var_gt",\
-                               "entropy_gt",\
-                               "repr_value",\
-                               "mean_repr",\
-                               "cmv_surv",\
+            self.plot_names = [#"pop-res",\
+                               #"starvation",\
+                               #"fitness",\
+                               #"fitness_term",\
+                               #"per_fitness_term_overlay",\
+                               #"plot_entropy_gt",\
+                               #"plot_entropy_bits",\
+                               #"age_distribution",\
+                               #"density_per_locus",\
+                               #"density",\
+                               #"mean_gt",\
+                               #"var_gt",\
+                               #"entropy_gt",\
+                               #"repr_value",\
+                               #"mean_repr",\
+                               #"cmv_surv",\
                                "n1",\
                                "n1_var",\
-                               "actual_death_rate",\
-                               "density_overlay",\
-                               "repr_value_overlay",\
-                               "cmv_surv_overlay",\
+                               #"actual_death_rate",\
+                               #"density_overlay",\
+                               #"repr_value_overlay",\
+                               #"cmv_surv_overlay",\
                                "n1_mean_sliding_window",\
-                               "n1_var_sliding_window"
+                               "n1_var_sliding_window",\
+                               "n1_grid",\
+                               "n1_mean_sliding_window_grid",\
+                               "n1_var_grid",\
+                               "n1_var_sliding_window_grid"
                                ]
             self.plots = []
         finally:
@@ -216,15 +224,15 @@ class Plotter:
     # TODO make this work and make use of it
     # for instance for n1 series and mean_gt
     # age_distr? maybe better just as overlay
-    def grid_plot(self, keys, dimlabels, facet, geoms, subkey=""):
+    def grid_plot(self, key, dimlabels, facet, subkey="", title=""):
         """Create a grid of plots, showing corresponding slices of one
         or more data series (e.g. at different time points."""
-        data = self.make_dataframe(keys, dimlabels, subkey)
+        data = self.make_dataframe([key], dimlabels, subkey, "all")
         xlabel = dimlabels[1] if dimlabels[0] == facet else dimlabels[0]
-        plot = ggplot.ggplot(data, ggplot.aes(x=xlabel, y="value",
-            color = "key")) + ggplot.facet_wrap(facet)
-        for g in geoms:
-            plot += getattr(ggplot, "geom_"+g)()
+        plot = ggplot.ggplot(data, ggplot.aes(x=xlabel, y="value")) + \
+                ggplot.facet_wrap(facet)
+        plot += ggplot.geom_point(color="steelblue", size=8)
+        plot += ggplot.labs(title=title)
         return plot
 
     ##############
@@ -255,6 +263,20 @@ class Plotter:
         """Per-snapshot overlay line plot of a single Record key."""
         return self.solo_plot(keys, ["snapshot", dimlabel], dimlabel, ["line"],\
                 subkey, "all", True, title)
+
+    # auxiliary function
+    def add_vlines(self, plot, expand=True):
+        exp = self.record["n_base"] if expand else 1
+        surv_repr = self.record["max_ls"]*exp
+        repr_neut = (2*self.record["max_ls"]-self.record["maturity"])*exp
+        plot += ggplot.geom_vline(x=[surv_repr, repr_neut], color = "black",\
+                linetype="dashed")
+        return plot
+
+    def n1_like_snapshot_grid(self, key, subkey="", title=""):
+        plot = self.grid_plot(key, ["snapshot", "bit"], "snapshot", subkey, title)
+        plot = self.add_vlines(plot)
+        return plot
 
     ###############
     # stage_trace #
@@ -316,10 +338,29 @@ class Plotter:
         return self.snapshot_overlay(["density"], "genotype", ["a"], "Density")
 
     def plot_repr_value_snap_overlay(self):
-        return self.snapshot_overlay(["repr_value"], "age", "", "Reproduction value")
+        return self.snapshot_overlay(["repr_value"], "age", "", \
+                "Reproduction value")
 
     def plot_cmv_surv_snap_overlay(self):
         return self.snapshot_overlay(["cmv_surv"], "age", "", "Cumulative survival")
+
+    #########################
+    # n1_like_snapshot_grid #
+    #########################
+    def plot_n1_grid(self):
+        return self.n1_like_snapshot_grid("n1","","Distribution of 1's per bit")
+
+    def plot_n1_mean_sliding_window_grid(self):
+        return self.n1_like_snapshot_grid("n1_window_mean","",\
+                "Mean distribution of 1's per bit (sliding window: {} bits)".format(self.record["windows"]["n1"]))
+
+    def plot_n1_var_grid(self):
+        return self.n1_like_snapshot_grid("n1_var","",\
+                "Variance of distribution of 1's per bit")
+
+    def plot_n1_var_sliding_window_grid(self):
+        return self.n1_like_snapshot_grid("n1_window_var","",\
+                "Variance of distribution of 1's per bit (sliding window: {} bits)".format(self.record["windows"]["n1"]))
 
     ############
     # specific #
@@ -329,43 +370,27 @@ class Plotter:
     def plot_n1(self, snapshot=""):
         plot = self.solo_plot(["n1"], ["snapshot","bit"], "bit", ["point"],\
                 "", snapshot, False, "Distribution of 1's per bit")
-        surv_repr = self.record["max_ls"]*self.record["n_base"]
-        repr_neut = (2*self.record["max_ls"]-self.record["maturity"])\
-                *self.record["n_base"]
-        plot += ggplot.geom_vline(x=[surv_repr, repr_neut], color = "black",\
-                linetype="dashed")
+        plot = self.add_vlines(plot)
         return plot
 
     def plot_n1_mean_sliding_window(self, snapshot=''):
         plot = self.solo_plot(["n1_window_mean"], ["snapshot","bit"], "bit",\
                 ["point"], "", snapshot, False,\
                 "Mean distribution of 1's per bit (sliding window: {} bits)".format(self.record["windows"]["n1"]))
-        surv_repr = self.record["max_ls"]*self.record["n_base"]
-        repr_neut = (2*self.record["max_ls"]-self.record["maturity"])\
-                *self.record["n_base"]
-        plot += ggplot.geom_vline(x=[surv_repr, repr_neut], color = "black",\
-                linetype="dashed")
+        plot = self.add_vlines(plot)
         return plot
 
     def plot_n1_var(self, snapshot=""):
         plot = self.solo_plot(["n1_var"], ["snapshot","bit"], "bit", ["point"],\
                 "", snapshot, False, "Variation of distribution of 1's per bit")
-        surv_repr = self.record["max_ls"]*self.record["n_base"]
-        repr_neut = (2*self.record["max_ls"]-self.record["maturity"])\
-                *self.record["n_base"]
-        plot += ggplot.geom_vline(x=[surv_repr, repr_neut], color = "black",\
-                linetype="dashed")
+        plot = self.add_vlines(plot)
         return plot
 
     def plot_n1_var_sliding_window(self, snapshot=''):
         plot = self.solo_plot(["n1_window_var"], ["snapshot","bit"], "bit",\
                 ["point"], "", snapshot, False,\
-                "Variation of distribution of 1's per bit (sliding window: {} bits)".format(self.record["windows"]["n1"]))
-        surv_repr = self.record["max_ls"]*self.record["n_base"]
-        repr_neut = (2*self.record["max_ls"]-self.record["maturity"])\
-                *self.record["n_base"]
-        plot += ggplot.geom_vline(x=[surv_repr, repr_neut], color = "black",\
-                linetype="dashed")
+                "Variance of distribution of 1's per bit (sliding window: {} bits)".format(self.record["windows"]["n1"]))
+        plot = self.add_vlines(plot)
         return plot
 
     def plot_actual_death_rate(self, window_size=100):
@@ -433,10 +458,7 @@ class Plotter:
         plot = self.solo_plot(["mean_gt"], ["snapshot", "locus"], "locus",\
                 ["point"], list(subkey), snapshot, False,\
                 "Mean genotype value")
-        surv_repr = self.record["max_ls"]
-        repr_neut = (2*self.record["max_ls"]-self.record["maturity"])
-        plot += ggplot.geom_vline(x=[surv_repr, repr_neut], color = "black",\
-                linetype="dashed")
+        plot = self.add_vlines(plot,False)
         return plot
 
     def plot_var_gt(self, subkey="a", snapshot=""):
@@ -444,10 +466,7 @@ class Plotter:
         plot = self.solo_plot(["var_gt"], ["snapshot", "locus"], "locus",\
                 ["point"], list(subkey), snapshot, False,\
                 "Genotype value variance")
-        surv_repr = self.record["max_ls"]
-        repr_neut = (2*self.record["max_ls"]-self.record["maturity"])
-        plot += ggplot.geom_vline(x=[surv_repr, repr_neut], color = "black",\
-                linetype="dashed")
+        plot = self.add_vlines(plot,False)
         return plot
 
     def plot_entropy_gt(self, subkey="a"):
