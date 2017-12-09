@@ -12,8 +12,6 @@
 # - Write tests
 # - add missing plots
 
-# TODO averaging: function separate from make_dataframe
-
 import numpy as np, pandas as pd, ggplot, os, shutil
 try:
        import cPickle as pickle
@@ -172,7 +170,7 @@ class Plotter:
         """
         Firstly select only rows of dataframe for which column key3 is in window.
         Group dataframe by columns key1.
-        Get the mean of the groups for the key1 column.
+        Get the mean of the groups for the key2 column.
         Return a pandas.DataFrame."
         """
         for key in [key1, key2, key3]:
@@ -216,6 +214,8 @@ class Plotter:
         return plot
 
     # TODO make this work and make use of it
+    # for instance for n1 series and mean_gt
+    # age_distr? maybe better just as overlay
     def grid_plot(self, keys, dimlabels, facet, geoms, subkey=""):
         """Create a grid of plots, showing corresponding slices of one
         or more data series (e.g. at different time points."""
@@ -324,7 +324,6 @@ class Plotter:
     ############
     # specific #
     ############
-
     # arrays
 
     def plot_n1(self, snapshot=""):
@@ -369,8 +368,39 @@ class Plotter:
                 linetype="dashed")
         return plot
 
+    def plot_actual_death_rate(self, window_size=100):
+        # check window size is OK
+        if window_size*(self.record["number_of_snapshots"]+1) > \
+                self.record["number_of_stages"]:
+            raise ValueError("Window size is too big; overlap.")
+        windows = [range(window_size)]
+        window_size /= 2
+        for s in self.record["snapshot_stages"][1:-1]:
+            windows += [range(s-window_size,s+window_size)]
+        window_size *= 2
+        windows += [range(self.record["number_of_stages"]-\
+                window_size, self.record["number_of_stages"])]
+
+        data = self.make_dataframe(["actual_death_rate"], ["stage","age"])
+
+        mean_data = pd.DataFrame()
+        for i in range(len(windows)):
+            x = self.dataframe_mean(data,"age","value","stage",windows[i])
+            #x["snapshot_stage"] = self.record["snapshot_stages"][i]
+            x["snapshot_stage"] = i
+            mean_data = mean_data.append(x)
+
+        mean_data["snapshot_stage"] = mean_data["snapshot_stage"].astype(str)
+        plot = ggplot.ggplot(mean_data, ggplot.aes(x="age",
+            y="value", color = "snapshot_stage"))
+        #plot += ggplot.geom_point()
+        plot += ggplot.geom_line()
+        plot += ggplot.labs(title="Actual death rate")
+        return plot
+
     # dictionaries
-    # auxuliary funtion
+
+    # auxiliary funtion
     def check_asrn(self, key):
         if key not in ['a','s','r','n']:
             raise ValueError("Invalid key value: {}".format(key))
@@ -425,32 +455,3 @@ class Plotter:
         return self.solo_plot(["entropy_gt"], ["snapshot"], "snapshot",\
                 ["point","line"], list(subkey), "all", False,\
                 "")
-
-    def plot_actual_death_rate(self, window_size=100):
-        # check window size is OK
-        if window_size*(self.record["number_of_snapshots"]+1) > \
-                self.record["number_of_stages"]:
-            raise ValueError("Window size is too big; overlap.")
-        windows = [range(window_size)]
-        window_size /= 2
-        for s in self.record["snapshot_stages"][1:-1]:
-            windows += [range(s-window_size,s+window_size)]
-        windows += [range(self.record["number_of_stages"]-\
-                window_size, self.record["number_of_stages"])]
-
-        data = self.make_dataframe(["actual_death_rate"], ["stage","age"])
-
-        mean_data = pd.DataFrame()
-        for i in range(len(windows)):
-            x = self.dataframe_mean(data,"age","value","stage",windows[i])
-            #x["snapshot_stage"] = self.record["snapshot_stages"][i]
-            x["snapshot_stage"] = i
-            mean_data = mean_data.append(x)
-
-        mean_data["snapshot_stage"] = mean_data["snapshot_stage"].astype(str)
-        plot = ggplot.ggplot(mean_data, ggplot.aes(x="age",
-            y="value", color = "snapshot_stage"))
-        #plot += ggplot.geom_point()
-        plot += ggplot.geom_line()
-        plot += ggplot.labs(title="Actual death rate")
-        return plot
