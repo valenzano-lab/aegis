@@ -201,48 +201,63 @@ class TestRecord:
 
     ## FINALISATION ##
 
-    def test_compute_locus_density(self, rec1, rec1_copy):
+    def test_compute_locus_density(self, rec1, rec1_copy, pop2, rec2):
         """Test that compute_locus_density performs correctly for a
-        genome filled with 1's.""" #! TODO: How about in a normal case?
+        genome filled with 1's and one randomly generated."""
+        llist = ["a","n","r","s"]
         rec1.compute_locus_density()
-        m,l,b = rec1["number_of_snapshots"], rec1["max_ls"], rec1["n_states"]
-        g,nn,mt = len(rec1["genmap"]), rec1["n_neutral"], rec1["maturity"]
-        llist = ["a","n","r","s"]
-        dims = {"a":[m,g,b],"n":[m,nn,b],"r":[m,l-mt,b], "s":[m,l,b]}
-        obj = rec1["density_per_locus"]
-        assert sorted(obj.keys()) == llist
-        for l in llist:
-            check = np.zeros(dims[l])
-            check[:,:,-1] = 1
-            assert np.array_equal(obj[l], check)
-
-    def test_compute_total_density(self, rec1, pop2, rec2):
-        """Test that compute_total_density performs correctly for a
-        genome filled with 1's and general."""
-        rec1.compute_total_density()
-        rec2.compute_locus_density()
-        rec2.compute_total_density()
-        n_snap,ns1 = rec1["number_of_snapshots"], rec1["n_states"]
-        llist = ["a","n","r","s"]
-        obj1 = rec1["density"]
+        obj1 = rec1["density_per_locus"]
         assert sorted(obj1.keys()) == llist
-        obj2 = rec2["density"]
+        rec2.compute_locus_density()
+        obj2 = rec2["density_per_locus"]
         assert sorted(obj2.keys()) == llist
-        # 2
+
+        n_snap,l1,ns1 = rec1["number_of_snapshots"], rec1["max_ls"],\
+                rec1["n_states"]
+        g,nn,mt1 = len(rec1["genmap"]), rec1["n_neutral"], rec1["maturity"]
+        dims = {"a":[n_snap,g,ns1],"n":[n_snap,nn,ns1],"r":[n_snap,l1-mt1,ns1], \
+                "s":[n_snap,l1,ns1]}
+
         l,m,ns2 = pop2.max_ls, pop2.maturity, rec2["n_states"]
         loci_all = pop2.sorted_loci()
         loci = {"s":np.array(loci_all[:,:l]),
                 "r":np.array(loci_all[:,l:(2*l-m)]),
                 "n":np.array(loci_all[:,(2*l-m):]), "a":loci_all}
+        def density(x):
+            bins = np.bincount(x,minlength=ns2)
+            return bins/float(sum(bins))
 
+        for ll in llist:
+            check1 = np.zeros(dims[ll])
+            check1[:,:,-1] = 1
+            assert np.array_equal(obj1[ll], check1)
+            check2 = np.apply_along_axis(density,0,loci[ll])
+            check2 = check2.T
+            assert np.allclose(obj2[ll][0], check2)
+
+    def test_compute_total_density(self, rec1, pop2, rec2):
+        """Test that compute_total_density performs correctly for a
+        genome filled with 1's and one randomly generated."""
+        llist = ["a","n","r","s"]
+        rec1.compute_total_density()
+        obj1 = rec1["density"]
+        assert sorted(obj1.keys()) == llist
+        rec2.compute_total_density()
+        obj2 = rec2["density"]
+        assert sorted(obj2.keys()) == llist
+
+        n_snap,ns1 = rec1["number_of_snapshots"], rec1["n_states"]
+        l,m,ns2 = pop2.max_ls, pop2.maturity, rec2["n_states"]
+        loci_all = pop2.sorted_loci()
+        loci = {"s":np.array(loci_all[:,:l]),
+                "r":np.array(loci_all[:,l:(2*l-m)]),
+                "n":np.array(loci_all[:,(2*l-m):]), "a":loci_all}
         loci_flat = copy.deepcopy(loci)
         loci_flat.update((k,v.reshape(v.shape[0]*v.shape[1])) \
                 for k,v in loci_flat.items())
         loci_flat.update((k,np.bincount(v,minlength=ns2)/float(len(v))) \
                 for k,v in loci_flat.items())
 
-        print obj2["a"][0]
-        print loci_flat["a"]
         for ll in llist:
             check1 = np.zeros([n_snap,ns1])
             check1[:,-1] = 1
