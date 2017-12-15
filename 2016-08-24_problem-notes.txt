@@ -1,0 +1,28 @@
+The problem:
+ - When running the simulation under normal conditions, survival and reproduction rates decline over time at all ages
+ - Equivalently, frequency of 1's in the genome remains low for all ages and declines over time. Consequently, density plots shift ever leftwards without appreciably changing in shape.
+ - Under constant resources condition, population size does not follow resources, but rather drops below it as survival and reproduction fall
+ - Fitness consequently declines over time as well
+ - Possibly some ageing (slightly faster decline at older ages) but strongly limited by overall non-age-dependent decline
+ - Standard deviation in genotypes also show very odd pattern - higher at low ages and in reproductive loci, declines with age. Would expect to see lower values in loci under stronger selection and increase with age.
+
+Eliminated reasons:
+ - Sexual reproduction (occurs in asexual, mutation-only scenarios)
+ - Crisis (not used)
+ - Seeding (not used)
+ - Multithreading (occurs even when this is disabled)
+ - Run averaging (ditto)
+ - Population initialisation (initial state looks good)
+ - Run/simulation initialisation (visible config parameters are correct, number of runs etc. all correct)
+ - Resource updating (also occurs under constant resources)
+ - Starvation factors (checked record manually, responds correctly to resource levels)
+
+Unlikely reasons:
+ - The mutation function (thoroughly tested, behaves appropriately)
+ - Structure of stage execution (checked thoroughly, matches preprint specifications)
+ - Chance function (thoroughly tested, both automatically and manually)
+ - get_subpop and death (thoroughly tested in various ways)
+ - growth ("")
+
+But that doesn't leave much. I've checked over the whole thing line by line and everything seems to check out. So I'm stumped to be honest.
+
