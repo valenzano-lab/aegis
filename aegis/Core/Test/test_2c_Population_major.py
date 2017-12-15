@@ -141,7 +141,7 @@ class TestPopulationDeath:
         surv_pos = np.array([range(p.n_base) + y for y in surv_loci*p.n_base])
         surv_pos = np.append(surv_pos, surv_pos + p.chr_len)
         p.genomes[:, surv_pos] =\
-                chance(x, [p.N, len(surv_pos)]).astype(int)
+                chance(x, (p.N, len(surv_pos))).astype(int)
         # Call and test death function, with and without starvation
         p2 = p.clone()
         p.death(surv_r, 1)
@@ -323,7 +323,7 @@ class TestPopulationGrowth:
         repr_pos = np.array([range(p.n_base) + y for y in repr_loci*p.n_base])
         repr_pos = np.append(repr_pos, repr_pos + p.chr_len)
         p.genomes[:, repr_pos] =\
-                chance(x, [p.N, len(repr_pos)]).astype(int)
+                chance(x, (p.N, len(repr_pos))).astype(int)
         # Call and test death function, with and without starvation
         for mode in ["sexual", "asexual", "recombine_only", "assort_only"]:
             p.repr_mode = mode

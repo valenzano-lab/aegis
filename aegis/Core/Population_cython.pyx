@@ -9,6 +9,8 @@
 ## PACKAGE IMPORT ##
 from .functions import chance, init_ages, init_genomes, init_generations
 from .Config import deepeq
+import numba
+cimport numba
 import numpy as np
 cimport numpy as np
 import random, copy
