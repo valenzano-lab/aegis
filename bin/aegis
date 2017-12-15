@@ -22,15 +22,14 @@ parser.add_argument('-v', '--verbose', action="store_true",
     (default: only starting population)")
 parser.add_argument('-r', type=int, metavar="<int>", default=100,
         help="report information every <int> stages (default: 100)")
-#parser.add_argument('-p', '--profile', action="store_true",
-#        help="profile genome simulation with cProfile")
+parser.add_argument('-p', '--profile', metavar='<str>', default="",
+        help="profile genome simulation with cProfile and save to given path")
 args = parser.parse_args()
 
-# TODO: Restore profiling code
-#if args.profile:
-#    import cProfile, pstats, StringIO
-#    pr = cProfile.Profile()
-#    pr.enable() # start profiling
+if args.profile != "":
+    import cProfile, pstats, StringIO
+    pr = cProfile.Profile()
+    pr.enable() # start profiling
 
 module = getattr(aegis, args.module)
 inpath = os.path.expanduser(args.infile)
@@ -44,10 +43,6 @@ elif args.script == "getconfig":
 elif args.script == "plot":
     module.plot(inpath)
 
-# TODO: Move v and r params to config file (then all uni-argument and 
-#       can simplify code).
-# TODO: Add args.script == "profile" option?
-
-#if args.profile:
-#    pr.create_stats()
-#    pr.dump_stats('timestats.txt')
+if args.profile != "":
+    pr.create_stats()
+    pr.dump_stats(args.profile)
