@@ -13,7 +13,7 @@ extensions = [
 
 setup(name='aegis',
         # Version
-        version='0.1',
+        version='0.5',
         # Package data
         packages=find_packages(),
         #packages=['aegis'],
