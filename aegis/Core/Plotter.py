@@ -26,28 +26,28 @@ class Plotter:
         rfile = open(record, "rb")
         try:
             self.record = pickle.load(rfile)
-            self.plot_methods = [#"plot_population_resources",\
-                                 #"plot_starvation",\
-                                 #"plot_fitness",\
-                                 #"plot_fitness_term",\
-                                 #"plot_fitness_term_overlay",\
-                                 #"plot_entropy_gt",\
-                                 #"plot_entropy_bits",\
-                                 #"plot_age_distribution",\
-                                 #"plot_density_per_locus",\
-                                 #"plot_density",\
-                                 #"plot_mean_gt",\
-                                 #"plot_var_gt",\
-                                 #"plot_entropy_gt",\
-                                 #"plot_repr_value",\
-                                 #"plot_mean_repr",\
-                                 #"plot_cmv_surv",\
+            self.plot_methods = ["plot_population_resources",\
+                                 "plot_starvation",\
+                                 "plot_fitness",\
+                                 "plot_fitness_term",\
+                                 "plot_fitness_term_overlay",\
+                                 "plot_entropy_gt",\
+                                 "plot_entropy_bits",\
+                                 "plot_age_distribution",\
+                                 "plot_density_per_locus",\
+                                 "plot_density",\
+                                 "plot_mean_gt",\
+                                 "plot_var_gt",\
+                                 "plot_entropy_gt",\
+                                 "plot_repr_value",\
+                                 "plot_mean_repr",\
+                                 "plot_cmv_surv",\
                                  "plot_n1",\
                                  "plot_n1_var",\
-                                 #"plot_actual_death_rate",\
-                                 #"plot_density_snap_overlay",\
-                                 #"plot_repr_value_snap_overlay",\
-                                 #"plot_cmv_surv_snap_overlay",\
+                                 "plot_actual_death_rate",\
+                                 "plot_density_snap_overlay",\
+                                 "plot_repr_value_snap_overlay",\
+                                 "plot_cmv_surv_snap_overlay",\
                                  "plot_n1_mean_sliding_window",\
                                  "plot_n1_var_sliding_window",\
                                  "plot_n1_grid",\
@@ -55,28 +55,28 @@ class Plotter:
                                  "plot_n1_var_grid",\
                                  "plot_n1_var_sliding_window_grid"
                                  ]
-            self.plot_names = [#"pop-res",\
-                               #"starvation",\
-                               #"fitness",\
-                               #"fitness_term",\
-                               #"per_fitness_term_overlay",\
-                               #"plot_entropy_gt",\
-                               #"plot_entropy_bits",\
-                               #"age_distribution",\
-                               #"density_per_locus",\
-                               #"density",\
-                               #"mean_gt",\
-                               #"var_gt",\
-                               #"entropy_gt",\
-                               #"repr_value",\
-                               #"mean_repr",\
-                               #"cmv_surv",\
+            self.plot_names = ["pop-res",\
+                               "starvation",\
+                               "fitness",\
+                               "fitness_term",\
+                               "per_fitness_term_overlay",\
+                               "plot_entropy_gt",\
+                               "plot_entropy_bits",\
+                               "age_distribution",\
+                               "density_per_locus",\
+                               "density",\
+                               "mean_gt",\
+                               "var_gt",\
+                               "entropy_gt",\
+                               "repr_value",\
+                               "mean_repr",\
+                               "cmv_surv",\
                                "n1",\
                                "n1_var",\
-                               #"actual_death_rate",\
-                               #"density_overlay",\
-                               #"repr_value_overlay",\
-                               #"cmv_surv_overlay",\
+                               "actual_death_rate",\
+                               "density_overlay",\
+                               "repr_value_overlay",\
+                               "cmv_surv_overlay",\
                                "n1_mean_sliding_window",\
                                "n1_var_sliding_window",\
                                "n1_grid",\
@@ -267,9 +267,10 @@ class Plotter:
     # auxiliary function
     def add_vlines(self, plot, expand=True):
         exp = self.record["n_base"] if expand else 1
+        mat = self.record["maturity"]*exp
         surv_repr = self.record["max_ls"]*exp
         repr_neut = (2*self.record["max_ls"]-self.record["maturity"])*exp
-        plot += ggplot.geom_vline(x=[surv_repr, repr_neut], color = "black",\
+        plot += ggplot.geom_vline(x=[mat, surv_repr, repr_neut], color = "black",\
                 linetype="dashed")
         return plot
 
@@ -382,7 +383,7 @@ class Plotter:
 
     def plot_n1_var(self, snapshot=""):
         plot = self.solo_plot(["n1_var"], ["snapshot","bit"], "bit", ["point"],\
-                "", snapshot, False, "Variation of distribution of 1's per bit")
+                "", snapshot, False, "Variance of distribution of 1's per bit")
         plot = self.add_vlines(plot)
         return plot
 
