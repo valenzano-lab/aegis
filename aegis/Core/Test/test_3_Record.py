@@ -40,14 +40,27 @@ def pop1(request, pop):
     return p
 
 @pytest.fixture(scope="module")
+def pop2(request, pop):
+    """Population of young adults with genomes filled with ones."""
+    p = pop.clone()
+    p.ages = np.tile(p.maturity, p.N)
+    p.generations = np.zeros(p.N, dtype=int)
+    return p
+
+@pytest.fixture(scope="module")
 def rec1(request, rec, pop1):
     """Record filled with initial state of pop1."""
     return static_fill(rec, pop1)
 
 @pytest.fixture(scope="module")
-def rec2(request, rec1):
+def rec1_copy(request, rec1):
     """Record filled with initial state of pop1."""
     return copy.deepcopy(rec1)
+
+@pytest.fixture(scope="module")
+def rec2(request, rec, pop2):
+    """Record filled with initial state of pop2."""
+    return static_fill(rec, pop2)
 
 ###########
 ## TESTS ##
@@ -188,7 +201,7 @@ class TestRecord:
 
     ## FINALISATION ##
 
-    def test_compute_locus_density(self, rec1, rec2):
+    def test_compute_locus_density(self, rec1, rec1_copy):
         """Test that compute_locus_density performs correctly for a
         genome filled with 1's.""" #! TODO: How about in a normal case?
         rec1.compute_locus_density()
@@ -203,18 +216,38 @@ class TestRecord:
             check[:,:,-1] = 1
             assert np.array_equal(obj[l], check)
 
-    def test_compute_total_density(self, rec1):
+    def test_compute_total_density(self, rec1, pop2, rec2):
         """Test that compute_total_density performs correctly for a
-        genome filled with 1's.""" #! TODO: How about in a normal case?
+        genome filled with 1's and general."""
         rec1.compute_total_density()
-        m,b = rec1["number_of_snapshots"], rec1["n_states"]
+        rec2.compute_locus_density()
+        rec2.compute_total_density()
+        n_snap,ns1 = rec1["number_of_snapshots"], rec1["n_states"]
         llist = ["a","n","r","s"]
-        obj = rec1["density"]
-        assert sorted(obj.keys()) == llist
-        for l in llist:
-            check = np.zeros([m,b])
-            check[:,-1] = 1
-            assert np.array_equal(obj[l], check)
+        obj1 = rec1["density"]
+        assert sorted(obj1.keys()) == llist
+        obj2 = rec2["density"]
+        assert sorted(obj2.keys()) == llist
+        # 2
+        l,m,ns2 = pop2.max_ls, pop2.maturity, rec2["n_states"]
+        loci_all = pop2.sorted_loci()
+        loci = {"s":np.array(loci_all[:,:l]),
+                "r":np.array(loci_all[:,l:(2*l-m)]),
+                "n":np.array(loci_all[:,(2*l-m):]), "a":loci_all}
+
+        loci_flat = copy.deepcopy(loci)
+        loci_flat.update((k,v.reshape(v.shape[0]*v.shape[1])) \
+                for k,v in loci_flat.items())
+        loci_flat.update((k,np.bincount(v,minlength=ns2)/float(len(v))) \
+                for k,v in loci_flat.items())
+
+        print obj2["a"][0]
+        print loci_flat["a"]
+        for ll in llist:
+            check1 = np.zeros([n_snap,ns1])
+            check1[:,-1] = 1
+            assert np.array_equal(obj1[ll], check1)
+            assert np.allclose(obj2[ll][0], loci_flat[ll])
 
     def test_compute_genotype_mean_var(self, rec1):
         """Test that compute_genotype_mean_var performs correctly for a
@@ -389,19 +422,19 @@ class TestRecord:
             assert np.array_equal(rec1[s+"_window_mean"],
                     np.tile(exp_val[s],shape))
 
-    def test_finalise(self, rec1, rec2):
+    def test_finalise(self, rec1, rec1_copy):
         """Test that finalise is equivalent to calling all finalisation
         methods separately."""
-        # First check that rec1 is finalised and rec2 is not
-        assert rec2["actual_death_rate"] == 0
+        # First check that rec1 is finalised and rec1_copy is not
+        assert rec1_copy["actual_death_rate"] == 0
         assert type(rec1["actual_death_rate"]) is np.ndarray
-        # Then finalise rec2 and compare
-        rec2.finalise()
-        assert type(rec2["actual_death_rate"]) is np.ndarray
-        for k in rec2.keys():
+        # Then finalise rec1_copy and compare
+        rec1_copy.finalise()
+        assert type(rec1_copy["actual_death_rate"]) is np.ndarray
+        for k in rec1_copy.keys():
             print k
             if k in ["snapshot_pops", "final_pop", "snapshot_age_distribution"]: continue
-            o1, o2 = rec1[k], rec2[k]
+            o1, o2 = rec1[k], rec1_copy[k]
             if k == "actual_death_rate":
                 assert o1.shape == o2.shape
                 assert np.sometrue(np.isnan(o1))
