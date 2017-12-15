@@ -1,0 +1,144 @@
+############################################################
+### Information about objects contained in Record object ###
+############################################################
+TODO
+- order in a meaningful way
+- fill the ?
+
+##################
+## single-value ##
+##################
+
+#######
+# int #
+#######
+res_limit
+snapshot_pops ?
+death_inc
+res_regen_constant
+n_states
+neut_offset
+number_of_snapshots
+chr_len
+repr_dec
+output_mode
+number_of_runs
+repr_offset
+start_pop
+R
+res_start
+maturity
+n_neutral
+n_base
+max_fail
+max_ls
+# float
+g_dist_n
+g_dist_s
+g_dist_r
+m_rate
+res_regen_prop
+r_rate
+m_ratio
+V
+
+#######
+# str #
+#######
+random_seed
+repr_mode
+output_prefix
+path_to_seed_file
+
+########
+# bool #
+########
+surv_pen
+repr_pen
+dieoff
+res_var
+
+# use in further text
+number_of_loci = max_ls + (max_ls-maturity) + n_neutral
+number_of_bits = number_of_loci * n_base
+
+###################             ##### 
+## numpy.ndarray ##             shape
+###################             #####
+
+#############
+# per stage #
+#############
+population_size                 (number_of_stages,)
+resources                       (number_of_stages,)
+repr_penf                       (number_of_stages,)
+surv_penf                       (number_of_stages,)
+age_distribution                (number_of_stages, max_ls)
+actual_death_rate               (number_of_stages-1, max_ls-1)
+
+################
+# per snapshot #
+################
+snapshot_stages                 (number_of_snapshots,)
+fitness                         (number_of_snapshots,)
+junk_fitness                    (number_of_snapshots,)
+entropy_bits                    (number_of_snapshots,)
+repr_value                      (number_of_snapshots, max_ls)
+mean_repr                       (number_of_snapshots, max_ls)
+junk_repr_value                 (number_of_snapshots, max_ls)
+junk_repr                       (number_of_snapshots, max_ls)
+cmv_surv                        (number_of_snapshots, max_ls)
+junk_cmv_surv                   (number_of_snapshots, max_ls)
+fitness_term                    (number_of_snapshots, max_ls)
+junk_fitness_term               (number_of_snapshots, max_ls)
+snapshot_age_distribution       (number_of_snapshots, max_ls)
+n1                              (number_of_snapshots, number_of_bits)
+n1_var                          (number_of_snapshots, number_of_bits)
+
+TODO: fill these out
+####################
+# genome and other #
+####################
+genmap                          (number_of_loci,)
+genmap_argsort                  (number_of_loci,)
+s_range                         (n_states,)
+r_range                         (n_states,)
+death_bound                     (2,)
+repr_bound                      (2,)
+surv_bound                      (2,)
+surv_step                       (1,)
+repr_step                       (1,)
+population_size_window_mean     ?
+population_size_window_var      ?
+resources_window_mean           ?
+resources_window_var            ?
+n1_window_mean                  (number_of_snapshots,number_of_loci-windows["n1"]+1)
+n1_window_var                   (number_of_snapshots,number_of_loci-windows["n1"]+1)
+prev_failed                     ?
+
+##########                      ####
+## dict ##                      keys
+##########                      ####
+density                         ['a','s','r','n']
+density_per_locus               ['a','s','r','n']
+mean_gt                         ['a','s','r','n']
+var_gt                          ['a','s','r','n']
+entropy_gt                      ['a','s','r','n']
+g_dist                          ['s','r','n'] # floats
+prob_mean                       ['surv','repr']
+prob_var                        ['surv','repr']
+junk_mean                       ['surv','repr']
+junk_var                        ['surv','repr']
+windows                         ['n1','population_size','resources']
+params                          ['g_dist','repr_offset','neut_offset','repr_mode',
+                                'n_base','maturity','start_pop','max_ls','chr_len']
+
+################                #####
+# dict objects #                shape
+################                #####
+density['a']                    (number_of_snapshots,n_states)
+density_per_locus['a']          (number_of_snapshots,number_of_loci,n_states)
+mean_gt['a']                    (number_of_snapshots,number_of_loci)
+var_gt['a']                     (number_of_snapshots,number_of_loci)
+entropy_gt['?']                 (number_of_snapshots)
+prob/junk_mean/var              (number_of_snapshots,max_ls)

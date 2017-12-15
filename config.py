@@ -16,15 +16,15 @@ number_of_snapshots = 16 # Number of stages at which to store output data;
                          # will take a snapshot at that proportion of stages
 
 ## RESOURCE PARAMETERS ##
-res_start = 0 # Starting resource value
+res_start = 1000 # Starting resource value
 res_var = True # Resources vary with population and time; else constant
-R = 1000 # Per-stage resource increment, if variable
-V = 1.6 # Resource regrowth factor, if variable
-res_limit = 5000 # Maximum resource value, if variable
+R = res_start # Per-stage resource increment, if variable
+V = 1.1 # Resource regrowth factor, if variable
+res_limit = res_start*5 # Maximum resource value, if variable
 
 ## STARTING POPULATION PARAMETERS ##
-start_pop = 500 # Starting population size
 age_random = False # Random starting ages; else all start as new adults
+start_pop = res_start # Starting population size
 g_dist_s = 0.5 # Proportion of 1's in survival loci of initial genomes
 g_dist_r = g_dist_s #                       reproductive loci
 g_dist_n = g_dist_s #                       neutral loci
@@ -43,5 +43,5 @@ surv_pen = True # Survival penalty under starvation
 repr_pen = False # Reproduction penalty under starvation
 death_inc = 3 # Per-stage death rate increase under starvation
 repr_dec = death_inc # Per-stage reproduction rate decrease under starvation
-window_size = 10 # Size of sliding window for recording standard deviation of
-                 # locus genotypes along genomes.
+# Size of sliding windows for recording averaged statistics:
+windows = {"population_size": 1000, "resources":1000, "n1":10}

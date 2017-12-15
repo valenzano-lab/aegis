@@ -1,0 +1,53 @@
+#!/usr/bin/env python
+
+# Import libraries and define arguments
+import argparse,os,sys,warnings,pyximport; pyximport.install()
+# ignore pandas warnings, but also all FutureWarning
+# TODO: handle this better
+warnings.simplefilter(action='ignore', category=FutureWarning)
+import aegis
+
+parser = argparse.ArgumentParser(description='Run the genome ageing simulation.',\
+        formatter_class=argparse.RawTextHelpFormatter)
+# TODO: add README and instruct the user to read it on the webpage before running
+parser.add_argument('script', help="AEGIS script to run:\n\
+    run - run the simulation with the config file specified in\n\
+          infile\n\
+    getconfig - copies the default config file to infile")
+parser.add_argument('infile', help="path to input config file")
+parser.add_argument('-m', '--module', metavar='<str>', default="Core",
+        help="AEGIS module to use for simulation run (default: 'Core')")
+parser.add_argument('-v', '--verbose', action="store_true",
+        help="display full information at each report stage\n\
+    (default: only starting population)")
+parser.add_argument('-r', type=int, metavar="<int>", default=100,
+        help="report information every <int> stages (default: 100)")
+#parser.add_argument('-p', '--profile', action="store_true",
+#        help="profile genome simulation with cProfile")
+args = parser.parse_args()
+
+# TODO: Restore profiling code
+#if args.profile:
+#    import cProfile, pstats, StringIO
+#    pr = cProfile.Profile()
+#    pr.enable() # start profiling
+
+module = getattr(aegis, args.module)
+inpath = os.path.expanduser(args.infile)
+
+if args.script == "run":
+    module.run(inpath, args.r, args.verbose)
+
+elif args.script == "getconfig":
+    module.getconfig(inpath)
+
+elif args.script == "plot":
+    module.plot(inpath)
+
+# TODO: Move v and r params to config file (then all uni-argument and 
+#       can simplify code).
+# TODO: Add args.script == "profile" option?
+
+#if args.profile:
+#    pr.create_stats()
+#    pr.dump_stats('timestats.txt')

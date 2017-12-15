@@ -138,7 +138,7 @@ class Config:
         self.repr_pen = c.repr_pen # Penalise reproduction under starvation?
         self.death_inc = c.death_inc # Rate of death-rate increase under starvation
         self.repr_dec = c.repr_dec # Rate of repr rate decrease under starvation
-        self.window_size = c.window_size # Sliding window size for SD recording
+        self.windows = c.windows # Sliding window size for SD recording
 
     def generate(self):
         """Generate derived configuration parameters from simple ones and
@@ -246,18 +246,6 @@ cdef class Population:
 
     # Minor methods
 
-    def shuffle(self):
-        """Rearrange order of individuals in population."""
-        index = np.arange(self.N)
-        np.random.shuffle(index)
-        self.ages = self.ages[index]
-        self.genomes = self.genomes[index]
-
-    def clone(self):
-        """Generate a new, identical population object."""
-        return Population(self.params(), self.genmap,
-                self.ages, self.genomes)
-
     def increment_ages(self):
         """Age all individuals in population by one stage."""
         self.ages += 1
@@ -272,14 +260,6 @@ cdef class Population:
                 "maturity":self.maturity
                 }
         return p_dict
-
-    cpdef addto(self, object pop):
-        """Append the individuals from a second population to this one,
-        keeping this one's parameters and genome map."""
-        self.ages = np.concatenate((self.ages, pop.ages), 0)
-        self.genomes = np.concatenate((self.genomes, pop.genomes), 0)
-        self.N = len(self.ages)
-        # As it stands cythonising this doesn't make much difference
 
     def chrs(self, reshape=False):
         """Return an array containing the first and second chromosomes 
@@ -497,8 +477,16 @@ class Record:
         assign("max_ls", np.array([conf.max_ls]))
         assign("maturity", np.array([conf.maturity]))
         assign("n_neutral", np.array([conf.n_neutral]))
+        assign("m_rate", np.array([conf.m_rate]))
+        assign("m_ratio", np.array([conf.m_ratio]))
+        assign("r_rate", np.array([conf.r_rate]))
         assign("sexual", conf.sexual)
+        assign("start_pop", np.array([conf.start_pop]))
         # Run parameters from config object
+        assign("res_start", np.array([conf.res_start]))
+        assign("res_limit", np.array([conf.res_limit]))
+        assign("res_regen_constant", np.array([conf.R]))
+        assign("res_regen_prop", np.array([conf.V]))
         assign("surv_bound", conf.surv_bound)
         assign("repr_bound", conf.repr_bound)
         assign("surv_step", np.array(conf.surv_step))
@@ -509,8 +497,10 @@ class Record:
         assign("res_var", conf.res_var)
         assign("surv_pen", conf.surv_pen)
         assign("repr_pen", conf.repr_pen)
+        assign("death_inc", np.array([conf.death_inc]))
+        assign("repr_dec", np.array([conf.repr_dec]))
         # Recording parameters from config object
-        assign("window_size", conf.window_size)
+        assign("windows", conf.windows)
         assign("n_states", conf.n_states)
         # Simple data collected at every stage
         n,l = self.record["n_stages"],self.record["max_ls"]
@@ -591,7 +581,7 @@ class Record:
             from an array of densities."""
             ad_tr = locus_densities.transpose(1,2,0) # [snapshot,locus,genotype]
             # Mean and variance of gt distribution
-            mean_gt = np.sum(ad_tr * gt, 2)
+            mean_gt = np.sum(ad_tr * gt, 2) # [snapshot, locus]
             # Get difference between each potential genotype and the mean at
             # each snapshot/locus
             gt_diff = np.tile(gt, [len(ss),ad_tr.shape[1],1]) - \
@@ -693,17 +683,10 @@ class Record:
         n1_total = np.mean(n1, 1)
         bit_distr = np.vstack((n1_total,1-n1_total))
         entropy_bits = np.apply_along_axis(st.entropy, 0, bit_distr)
-        # Sliding-window variance in number of 1s along genome
-        d,s,w = n1.ndim-1, len(n1.strides)-1, self.get("window_size")
-        a_shape = n1.shape[:d] + (n1.shape[d] - w + 1, w)
-        a_strd = n1.strides + (n1.strides[s],) # strides
-        sliding_window_n1 = np.std(np.lib.stride_tricks.as_strided(
-            n1, shape=a_shape, strides=a_strd), 2)
         # Set record entries
         self.set("n1", n1)
         self.set("n1_var", n1_var)
         self.set("entropy_bits", entropy_bits)
-        self.set("sliding_window_n1", sliding_window_n1)
 
     def compute_actual_death(self):
         """Compute actual death rate for each age at each stage."""
@@ -711,11 +694,24 @@ class Record:
                 self.get("population_size")[:,None]
         dividend = N_age[1:, 1:]
         divisor = np.copy(N_age[:-1, :-1])
-        divisor[divisor == 0] = 1 # avoid division by zero
-        death = 1 - dividend / divisor
-        # value for last age is 1
-        self.set("actual_death_rate", 
-                np.append(death, np.ones([death.shape[0], 1]), axis=1))
+        divisor[divisor == 0] = np.nan # flag division by zero
+        self.set("actual_death_rate", 1 - dividend / divisor)
+
+    def get_window(self, key, wsize):
+        """Obtain sliding windows from a record entry."""
+        x = self.get(key)
+        d,s = x.ndim-1, len(x.strides)-1
+        w = np.min([wsize, x.shape[d] + 1]) # Maximum window size
+        a_shape = x.shape[:d] + (x.shape[d] - w + 1, w)
+        a_strd = x.strides + (x.strides[s],)
+        return np.lib.stride_tricks.as_strided(x, a_shape, a_strd)
+
+    def compute_windows(self):
+        dim = {"population_size":1, "resources":1, "n1":2}
+        for s in ["population_size","resources","n1"]:
+            w = self.get_window(s, self.get("windows")[s])
+            self.set(s + "_window_mean", np.mean(w, dim[s]))
+            self.set(s + "_window_var", np.var(w, dim[s]))
 
     def finalise(self):
         """Calculate additional stats from recorded data of a completed run."""
@@ -723,6 +719,8 @@ class Record:
         self.compute_probabilities()
         self.compute_bits()
         self.compute_actual_death()
+        self.compute_windows()
+        self.set("snapshot_pops",0) # TODO: Make this configurable!
 
 class Run:
     """An object representing a single run of a simulation."""
@@ -1019,8 +1017,7 @@ class Simulation:
                     list(r("snapshot_stages")) for r in rec_gets])
             eq_array_2 = np.array([r("mean_gt")["s"].shape+r("density")["s"].shape+\
                     r("entropy_gt")["s"].shape+r("resources").shape+r("n1").shape+\
-                    r("sliding_window_n1").shape+r("age_distribution").shape\
-                    for r in rec_gets])
+                    r("age_distribution").shape for r in rec_gets])
             cm = np.all(np.isclose(eq_array_0, eq_array_0[0])) and \
                     np.all(np.isclose(eq_array_1, eq_array_1[0])) and \
                     np.all(np.isclose(eq_array_2,eq_array_2[0]))
@@ -1036,23 +1033,28 @@ class Simulation:
         def average_entry(key):
             """Average a given entry across all runs and store under the
             corresponding key in self.avg_record."""
-            excl = ["snapshot_pops", "prev_failed", "percent_dieoff",
-                    "n_runs", "n_successes"]
-            if key in excl: return
+            if key in ["snapshot_pops", "n_runs", "n_successes"]: return
             k0,sar = rec_gets[0](key), self.avg_record
-            if isinstance(k0, dict):
+            if key in ["population_size","resources","surv_penf","repr_penf",
+                    "prev_failed", "percent_dieoff",
+                    "population_size_window_mean", "resources_window_mean",
+                    "population_size_window_var", "resources_window_var"]:
+                # Concatenate rather than average
+                sar.set(key,np.vstack([r(key) for r in rec_gets]))
+            elif isinstance(k0, dict):
                 d_out, d_out_sd = {}, {}
                 for k in sorted(k0.keys()):
                     karray = np.array([r(key)[k] for r in rec_gets])
-                    d_out[k] = np.mean(karray, 0)
-                    d_out_sd[k] = np.std(karray, 0)
+                    d_out[k] = np.nanmean(karray, 0) 
+                    d_out_sd[k] = np.nanstd(karray, 0)
+                    # nanmean/nanstd to account for actual death rate nan's
                 sar.set(key, d_out)
                 sar.set(key + "_sd", d_out_sd)
             elif isinstance(k0, np.ndarray) or isinstance(k0, int)\
                     or isinstance(k0, float):
                 karray = np.array([r(key) for r in rec_gets])
-                sar.set(key, np.mean(karray, 0))
-                sar.set(key + "_sd", np.std(karray, 0))
+                sar.set(key, np.nanmean(karray, 0))
+                sar.set(key + "_sd", np.nanstd(karray, 0))
                 if isinstance(sar.get(key),np.ndarray):
                     if np.allclose(sar.get(key), sar.get(key).astype(int)):
                             sar.set("key", sar.get(key).astype(int))
@@ -1069,10 +1071,10 @@ class Simulation:
                     sum([x.complete and not x.dieoff for x in self.runs]))
             fails = [r.record.get("prev_failed") for r in self.runs]
             failsum = np.sum(fails)
-            sar.set("prev_failed", failsum)
-            sar.set("percent_dieoff", 100*\
-                    (sar.get("prev_failed")+sum([x.dieoff for x in self.runs]))/\
-                    (sar.get("prev_failed")+len(self.runs)))
+            sar.set("total_failed", failsum)
+            sar.set("percent_dieoff_total", 100*\
+                    (sar.get("total_failed")+sum([x.dieoff for x in self.runs]))/\
+                    (sar.get("total_failed")+len(self.runs)))
         # Procedure
         test_compatibility() # First test record compatibility
         keys = rec_list[0].get_keys()
