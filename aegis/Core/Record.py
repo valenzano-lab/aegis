@@ -268,7 +268,7 @@ class Record(Infodict):
         """Compute true and junk cumulative survival probabilities at each age
         and snapshot from the corresponding survival probability arrays."""
         l = self["max_ls"]
-        init_surv = np.tile(1,len(self["prob_mean"]["surv"]))
+        #init_surv = np.tile(1,len(self["prob_mean"]["surv"]))
         # (P(survival from age 0 to age 0) = 1)
         cmv_surv = np.ones(self["prob_mean"]["surv"].shape)
         cmv_surv[:,1:] = np.cumprod(self["prob_mean"]["surv"],1)[:,:-1]
