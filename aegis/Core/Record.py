@@ -293,7 +293,7 @@ class Record(Infodict):
         mean_repr /= 2.0 if sex else 1.0
         self["mean_repr"] = mean_repr
         # Junk values
-        q = np.mean(self["prob_mean"]["repr"], 1)
+        q = np.mean(self["junk_mean"]["repr"], 1)
         junk_repr = np.tile(q[:,np.newaxis], [1,self["max_ls"]])
         junk_repr[:,:self["maturity"]] = 0
         junk_repr /= 2.0 if sex else 1.0 #! TODO: Check this
