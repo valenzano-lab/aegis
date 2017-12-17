@@ -201,6 +201,7 @@ class TestRecord:
 
     ## FINALISATION ##
 
+    # DONE
     def test_compute_locus_density(self, rec1, rec1_copy, pop2, rec2):
         """Test that compute_locus_density performs correctly for a
         genome filled with 1's and one randomly generated."""
@@ -235,6 +236,7 @@ class TestRecord:
             assert np.array_equal(obj1[l], check1)
             assert np.allclose(obj2[l][0], check2)
 
+    # DONE
     def test_compute_total_density(self, rec1, pop2, rec2):
         """Test that compute_total_density performs correctly for a
         genome filled with 1's and one randomly generated."""
@@ -264,6 +266,7 @@ class TestRecord:
             assert np.array_equal(obj1[l], check1)
             assert np.allclose(obj2[l][0], loci_flat[l])
 
+    # DONE
     def test_compute_genotype_mean_var(self, rec1, pop2, rec2):
         """Test that compute_genotype_mean_var performs correctly for a
         genome filled with 1's and one randomly generated."""
@@ -359,6 +362,7 @@ class TestRecord:
             assert np.array_equal(rec1["junk_mean"][l], np.tile(vmax[l], [m,nn]))
             assert np.array_equal(rec1["junk_var"][l], np.zeros([m,nn]))
 
+    # DONE
     def test_compute_cmv_surv(self, rec1, pop2, rec2):
         """Test that cumulative survival probabilities are computed
         correctly for a genome filled with 1's and one randomly generated."""
@@ -387,6 +391,7 @@ class TestRecord:
         assert np.allclose(rec2["cmv_surv"][0], check2)
         assert np.allclose(rec2["junk_cmv_surv"][0], check2_junk)
 
+    # DONE
     def test_compute_mean_repr(self, rec1, pop2, rec2):
         """Test that mean reproduction probability calculations are
         computed correctly for a genome filled with 1's and one randomly generated.
@@ -419,12 +424,14 @@ class TestRecord:
         assert np.allclose(rec2["mean_repr"], check2/div)
         assert np.allclose(rec2["junk_repr"][0], check2_junk/div)
 
-    def test_compute_fitness(self, rec1):
+    # DONE
+    def test_compute_fitness(self, rec1, rec2):
         """Test that per-age and total fitness are computed correctly
-        for a genome filled with 1's."""
+        for a genome filled with 1's and one randomly generated."""
         # Update record
         rec1.compute_fitness()
-        # Test vs expectation
+        rec2.compute_fitness()
+        # 1's genome
         assert np.allclose(rec1["fitness_term"],
                 rec1["cmv_surv"]*rec1["mean_repr"])
         assert np.allclose(rec1["junk_fitness_term"],
@@ -432,26 +439,65 @@ class TestRecord:
         assert np.allclose(rec1["fitness"], np.sum(rec1["fitness_term"], 1))
         assert np.allclose(rec1["junk_fitness"],
                 np.sum(rec1["junk_fitness_term"], 1))
+        # random genome
+        assert np.allclose(rec2["fitness_term"],
+                rec2["cmv_surv"]*rec2["mean_repr"])
+        assert np.allclose(rec2["junk_fitness_term"],
+                rec2["junk_cmv_surv"]*rec2["junk_repr"])
+        assert np.allclose(rec2["fitness"], np.sum(rec2["fitness_term"], 1))
+        assert np.allclose(rec2["junk_fitness"],
+                np.sum(rec2["junk_fitness_term"], 1))
 
-    def test_compute_reproductive_value(self, rec1):
+    # DONE
+    def test_compute_reproductive_value(self, rec1, rec2):
         # Update record
         rec1.compute_reproductive_value()
+        rec2.compute_reproductive_value()
         # Test vs expectation
-        f = np.fliplr(np.cumsum(np.fliplr(rec1["fitness_term"]),1))
-        jf = np.fliplr(np.cumsum(np.fliplr(rec1["junk_fitness_term"]),1))
-        assert np.allclose(rec1["repr_value"], f/rec1["cmv_surv"])
-        assert np.allclose(rec1["junk_repr_value"], jf/rec1["junk_cmv_surv"])
+        f1 = np.fliplr(np.cumsum(np.fliplr(rec1["fitness_term"]),1))
+        jf1 = np.fliplr(np.cumsum(np.fliplr(rec1["junk_fitness_term"]),1))
+        f2 = np.fliplr(np.cumsum(np.fliplr(rec2["fitness_term"]),1))
+        jf2 = np.fliplr(np.cumsum(np.fliplr(rec2["junk_fitness_term"]),1))
+        assert np.allclose(rec1["repr_value"], f1/rec1["cmv_surv"])
+        assert np.allclose(rec1["junk_repr_value"], jf1/rec1["junk_cmv_surv"])
+        assert np.allclose(rec2["repr_value"], f2/rec2["cmv_surv"])
+        assert np.allclose(rec2["junk_repr_value"], jf2/rec2["junk_cmv_surv"])
 
-    def test_compute_bits(self, rec1):
+    # DONE
+    def test_compute_bits(self, rec1, pop2, rec2):
         """Test computation of mean and variance in bit value along
-        chromosome for a genome filled with 1's."""
+        chromosome for a genome filled with 1's and one randomly generated."""
         rec1.compute_bits()
-        # Define parameters
-        m,c = rec1["number_of_snapshots"],rec1["chr_len"]
-        # Test against expectation
-        assert np.array_equal(rec1["n1"], np.ones([m,c]))
-        assert np.array_equal(rec1["n1_var"], np.zeros([m,c]))
+        rec2.compute_bits()
 
+        # 1's genome
+        n_snap,chr_len1 = rec1["number_of_snapshots"],rec1["chr_len"]
+        assert np.array_equal(rec1["n1"], np.ones([n_snap,chr_len1]))
+        assert np.array_equal(rec1["n1_var"], np.zeros([n_snap,chr_len1]))
+
+        # random genome
+        nbase = rec2["n_base"]
+        # choose one locus at random and fill with ones to check for correct order
+        rbit = np.random.choice(xrange(len(pop2.genmap)))
+        rlocus = np.array([rbit*nbase + c for c in xrange(nbase)])
+        rlocus = np.stack([rlocus, rlocus+pop2.chr_len])
+        abit = pop2.genmap[rbit]
+        alocus = np.array([abit*nbase + c for c in xrange(nbase)])
+        genomes = copy.deepcopy(pop2.genomes)
+        genomes[:,rlocus] = 1
+        genomes = genomes.reshape(pop2.N*2, pop2.chr_len)
+        order = np.ndarray.flatten(np.array([pop2.genmap_argsort*nbase + c for c in\
+                xrange(nbase)]), order="F")
+        check1 = np.mean(genomes,0)[order]
+        check11 = rec2["n1"][0]
+        check11[alocus] = 1
+        check2 = np.var(genomes,0)[order]
+        check22 = rec2["n1_var"][0]
+        check22[alocus] = 0
+        assert np.allclose(check11, check1)
+        assert np.allclose(check22, check2)
+
+    # TODO general case
     def test_compute_entropies(self, rec1):
         """Test computation of per-bit and per-locus entropy in a
         population, for a genome filled with 1's."""
@@ -463,6 +509,7 @@ class TestRecord:
         assert sorted(rec1["entropy_gt"].keys()) == ["a", "n", "r", "s"]
         for v in rec1["entropy_gt"].values(): assert np.array_equal(v,z)
 
+    # TODO general case
     def test_compute_actual_death(self, rec1):
         """Test if compute_actual_death stores expected results for
         artificial data."""
@@ -520,6 +567,7 @@ class TestRecord:
             assert np.array_equal(rec1[s+"_window_mean"],
                     np.tile(exp_val[s],shape))
 
+    # DONE (maybe do it with rec2, since more genereal)
     def test_finalise(self, rec1, rec1_copy):
         """Test that finalise is equivalent to calling all finalisation
         methods separately."""
