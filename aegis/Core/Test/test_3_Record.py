@@ -303,21 +303,45 @@ class TestRecord:
             assert np.allclose(obj2_mean[l][0], check2_mean)
             assert np.allclose(obj2_var[l][0], check2_var)
 
-    def test_compute_surv_repr_probabilities_true(self, rec1):
+    @pytest.mark.xfail(reason="test not fully implemented")
+    def test_compute_surv_repr_probabilities_true(self, rec1, pop2, rec2):
         """Test that compute_surv_repr_probabilities_true performs
-        correctly for a genome filled with 1's.""" #! TODO: How about in a normal case?
+        correctly for a genome filled with 1's and one randomly generated."""
         rec1.compute_surv_repr_probabilities_true()
-        # Define parameters
-        m,ls = rec1["number_of_snapshots"], rec1["max_ls"]
-        ns,mt= rec1["n_states"], rec1["maturity"]
+        rec2.compute_surv_repr_probabilities_true()
         llist = ["repr", "surv"]
-        dims = {"surv":[m,ls], "repr":[m,ls-mt]}
-        vmax = {"surv":rec1.p_surv(ns-1), "repr":rec1.p_repr(ns-1)}
-        # Test vs expectation
         for k in ["mean", "var"]: assert sorted(rec1["prob_"+k].keys()) == llist
+        for k in ["mean", "var"]: assert sorted(rec2["prob_"+k].keys()) == llist
+
+        # Define parameters
+        n_snap,l1 = rec1["number_of_snapshots"], rec1["max_ls"]
+        ns1,mt1= rec1["n_states"], rec1["maturity"]
+        dims = {"surv":[n_snap,l1], "repr":[n_snap,l1-mt1]}
+        vmax = {"surv":rec1.p_surv(ns1-1), "repr":rec1.p_repr(ns1-1)}
+
+        l2,mt2,ns2 = pop2.max_ls, pop2.maturity, rec2["n_states"]
+        loci_all = pop2.sorted_loci()
+        loci = {"s":np.array(loci_all[:,:l2]),
+                "r":np.array(loci_all[:,l2:(2*l2-mt2)]),
+                "n":np.array(loci_all[:,(2*l2-mt2):]), "a":loci_all}
+
+        # Test vs expectation
         for l in llist:
+            data = loci[l[0]]
+            values = rec2[l[0]+"_range"]
+            check_mean = np.mean(values[data],0)
+            if l=="repr": check_var = np.var(values[data],0)/20*pop2.N
+            else: check_var = np.var(values[data],0)*pop2.N
+            print l
+            print check_var
+            print rec2["prob_var"][l][0]
+            print check_var[0]/rec2["prob_var"][l][0][0]
+            print check_var[1]/rec2["prob_var"][l][0][1]
+            # TODO why is this scaled like this ???
             assert np.array_equal(rec1["prob_mean"][l], np.tile(vmax[l], dims[l]))
             assert np.array_equal(rec1["prob_var"][l], np.zeros(dims[l]))
+            assert np.allclose(check_mean, rec2["prob_mean"][l][0])
+            assert np.allclose(check_var, rec2["prob_var"][l][0])
 
     def test_surv_repr_probabilities_junk(self, rec1):
         """Test that compute_surv_repr_probabilities_junk performs
