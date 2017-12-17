@@ -387,21 +387,37 @@ class TestRecord:
         assert np.allclose(rec2["cmv_surv"][0], check2)
         assert np.allclose(rec2["junk_cmv_surv"][0], check2_junk)
 
-    # TODO general case
-    def test_compute_mean_repr(self, rec1):
+    def test_compute_mean_repr(self, rec1, pop2, rec2):
         """Test that mean reproduction probability calculations are
-        computed correctly for a genome filled with 1's."""
+        computed correctly for a genome filled with 1's and one randomly generated.
+        """
         rec1.compute_mean_repr()
+        rec2.compute_mean_repr()
+
         # Define parameters
         sex = rec1["repr_mode"] in ["sexual", "assort_only"]
-        div = 2 if sex else 1
-        m,ns = rec1["number_of_snapshots"], rec1["n_states"]
-        ls,mt = rec1["max_ls"], rec1["maturity"]
+        div = 2.0 if sex else 1.0
+        n_snap,ns1 = rec1["number_of_snapshots"], rec1["n_states"]
+        l1,mt1 = rec1["max_ls"], rec1["maturity"]
+        mr = np.tile(rec1.p_repr(ns1-1), [n_snap,l1])
+        mr[:,:mt1] = 0
+
+        l2,mt2,ns2 = pop2.max_ls, pop2.maturity, rec2["n_states"]
+        loci_all = pop2.sorted_loci()
+        loci = {"s":np.array(loci_all[:,:l2]),
+                "r":np.array(loci_all[:,l2:(2*l2-mt2)]),
+                "n":np.array(loci_all[:,(2*l2-mt2):]), "a":loci_all}
+        values = rec2["r_range"]
+        check2 = np.zeros(l2)
+        check2[mt2:] = np.mean(values[loci["r"]],0)[:]
+        check2_junk = np.zeros(l2)
+        check2_junk[mt2:] = np.tile(np.mean(values[loci["n"]]), l2-mt2)[:]
+
         # Test vs expectation
-        mr = np.tile(rec1.p_repr(ns-1), [m,ls])
-        mr[:,:mt] = 0
         assert np.allclose(rec1["mean_repr"], mr/div)
         assert np.allclose(rec1["junk_repr"], mr/div)
+        assert np.allclose(rec2["mean_repr"], check2/div)
+        assert np.allclose(rec2["junk_repr"][0], check2_junk/div)
 
     def test_compute_fitness(self, rec1):
         """Test that per-age and total fitness are computed correctly
