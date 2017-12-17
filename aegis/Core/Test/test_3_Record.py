@@ -303,6 +303,7 @@ class TestRecord:
             assert np.allclose(obj2_mean[l][0], check2_mean)
             assert np.allclose(obj2_var[l][0], check2_var)
 
+    # TODO resolve issue
     @pytest.mark.xfail(reason="test not fully implemented")
     def test_compute_surv_repr_probabilities_true(self, rec1, pop2, rec2):
         """Test that compute_surv_repr_probabilities_true performs
@@ -343,9 +344,10 @@ class TestRecord:
             assert np.allclose(check_mean, rec2["prob_mean"][l][0])
             assert np.allclose(check_var, rec2["prob_var"][l][0])
 
+    # TODO general case
     def test_surv_repr_probabilities_junk(self, rec1):
         """Test that compute_surv_repr_probabilities_junk performs
-        correctly for a genome filled with 1's.""" #! TODO: How about in a normal case?
+        correctly for a genome filled with 1's."""
         rec1.compute_surv_repr_probabilities_junk()
         # Define parameters
         m,nn,ns = rec1["number_of_snapshots"],rec1["n_neutral"],rec1["n_states"]
@@ -357,17 +359,35 @@ class TestRecord:
             assert np.array_equal(rec1["junk_mean"][l], np.tile(vmax[l], [m,nn]))
             assert np.array_equal(rec1["junk_var"][l], np.zeros([m,nn]))
 
-    def test_compute_cmv_surv(self, rec1):
+    def test_compute_cmv_surv(self, rec1, pop2, rec2):
         """Test that cumulative survival probabilities are computed
-        correctly for a genome filled with 1's."""
+        correctly for a genome filled with 1's and one randomly generated."""
         rec1.compute_cmv_surv()
-        # Define parameters
-        m,ls,ns = rec1["number_of_snapshots"], rec1["max_ls"], rec1["n_states"]
-        # Test vs expectation
-        cs = np.tile(rec1.p_surv(ns-1)**np.arange(ls), [m,1])
-        assert np.allclose(rec1["cmv_surv"], cs)
-        assert np.allclose(rec1["junk_cmv_surv"], cs)
+        rec2.compute_surv_repr_probabilities_junk()
+        rec2.compute_cmv_surv()
 
+        # Define parameters
+        n_snap,l1,ns1 = rec1["number_of_snapshots"], rec1["max_ls"],\
+                rec1["n_states"]
+        check1 = np.tile(rec1.p_surv(ns1-1)**np.arange(l1), [n_snap,1])
+
+        l2,mt2,ns2 = pop2.max_ls, pop2.maturity, rec2["n_states"]
+        loci_all = pop2.sorted_loci()
+        loci = {"s":np.array(loci_all[:,:l2]),
+                "r":np.array(loci_all[:,l2:(2*l2-mt2)]),
+                "n":np.array(loci_all[:,(2*l2-mt2):]), "a":loci_all}
+        values = rec2["s_range"]
+        check2 = np.ones(l2)
+        check2[1:] = np.cumprod(np.mean(values[loci["s"]],0))[:-1]
+        check2_junk = np.ones(l2)
+        check2_junk[1:] = np.cumprod(np.tile(np.mean(values[loci["n"]]),l2-1))
+        # Test vs expectation
+        assert np.allclose(rec1["cmv_surv"], check1)
+        assert np.allclose(rec1["junk_cmv_surv"], check1)
+        assert np.allclose(rec2["cmv_surv"][0], check2)
+        assert np.allclose(rec2["junk_cmv_surv"][0], check2_junk)
+
+    # TODO general case
     def test_compute_mean_repr(self, rec1):
         """Test that mean reproduction probability calculations are
         computed correctly for a genome filled with 1's."""
