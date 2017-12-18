@@ -10,7 +10,7 @@
 
 ## PACKAGE IMPORT ##
 import numpy as np
-import copy, imp
+import copy, imp, math
 
 ## AUXILIARY FUNCTIONS ##
 def deepkey(key, dict1, dict2, verbose=False):
@@ -266,6 +266,11 @@ class Config(Infodict):
         mirror("output_mode", "Level of information to retain in simulation\
                 output: 0 = records only, 1 = records + final population,\
                 2 = records + all snapshot populations. [int]")
+        # Autocomputing stage number
+        mirror("delta", "Greatest allowed difference between expected final\
+                mean neutral genotype and predicted equilibrium value [float].")
+        mirror("scale", "Scaling factor applied to target generation\
+                estimated for delta to ensure sufficient equilibration. [float].")
         self.check()
 
     # Check for invalid config construction
@@ -343,12 +348,6 @@ class Config(Infodict):
             self["repr_bound"][1], self["n_states"]), "Reproduction \
                     probability for each genotype sum value, linearly spaced. \
                     [float array]")
-        # Snapshot stages
-        self.put("snapshot_stages", np.around(
-            np.linspace(0,self["number_of_stages"]-1,
-                self["number_of_snapshots"]), 0).astype(int), "Stages of a \
-                        run at which to record detailed information about \
-                        the state of the population. [int array]")
         # Params dict
         self.put("params", self.subdict(
             ["repr_mode", "chr_len", "n_base", "maturity", "start_pop",
@@ -358,6 +357,30 @@ class Config(Infodict):
                     chromosome, age of maturity, maximum lifespan, \
                     starting population size, and initial bit value \
                     distribution. [dict]")
+        # Compute automatic stage numbering (if required)
+        self.autostage()
 
-        #! Script for generating new config file with default values,
-        # or data file with default setup in place
+    def autostage(self):
+        """Compute automatic running behaviour ... UNTESTED"""
+        if self["number_of_stages"] != "auto":
+            # Compute snapshot stages
+            self.put("snapshot_stages", np.around(
+                np.linspace(0,self["number_of_stages"]-1,
+                    self["number_of_snapshots"]), 0).astype(int), "Stages of a \
+                            run at which to record detailed information about \
+                            the state of the population. [int array]")
+            return
+        # Compute analytical parameters
+        alpha, beta = self["m_rate"], self["m_rate"]*self["m_ratio"]
+        a, p = 1 - alpha - beta, beta/(alpha+beta)
+        A, P = abs(a), abs(p - self["g_dist_n"])
+        k = (math.log10(self["delta"]) - math.log10(P))/math.log10(A)
+        # Assign generation threshold
+        self.put("min_gen", int(k*self["scale"]),
+                "Minimum generation for automatic stage counting.")
+        # Compute snapshot generations
+        self.put("snapshot_generations", np.around(
+            np.linspace(0,k, self["number_of_snapshots"]), 0).astype(int), 
+            "Generation states at which to record detailed population\
+                    information, under automatic stage counting. [int array]")
+        # TODO: Finish docstring, write tests

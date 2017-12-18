@@ -35,6 +35,10 @@ g_dist_s = 0.5 # Proportion of 1's in survival loci of initial genomes
 g_dist_r = g_dist_s #                       reproductive loci
 g_dist_n = g_dist_s #                       neutral loci
 
+## AUTOCOMPUTING STAGE NUMBER ##
+delta = 10**-10 # Maximum difference between final and equilibrium neutral genotypes
+scale = 1.1 # Scaling factor applied to target generation estimated for delta
+
 ## SIMULATION FUNDAMENTALS: CHANGE WITH CARE ##
 death_bound = [0.001, 0.02] # min and max death rates
 repr_bound = [0, 0.2] # min and max reproduction rates

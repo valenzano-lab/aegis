@@ -104,20 +104,8 @@ class Run:
         if not isinstance(self.population, Population):
             m="Convert Outpop objects to Population before running execute_stage."
             raise TypeError(m)
-        # Set up reporting parameters
-        report_stage = (self.n_stage % self.report_n == 0)
-        if report_stage:
-            self.logprint("Population = {0}.".format(self.population.N))
-        self.dieoff = (self.population.N == 0)
+        full_report =  self.record_stage()
         if not self.dieoff:
-            # Record information
-            snapshot = -1 if self.n_stage not in self.conf["snapshot_stages"] \
-                    else self.n_snap
-            full_report = report_stage and self.verbose
-            self.record.update(self.population, self.resources, self.surv_penf,
-                    self.repr_penf, self.n_stage, snapshot)
-            self.n_snap += 1 if snapshot >= 0 else 0
-            if (snapshot >= 0) and full_report: self.logprint("Snapshot taken.")
             # Update ages, resources and starvation
             self.population.increment_ages()
             self.update_resources()
@@ -141,10 +129,47 @@ class Run:
         # Update run status
         self.dieoff = self.record["dieoff"] = (self.population.N == 0)
         self.n_stage += 1
-        self.complete = self.dieoff or self.n_stage==self.conf["number_of_stages"]
+        self.test_complete()
         if self.complete and not self.dieoff:
             self.record.finalise()
         #! TODO: What about if dieoff?
+    
+    def record_stage(self):
+        """Record and report population information, as appropriate for
+        the stage number and run settings."""
+        # Set up reporting parameters
+        report_stage = (self.n_stage % self.report_n == 0)
+        if report_stage:
+            self.logprint("Population = {0}.".format(self.population.N))
+        if self.population.N == 0:
+            self.dieoff = True
+            return
+        # Decide whether to take a detailed snapshot
+        if self.conf["number_of_stages"] == auto:
+            snapshot_obs = np.min(self.population.generations)
+            snapshot_exp = self.conf["snapshot_generations"]
+            snapshot = -1 if snapshot_obs not in snapshot_exp else self.n_snap
+            # Prevent same min generation triggering multiple snapshots:
+            if snapshot >= 0: snapshot_exp = snapshot_exp[1:]
+        else:
+            snapshot = -1 if self.n_stage not in self.conf["snapshot_stages"] \
+                    else self.n_snap
+        # Record information and return verbosity boolean
+        self.record.update(self.population, self.resources, self.surv_penf,
+                self.repr_penf, self.n_stage, snapshot)
+        self.n_snap += 1 if snapshot >= 0 else 0
+        full_report = report_stage and self.verbose
+        if (snapshot >= 0) and full_report: self.logprint("Snapshot taken.")
+        return full_report
+
+    def test_complete(self):
+        """Test whether a run is complete following a given stage,
+        under fixed and automatic stage counting."""
+        auto = (self.conf["number_of_stages"] == "auto")
+        var = np.min(self.population.generations) if auto else self.n_stage
+        ref = self.conf["min_gen"] if auto else self.conf["number_of_stages"]
+        self.complete = self.dieoff or var >= ref
+        # TODO: Test this
 
     def execute_attempt(self):
         """Execute a single run attempt from start to completion or failure."""
