@@ -74,11 +74,7 @@ class Population:
         else:
             self.N = params["start_pop"]
 
-    def fill(self, 
-            ages,
-            genomes,
-            generations,
-            ):
+    def fill(self, ages, genomes, generations):
         """Fill a new Population object with individuals based on input
         age, genome and generation arrays."""
         # Test for new vs seeded values
@@ -95,7 +91,7 @@ class Population:
         self.ages = np.copy(ages)
         self.genomes = np.copy(genomes)
         self.generations = np.copy(generations)
-        self.loci = self.sorted_loci()
+        self.loci = self.sorted_loci() # TODO: make this a copy?
 
     def make_genome_array(self):
         """Generate initial genomes for start_pop individuals according to
@@ -216,12 +212,6 @@ class Population:
         # to get total genotype value for each locus (dim1=indiv, dim2=locus)
         locs = np.einsum("ijkl->jk", chrx)
         return locs[:,self.genmap_argsort]
-
-    def compute_loci(self):
-        """Compute the sorted genomic locus genotypes for the population
-        from its genomes, and store as an attribute."""
-        self.loci = self.sorted_loci()
-        self.loci_current = True
 
     def surv_loci(self):
         """Return the sorted survival locus genotypes of each individual in
