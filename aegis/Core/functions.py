@@ -3,13 +3,13 @@ import random
 import numpy as np
 import datetime
 from dateutil.relativedelta import relativedelta as delta
-import numba
+#import numba
 
 ###################
 ## Randomisation ##
 ###################
 
-@numba.jit(nopython=True)
+#@numba.jit(nopython=True)
 def chance(p,n=1):
     """Generate array (of shape specified by n, where n is either an integer
     or a tuple of integers) of independent booleans with P(True)=z."""

@@ -1,8 +1,9 @@
-import pyximport, os, shutil, numpy as np
-pyximport.install(setup_args={
-    #"script_args":["--compiler=mingw32"],
-    "include_dirs":np.get_include(
-        )}, reload_support=True)
+import os, shutil, numpy as np
+#import pyximport
+#pyximport.install(setup_args={
+#    #"script_args":["--compiler=mingw32"],
+#    "include_dirs":np.get_include(
+#        )}, reload_support=True)
 from aegis.Core.functions import chance, init_ages, init_genomes, init_generations
 from aegis.Core.Population import Population, Outpop
 from aegis.Core.Config import Config, Infodict, deepeq
