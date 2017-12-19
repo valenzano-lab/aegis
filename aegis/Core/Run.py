@@ -140,20 +140,29 @@ class Run:
         # Set up reporting parameters
         report_stage = (self.n_stage % self.report_n == 0)
         if report_stage:
-            self.logprint("Population = {0}.".format(self.population.N))
+            s = "Population = {0}.".format(self.population.N)
+            if self.conf.auto():
+                g = " Min generation = {0}/{1}."
+                s += g.format(np.min(self.population.generations),
+                        self.conf["min_gen"])
+            self.logprint(s)
         if self.population.N == 0:
             self.dieoff = True
             return
         # Decide whether to take a detailed snapshot
-        if self.conf["number_of_stages"] == auto:
-            snapshot_obs = np.min(self.population.generations)
-            snapshot_exp = self.conf["snapshot_generations"]
-            snapshot = -1 if snapshot_obs not in snapshot_exp else self.n_snap
-            # Prevent same min generation triggering multiple snapshots:
-            if snapshot >= 0: snapshot_exp = snapshot_exp[1:]
+        snapshot = -1
+        if not self.conf.auto():
+            if self.n_stage in self.conf["snapshot_stages"]: 
+                snapshot = self.n_snap
         else:
-            snapshot = -1 if self.n_stage not in self.conf["snapshot_stages"] \
-                    else self.n_snap
+            obs = np.min(self.population.generations)
+            exp = self.conf["snapshot_generations_remaining"][0]
+            if obs >= exp:
+                snapshot = self.n_snap
+                # Prevent same min generation triggering multiple snapshots:
+                self.conf["snapshot_generations_remaining"] = \
+                        self.conf["snapshot_generations_remaining"][1:]
+                        # TODO: Reconstruct this in Record finalisation
         # Record information and return verbosity boolean
         self.record.update(self.population, self.resources, self.surv_penf,
                 self.repr_penf, self.n_stage, snapshot)
@@ -165,10 +174,13 @@ class Run:
     def test_complete(self):
         """Test whether a run is complete following a given stage,
         under fixed and automatic stage counting."""
-        auto = (self.conf["number_of_stages"] == "auto")
-        var = np.min(self.population.generations) if auto else self.n_stage
-        ref = self.conf["min_gen"] if auto else self.conf["number_of_stages"]
-        self.complete = self.dieoff or var >= ref
+        self.complete = self.dieoff
+        if not self.dieoff and self.conf.auto():
+            gen = (np.min(self.population.generations) >= self.conf["min_gen"])
+            stg = (self.n_stage >= self.conf["max_stages"])
+        elif not self.dieoff and not self.conf.auto():
+            stg, gen = (self.n_stage >= self.conf["number_of_stages"]), False
+        self.complete = self.dieoff or gen or stg
         # TODO: Test this
 
     def execute_attempt(self):
@@ -179,6 +191,9 @@ class Run:
         f,r = self.record["prev_failed"]+1, self.n_run
         a = "run {0}, attempt {1}".format(r,f) if f>1 else "run {0}".format(r)
         self.logprint("Beginning {0} at {1}.".format(a, timenow(True)))
+        if self.conf.auto():
+            self.logprint("Automatic stage counting. Target generation: {}."\
+                    .format(self.conf["min_gen"]))
         # Execute stages until completion
         while not self.complete:
             self.execute_stage()
@@ -217,10 +232,10 @@ class Run:
     def logprint(self, message):
         """Print message to stdout and save in log object."""
         # Compute numbers of spaces to keep all messages aligned
-        nspace_run = len(str(self.conf["number_of_runs"]-1))\
-                -len(str(self.n_run))
-        nspace_stg = len(str(self.conf["number_of_stages"]))\
-                -len(str(self.n_stage))
+        n, r = self.conf["number_of_stages"], self.conf["number_of_runs"]
+        if n == "auto": n = self.conf["max_stages"] # TODO: test this
+        nspace_run = len(str(r-1))-len(str(self.n_run))
+        nspace_stg = len(str(n)) - len(str(self.n_stage))
         # Create string
         lstr = "RUN {0}{1} | STAGE {2}{3} | {4}".format(" "*nspace_run,
                 self.n_run, " "*nspace_stg, self.n_stage, message)

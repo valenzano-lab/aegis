@@ -271,6 +271,7 @@ class Config(Infodict):
                 mean neutral genotype and predicted equilibrium value [float].")
         mirror("scale", "Scaling factor applied to target generation\
                 estimated for delta to ensure sufficient equilibration. [float].")
+        mirror("max_stages", "Maximum possible number of stages. [int]")
         self.check()
 
     # Check for invalid config construction
@@ -293,6 +294,11 @@ class Config(Infodict):
             s = "Difference between offset values must be >= max lifespan."
             raise ValueError(s)
         return True
+
+    # Test whether stage counting is automatic
+
+    def auto(self):
+        return self["number_of_stages"] == "auto"
 
     # Generate derived attributes
 
@@ -362,11 +368,11 @@ class Config(Infodict):
 
     def autostage(self):
         """Compute automatic running behaviour ... UNTESTED"""
-        if self["number_of_stages"] != "auto":
+        if not self.auto():
             # Compute snapshot stages
             self.put("snapshot_stages", np.around(
                 np.linspace(0,self["number_of_stages"]-1,
-                    self["number_of_snapshots"]), 0).astype(int), "Stages of a \
+                    self["number_of_snapshots"])).astype(int), "Stages of a \
                             run at which to record detailed information about \
                             the state of the population. [int array]")
             return
@@ -380,7 +386,12 @@ class Config(Infodict):
                 "Minimum generation for automatic stage counting.")
         # Compute snapshot generations
         self.put("snapshot_generations", np.around(
-            np.linspace(0,k, self["number_of_snapshots"]), 0).astype(int), 
-            "Generation states at which to record detailed population\
-                    information, under automatic stage counting. [int array]")
+            np.linspace(0, self["min_gen"], self["number_of_snapshots"])
+            ).astype(int), "Generation states at which to record detailed\
+                    population information, under automatic stage counting.\
+                    [int array]")
+        self.put("snapshot_generations_remaining", 
+                np.copy(self["snapshot_generations"]),
+                "Remaining snapshot generation points in simulation run;\
+                        eliminated as each point is reached. [int array].")
         # TODO: Finish docstring, write tests

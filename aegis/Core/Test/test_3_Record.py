@@ -11,7 +11,9 @@ def static_fill(rec_obj, pop_obj):
     """Fill a whole record object with the same initial
     population state."""
     r = copy.deepcopy(rec_obj)
-    n,s,c = r["number_of_stages"], r["snapshot_stages"], 0
+    n = r["number_of_stages"] if not r.auto() else r["max_stages"]
+    s = r["snapshot_generations"] if r.auto() else r["snapshot_stages"]
+    c = 0
     for x in xrange(n):
         snapshot = c if x in s else -1
         r.update(pop_obj, 100, 1, 1, x, snapshot)
@@ -22,7 +24,7 @@ def static_fill(rec_obj, pop_obj):
 ## FIXTURES ##
 ##############
 
-from test_1_Config import conf, conf_path
+from test_1_Config import conf, conf_path, ran_str
 from test_2a_Population_init import pop
 
 @pytest.fixture(scope="module")
@@ -56,10 +58,27 @@ def rec2(request, rec1):
 class TestRecord:
     """Test Record object initialisation and methods."""
 
+    ## FUNDAMENTALS ##
+
+    def test_record_copy(self, rec):
+        """Test that the config copy() method is equivalent to
+        copy.deepcopy()."""
+        r1 = rec.copy()
+        r2 = copy.deepcopy(rec)
+        assert r1 == r2
+
+    def test_config_auto(self, rec):
+        r = rec.copy()
+        assert r.auto() == (r["number_of_stages"] == "auto")
+        r["number_of_stages"] = "auto"
+        assert r.auto()
+        r["number_of_stages"] = random.randrange(1000)
+        assert not r.auto()
+
     ## INITIALISATION ##
 
     def test_record_init(self, conf, rec):
-        R = copy.deepcopy(rec)
+        R = rec.copy()
         # Conf param entries should be inherited in Record
         for k in conf.keys():
             print k, R[k], np.array(conf[k])
@@ -75,8 +94,8 @@ class TestRecord:
         assert np.array_equal(R["dieoff"], np.array(False))
         assert np.array_equal(R["prev_failed"], np.array(0))
         # Per-stage data entry
-        a0 = np.zeros(R["number_of_stages"])
-        a1 = np.zeros([R["number_of_stages"],R["max_ls"]])
+        n = R["number_of_stages"] if not R.auto() else R["max_stages"]
+        a0, a1 = np.zeros(n), np.zeros([n, R["max_ls"]])
         assert np.array_equal(R["population_size"], a0)
         assert np.array_equal(R["resources"], a0)
         assert np.array_equal(R["surv_penf"], a0)
@@ -148,7 +167,7 @@ class TestRecord:
 
     def test_update_quick(self, rec, pop):
         """Test that every-stage update function records correctly."""
-        rec2 = copy.deepcopy(rec)
+        rec2 = rec.copy()
         r = rec2.get_value
         rec2.update(pop, 100, 1, 1, 0, -1)
         agedist=np.bincount(pop.ages,minlength=pop.max_ls)/float(pop.N)
@@ -162,7 +181,7 @@ class TestRecord:
 
     def test_update_full(self, rec, pop):
         """Test that snapshot update function records correctly."""
-        rec2 = copy.deepcopy(rec)
+        rec2 = rec.copy()
         pop2 = pop.clone()
         np.random.shuffle(pop2.genmap)
         np.random.shuffle(pop2.ages)
@@ -341,8 +360,9 @@ class TestRecord:
         r["age_distribution"] = np.tile(1/float(maxls), (3, maxls))
         r["population_size"] = np.array([maxls*4,maxls*2,maxls])
         r.compute_actual_death()
+        n = r["number_of_stages"] if not r.auto() else r["max_stages"]
         print r["age_distribution"].shape, r["population_size"].shape
-        print r["actual_death_rate"].shape, r["number_of_stages"], r["max_ls"]
+        print r["actual_death_rate"].shape, n, r["max_ls"]
         assert np.array_equal(r["actual_death_rate"],
                 np.tile(0.5, np.array(r["age_distribution"].shape) - 1))
 

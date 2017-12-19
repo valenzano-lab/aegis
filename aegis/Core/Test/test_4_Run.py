@@ -11,7 +11,7 @@ import numpy as np
 ## FIXTURES ##
 ##############
 
-from test_1_Config import conf, conf_path
+from test_1_Config import conf, conf_path, ran_str
 from test_2a_Population_init import pop
 from test_3_Record import rec, pop1, rec1
 
@@ -19,12 +19,6 @@ from test_3_Record import rec, pop1, rec1
 def run(request, conf):
     """Unseeded run object inheriting from conf fixture."""
     return Run(conf, "", 0, 100, False)
-
-@pytest.fixture()
-def ran_str(request, scope="module"):
-    """Generate a random lowercase ascii string."""
-    return \
-        ''.join(random.choice(string.ascii_lowercase) for _ in range(50))
 
 ###########
 ## TESTS ##
@@ -143,8 +137,8 @@ class TestRun:
     def test_execute_stage_functionality(self, run):
         """Test basic functional operation of test_execute_stage, ignoring
         status reporting."""
-        # Normal
         run1 = run.copy()
+        # Normal
         run1.population = run1.population.toPop()
         run1.execute_stage()
         assert run1.n_stage == run.n_stage + 1
@@ -160,20 +154,27 @@ class TestRun:
         # Last stage
         run2 = run.copy()
         run2.population = run2.population.toPop()
-        print run2.conf["snapshot_stages"]
-        print run2.n_stage, run2.n_snap
         n = 0
         while not run2.complete:
+            print run2.n_stage, run2.population.N, len(run2.population.generations),
+            print np.min(run2.population.generations),
+            print run2.conf["min_gen"] if run2.conf.auto() else ""
             run2.execute_stage()
+        assert run2.complete
         assert (run2.dieoff == (run2.population.N == 0))
-        if not run2.dieoff:
-            assert run2.n_stage == run.conf["number_of_stages"]
+        print run2.n_stage, run2.n_snap
+        if not run2.dieoff: # Run completion
             assert run2.n_snap == run.conf["number_of_snapshots"]
-        else:
-            print run2.n_stage, run2.conf["snapshot_stages"]
+            assert run2.n_stage == run.conf["number_of_stages"]
+        elif not run2.conf.auto(): # Set stage count + dieoff
+            print run2.conf["snapshot_stages"]
             assert run2.n_snap == 1+np.max(
                     np.nonzero(run2.conf["snapshot_stages"]<=run2.n_stage)[0])
-        assert run2.complete
+        else: # Auto stage count + dieoff
+            print run2.conf["snapshot_generations"]
+            print run2.conf["snapshot_generations_remaining"]
+            assert run2.n_snap == run.conf["number_of_snapshots"] - \
+                    len(run2.conf["snapshot_generations_remaining"])
         # Dead
         run3 = run.copy()
         run3.population = run3.population.toPop()

@@ -55,6 +55,7 @@ def timediff(starttime, endtime):
         report = (g != 0)
         if report: outstr += "{0} {1}{2}".format(g, unit, after[n])
     return outstr
+# TODO: Test this
 
 def get_runtime(starttime, endtime, prefix = "Total runtime"):
     """Compute the runtime of a process from the start and end times
