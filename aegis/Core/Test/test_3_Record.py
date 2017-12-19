@@ -1,4 +1,5 @@
 from aegis.Core import Infodict, Config, Population, Outpop, Record
+from aegis.Core import fivenum
 from aegis.Core.Config import deepeq, deepkey
 import pytest,importlib,types,random,copy,string
 import numpy as np
@@ -101,6 +102,7 @@ class TestRecord:
         assert np.array_equal(R["surv_penf"], a0)
         assert np.array_equal(R["repr_penf"], a0)
         assert np.array_equal(R["age_distribution"], a1)
+        assert np.array_equal(R["generation_dist"], np.zeros([n,5]))
         # Snapshot population placeholders
         assert R["snapshot_pops"] == [0]*R["number_of_snapshots"]
         # Empty names for final computation
@@ -176,6 +178,8 @@ class TestRecord:
         assert r("surv_penf")[0] == 1
         assert r("repr_penf")[0] == 1
         assert np.array_equal(r("age_distribution")[0], agedist)
+        assert np.allclose(r("generation_dist")[0], 
+                fivenum(pop.generations))
         for n in xrange(len(r("snapshot_pops"))):
             assert r("snapshot_pops")[n] == 0
 
@@ -195,6 +199,8 @@ class TestRecord:
         assert r("surv_penf")[0] == 2
         assert r("repr_penf")[0] == 2
         assert np.array_equal(r("age_distribution")[0], agedist)
+        assert np.allclose(r("generation_dist")[0], 
+                fivenum(pop.generations))
         for n in xrange(1,len(r("snapshot_pops"))):
             assert r("snapshot_pops")[n] == 0
         # Snapshot population

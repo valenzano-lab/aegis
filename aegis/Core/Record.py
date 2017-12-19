@@ -7,11 +7,13 @@
 #   more advanced statistics from that information.                    #
 ########################################################################
 # TODO: add generation and parental-age recording
+# TODO: add detailed per-snapshot generation recording
 # TODO: convert some output into pandas data frames for easier plotting
 
 ## PACKAGE IMPORT ##
 import numpy as np
 import scipy.stats as st
+from .functions import fivenum
 from .Config import Infodict
 from .Population import Population, Outpop
 import copy
@@ -52,6 +54,8 @@ class Record(Infodict):
                 "Reproduction penalty due to starvation at each stage.")
         self.put("age_distribution", np.copy(a1),
                 "Proportion of population in each age group at each stage.")
+        self.put("generation_dist", np.zeros([n,5]), "Five-number summary of\
+                the population's generation distribution at each stage.")
         # Space for saving population state for each snapshot
         self.put("snapshot_pops", [0]*self["number_of_snapshots"],
                 "Complete population state at each snapshot stage.")
@@ -180,6 +184,7 @@ class Record(Infodict):
         self["repr_penf"][n_stage] = repr_penf
         self["age_distribution"][n_stage] = np.bincount(population.ages,
                 minlength = population.max_ls)/float(population.N)
+        self["generation_dist"][n_stage] = fivenum(population.generations)
         if n_snap >= 0:
             self["snapshot_pops"][n_snap] = Outpop(population)
         #! Consider snapshot_pops recording: write to a tempdir instead?
