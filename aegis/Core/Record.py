@@ -40,8 +40,8 @@ class Record(Infodict):
         self.put("prev_failed", np.array(0),
                 "Number of run repeats before this one that ended in dieoff.")
         # Arrays for per-stage data entry
-        a0 = np.zeros(self["number_of_stages"])
-        a1 = np.zeros([self["number_of_stages"],self["max_ls"]])
+        n = self["number_of_stages"] if not self.auto() else self["max_stages"]
+        a0, a1 = np.zeros(n), np.zeros([n, self["max_ls"]])
         self.put("population_size", np.copy(a0),
                 "Size of population at each stage.")
         self.put("resources", np.copy(a0),
@@ -145,6 +145,11 @@ class Record(Infodict):
         putzero("n1_window_var", "Sliding-window variance in\
                 average bit value over age-ordered bits in the chromosome")
 
+    # Test whether stage counting is automatic
+
+    def auto(self):
+        return self["number_of_stages"] == "auto"
+
     # CALCULATING PROBABILITIES
     def p_calc(self, gt, bound):
         """Derive a probability array from a genotype array and list of
@@ -218,7 +223,8 @@ class Record(Infodict):
     def compute_genotype_mean_var(self):
         """Compute the mean and variance in genotype sums at each locus
         and snapshot."""
-        ss,gt = self["snapshot_stages"],np.arange(self["n_states"])
+        ss = self["snapshot_generations" if self.auto() else "snapshot_stages"]
+        gt = np.arange(self["n_states"])
         mean_gt_dict, var_gt_dict = {}, {}
         for k in ["s","r","n","a"]: # Survival, reproductive, neutral, all
             dl = self["density_per_locus"][k] #[snapshot,locus,genotype]
@@ -400,10 +406,9 @@ class Record(Infodict):
         """Calculate additional stats from recorded data of a completed run."""
         # Subset age distributions to snapshot stages for plotting
         # TODO test this in record test for finalise
-        self.put("snapshot_age_distribution",
-                self["age_distribution"][self["snapshot_stages"]],
-                "Distribution of ages in the population at each snapshot stage."
-                )
+        ss = self["snapshot_generations" if self.auto() else "snapshot_stages"]
+        self.put("snapshot_age_distribution", self["age_distribution"][ss],
+                "Distribution of ages in the population at each snapshot.")
         # Genotype distributions and statistics
         self.compute_locus_density()
         self.compute_total_density()

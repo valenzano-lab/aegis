@@ -1,5 +1,5 @@
 from aegis.Core import Infodict, Config
-import pytest,importlib,types,random,copy,string,os
+import pytest,importlib,types,random,copy,string,os,tempfile,math
 import numpy as np
 
 ##############
@@ -7,26 +7,47 @@ import numpy as np
 ##############
 
 @pytest.fixture(scope="module")
+def ran_str(request):
+    """Generate a random lowercase ascii string."""
+    return \
+        ''.join(random.choice(string.ascii_lowercase) for _ in range(50))
+
+@pytest.fixture(scope="module")
 def conf_path(request):
     dirpath = os.path.dirname(os.path.realpath(__file__))
     filepath = os.path.join(dirpath, "config_test.py")
     return filepath
 
-@pytest.fixture(params=["import", "random", "random"], scope="module")
-def conf(request, conf_path):
+@pytest.fixture(params=["import", "random", "auto"], scope="module")
+def conf(request, conf_path, ran_str):
     """Create a default configuration object."""
     c = Config(conf_path)
     c.put("setup", request.param, "Method of fixture generation.")
-    if request.param == "random": # Randomise config parameters
-        # TODO: Add seed value here?
-        # Run parameters
-        c["number_of_runs"] = random.randint(1,5)
-        c["number_of_stages"] = random.randint(50,400)
-        c["number_of_snapshots"] = random.randint(5,20)
-        c["start_pop"] = random.randint(200,1000)
-        # Reproductive mode
+    if request.param != "import": # Randomise config parameters
+        ## CORE PARAMETERS ##
+        # c["random_seed"] = random.random() # TODO: Add seed value here?
+        c["output_prefix"] = os.path.join(tempfile.gettempdir(), ran_str)
+        c["number_of_runs"] = random.randint(1,3)
+        nstage = random.randint(10,80)
+        c["number_of_stages"] = "auto" if request.param == "auto" else nstage
+        c["number_of_snapshots"] = random.randint(2,10)
+        # c["output_mode"] = random.randrange(3) # TODO: Test with this?
+        # c["max_fail"] = random.randrange(10) # TODO: Test with this?
+        ## STARTING PARAMETERS ##
         c["repr_mode"] = random.choice(
                 ['sexual','asexual','assort_only','recombine_only'])
+        c["res_start"] = random.randint(500,1000)
+        c["res_var"] = random.choice([True, False])
+        c["start_pop"] = random.randint(200,500)
+        ## RESOURCE PARAMETERS ##
+        c["res_limit"] = random.randint(5000,10000)
+        c["V"] = random.uniform(1,3)
+        c["R"] = random.randint(500,1000)
+        ## AUTOCOMPUTING STAGE NUMBER ##
+        c["delta"] = 10**-random.randint(5,15)
+        c["scale"] = random.randint(9, 19)/10.0
+        c["max_stages"] = random.randint(200,400)
+        ## SIMULATION FUNDAMENTALS ##
         # Death and reproduction parameters
         db_low, rb_low = np.random.uniform(size=2)
         db_high = db_low + random.uniform(0, 1-db_low)
@@ -45,11 +66,6 @@ def conf(request, conf_path):
         c["max_ls"] = random.randint(20, c["repr_offset"]-1)
         c["maturity"] = random.randint(5, c["max_ls"]-2)
         # Resources and starvation
-        c["res_start"] = random.randint(500,2000)
-        c["res_var"] = random.choice([True, False])
-        c["res_limit"] = random.randint(5000,10000)
-        c["V"] = random.uniform(1,3)
-        c["R"] = random.randint(500,1000)
         c["surv_pen"] = random.choice([True, False])
         c["repr_pen"] = random.choice([True, False])
         c["death_inc"] = random.randint(1, 10)
@@ -180,20 +196,42 @@ class TestInfodict:
 
 class TestConfig:
 
+    def test_config_copy(self, conf):
+        """Test that the config copy() method is equivalent to
+        copy.deepcopy()."""
+        c1 = conf.copy()
+        c2 = copy.deepcopy(conf)
+        assert c1 == c2
+
+    def test_config_auto(self, conf):
+        c = conf.copy()
+        assert c.auto() == (c["number_of_stages"] == "auto")
+        c["number_of_stages"] = "auto"
+        assert c.auto()
+        c["number_of_stages"] = random.randrange(1000)
+        assert not c.auto()
+
     def test_config_init(self, conf):
         """Test that Config objects are correctly initialised from an imported
         configuration file."""
-        if conf["setup"] == "random": return
+        if conf["setup"] != "import": return
         c = copy.deepcopy(conf)
         # Remove stuff that gets introduced/changed during generation
-        del c["g_dist"], c["genmap"], c["chr_len"], c["s_range"], c["r_range"], c["params"]
-        del c["snapshot_stages"], c["surv_step"], c["repr_step"], c["genmap_argsort"]
-        del c["n_states"], c["surv_bound"]
+        del_keys = ("g_dist", "genmap", "chr_len", "s_range", "r_range",
+                "params", "surv_step", "repr_step", "genmap_argsort",
+                "n_states", "surv_bound")
+        if c.auto():
+            del_keys += ("min_gen", "snapshot_generations", 
+                    "snapshot_generations_remaining")
+        else:
+            del_keys += ("snapshot_stages",)
+        for key in del_keys: del c[key]
         if c["repr_mode"] in ["sexual", "assort_only"]: c["repr_bound"] /= 2
         # Compare remaining keys to directly imported config file
         c_import = importlib.import_module("config_test")
         for key in c.keys():
             if key in ["setup", "info_dict"]: continue
+            print key
             assert type(c.get_info(key)) is str
             assert len(c.get_info(key)) > 0
             attr = c.get_value(key)
@@ -212,7 +250,7 @@ class TestConfig:
         """Test that configurations with incompatible genome parameters are
         correctly rejected."""
         if conf["setup"] == "random": return
-        c = copy.deepcopy(conf)
+        c = conf.copy()
         assert c.check()
         repr_mode_old = c["repr_mode"]
         s = string.ascii_lowercase
@@ -236,13 +274,19 @@ class TestConfig:
 
     def test_config_generate(self, conf):
         """Test that gen_conf correctly generates derived simulation params."""
-        c = copy.deepcopy(conf)
+        c = conf.copy()
         np.set_printoptions(threshold=np.nan)
         # Remove stuff that gets introduced/changed during generation
-        del c["g_dist"], c["genmap"], c["chr_len"], c["s_range"], c["r_range"], c["params"]
-        del c["snapshot_stages"], c["surv_step"], c["repr_step"], c["genmap_argsort"]
-        del c["n_states"], c["surv_bound"]
-        sexvar = c["repr_mode"] in ["sexual", "assort_only"]
+        del_keys = ("g_dist", "genmap", "chr_len", "s_range", "r_range",
+                "params", "surv_step", "repr_step", "genmap_argsort",
+                "n_states", "surv_bound")
+        if c.auto():
+            del_keys += ("min_gen", "snapshot_generations", 
+                    "snapshot_generations_remaining")
+        else:
+            del_keys += ("snapshot_stages",)
+        for key in del_keys: del c[key]
+        sexvar = (c["repr_mode"] in ["sexual", "assort_only"])
         if sexvar: c["repr_bound"] /= 2
         # Save info and run
         crb1 = c["repr_bound"][1]
@@ -281,10 +325,6 @@ class TestConfig:
         print np.diff(c["r_range"])
         assert np.allclose(np.diff(c["s_range"]), c["surv_step"])
         assert np.allclose(np.diff(c["r_range"]), c["repr_step"])
-        # Snapshot stages
-        assert len(c["snapshot_stages"]) == c["number_of_snapshots"]
-        assert np.array_equal(c["snapshot_stages"],np.around(np.linspace(
-            0, c["number_of_stages"]-1, c["number_of_snapshots"]), 0))
         # Params dict
         assert type(c["params"]) is dict
         assert c["params"]["repr_mode"] == c["repr_mode"]
@@ -294,3 +334,21 @@ class TestConfig:
         assert c["params"]["max_ls"] == c["max_ls"]
         assert c["params"]["start_pop"] == c["start_pop"]
         assert c["params"]["g_dist"] == c["g_dist"]
+        # Snapshot stages
+        if c.auto():
+            m,r = c["m_rate"], c["m_ratio"]
+            A, P = abs(1 - m - m*r), abs(r/(1+r) - c["g_dist_n"])
+            k = (math.log10(c["delta"]) - math.log10(P))/math.log10(A)
+            assert c["min_gen"] == int(k * c["scale"])
+            assert len(c["snapshot_generations"]) == c["number_of_snapshots"]
+            assert len(c["snapshot_generations"]) == c["number_of_snapshots"]
+            assert c["snapshot_generations"].dtype is np.dtype(int)
+            assert np.array_equal(c["snapshot_generations"],np.around(
+                np.linspace(0, c["min_gen"], c["number_of_snapshots"])))
+            assert np.array_equal(c["snapshot_generations"],
+                    c["snapshot_generations_remaining"])
+        else:
+            assert len(c["snapshot_stages"]) == c["number_of_snapshots"]
+            assert c["snapshot_stages"].dtype is np.dtype(int)
+            assert np.array_equal(c["snapshot_stages"],np.around(np.linspace(
+                0, c["number_of_stages"]-1, c["number_of_snapshots"])))

@@ -4,7 +4,7 @@ import pytest, random, copy
 import numpy as np
 
 # Import fixtures
-from test_1_Config import conf, conf_path
+from test_1_Config import conf, conf_path, ran_str
 from test_2a_Population_init import pop
 
 precision = 0.02
@@ -307,10 +307,10 @@ class TestPopulationGrowth:
         """Test if make_children correctly incorporates starvation
         factors to get parentage probability."""
         # Define parameters and expected output
-        p,x = pop.clone(), 1.0
+        p,x,y = pop.clone(), 1.0, 3
         print x
-        p.add_members(p)
-        p.add_members(p)
+        for n in xrange(y): # Increase population by 2**y
+            p.add_members(p)
         pmin, pmax = 0.01, 0.2
         n = float(np.sum(p.ages >= p.maturity)) # of adults
         repr_r = np.linspace(pmin, pmax, 2*pop.n_base+1)
