@@ -290,23 +290,40 @@ class TestPopulationGrowth:
         # All four child chromosomes from a different parent
         assert np.array_equal(np.unique(parent), np.sort(parent))
 
-    def test_assortment_gentimes(self, pop):
-        """Test that child gentimes are correctly computed as the
-        (rounded down) mean of the two parental ages."""
-        # Generate population with random ages and N=20
-        p,n = pop.clone(), 20
+    def test_assortment_genstats_pair(self, pop):
+        """Test that child generations and gentimes are correctly
+        computed for a single assorted parental pair."""
+        p,n = pop.clone(), 2
         p.shuffle()
-        p.subtract_members(xrange(n,p.N)) # n random parents
         p.ages = np.random.randint(0, p.max_ls, p.N)
+        p.generations = np.random.randint(0, 100, p.N)
+        p.subtract_members(xrange(n,p.N)) # n random parents
+        # Make a copy, assort and test
+        p2 = p.clone()
+        p2.assortment()
+        assert p2.ages == np.mean(p.ages).astype(int)
+        assert p2.generations == np.max(p.generations)
+
+    def test_assortment_gentimes(self, pop):
+        """Test that child generations and gentimes are within expected
+        parameters for a larger assorted parental group."""
+        # Generate populations with random ages and n pairs
+        p,n = pop.clone(), 10
+        p.shuffle()
+        p.ages = np.random.randint(0, p.max_ls, p.N)
+        p.generations = np.random.randint(0, 100, p.N)
+        p.subtract_members(xrange(n*2,p.N)) # 2n random parents in n pairs
         # Make a copy and assort
         p2 = p.clone()
         p2.assortment()
-        # Test that sums match
+        # Test that age sums match
         s1, s2, n2 = np.sum(p.ages), np.sum(p2.ages), p2.N
         print s1, 2*s2, s1-2*s2, n2
         assert s1 - 2*s2 < n2
-        # Pretty weak test, but hard to do better as lang as assortment()
-        # shuffles the population...
+        # Test that generation
+        g, outsum = np.sort(p.generations), np.sum(p2.generations)
+        minsum,maxsum = np.sum(g[1::2]), np.sum(g[n:])
+        assert minsum <= outsum and outsum <= maxsum
 
     # 4: Make_children (all modes)
     def test_make_children_child_ages_generations(self, pop):
