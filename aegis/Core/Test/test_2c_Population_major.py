@@ -303,6 +303,21 @@ class TestPopulationGrowth:
             assert np.array_equal(c.ages, np.zeros(c.N))
             assert np.array_equal(c.generations, np.ones(c.N))
 
+    def test_make_children_gentimes(self, pop):
+        """Test that individuals produced by make_children all have
+        generation times matching parental ages."""
+        p, rr = pop.clone(), np.linspace(1, 1, pop.n_base*2+1)
+        p.generations[:] = 0
+        assert np.array_equal(np.tile(-1, p.N), p.gentimes)
+        for mode in ["asexual", "recombine_only"]:
+            print mode
+            p.repr_mode = mode
+            p.set_attributes(p.params())
+            c = p.make_children(rr, 1, 0, 1, 0)
+            assert np.array_equal(np.sort(p.ages[p.ages >= p.maturity]),
+                    np.sort(c.gentimes))
+        # TODO: Add test for assorted case (when n(children) half of n(parents)
+
     def test_make_children_starvation(self, pop):
         """Test if make_children correctly incorporates starvation
         factors to get parentage probability."""
