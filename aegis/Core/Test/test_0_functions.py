@@ -1,5 +1,5 @@
 from aegis.Core import chance, init_ages, init_genomes, init_generations
-from aegis.Core import quantile, fivenum
+from aegis.Core import quantile, fivenum, init_gentimes
 import numpy as np
 import pytest, random
 
@@ -35,6 +35,7 @@ class TestFunctionsInit:
         assert np.array_equal(init_ages(), np.array([-1]))
         assert np.array_equal(init_genomes(), np.array([[-1],[-1]]))
         assert np.array_equal(init_generations(), np.array([-1]))
+        assert np.array_equal(init_gentimes(), np.array([-1]))
 
 
 #! TODO: Test time functions

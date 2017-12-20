@@ -32,6 +32,11 @@ def init_generations():
     generated during Population initialisation."""
     return np.array([-1])
 
+def init_gentimes():
+    """Return an array specifying that a new generation-time vector should be 
+    generated during Population initialisation."""
+    return np.array([-1])
+
 ##########
 ## Time ##
 ##########
