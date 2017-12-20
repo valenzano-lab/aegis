@@ -290,6 +290,24 @@ class TestPopulationGrowth:
         # All four child chromosomes from a different parent
         assert np.array_equal(np.unique(parent), np.sort(parent))
 
+    def test_assortment_gentimes(self, pop):
+        """Test that child gentimes are correctly computed as the
+        (rounded down) mean of the two parental ages."""
+        # Generate population with random ages and N=20
+        p,n = pop.clone(), 20
+        p.shuffle()
+        p.subtract_members(xrange(n,p.N)) # n random parents
+        p.ages = np.random.randint(0, p.max_ls, p.N)
+        # Make a copy and assort
+        p2 = p.clone()
+        p2.assortment()
+        # Test that sums match
+        s1, s2, n2 = np.sum(p.ages), np.sum(p2.ages), p2.N
+        print s1, 2*s2, s1-2*s2, n2
+        assert s1 - 2*s2 < n2
+        # Pretty weak test, but hard to do better as lang as assortment()
+        # shuffles the population...
+
     # 4: Make_children (all modes)
     def test_make_children_child_ages_generations(self, pop):
         """Test that individuals produced by make_children are all of
@@ -303,9 +321,10 @@ class TestPopulationGrowth:
             assert np.array_equal(c.ages, np.zeros(c.N))
             assert np.array_equal(c.generations, np.ones(c.N))
 
-    def test_make_children_gentimes(self, pop):
+    def test_make_children_gentimes_noassort(self, pop):
         """Test that individuals produced by make_children all have
-        generation times matching parental ages."""
+        generation times matching parental ages, in the absence of
+        assortment."""
         p, rr = pop.clone(), np.linspace(1, 1, pop.n_base*2+1)
         p.generations[:] = 0
         assert np.array_equal(np.tile(-1, p.N), p.gentimes)
@@ -316,7 +335,7 @@ class TestPopulationGrowth:
             c = p.make_children(rr, 1, 0, 1, 0)
             assert np.array_equal(np.sort(p.ages[p.ages >= p.maturity]),
                     np.sort(c.gentimes))
-        # TODO: Add test for assorted case (when n(children) half of n(parents)
+        # See assortment tests for test of correct computation in sexual case
 
     def test_make_children_starvation(self, pop):
         """Test if make_children correctly incorporates starvation

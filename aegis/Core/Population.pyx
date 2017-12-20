@@ -452,6 +452,9 @@ cdef class Population:
         chrs = np.copy(self.chrs(False))
         self.genomes[::2,:self.chr_len] = chrs[which_chr_0, parent_0]
         self.genomes[::2,self.chr_len:] = chrs[which_chr_1, parent_1]
+        # Update ages as rounded mean of two parents
+        self.ages[::2] += self.ages[1::2]
+        self.ages /= 2
         self.subset_members(np.tile([True,False], self.N/2))
  
     # Startpop method
