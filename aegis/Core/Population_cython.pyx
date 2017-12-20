@@ -10,6 +10,8 @@
 from .functions import chance
 from .functions import init_ages, init_genomes, init_generations, init_gentimes
 from .Config import deepeq
+import numba
+cimport numba
 import numpy as np
 cimport numpy as np
 import random, copy

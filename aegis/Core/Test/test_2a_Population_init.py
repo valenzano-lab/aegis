@@ -186,7 +186,7 @@ class TestPopulationInit:
         x = random.random()
         ages_r = np.random.randint(0, 10, c["params"]["start_pop"])
         genomes_r = chance(1-x**2, 
-                (c["params"]["start_pop"],c["params"]["chr_len"])).astype(int)
+                (c["params"]["start_pop"],c["params"]["chr_len"]*2)).astype(int)
         generations_r = np.random.randint(0, 10, c["params"]["start_pop"])
         x = random.random()
         c["params"]["g_dist"] = {"s":x,"r":x,"n":x}
@@ -211,8 +211,10 @@ class TestPopulationInit:
             assert np.isclose(m, 1, atol=0.1)
         # Check genomes
         for n in [0,1,4,5]:
+            assert (pops[n].N, pops[n].chr_len*2) == pops[n].genomes.shape
             assert np.array_equal(genomes_r, pops[n].genomes)
         for n in [2,3,6,7]:
+            assert (pops[n].N, pops[n].chr_len*2) == pops[n].genomes.shape
             assert not np.array_equal(genomes_r, pops[n].genomes)
             assert np.isclose(np.mean(pops[n].genomes), x, atol=0.02)
         # Check generations
@@ -221,6 +223,9 @@ class TestPopulationInit:
         for n in [1,3,5,7]:
             assert not np.array_equal(generations_r, pops[n].generations)
             assert np.all(pops[n].generations == 0)
+        # Check loci
+        for p in pops:
+            assert np.array_equal(p.loci, p.sorted_loci())
         # Check gentimes
         for n in xrange(8):
             assert np.all(pops[n].gentimes == 0L)

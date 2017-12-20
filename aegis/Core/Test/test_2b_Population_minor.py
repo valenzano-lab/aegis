@@ -7,7 +7,8 @@ import numpy as np
 from test_1_Config import conf, conf_path, ran_str
 from test_2a_Population_init import pop
 
-attrs = ("ages", "genomes", "generations", "gentimes")
+attrs_no_loci = ("ages", "genomes", "generations", "gentimes")
+attrs = attrs_no_loci + ("loci",)
 attrs_genmap = attrs + ("genmap",)
 
 class TestPopulationReComb:
@@ -39,13 +40,10 @@ class TestPopulationReComb:
             assert np.array_equal(getattr(pop3, a), getattr(pop2,a))
         assert pop3.N == pop2.N
         # Test that populations are now independent
-        pop3.ages[0] = -1
-        pop3.generations[0] = -1
-        pop3.genomes[0,0] = -1
-        pop3.gentimes[0] = -2
-        assert np.array_equal(pop2.genmap, pop3.genmap)
         for a in attrs:
+            getattr(pop3, a)[0] = -1
             assert not np.array_equal(getattr(pop3, a), getattr(pop2,a))
+        assert np.array_equal(pop2.genmap, pop3.genmap)
 
     def test_attrib_rep(self, pop):
         """Test repetition of function over attributes."""
@@ -72,17 +70,19 @@ class TestPopulationReComb:
         pop2.gentimes[0] = 1
         pop3 = pop2.clone()
         pop3.shuffle()
+        assert np.array_equal(pop2.genmap, pop3.genmap)
         for a in attrs:
-            assert not np.array_equal(
-                    getattr(pop3, a), getattr(pop2, a))
+            print a
+            assert not np.array_equal(getattr(pop3, a), getattr(pop2, a))
         pop3.ages.sort()
         pop2.ages.sort()
         pop3.generations.sort()
         pop2.generations.sort()
-        assert not np.array_equal(pop3.genomes, pop2.genomes)
-        assert not np.array_equal(pop3.gentimes, pop2.gentimes)
-        assert np.array_equal(pop3.ages, pop2.ages)
-        assert np.array_equal(pop3.generations, pop2.generations)
+        for a in attrs:
+            if a in ("ages", "generations"):
+                assert np.array_equal(getattr(pop3, a), getattr(pop2, a))
+            else:
+                assert not np.array_equal(getattr(pop3, a), getattr(pop2, a))
 
     def test_subset_members(self, pop):
         """Test if a population subset is correctly produced from a
@@ -149,15 +149,16 @@ class TestPopulationReComb:
         """Test if a population is successfully appended to the receiver
         population, which remains unchanged, by appending a population to
         itself."""
-        pop_a = pop.clone()
-        pop_b = pop.clone()
-        pop_b.add_members(pop_a)
-        assert np.array_equal(pop_b.ages, np.tile(pop_a.ages,2))
-        assert np.array_equal(pop_b.genomes, np.tile(pop_a.genomes,(2,1)))
-        assert np.array_equal(pop_b.generations, np.tile(pop_a.generations,2))
-        assert np.array_equal(pop_b.gentimes, np.tile(pop_a.gentimes,2))
-        assert pop_b.N == 2*pop_a.N
-        # TODO: Include upgraded version from nocython branch
+        pop2 = pop.clone()
+        pop3 = pop.clone()
+        pop3.add_members(pop2)
+        assert pop3.N == 2*pop2.N
+        for a in attrs:
+            print a
+            o2, o3 = getattr(pop2, a), getattr(pop3, a)
+            print o2.shape, o3.shape
+            shape = (2,) + (1,) * (np.ndim(o2)-1)
+            assert np.array_equal(o3, np.tile(o2, shape))
 
     def test_subset_clone(self, pop):
         # Initialise
@@ -177,12 +178,11 @@ class TestPopulationReComb:
         for a in attrs:
             assert np.array_equal(getattr(pop3, a), getattr(pop2,a))
         # Test that populations are now independent
-        pop3.ages[0] -= 1
-        pop3.generations[0] -= 1
-        pop3.genomes[0,0] -= 1
-        pop3.gentimes[0] -= 1
         for a in attrs:
+            getattr(pop3, a)[0] = -1
             assert not np.array_equal(getattr(pop3, a), getattr(pop2,a))
+        assert np.array_equal(pop2.genmap, pop3.genmap)
+        # Test that populations are now independent
 
 class TestPopulationIncrement:
     """Test methods of Population object relating to incrementation
@@ -232,8 +232,47 @@ class TestPopulationLoci:
     def test_loci_subsets(self, pop):
         """Test functionality of surv_loci, repr_loci and neut_loci
         subsetting methods, given correct sorted_loci functionality."""
-        g,l = np.sort(pop.genmap), pop.sorted_loci()
-        assert np.array_equal(l[:,g<=pop.repr_offset], pop.surv_loci())
-        assert np.array_equal(l[:,g>=pop.neut_offset], pop.neut_loci())
-        assert np.array_equal(l[:,np.logical_and(g>= pop.repr_offset,
-            g<pop.neut_offset)], pop.repr_loci())
+        def surv_loci_match(p, ref):
+            g = np.sort(p.genmap)
+            return np.array_equal(p.surv_loci(),ref[:,g<=pop.repr_offset])
+        def repr_loci_match(p, ref):
+            g = np.sort(p.genmap)
+            return np.array_equal(p.repr_loci(),
+                    ref[:,np.logical_and(g>= pop.repr_offset,g<pop.neut_offset)])
+        def neut_loci_match(p, ref):
+            g = np.sort(p.genmap)
+            return np.array_equal(p.neut_loci(),ref[:,g>=pop.neut_offset])
+        sublocus_tests = [surv_loci_match, repr_loci_match, neut_loci_match]
+        pop2 = pop.clone()
+        n = pop2.N
+        # First test for loci attribute and sorted_loci method
+        for s in sublocus_tests:
+            assert s(pop2, pop2.loci)
+            assert s(pop2, pop2.sorted_loci())
+        # Next test relation is preserved upon adding/subtracting members
+        pop2.add_members(pop2)
+        for s in sublocus_tests:
+            assert s(pop2, pop2.loci)
+            assert s(pop2, pop2.sorted_loci())
+        pop2.subtract_members(np.arange(n))
+        for s in sublocus_tests:
+            assert s(pop2, pop2.loci)
+            assert s(pop2, pop2.sorted_loci())
+        # Next test that relationship is broken if members not added to loci
+        l = pop2.loci
+        for a in attrs_no_loci:
+            setattr(pop2, a, np.tile(getattr(pop2, a),
+                (2,) + (1,) * (np.ndim(getattr(pop2, a)-1))))
+        pop2.N *= 2
+        assert np.array_equal(pop2.loci, l)
+        for s in sublocus_tests:
+            assert s(pop2, pop2.loci)
+            assert not s(pop2, pop2.sorted_loci())
+        # Finally test that relationship restored by resetting loci attribute
+        pop2.loci = pop2.sorted_loci()
+        for s in sublocus_tests:
+            assert s(pop2, pop2.loci)
+            assert s(pop2, pop2.sorted_loci())
+
+
+

@@ -12,7 +12,11 @@
 # - Write tests
 # - add missing plots
 
-import numpy as np, pandas as pd, ggplot, os, shutil
+import numpy as np, pandas as pd, os, shutil
+import matplotlib
+matplotlib.use("Agg")
+import ggplot
+
 try:
        import cPickle as pickle
 except:
