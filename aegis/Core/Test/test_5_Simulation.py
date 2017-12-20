@@ -1,6 +1,7 @@
 from aegis.Core import Infodict, Config, Population, Outpop
 from aegis.Core import Record, Run, Simulation
 from aegis.Core import chance, init_ages, init_genomes, init_generations, deepeq
+from aegis.Core import init_gentimes
 import pytest, imp, types, random, copy, string, tempfile, os, shutil
 import numpy as np
 try:

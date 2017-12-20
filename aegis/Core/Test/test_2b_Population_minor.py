@@ -7,6 +7,9 @@ import numpy as np
 from test_1_Config import conf, conf_path, ran_str
 from test_2a_Population_init import pop
 
+attrs = ("ages", "genomes", "generations", "gentimes")
+attrs_genmap = attrs + ("genmap",)
+
 class TestPopulationReComb:
     """Test methods of Population object relating to rearrangement and
     combination of populations."""
@@ -32,15 +35,16 @@ class TestPopulationReComb:
         pop2.generations[0] = 1
         pop3 = pop2.clone()
         assert pop3.params() == pop2.params()
-        for a in ["genmap", "ages", "genomes", "generations"]:
+        for a in attrs_genmap:
             assert np.array_equal(getattr(pop3, a), getattr(pop2,a))
         assert pop3.N == pop2.N
         # Test that populations are now independent
         pop3.ages[0] = -1
         pop3.generations[0] = -1
         pop3.genomes[0,0] = -1
+        pop3.gentimes[0] = -2
         assert np.array_equal(pop2.genmap, pop3.genmap)
-        for a in ["ages", "genomes", "generations"]:
+        for a in attrs:
             assert not np.array_equal(getattr(pop3, a), getattr(pop2,a))
 
     def test_attrib_rep(self, pop):
@@ -49,12 +53,12 @@ class TestPopulationReComb:
         def f1(x): return x+1
         def f2(x): return x-1
         pop2.attrib_rep(f1)
-        for a in ["ages", "genomes", "generations"]:
+        for a in attrs:
             assert np.array_equal(getattr(pop, a)+1, getattr(pop2,a))
         assert pop.params() == pop2.params()
         assert pop.N == pop2.N
         pop2.attrib_rep(f2)
-        for a in ["ages", "genomes", "generations"]:
+        for a in attrs:
             assert np.array_equal(getattr(pop, a), getattr(pop2,a))
         assert pop.params() == pop2.params()
         assert pop.N == pop2.N
@@ -65,16 +69,18 @@ class TestPopulationReComb:
         #if conf["setup"] == "random": return
         pop2 = pop.clone()
         pop2.generations[0] = 1
+        pop2.gentimes[0] = 1
         pop3 = pop2.clone()
         pop3.shuffle()
-        assert not np.array_equal(pop3.ages, pop2.ages)
-        assert not np.array_equal(pop3.generations, pop2.generations)
-        assert not np.array_equal(pop3.genomes, pop2.genomes)
+        for a in attrs:
+            assert not np.array_equal(
+                    getattr(pop3, a), getattr(pop2, a))
         pop3.ages.sort()
         pop2.ages.sort()
         pop3.generations.sort()
         pop2.generations.sort()
         assert not np.array_equal(pop3.genomes, pop2.genomes)
+        assert not np.array_equal(pop3.gentimes, pop2.gentimes)
         assert np.array_equal(pop3.ages, pop2.ages)
         assert np.array_equal(pop3.generations, pop2.generations)
 
@@ -85,7 +91,7 @@ class TestPopulationReComb:
         pop2 = pop.clone()
         v = np.ones(pop2.N, dtype=bool)
         pop2.subset_members(v)
-        for a in ["ages", "genomes", "generations"]:
+        for a in attrs:
             assert np.array_equal(getattr(pop, a), getattr(pop2,a))
         assert pop.params() == pop2.params()
         assert pop.N == pop2.N
@@ -93,7 +99,7 @@ class TestPopulationReComb:
         pop3 = pop.clone()
         v = np.zeros(pop3.N, dtype=bool)
         pop3.subset_members(v)
-        for a in ["ages", "genomes", "generations"]:
+        for a in attrs:
             assert len(getattr(pop3,a)) == 0
         assert pop3.N == 0
         # Case 3: alternating
@@ -102,7 +108,7 @@ class TestPopulationReComb:
         if pop.N % 2 == 1: v += [True]
         v = np.array(v)
         pop4.subset_members(v)
-        for a in ["ages", "genomes", "generations"]:
+        for a in attrs:
             assert np.array_equal(getattr(pop, a)[0::2],
                     getattr(pop4,a))
         assert pop.params() == pop4.params()
@@ -115,7 +121,7 @@ class TestPopulationReComb:
         pop5 = pop.clone()
         v = np.random.randint(0,2,pop5.N,dtype=bool)
         pop5.subset_members(v)
-        for a in ["ages", "genomes", "generations"]:
+        for a in attrs:
             assert np.array_equal(getattr(pop, a)[v],
                     getattr(pop5,a))
         assert pop.params() == pop5.params()
@@ -134,7 +140,7 @@ class TestPopulationReComb:
         pop2.subtract_members(i)
         print pop2.N
         # Check result
-        for a in ["ages", "genomes", "generations"]:
+        for a in attrs:
             print a
             assert np.array_equal(np.delete(getattr(pop, a), i, 0),
                     getattr(pop2,a))
@@ -148,7 +154,10 @@ class TestPopulationReComb:
         pop_b.add_members(pop_a)
         assert np.array_equal(pop_b.ages, np.tile(pop_a.ages,2))
         assert np.array_equal(pop_b.genomes, np.tile(pop_a.genomes,(2,1)))
+        assert np.array_equal(pop_b.generations, np.tile(pop_a.generations,2))
+        assert np.array_equal(pop_b.gentimes, np.tile(pop_a.gentimes,2))
         assert pop_b.N == 2*pop_a.N
+        # TODO: Include upgraded version from nocython branch
 
     def test_subset_clone(self, pop):
         # Initialise
@@ -159,19 +168,20 @@ class TestPopulationReComb:
         assert pop3.params() == pop2.params()
         assert pop3.N == np.sum(v)
         assert pop2.N == pop.N
-        for a in ["ages", "genomes", "generations"]:
+        for a in attrs:
             assert not np.array_equal(getattr(pop3, a), getattr(pop2,a))
         # Test that subsetting pop2 by same index produces same result
         pop2.subset_members(v)
         assert pop3.params() == pop2.params()
         assert pop3.N == pop2.N
-        for a in ["ages", "genomes", "generations"]:
+        for a in attrs:
             assert np.array_equal(getattr(pop3, a), getattr(pop2,a))
         # Test that populations are now independent
-        pop3.ages[0] = -1
-        pop3.generations[0] = -1
-        pop3.genomes[0,0] = -1
-        for a in ["ages", "genomes", "generations"]:
+        pop3.ages[0] -= 1
+        pop3.generations[0] -= 1
+        pop3.genomes[0,0] -= 1
+        pop3.gentimes[0] -= 1
+        for a in attrs:
             assert not np.array_equal(getattr(pop3, a), getattr(pop2,a))
 
 class TestPopulationIncrement:

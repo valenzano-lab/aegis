@@ -1,4 +1,5 @@
 from aegis.Core import Infodict, Config, Population, Outpop, Record
+from aegis.Core import fivenum
 from aegis.Core.Config import deepeq, deepkey
 import pytest,importlib,types,random,copy,string
 import numpy as np
@@ -39,6 +40,7 @@ def pop1(request, pop):
     p.genomes = np.ones(p.genomes.shape).astype(int)
     p.ages = np.tile(p.maturity, p.N)
     p.generations = np.zeros(p.N, dtype=int)
+    p.gentimes = np.zeros(p.N, dtype=int)
     return p
 
 @pytest.fixture(scope="module")
@@ -101,6 +103,8 @@ class TestRecord:
         assert np.array_equal(R["surv_penf"], a0)
         assert np.array_equal(R["repr_penf"], a0)
         assert np.array_equal(R["age_distribution"], a1)
+        assert np.array_equal(R["generation_dist"], np.zeros([n,5]))
+        assert np.array_equal(R["gentime_dist"], np.zeros([n,5]))
         # Snapshot population placeholders
         assert R["snapshot_pops"] == [0]*R["number_of_snapshots"]
         # Empty names for final computation
@@ -176,6 +180,10 @@ class TestRecord:
         assert r("surv_penf")[0] == 1
         assert r("repr_penf")[0] == 1
         assert np.array_equal(r("age_distribution")[0], agedist)
+        assert np.allclose(r("generation_dist")[0], 
+                fivenum(pop.generations))
+        assert np.allclose(r("gentime_dist")[0], 
+                fivenum(pop.gentimes))
         for n in xrange(len(r("snapshot_pops"))):
             assert r("snapshot_pops")[n] == 0
 
@@ -195,6 +203,10 @@ class TestRecord:
         assert r("surv_penf")[0] == 2
         assert r("repr_penf")[0] == 2
         assert np.array_equal(r("age_distribution")[0], agedist)
+        assert np.allclose(r("generation_dist")[0], 
+                fivenum(pop.generations))
+        assert np.allclose(r("gentime_dist")[0], 
+                fivenum(pop.gentimes))
         for n in xrange(1,len(r("snapshot_pops"))):
             assert r("snapshot_pops")[n] == 0
         # Snapshot population
@@ -204,8 +216,33 @@ class TestRecord:
         assert np.array_equal(p.ages, pop2.ages)
         assert np.array_equal(p.genomes, pop2.genomes)
         assert np.array_equal(p.generations, pop2.generations)
+        assert np.array_equal(p.gentimes, pop2.gentimes)
 
     ## FINALISATION ##
+
+    def test_compute_snapshot_properties(self, pop1, rec1):
+        """Test that compute_snapshot_properties performs correctly for
+        a genome filled with 1's.""" #! TODO: How about in a normal case?
+        n = rec1["number_of_stages"] if not rec1.auto() else rec1["max_stages"]
+        mt = float(rec1["maturity"])
+        g = np.ceil(n/mt).astype(int)+1
+        print n, mt, g
+        print rec1["number_of_snapshots"]
+        print rec1["snapshot_generation_distribution"].shape
+        rec1.compute_snapshot_properties()
+        # Compute expected values
+        exp_dist = {"age": np.zeros(rec1["max_ls"]),
+                "gentime": np.zeros(rec1["max_ls"]),
+                "generation": np.zeros(g)}
+        exp_dist["age"][int(mt)] = 1 # Everyone is the same age
+        exp_dist["gentime"][0] = 1 # Everyone is from initial pop
+        exp_dist["generation"][0] = 1 # Everyone is of generation 0
+        # Test output
+        for k in ["age", "gentime", "generation"]:
+            o = rec1["snapshot_{}_distribution".format(k)]
+            print k,o
+            assert np.all(o == exp_dist[k])
+            assert np.allclose(np.sum(o, 1), 1)
 
     def test_compute_locus_density(self, rec1, rec2):
         """Test that compute_locus_density performs correctly for a
@@ -412,11 +449,15 @@ class TestRecord:
     def test_finalise(self, rec1, rec2):
         """Test that finalise is equivalent to calling all finalisation
         methods separately."""
+        print rec1["snapshot_generation_distribution"]
+        print rec2["snapshot_generation_distribution"]
         # First check that rec1 is finalised and rec2 is not
         assert rec2["actual_death_rate"] == 0
         assert type(rec1["actual_death_rate"]) is np.ndarray
         # Then finalise rec2 and compare
         rec2.finalise()
+        print rec1["snapshot_generation_distribution"]
+        print rec2["snapshot_generation_distribution"]
         assert type(rec2["actual_death_rate"]) is np.ndarray
         for k in rec2.keys():
             print k

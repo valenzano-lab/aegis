@@ -1,5 +1,6 @@
 from aegis.Core import Config, Population, Outpop # Classes
 from aegis.Core import chance, init_ages, init_genomes, init_generations
+from aegis.Core import init_gentimes
 import pytest, random, copy
 import numpy as np
 
@@ -14,7 +15,7 @@ from test_1_Config import conf, conf_path, ran_str
 def pop(request, conf):
     """Create a sample population from the default configuration."""
     return Population(conf["params"], conf["genmap"], init_ages(),
-            init_genomes(), init_generations())
+            init_genomes(), init_generations(), init_gentimes())
 
 class TestPopulationInit:
     """Test Population object methods relating to initialisation."""
@@ -93,12 +94,12 @@ class TestPopulationInit:
         p = copy.deepcopy(conf["params"])
         p["start_pop"] += random.randint(1,20)
         pop2.set_initial_size(p, init_ages(),
-                init_genomes(), init_generations())
+                init_genomes(), init_generations(), init_gentimes())
         assert pop2.N == p["start_pop"]
         # State 2: none new
         pop2.N = 0
         pop2.set_initial_size(pop.params(), pop.ages, pop.genomes,
-                pop.generations)
+                pop.generations, pop.gentimes)
         assert pop2.N == pop.N
         # State 3: two new
         pop3 = pop.clone()
@@ -107,21 +108,21 @@ class TestPopulationInit:
         pop3.subtract_members(drop)
         pop2.N = 0
         pop2.set_initial_size(pop3.params(), pop3.ages,
-                init_genomes(), init_generations())
+                init_genomes(), init_generations(), init_gentimes())
         assert pop2.N == n3 - len(drop)
         n3 = pop3.N
         drop = random.sample(xrange(pop3.N), random.randrange(10))
         pop3.subtract_members(drop)
         pop2.N = 0
         pop2.set_initial_size(pop3.params(), init_ages(),
-                pop3.genomes, init_generations())
+                pop3.genomes, init_generations(), init_gentimes())
         assert pop2.N == n3 - len(drop)
         n3 = pop3.N
         drop = random.sample(xrange(pop3.N), random.randrange(10))
         pop3.subtract_members(drop)
         pop2.N = 0
         pop2.set_initial_size(pop3.params(), init_ages(),
-                init_genomes(), pop3.generations)
+                init_genomes(), pop3.generations, init_gentimes())
         assert pop2.N == n3 - len(drop)
         # State 4: one new
         pop4 = pop.clone()
@@ -130,22 +131,23 @@ class TestPopulationInit:
         pop4.subtract_members(drop)
         pop2.N = 0
         pop2.set_initial_size(pop4.params(), pop4.ages,
-                pop4.genomes, init_generations())
+                pop4.genomes, init_generations(), init_gentimes())
         assert pop2.N == n4 - len(drop)
         n4 = pop4.N
         drop = random.sample(xrange(pop4.N), random.randrange(10))
         pop4.subtract_members(drop)
         pop2.N = 0
         pop2.set_initial_size(pop4.params(), pop4.ages,
-                init_genomes(), pop4.generations)
+                init_genomes(), pop4.generations, init_gentimes())
         assert pop2.N == n4 - len(drop)
         n4 = pop4.N
         drop = random.sample(xrange(pop4.N), random.randrange(10))
         pop4.subtract_members(drop)
         pop2.N = 0
         pop2.set_initial_size(pop4.params(), init_ages(),
-                pop4.genomes, pop4.generations)
+                pop4.genomes, pop4.generations, init_gentimes())
         assert pop2.N == n4 - len(drop)
+        # TODO: Expand for gentimes cases, or collapse for pandas df
 
     def test_initial_size_compatible(self, pop):
         """Test that set_initial_size returns an appropriate error
@@ -162,16 +164,17 @@ class TestPopulationInit:
         pop3.generations = np.delete(pop3.generations, rsp3(3), 0)
         with pytest.raises(ValueError):
             pop2.set_initial_size(pop3.params(), pop3.ages, pop3.genomes,
-                    init_generations())
+                    init_generations(), init_gentimes())
         with pytest.raises(ValueError):
             pop2.set_initial_size(pop3.params(), pop3.ages, init_genomes(),
-                    pop3.generations)
+                    pop3.generations, init_gentimes())
         with pytest.raises(ValueError):
             pop2.set_initial_size(pop3.params(), init_ages(), pop3.genomes,
-                    pop3.generations)
+                    pop3.generations, init_gentimes())
         with pytest.raises(ValueError):
             pop2.set_initial_size(pop3.params(), pop3.ages, pop3.genomes,
-                    pop3.generations)
+                    pop3.generations, init_gentimes())
+        # TODO: Expand for gentimes cases, or collapse for pandas df
 
     def test_fill(self, conf):
         """Test that Population.fill correctly reads in member data
@@ -188,16 +191,17 @@ class TestPopulationInit:
         x = random.random()
         c["params"]["g_dist"] = {"s":x,"r":x,"n":x}
         # Initialise populations
-        def pop(ages, genomes, generations):
-            return Population(c["params"], c["genmap"], ages, genomes, generations)
-        pops = [pop(ages_r, genomes_r, generations_r),
-                pop(ages_r, genomes_r, init_generations()),
-                pop(ages_r, init_genomes(), generations_r),
-                pop(ages_r, init_genomes(), init_generations()),
-                pop(init_ages(), genomes_r, generations_r),
-                pop(init_ages(), genomes_r, init_generations()),
-                pop(init_ages(), init_genomes(), generations_r),
-                pop(init_ages(), init_genomes(), init_generations())]
+        def pop(ages, genomes, generations, gentimes):
+            return Population(c["params"], c["genmap"], ages, genomes, 
+                    generations, gentimes)
+        pops = [pop(ages_r, genomes_r, generations_r, init_gentimes()),
+                pop(ages_r, genomes_r, init_generations(), init_gentimes()),
+                pop(ages_r, init_genomes(), generations_r, init_gentimes()),
+                pop(ages_r, init_genomes(), init_generations(), init_gentimes()),
+                pop(init_ages(), genomes_r, generations_r, init_gentimes()),
+                pop(init_ages(), genomes_r, init_generations(), init_gentimes()),
+                pop(init_ages(), init_genomes(), generations_r, init_gentimes()),
+                pop(init_ages(), init_genomes(), init_generations(), init_gentimes())]
         # Check ages
         for n in [0,1,2,3]: 
             assert np.array_equal(ages_r, pops[n].ages)
@@ -217,6 +221,10 @@ class TestPopulationInit:
         for n in [1,3,5,7]:
             assert not np.array_equal(generations_r, pops[n].generations)
             assert np.all(pops[n].generations == 0)
+        # Check gentimes
+        for n in xrange(8):
+            assert np.all(pops[n].gentimes == 0L)
+        # TODO: Expand for gentimes cases, or collapse for pandas df
 
     def test_population_init(self, pop):
         """Test that Population.__init__ applies the correct methods..."""
@@ -227,13 +235,13 @@ class TestPopulationInit:
         pop2.chr_len, pop2.maturity, pop2.max_ls, pop2.n_base = [0,0,0,0]
         pop2.g_dist = {}
         pop2.repr_offset, pop2.neut_offset, pop2.N = [0,0,0]
-        del pop2.ages, pop2.genomes, pop2.generations
+        del pop2.ages, pop2.genomes, pop2.generations, pop2.gentimes
         # Refill
         pop2.set_genmap(pop.genmap)
         pop2.set_attributes(pop.params())
         pop2.set_initial_size(pop.params(), pop.ages, 
-                pop.genomes, pop.generations)
-        pop2.fill(pop.ages, pop.genomes, pop.generations)
+                pop.genomes, pop.generations, pop.gentimes)
+        pop2.fill(pop.ages, pop.genomes, pop.generations, pop.gentimes)
         # Test that pop2 and pop are identical
         for a in dir(pop):
             print(a)
@@ -250,11 +258,11 @@ class TestPopulationInit:
         reproduction)."""
         P1 = pop.clone()
         P2 = Population(P1.params(), P1.genmap, P1.ages, P1.genomes,
-                P1.generations)
+                P1.generations, P1.gentimes)
         P3 = Population(P1.params(), P1.genmap, P1.ages[:100], 
-                P1.genomes[:100], P1.generations[:100])
+                P1.genomes[:100], P1.generations[:100], P1.gentimes[:100])
         P4 = Population(P3.params(), P3.genmap, P3.ages, P3.genomes,
-                P3.generations)
+                P3.generations, P3.gentimes)
         P2.mutate(0.5, 1)
         P4.mutate(0.5, 1)
         # Test ages
@@ -269,6 +277,16 @@ class TestPopulationInit:
         assert pop.genomes[:100].shape == P4.genomes.shape
         assert not np.array_equal(pop.genomes, P2.genomes)
         assert not np.array_equal(pop.genomes[:100], P4.genomes)
+        # Test generations
+        assert np.array_equal(pop.generations, P1.generations)
+        assert np.array_equal(pop.generations, P2.generations)
+        assert np.array_equal(pop.generations[:100], P3.generations)
+        assert np.array_equal(pop.generations[:100], P4.generations)
+        # Test gentimes
+        assert np.array_equal(pop.gentimes, P1.gentimes)
+        assert np.array_equal(pop.gentimes, P2.gentimes)
+        assert np.array_equal(pop.gentimes[:100], P3.gentimes)
+        assert np.array_equal(pop.gentimes[:100], P4.gentimes)
     
     #! TODO: Tests for individual parts of initialisation
 

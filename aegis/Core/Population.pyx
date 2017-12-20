@@ -7,7 +7,8 @@
 ########################################################################
 
 ## PACKAGE IMPORT ##
-from .functions import chance, init_ages, init_genomes, init_generations
+from .functions import chance
+from .functions import init_ages, init_genomes, init_generations, init_gentimes
 from .Config import deepeq
 import numpy as np
 cimport numpy as np
@@ -30,6 +31,7 @@ cdef class Population:
     """A simulated population with genomes, ages and generation numbers,
     capable of undergoing growth and death."""
     cdef public np.ndarray genmap, ages, genomes, genmap_argsort, generations
+    cdef public np.ndarray gentimes
     cdef public int recombine, assort, chr_len, n_base, max_ls, maturity, N
     cdef public int repr_offset, neut_offset
     cdef public str repr_mode
@@ -43,13 +45,14 @@ cdef class Population:
             np.ndarray[NPINT_t, ndim=1] ages,
             np.ndarray[NPINT_t, ndim=2] genomes,
             np.ndarray[NPINT_t, ndim=1] generations,
+            np.ndarray[NPINT_t, ndim=1] gentimes,
             ):
         """Create a new population, either with newly-generated age and genome
         vectors or inheriting these from a seed."""
         self.set_genmap(genmap) # Define genome map
         self.set_attributes(params) # Define population parameters
-        self.set_initial_size(params, ages, genomes, generations) # Define size
-        self.fill(ages, genomes, generations) # Generate individuals
+        self.set_initial_size(params, ages, genomes, generations, gentimes) # Define size
+        self.fill(ages, genomes, generations, gentimes) # Generate individuals
 
     def set_genmap(self, np.ndarray[NPINT_t, ndim=1] genmap):
         """Set Population genome map from an input array."""
@@ -76,11 +79,13 @@ cdef class Population:
             np.ndarray[NPINT_t, ndim=1] ages,
             np.ndarray[NPINT_t, ndim=2] genomes,
             np.ndarray[NPINT_t, ndim=1] generations,
+            np.ndarray[NPINT_t, ndim=1] gentimes
             ):
         """Determine population size from initial inputs."""
         new_ages = np.array_equal(ages, init_ages())
         new_genomes = np.array_equal(genomes, init_genomes())
         new_generations = np.array_equal(generations, init_generations())
+        new_gentimes = np.array_equal(gentimes, init_gentimes())
         if not new_ages:
             if not new_genomes and len(ages) != len(genomes):
                 errstr = "Size mismatch between age and genome arrays."
@@ -88,14 +93,25 @@ cdef class Population:
             if not new_generations and len(ages) != len(generations):
                 errstr = "Size mismatch between age and generation arrays."
                 raise ValueError(errstr)
+            if not new_gentimes and len(ages) != len(gentimes):
+                errstr = "Size mismatch between age and gentime arrays."
+                raise ValueError(errstr)
             self.N = len(ages)
         elif not new_genomes:
             if not new_generations and len(genomes) != len(generations):
                 errstr = "Size mismatch between genome and generation arrays."
                 raise ValueError(errstr)
+            if not new_gentimes and len(genomes) != len(gentimes):
+                errstr = "Size mismatch between genome and gentime arrays."
+                raise ValueError(errstr)
             self.N = len(genomes)
         elif not new_generations:
+            if not new_gentimes and len(generations) != len(gentimes):
+                errstr = "Size mismatch between generation and gentime arrays."
+                raise ValueError(errstr)
             self.N = len(generations)
+        elif not new_gentimes:
+            self.N = len(gentimes)
         else:
             self.N = params["start_pop"]
 
@@ -103,6 +119,7 @@ cdef class Population:
             np.ndarray[NPINT_t, ndim=1] ages,
             np.ndarray[NPINT_t, ndim=2] genomes,
             np.ndarray[NPINT_t, ndim=1] generations,
+            np.ndarray[NPINT_t, ndim=1] gentimes
             ):
         """Fill a new Population object with individuals based on input
         age, genome and generation arrays."""
@@ -110,6 +127,7 @@ cdef class Population:
         new_ages = np.array_equal(ages, init_ages())
         new_genomes = np.array_equal(genomes, init_genomes())
         new_generations = np.array_equal(generations, init_generations())
+        new_gentimes = np.array_equal(gentimes, init_gentimes())
         # Specify individual value arrays
         if new_ages:
             ages = np.random.randint(0,self.max_ls-1,self.N)
@@ -117,9 +135,12 @@ cdef class Population:
             genomes = self.make_genome_array()
         if new_generations:
             generations = np.repeat(0L, self.N)
+        if new_gentimes:
+            gentimes = np.repeat(0L, self.N) # TODO: Consider other options
         self.ages = np.copy(ages)
         self.genomes = np.copy(genomes)
         self.generations = np.copy(generations)
+        self.gentimes = np.copy(gentimes)
 
     def make_genome_array(self):
         """Generate initial genomes for start_pop individuals according to
@@ -163,11 +184,11 @@ cdef class Population:
     def clone(self):
         """Generate a new, identical population object."""
         return Population(self.params(), self.genmap,
-                self.ages, self.genomes, self.generations)
+                self.ages, self.genomes, self.generations, self.gentimes)
 
     def attrib_rep(self, function, pop2=""):
         """Repeat an operation over all relevant attributes, then update N."""
-        for attr in ["ages","genomes","generations"]:
+        for attr in ["ages","genomes","generations", "gentimes"]:
             val1,val2 = getattr(self,attr), getattr(pop2,attr) if pop2 else ""
             setattr(self,attr,function(val1) if val2=="" else function(val1,val2))
         self.N = len(self.ages)
@@ -357,6 +378,7 @@ cdef class Population:
         # Mutate children and add to population
         children.mutate(m_rate, m_ratio) 
         children.increment_generations()
+        children.gentimes = children.ages + 0L # Record parental ages
         children.ages[:] = 0L # Make newborn
         return children
 
@@ -430,7 +452,15 @@ cdef class Population:
         chrs = np.copy(self.chrs(False))
         self.genomes[::2,:self.chr_len] = chrs[which_chr_0, parent_0]
         self.genomes[::2,self.chr_len:] = chrs[which_chr_1, parent_1]
+        # Update generations as the max of two parents
+        self.generations[::2] = np.maximum(self.generations[::2], 
+                self.generations[1::2])
+        # Update ages as rounded mean of two parents (for gentime recording)
+        self.ages[::2] += self.ages[1::2]
+        self.ages /= 2
         self.subset_members(np.tile([True,False], self.N/2))
+        # TODO: Consider implemeting more sophisticated rounding, e.g.
+        # randomise between upper and lower integer
  
     # Startpop method
 
@@ -453,6 +483,7 @@ class Outpop:
         self.ages = np.copy(pop.ages)
         self.genomes = np.copy(pop.genomes)
         self.generations = np.copy(pop.generations)
+        self.gentimes = np.copy(pop.gentimes)
         self.N = pop.N
 
     def params(self):
@@ -472,7 +503,7 @@ class Outpop:
     def toPop(self):
         """Make cythonised Population object from this Outpop."""
         return Population(self.params(), self.genmap, self.ages, 
-                self.genomes, self.generations)
+                self.genomes, self.generations, self.gentimes)
 
     def clone(self):
         """Generate a new, identical Outpop object."""
@@ -485,6 +516,7 @@ class Outpop:
         return np.array_equal(self.genomes, other.genomes) and \
                 np.array_equal(self.ages, other.ages) and \
                 np.array_equal(self.generations, other.generations) and \
+                np.array_equal(self.gentimes, other.gentimes) and \
                 deepeq(self.params(), other.params())
         return NotImplemented
     def __ne__(self, other):
@@ -492,7 +524,7 @@ class Outpop:
         return NotImplemented
     def __hash__(self):
         return hash(tuple(self.ages, self.genomes, self.generations, 
-            self.params()))
+            self.gentimes, self.params()))
 
     # Startpop method
 

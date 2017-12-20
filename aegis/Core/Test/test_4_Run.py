@@ -1,5 +1,6 @@
 from aegis.Core import Infodict, Config, Population, Outpop, Record, Run
 from aegis.Core import chance, init_ages, init_genomes, init_generations, deepeq
+from aegis.Core import init_gentimes
 import pytest,importlib,types,random,copy,string
 import numpy as np
 

@@ -7,11 +7,13 @@
 #   more advanced statistics from that information.                    #
 ########################################################################
 # TODO: add generation and parental-age recording
+# TODO: add detailed per-snapshot generation recording
 # TODO: convert some output into pandas data frames for easier plotting
 
 ## PACKAGE IMPORT ##
 import numpy as np
 import scipy.stats as st
+from .functions import fivenum
 from .Config import Infodict
 from .Population import Population, Outpop
 import copy
@@ -41,6 +43,7 @@ class Record(Infodict):
                 "Number of run repeats before this one that ended in dieoff.")
         # Arrays for per-stage data entry
         n = self["number_of_stages"] if not self.auto() else self["max_stages"]
+        # TODO: Add pre-finalisation truncating of unused stages in auto case
         a0, a1 = np.zeros(n), np.zeros([n, self["max_ls"]])
         self.put("population_size", np.copy(a0),
                 "Size of population at each stage.")
@@ -52,6 +55,10 @@ class Record(Infodict):
                 "Reproduction penalty due to starvation at each stage.")
         self.put("age_distribution", np.copy(a1),
                 "Proportion of population in each age group at each stage.")
+        self.put("generation_dist", np.zeros([n,5]), "Five-number summary of\
+                the population's generation distribution at each stage.")
+        self.put("gentime_dist", np.zeros([n,5]), "Five-number summary of\
+                the population's generation-time distribution at each stage.")
         # Space for saving population state for each snapshot
         self.put("snapshot_pops", [0]*self["number_of_snapshots"],
                 "Complete population state at each snapshot stage.")
@@ -59,6 +66,15 @@ class Record(Infodict):
         def putzero(name, infstr): self.put(name, 0, infstr)
         # Final population
         putzero("final_pop", "Final population state at end of simulation.")
+        # Basic properties of snapshot populations
+        ns,ml,mt = self["number_of_snapshots"], self["max_ls"], self["maturity"]
+        self.put("snapshot_age_distribution", np.zeros([ns,ml]),
+            "Distribution of ages in the population at each snapshot.")
+        self.put("snapshot_gentime_distribution", np.zeros([ns,ml]),
+            "Distribution of gentimes in the population at each snapshot.")
+        self.put("snapshot_generation_distribution", 
+            np.zeros([ns, np.ceil(n/float(mt)).astype(int)+1]),
+            "Distribution of generations in the population at each snapshot.")
         # Genotype sum statistics (density and average)
         putzero("density_per_locus",
                 "Density distributions of genotype sums (from 0 to maximum)\
@@ -180,13 +196,31 @@ class Record(Infodict):
         self["repr_penf"][n_stage] = repr_penf
         self["age_distribution"][n_stage] = np.bincount(population.ages,
                 minlength = population.max_ls)/float(population.N)
+        self["generation_dist"][n_stage] = fivenum(population.generations)
+        self["gentime_dist"][n_stage] = fivenum(population.gentimes)
         if n_snap >= 0:
             self["snapshot_pops"][n_snap] = Outpop(population)
         #! Consider snapshot_pops recording: write to a tempdir instead?
 
     ##  FINALISATION  ##
 
-    # 1: GENOTYPE DENSITY DISTRIBUTIONS AND STATISTICS
+    # 0: BASIC PROPERTIES (AGES, GENERATIONS, ETC)
+
+    def compute_snapshot_properties(self):
+        """Compute basic properties (ages, gentimes, etc) of snapshot
+        populations during finalisation."""
+        n = self["number_of_stages"] if not self.auto() else self["max_stages"]
+        g = np.ceil(n/float(self["maturity"])).astype(int)+1
+        for s in xrange(self["number_of_snapshots"]):
+            p = self["snapshot_pops"][s]
+            minlen = {"age":p.max_ls, "gentime":p.max_ls, "generation":g}
+            for k in ["age", "gentime", "generation"]:
+                key = "snapshot_{}_distribution".format(k)
+                newval = np.bincount(getattr(p, "{}s".format(k)),
+                        minlength=minlen[k])/float(p.N)
+                print key, minlen[k], newval.shape
+                print newval
+                self[key][s] = newval
 
     def compute_locus_density(self):
         """Compute normalised distributions of sum genotypes for each locus in
@@ -404,11 +438,8 @@ class Record(Infodict):
 
     def finalise(self):
         """Calculate additional stats from recorded data of a completed run."""
-        # Subset age distributions to snapshot stages for plotting
-        # TODO test this in record test for finalise
-        ss = self["snapshot_generations" if self.auto() else "snapshot_stages"]
-        self.put("snapshot_age_distribution", self["age_distribution"][ss],
-                "Distribution of ages in the population at each snapshot.")
+        # Compute basic properties of snapshot pops
+        self.compute_snapshot_properties()
         # Genotype distributions and statistics
         self.compute_locus_density()
         self.compute_total_density()

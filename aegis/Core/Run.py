@@ -11,6 +11,7 @@ import numpy as np
 import scipy.stats as st
 import copy, datetime, time
 from .functions import chance, init_ages, init_genomes, init_generations
+from .functions import init_gentimes
 from .functions import timenow, timediff, get_runtime
 from .Config import Infodict, Config, deepeq
 from .Population import Population, Outpop
@@ -49,7 +50,7 @@ class Run:
             # Simulation to be able to save it.)
             self.population = Outpop(Population(self.conf["params"],
                 self.conf["genmap"], init_ages(), init_genomes(),
-                init_generations()))
+                init_generations(), init_gentimes()))
         self.n_stage = 0
         self.n_snap = 0
         self.n_run = n_run
