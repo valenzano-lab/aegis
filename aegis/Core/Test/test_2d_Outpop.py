@@ -16,6 +16,9 @@ def opop(request, pop):
     """Convert a sample population into Outpop format."""
     return Outpop(pop)
 
+attrs = ("ages", "genomes", "generations", "gentimes")
+attrs_genmap = attrs + ("genmap",)
+
 ###########
 ## TESTS ##
 ###########
@@ -27,7 +30,7 @@ class TestOutpop:
         o = Outpop(pop)
         # Test if Outpop parameters and content match original population
         assert o.params() == pop.params()
-        for a in ["genmap", "ages", "genomes", "generations"]:
+        for a in attrs_genmap:
             assert np.array_equal(getattr(o, a), getattr(pop,a))
         assert o.N == pop.N
         assert type(o) is not type(pop)
@@ -35,8 +38,9 @@ class TestOutpop:
         o.ages[0] = -1
         o.generations[0] = -1
         o.genomes[0,0] = -1
+        o.gentimes[0] = -2
         assert np.array_equal(o.genmap, pop.genmap)
-        for a in ["ages", "genomes", "generations"]:
+        for a in attrs:
             assert not np.array_equal(getattr(o, a), getattr(pop,a))
 
     def test_outpop_params(self, pop, opop):
@@ -59,7 +63,7 @@ class TestOutpop:
         # Test that opop.toPop() is equivalent to pop
         p1, p2 = pop, opop.toPop()
         assert p1.params() == p2.params()
-        for a in ["genmap", "ages", "genomes", "generations"]:
+        for a in attrs_genmap:
             assert np.array_equal(getattr(p1, a), getattr(p2,a))
         assert p1.N == p2.N
         assert type(p1) is type(p2)
@@ -67,8 +71,9 @@ class TestOutpop:
         p2.ages[0] = -1
         p2.generations[0] = -1
         p2.genomes[0,0] = -1
+        p2.gentimes[0] = -2
         assert np.array_equal(p2.genmap, opop.genmap)
-        for a in ["ages", "genomes", "generations"]:
+        for a in attrs:
             assert not np.array_equal(getattr(opop, a), getattr(p2,a))
 
     def test_outpop_clone(self, pop, opop):
@@ -77,15 +82,17 @@ class TestOutpop:
         #if conf["setup"] == "random": return
         opop2 = opop.clone()
         opop2.generations[0] = 1
+        opop2.gentimes[0] = 2
         opop3 = opop2.clone()
         assert opop3.params() == opop2.params()
-        for a in ["genmap", "ages", "genomes", "generations"]:
+        for a in attrs_genmap:
             assert np.array_equal(getattr(opop3, a), getattr(opop2,a))
         assert opop3.N == opop2.N
         # Test that populations are now independent
         opop3.ages[0] = -1
         opop3.generations[0] = -1
         opop3.genomes[0,0] = -1
+        opop3.gentimes[0] = -2
         assert np.array_equal(opop2.genmap, opop3.genmap)
-        for a in ["ages", "genomes", "generations"]:
+        for a in attrs:
             assert not np.array_equal(getattr(opop3, a), getattr(opop2,a))

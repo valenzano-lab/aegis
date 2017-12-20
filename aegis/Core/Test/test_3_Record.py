@@ -40,6 +40,7 @@ def pop1(request, pop):
     p.genomes = np.ones(p.genomes.shape).astype(int)
     p.ages = np.tile(p.maturity, p.N)
     p.generations = np.zeros(p.N, dtype=int)
+    p.gentimes = np.tile(-1L, p.N)
     return p
 
 @pytest.fixture(scope="module")
@@ -103,6 +104,7 @@ class TestRecord:
         assert np.array_equal(R["repr_penf"], a0)
         assert np.array_equal(R["age_distribution"], a1)
         assert np.array_equal(R["generation_dist"], np.zeros([n,5]))
+        assert np.array_equal(R["gentime_dist"], np.zeros([n,5]))
         # Snapshot population placeholders
         assert R["snapshot_pops"] == [0]*R["number_of_snapshots"]
         # Empty names for final computation
@@ -180,6 +182,8 @@ class TestRecord:
         assert np.array_equal(r("age_distribution")[0], agedist)
         assert np.allclose(r("generation_dist")[0], 
                 fivenum(pop.generations))
+        assert np.allclose(r("gentime_dist")[0], 
+                fivenum(pop.gentimes))
         for n in xrange(len(r("snapshot_pops"))):
             assert r("snapshot_pops")[n] == 0
 
@@ -201,6 +205,8 @@ class TestRecord:
         assert np.array_equal(r("age_distribution")[0], agedist)
         assert np.allclose(r("generation_dist")[0], 
                 fivenum(pop.generations))
+        assert np.allclose(r("gentime_dist")[0], 
+                fivenum(pop.gentimes))
         for n in xrange(1,len(r("snapshot_pops"))):
             assert r("snapshot_pops")[n] == 0
         # Snapshot population
@@ -210,6 +216,7 @@ class TestRecord:
         assert np.array_equal(p.ages, pop2.ages)
         assert np.array_equal(p.genomes, pop2.genomes)
         assert np.array_equal(p.generations, pop2.generations)
+        assert np.array_equal(p.gentimes, pop2.gentimes)
 
     ## FINALISATION ##
 

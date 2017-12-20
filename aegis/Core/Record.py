@@ -56,6 +56,8 @@ class Record(Infodict):
                 "Proportion of population in each age group at each stage.")
         self.put("generation_dist", np.zeros([n,5]), "Five-number summary of\
                 the population's generation distribution at each stage.")
+        self.put("gentime_dist", np.zeros([n,5]), "Five-number summary of\
+                the population's generation-time distribution at each stage.")
         # Space for saving population state for each snapshot
         self.put("snapshot_pops", [0]*self["number_of_snapshots"],
                 "Complete population state at each snapshot stage.")
@@ -185,6 +187,7 @@ class Record(Infodict):
         self["age_distribution"][n_stage] = np.bincount(population.ages,
                 minlength = population.max_ls)/float(population.N)
         self["generation_dist"][n_stage] = fivenum(population.generations)
+        self["gentime_dist"][n_stage] = fivenum(population.gentimes)
         if n_snap >= 0:
             self["snapshot_pops"][n_snap] = Outpop(population)
         #! Consider snapshot_pops recording: write to a tempdir instead?
