@@ -1,4 +1,5 @@
 from aegis.Core import Infodict, Config, Population, Outpop, Record
+from aegis.Core import chance, init_ages, init_genomes, init_generations
 from aegis.Core.Config import deepeq, deepkey
 import pytest,importlib,types,random,copy,string
 import numpy as np
@@ -23,7 +24,15 @@ def static_fill(rec_obj, pop_obj):
 ##############
 
 from test_1_Config import conf, conf_path
-from test_2a_Population_init import pop
+#from test_2a_Population_init import pop
+
+@pytest.fixture(scope="module")
+def pop(request, conf):
+    """Create a sample population from the default configuration."""
+    gm = conf["genmap"]
+    np.random.shuffle(gm)
+    return Population(conf["params"], gm,init_ages(), init_genomes(),
+            init_generations())
 
 @pytest.fixture(scope="module")
 def rec(request, conf):
@@ -479,9 +488,18 @@ class TestRecord:
         nbase = rec2["n_base"]
         # choose one locus at random and fill with ones to check for correct order
         rbit = np.random.choice(xrange(len(pop2.genmap)))
+        print "rbit: ", rbit
+        print "pop2.genmap[rbit]: ", pop2.genmap[rbit]
         rlocus = np.array([rbit*nbase + c for c in xrange(nbase)])
         rlocus = np.stack([rlocus, rlocus+pop2.chr_len])
-        abit = pop2.genmap[rbit]
+        # get the regarding locus in sorted genome
+        apo = pop2.genmap[rbit] # age + offset
+        if apo/pop2.neut_offset > 0:
+            abit = 2*pop2.max_ls - pop2.maturity + apo%pop2.neut_offset
+        elif apo/pop2.repr_offset > 0:
+            abit = pop2.max_ls - pop2.maturity + apo%pop2.repr_offset
+        else:
+            abit = apo
         alocus = np.array([abit*nbase + c for c in xrange(nbase)])
         genomes = copy.deepcopy(pop2.genomes)
         genomes[:,rlocus] = 1
@@ -494,6 +512,7 @@ class TestRecord:
         check2 = np.var(genomes,0)[order]
         check22 = rec2["n1_var"][0]
         check22[alocus] = 0
+        np.set_printoptions(threshold=np.nan)
         assert np.allclose(check11, check1)
         assert np.allclose(check22, check2)
 
