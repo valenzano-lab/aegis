@@ -7,7 +7,8 @@
 ########################################################################
 
 ## PACKAGE IMPORT ##
-from .functions import chance, init_ages, init_genomes, init_generations
+from .functions import chance
+from .functions import init_ages, init_genomes, init_generations, init_gentimes
 from .Config import deepeq
 import numpy as np
 import random, copy
@@ -22,13 +23,13 @@ class Population:
 
     ## INITIALISATION ##
 
-    def __init__(self, params, genmap, ages, genomes, generations):
+    def __init__(self, params, genmap, ages, genomes, generations, gentimes):
         """Create a new population, either with newly-generated age and genome
         vectors or inheriting these from a seed."""
         self.set_genmap(genmap) # Define genome map
         self.set_attributes(params) # Define population parameters
-        self.set_initial_size(params, ages, genomes, generations) # Define size
-        self.fill(ages, genomes, generations) # Generate individuals
+        self.set_initial_size(params, ages, genomes, generations, gentimes) # Define size
+        self.fill(ages, genomes, generations, gentimes) # Generate individuals
 
     def set_genmap(self, genmap):
         """Set Population genome map from an input array."""
@@ -51,11 +52,12 @@ class Population:
         self.repr_offset = params["repr_offset"] # Genmap offset for repr loci
         self.neut_offset = params["neut_offset"] # Genmap offset for neut loci
 
-    def set_initial_size(self, params, ages, genomes, generations):
+    def set_initial_size(self, params, ages, genomes, generations, gentimes):
         """Determine population size from initial inputs."""
         new_ages = np.array_equal(ages, init_ages())
         new_genomes = np.array_equal(genomes, init_genomes())
         new_generations = np.array_equal(generations, init_generations())
+        new_gentimes = np.array_equal(gentimes, init_gentimes())
         if not new_ages:
             if not new_genomes and len(ages) != len(genomes):
                 errstr = "Size mismatch between age and genome arrays."
@@ -63,24 +65,36 @@ class Population:
             if not new_generations and len(ages) != len(generations):
                 errstr = "Size mismatch between age and generation arrays."
                 raise ValueError(errstr)
+            if not new_gentimes and len(ages) != len(gentimes):
+                errstr = "Size mismatch between age and gentime arrays."
+                raise ValueError(errstr)
             self.N = len(ages)
         elif not new_genomes:
             if not new_generations and len(genomes) != len(generations):
                 errstr = "Size mismatch between genome and generation arrays."
                 raise ValueError(errstr)
+            if not new_gentimes and len(genomes) != len(gentimes):
+                errstr = "Size mismatch between genome and gentime arrays."
+                raise ValueError(errstr)
             self.N = len(genomes)
         elif not new_generations:
+            if not new_gentimes and len(generations) != len(gentimes):
+                errstr = "Size mismatch between generation and gentime arrays."
+                raise ValueError(errstr)
             self.N = len(generations)
+        elif not new_gentimes:
+            self.N = len(gentimes)
         else:
             self.N = params["start_pop"]
 
-    def fill(self, ages, genomes, generations):
+    def fill(self, ages, genomes, generations, gentimes):
         """Fill a new Population object with individuals based on input
         age, genome and generation arrays."""
         # Test for new vs seeded values
         new_ages = np.array_equal(ages, init_ages())
         new_genomes = np.array_equal(genomes, init_genomes())
         new_generations = np.array_equal(generations, init_generations())
+        new_gentimes = np.array_equal(gentimes, init_gentimes())
         # Specify individual value arrays
         if new_ages:
             ages = np.random.randint(0,self.max_ls-1,self.N)
@@ -88,10 +102,13 @@ class Population:
             genomes = self.make_genome_array()
         if new_generations:
             generations = np.repeat(0L, self.N)
+        if new_gentimes:
+            gentimes = np.repeat(0L, self.N) # TODO: Consider other options
         self.ages = np.copy(ages)
         self.genomes = np.copy(genomes)
         self.generations = np.copy(generations)
-        self.loci = self.sorted_loci() # TODO: make this a copy?
+        self.gentimes = np.copy(gentimes)
+        self.loci = self.sorted_loci() 
 
     def make_genome_array(self):
         """Generate initial genomes for start_pop individuals according to
@@ -135,10 +152,10 @@ class Population:
     def clone(self):
         """Generate a new, identical population object."""
         return Population(self.params(), self.genmap,
-                self.ages, self.genomes, self.generations)
+                self.ages, self.genomes, self.generations, self.gentimes)
 
     def attrib_rep(self, function, pop2="", 
-            attrs=["ages", "genomes", "generations", "loci"]):
+            attrs=["ages", "genomes", "generations", "gentimes", "loci"]):
         """Repeat an operation over all relevant attributes, then update N."""
         for attr in attrs:
             val1,val2 = getattr(self,attr), getattr(pop2,attr) if pop2 else ""
@@ -288,6 +305,7 @@ class Population:
         # Mutate children and add to population
         children.mutate(m_rate, m_ratio) 
         children.increment_generations()
+        children.gentimes = children.ages + 0L # Record parental ages
         children.ages[:] = 0L # Make newborn
         return children
 
@@ -311,6 +329,9 @@ class Population:
             negative_mut = 1-chance(m_rate, np.sum(is_1))
             self.genomes[is_0] = positive_mut
             self.genomes[is_1] = negative_mut
+        self.loci = self.sorted_loci() # Renew loci (inc. recomb./assortment)
+        # TODO: Test that loci update following mutation
+
 
     def recombination(self, r_rate): # Per-bit recombination rate
         """Recombine between the two chromosomes of each individual
@@ -333,6 +354,7 @@ class Population:
     def assortment(self):
         """Pair individuals into breeding pairs and generate children
         through random assortment."""
+        print self.N, len(self.generations)
         if self.N == 1:
             raise ValueError("Cannot perform assortment with a single parent.")
         if self.N % 2 != 0: # If odd number of parents, discard one at random
@@ -354,7 +376,16 @@ class Population:
         chrs = np.copy(self.chrs(False))
         self.genomes[::2,:self.chr_len] = chrs[which_chr_0, parent_0]
         self.genomes[::2,self.chr_len:] = chrs[which_chr_1, parent_1]
+        # Update generations as the max of two parents
+        print self.N, len(self.generations)
+        self.generations[::2] = np.maximum(self.generations[::2], 
+                self.generations[1::2])
+        # Update ages as rounded mean of two parents (for gentime recording)
+        self.ages[::2] += self.ages[1::2]
+        self.ages /= 2
         self.subset_members(np.tile([True,False], self.N/2))
+        # TODO: Consider implemeting more sophisticated rounding, e.g.
+        # randomise between upper and lower integer
  
     # Startpop method
 
@@ -362,6 +393,7 @@ class Population:
         return Outpop(self).__startpop__(pop_number)
 
 class Outpop:
+    # TODO: Delete this? (Somewhat redundant without Cython)
     """Non-cythonised, pickle-able I/O form of Population class."""
     def __init__(self, pop):
         """Generate an Outpop from a Population object."""
@@ -377,6 +409,7 @@ class Outpop:
         self.ages = np.copy(pop.ages)
         self.genomes = np.copy(pop.genomes)
         self.generations = np.copy(pop.generations)
+        self.gentimes = np.copy(pop.gentimes)
         self.N = pop.N
 
     def params(self):
@@ -396,19 +429,20 @@ class Outpop:
     def toPop(self):
         """Make cythonised Population object from this Outpop."""
         return Population(self.params(), self.genmap, self.ages, 
-                self.genomes, self.generations)
+                self.genomes, self.generations, self.gentimes)
 
     def clone(self):
         """Generate a new, identical Outpop object."""
         return Outpop(self)
 
-    # Comparison methods
+    # Comparison methods (TODO: Copy these to Population object itself?)
 
     def __eq__(self, other):
         if not isinstance(other, self.__class__): return NotImplemented
         return np.array_equal(self.genomes, other.genomes) and \
                 np.array_equal(self.ages, other.ages) and \
                 np.array_equal(self.generations, other.generations) and \
+                np.array_equal(self.gentimes, other.gentimes) and \
                 deepeq(self.params(), other.params())
         return NotImplemented
     def __ne__(self, other):
@@ -416,7 +450,7 @@ class Outpop:
         return NotImplemented
     def __hash__(self):
         return hash(tuple(self.ages, self.genomes, self.generations, 
-            self.params()))
+            self.gentimes, self.params()))
 
     # Startpop method
 
