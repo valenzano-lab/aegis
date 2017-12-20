@@ -136,7 +136,7 @@ cdef class Population:
         if new_generations:
             generations = np.repeat(0L, self.N)
         if new_gentimes:
-            gentimes = np.repeat(-1L, self.N)
+            gentimes = np.repeat(0L, self.N) # TODO: Consider other options
         self.ages = np.copy(ages)
         self.genomes = np.copy(genomes)
         self.generations = np.copy(generations)
@@ -456,6 +456,8 @@ cdef class Population:
         self.ages[::2] += self.ages[1::2]
         self.ages /= 2
         self.subset_members(np.tile([True,False], self.N/2))
+        # TODO: Consider implemeting more sophisticated rounding, e.g.
+        # randomise between upper and lower integer
  
     # Startpop method
 

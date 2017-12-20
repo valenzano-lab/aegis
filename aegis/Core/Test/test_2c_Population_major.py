@@ -327,7 +327,7 @@ class TestPopulationGrowth:
         assortment."""
         p, rr = pop.clone(), np.linspace(1, 1, pop.n_base*2+1)
         p.generations[:] = 0
-        assert np.array_equal(np.tile(-1, p.N), p.gentimes)
+        assert np.array_equal(np.tile(0, p.N), p.gentimes)
         for mode in ["asexual", "recombine_only"]:
             print mode
             p.repr_mode = mode

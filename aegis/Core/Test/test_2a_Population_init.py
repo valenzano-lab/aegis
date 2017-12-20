@@ -223,7 +223,7 @@ class TestPopulationInit:
             assert np.all(pops[n].generations == 0)
         # Check gentimes
         for n in xrange(8):
-            assert np.all(pops[n].gentimes == -1L)
+            assert np.all(pops[n].gentimes == 0L)
         # TODO: Expand for gentimes cases, or collapse for pandas df
 
     def test_population_init(self, pop):
