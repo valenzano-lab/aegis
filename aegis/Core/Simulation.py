@@ -11,7 +11,7 @@ import numpy as np
 import scipy.stats as st
 import copy, datetime, time, os, importlib, inspect, numbers, shutil
 from .functions import chance, init_ages, init_genomes, init_generations
-from .functions import timenow, timediff, get_runtime
+from .functions import timenow, timediff, get_runtime, init_gentimes
 from .Config import Infodict, Config
 from .Population import Population, Outpop
 from .Record import Record

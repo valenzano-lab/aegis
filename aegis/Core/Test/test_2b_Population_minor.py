@@ -4,12 +4,12 @@ import pytest, random, copy
 import numpy as np
 
 # Import fixtures
-from test_1_Config import conf, conf_path
+from test_1_Config import conf, conf_path, ran_str
 from test_2a_Population_init import pop
 
-attrs = ("ages", "genomes", "generations", "loci")
+attrs_no_loci = ("ages", "genomes", "generations", "gentimes")
+attrs = attrs_no_loci + ("loci",)
 attrs_genmap = attrs + ("genmap",)
-attrs_no_loci = ("ages", "genomes", "generations")
 
 class TestPopulationReComb:
     """Test methods of Population object relating to rearrangement and
@@ -67,6 +67,7 @@ class TestPopulationReComb:
         #if conf["setup"] == "random": return
         pop2 = pop.clone()
         pop2.generations[0] = 1
+        pop2.gentimes[0] = 1
         pop3 = pop2.clone()
         pop3.shuffle()
         assert np.array_equal(pop2.genmap, pop3.genmap)

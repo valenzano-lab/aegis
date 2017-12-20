@@ -34,6 +34,11 @@ def init_generations():
     generated during Population initialisation."""
     return np.array([-1])
 
+def init_gentimes():
+    """Return an array specifying that a new generation-time vector should be 
+    generated during Population initialisation."""
+    return np.array([-1])
+
 ##########
 ## Time ##
 ##########
@@ -57,9 +62,22 @@ def timediff(starttime, endtime):
         report = (g != 0)
         if report: outstr += "{0} {1}{2}".format(g, unit, after[n])
     return outstr
+# TODO: Test this
 
 def get_runtime(starttime, endtime, prefix = "Total runtime"):
     """Compute the runtime of a process from the start and end times
     and print the output as a human-readable string."""
     runtime = timediff(starttime, endtime)
     return "{}: {}.".format(prefix, runtime)
+
+###########################
+## Five-number Summaries ##
+###########################
+
+def quantile(array, p, interpolation="linear"):
+    """Get the p-quantile of a numeric array using np.percentile."""
+    return np.percentile(array, p*100, interpolation=interpolation)
+
+def fivenum(array):
+    """Return the five-number summary of a numeric array."""
+    return np.array([quantile(array, p) for p in np.arange(0, 1.1, 0.25)])
