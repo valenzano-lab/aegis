@@ -315,8 +315,9 @@ class TestRecord:
             assert np.allclose(obj2_mean[l][0], check2_mean)
             assert np.allclose(obj2_var[l][0], check2_var)
 
-    # TODO resolve issue
-    @pytest.mark.xfail(reason="test not fully implemented")
+    # TODO resolve issue - right now I don't believe the current variance
+    # calculation is correct
+    @pytest.mark.xfail(reason="test needs to be finished")
     def test_compute_surv_repr_probabilities_true(self, rec1, pop2, rec2):
         """Test that compute_surv_repr_probabilities_true performs
         correctly for a genome filled with 1's and one randomly generated."""
@@ -340,16 +341,20 @@ class TestRecord:
 
         # Test vs expectation
         for l in llist:
-            data = loci[l[0]]
-            values = rec2[l[0]+"_range"]
-            check_mean = np.mean(values[data],0)
-            if l=="repr": check_var = np.var(values[data],0)/20*pop2.N
-            else: check_var = np.var(values[data],0)*pop2.N
             print l
-            print check_var
-            print rec2["prob_var"][l][0]
-            print check_var[0]/rec2["prob_var"][l][0][0]
-            print check_var[1]/rec2["prob_var"][l][0][1]
+            data = loci[l[0]]
+            print "\ndata\n", data[:5]
+            values = rec2[l[0]+"_range"]
+            print "\nvalues\n", values
+            print "\nvalues[data]\n", (values[data])[:5]
+            print "...\n"
+            print "\nnp.var(data[values],0)\n", np.var((values[data]),0)
+            print "\nrec2\n", rec2["prob_var"][l][0]
+            check_mean = np.mean(values[data],0)
+            if l=="repr": check_var = np.var(values[data],0)#/20*pop2.N
+            else: check_var = np.var(values[data],0)#*pop2.N
+#            print check_var[0]/rec2["prob_var"][l][0][0]
+#            print check_var[1]/rec2["prob_var"][l][0][1]
             # TODO why is this scaled like this ???
             assert np.array_equal(rec1["prob_mean"][l], np.tile(vmax[l], dims[l]))
             assert np.array_equal(rec1["prob_var"][l], np.zeros(dims[l]))
