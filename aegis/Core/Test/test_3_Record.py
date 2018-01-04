@@ -1,4 +1,6 @@
 from aegis.Core import Infodict, Config, Population, Outpop, Record
+from aegis.Core import chance, init_ages, init_genomes, init_generations
+from aegis.Core import init_gentimes
 from aegis.Core import fivenum
 from aegis.Core.Config import deepeq, deepkey
 import pytest,importlib,types,random,copy,string
@@ -26,7 +28,15 @@ def static_fill(rec_obj, pop_obj):
 ##############
 
 from test_1_Config import conf, conf_path, ran_str
-from test_2a_Population_init import pop
+#from test_2a_Population_init import pop
+
+@pytest.fixture(scope="module")
+def pop(request, conf):
+    """Create a sample population from the default configuration."""
+    gm = conf["genmap"]
+    np.random.shuffle(gm)
+    return Population(conf["params"], gm, init_ages(), init_genomes(),
+            init_generations(), init_gentimes())
 
 @pytest.fixture(scope="module")
 def rec(request, conf):
@@ -44,14 +54,28 @@ def pop1(request, pop):
     return p
 
 @pytest.fixture(scope="module")
+def pop2(request, pop):
+    """Population of young adults with genomes filled with ones."""
+    p = pop.clone()
+    p.ages = np.tile(p.maturity, p.N)
+    p.generations = np.zeros(p.N, dtype=int)
+    p.gentimes = np.zeros(p.N, dtype=int)
+    return p
+
+@pytest.fixture(scope="module")
 def rec1(request, rec, pop1):
     """Record filled with initial state of pop1."""
     return static_fill(rec, pop1)
 
 @pytest.fixture(scope="module")
-def rec2(request, rec1):
+def rec1_copy(request, rec, pop1):
     """Record filled with initial state of pop1."""
-    return copy.deepcopy(rec1)
+    return static_fill(rec, pop1)
+
+@pytest.fixture(scope="module")
+def rec2(request, rec, pop2):
+    """Record filled with initial state of pop2."""
+    return static_fill(rec, pop2)
 
 ###########
 ## TESTS ##
@@ -180,9 +204,9 @@ class TestRecord:
         assert r("surv_penf")[0] == 1
         assert r("repr_penf")[0] == 1
         assert np.array_equal(r("age_distribution")[0], agedist)
-        assert np.allclose(r("generation_dist")[0], 
+        assert np.allclose(r("generation_dist")[0],
                 fivenum(pop.generations))
-        assert np.allclose(r("gentime_dist")[0], 
+        assert np.allclose(r("gentime_dist")[0],
                 fivenum(pop.gentimes))
         for n in xrange(len(r("snapshot_pops"))):
             assert r("snapshot_pops")[n] == 0
@@ -203,9 +227,9 @@ class TestRecord:
         assert r("surv_penf")[0] == 2
         assert r("repr_penf")[0] == 2
         assert np.array_equal(r("age_distribution")[0], agedist)
-        assert np.allclose(r("generation_dist")[0], 
+        assert np.allclose(r("generation_dist")[0],
                 fivenum(pop.generations))
-        assert np.allclose(r("gentime_dist")[0], 
+        assert np.allclose(r("gentime_dist")[0],
                 fivenum(pop.gentimes))
         for n in xrange(1,len(r("snapshot_pops"))):
             assert r("snapshot_pops")[n] == 0
@@ -220,7 +244,7 @@ class TestRecord:
 
     ## FINALISATION ##
 
-    def test_compute_snapshot_properties(self, pop1, rec1):
+    def test_compute_snapshot_properties(self, pop1, rec1, rec2):
         """Test that compute_snapshot_properties performs correctly for
         a genome filled with 1's.""" #! TODO: How about in a normal case?
         n = rec1["number_of_stages"] if not rec1.auto() else rec1["max_stages"]
@@ -230,6 +254,7 @@ class TestRecord:
         print rec1["number_of_snapshots"]
         print rec1["snapshot_generation_distribution"].shape
         rec1.compute_snapshot_properties()
+        rec2.compute_snapshot_properties() # do here because of finalisation
         # Compute expected values
         exp_dist = {"age": np.zeros(rec1["max_ls"]),
                 "gentime": np.zeros(rec1["max_ls"]),
@@ -244,69 +269,161 @@ class TestRecord:
             assert np.all(o == exp_dist[k])
             assert np.allclose(np.sum(o, 1), 1)
 
-    def test_compute_locus_density(self, rec1, rec2):
+    # DONE
+    def test_compute_locus_density(self, rec1, pop2, rec2):
         """Test that compute_locus_density performs correctly for a
-        genome filled with 1's.""" #! TODO: How about in a normal case?
+        genome filled with 1's and one randomly generated."""
+        llist = ["a","n","r","s"]
         rec1.compute_locus_density()
-        m,l,b = rec1["number_of_snapshots"], rec1["max_ls"], rec1["n_states"]
-        g,nn,mt = len(rec1["genmap"]), rec1["n_neutral"], rec1["maturity"]
-        llist = ["a","n","r","s"]
-        dims = {"a":[m,g,b],"n":[m,nn,b],"r":[m,l-mt,b], "s":[m,l,b]}
-        obj = rec1["density_per_locus"]
-        assert sorted(obj.keys()) == llist
-        for l in llist:
-            check = np.zeros(dims[l])
-            check[:,:,-1] = 1
-            assert np.array_equal(obj[l], check)
+        obj1 = rec1["density_per_locus"]
+        rec2.compute_locus_density()
+        obj2 = rec2["density_per_locus"]
+        assert sorted(obj1.keys()) == llist
+        assert sorted(obj2.keys()) == llist
 
-    def test_compute_total_density(self, rec1):
+        n_snap,l1,ns1 = rec1["number_of_snapshots"], rec1["max_ls"],\
+                rec1["n_states"]
+        g,nn,mt1 = len(rec1["genmap"]), rec1["n_neutral"], rec1["maturity"]
+        dims = {"a":[n_snap,g,ns1],"n":[n_snap,nn,ns1],"r":[n_snap,l1-mt1,ns1], \
+                "s":[n_snap,l1,ns1]}
+
+        l2,mt2,ns2 = pop2.max_ls, pop2.maturity, rec2["n_states"]
+        loci_all = pop2.sorted_loci()
+        loci = {"s":np.array(loci_all[:,:l2]),
+                "r":np.array(loci_all[:,l2:(2*l2-mt2)]),
+                "n":np.array(loci_all[:,(2*l2-mt2):]), "a":loci_all}
+        def density(x):
+            bins = np.bincount(x,minlength=ns2)
+            return bins/float(sum(bins))
+
+        for l in llist:
+            check1 = np.zeros(dims[l])
+            check1[:,:,-1] = 1
+            check2 = np.apply_along_axis(density,0,loci[l])
+            check2 = check2.T
+            assert np.array_equal(obj1[l], check1)
+            assert np.allclose(obj2[l][0], check2)
+
+    # DONE
+    def test_compute_total_density(self, rec1, pop2, rec2):
         """Test that compute_total_density performs correctly for a
-        genome filled with 1's.""" #! TODO: How about in a normal case?
+        genome filled with 1's and one randomly generated."""
+        llist = ["a","n","r","s"]
         rec1.compute_total_density()
-        m,b = rec1["number_of_snapshots"], rec1["n_states"]
-        llist = ["a","n","r","s"]
-        obj = rec1["density"]
-        assert sorted(obj.keys()) == llist
-        for l in llist:
-            check = np.zeros([m,b])
-            check[:,-1] = 1
-            assert np.array_equal(obj[l], check)
+        obj1 = rec1["density"]
+        rec2.compute_total_density()
+        obj2 = rec2["density"]
+        assert sorted(obj1.keys()) == llist
+        assert sorted(obj2.keys()) == llist
 
-    def test_compute_genotype_mean_var(self, rec1):
+        n_snap,ns1 = rec1["number_of_snapshots"], rec1["n_states"]
+        l2,mt2,ns2 = pop2.max_ls, pop2.maturity, rec2["n_states"]
+        loci_all = pop2.sorted_loci()
+        loci = {"s":np.array(loci_all[:,:l2]),
+                "r":np.array(loci_all[:,l2:(2*l2-mt2)]),
+                "n":np.array(loci_all[:,(2*l2-mt2):]), "a":loci_all}
+        loci_flat = copy.deepcopy(loci)
+        loci_flat.update((k,v.reshape(v.shape[0]*v.shape[1])) \
+                for k,v in loci_flat.items())
+        loci_flat.update((k,np.bincount(v,minlength=ns2)/float(len(v))) \
+                for k,v in loci_flat.items())
+
+        for l in llist:
+            check1 = np.zeros([n_snap,ns1])
+            check1[:,-1] = 1
+            assert np.array_equal(obj1[l], check1)
+            assert np.allclose(obj2[l][0], loci_flat[l])
+
+    # DONE
+    def test_compute_genotype_mean_var(self, rec1, pop2, rec2):
         """Test that compute_genotype_mean_var performs correctly for a
-        genome filled with 1's.""" #! TODO: How about in a normal case?
+        genome filled with 1's and one randomly generated."""
         rec1.compute_genotype_mean_var()
-        m,l,b = rec1["number_of_snapshots"], rec1["max_ls"], rec1["n_states"]
-        g,nn,mt = len(rec1["genmap"]), rec1["n_neutral"], rec1["maturity"]
+        obj1_mean = rec1["mean_gt"]
+        obj1_var = rec1["var_gt"]
+        rec2.compute_genotype_mean_var()
+        obj2_mean = rec2["mean_gt"]
+        obj2_var = rec2["var_gt"]
         llist = ["a","n","r","s"]
-        dims = {"a":[m,g],"n":[m,nn],"r":[m,l-mt],"s":[m,l]}
-        for k in ["mean_gt","var_gt"]:
-            obj = rec1[k]
-            assert sorted(obj.keys()) == llist
-            for l in llist:
-                check = np.zeros(dims[l])
-                if k == "mean_gt": check[:] = b-1 # All genotypes maximal
-                assert np.array_equal(obj[l], check)
+        assert sorted(obj1_mean.keys()) == llist
+        assert sorted(obj1_var.keys()) == llist
+        assert sorted(obj2_mean.keys()) == llist
+        assert sorted(obj2_var.keys()) == llist
 
-    def test_compute_surv_repr_probabilities_true(self, rec1):
-        """Test that compute_surv_repr_probabilities_true performs
-        correctly for a genome filled with 1's.""" #! TODO: How about in a normal case?
-        rec1.compute_surv_repr_probabilities_true()
-        # Define parameters
-        m,ls = rec1["number_of_snapshots"], rec1["max_ls"]
-        ns,mt= rec1["n_states"], rec1["maturity"]
-        llist = ["repr", "surv"]
-        dims = {"surv":[m,ls], "repr":[m,ls-mt]}
-        vmax = {"surv":rec1.p_surv(ns-1), "repr":rec1.p_repr(ns-1)}
-        # Test vs expectation
-        for k in ["mean", "var"]: assert sorted(rec1["prob_"+k].keys()) == llist
+        n_snap,l1,ns1 = rec1["number_of_snapshots"], rec1["max_ls"],\
+                rec1["n_states"]
+        g,nn,mt1 = len(rec1["genmap"]), rec1["n_neutral"], rec1["maturity"]
+        dims = {"a":[n_snap,g],"n":[n_snap,nn],"r":[n_snap,l1-mt1],"s":[n_snap,l1]}
+
+        l2,mt2,ns2 = pop2.max_ls, pop2.maturity, rec2["n_states"]
+        loci_all = pop2.sorted_loci()
+        loci = {"s":np.array(loci_all[:,:l2]),
+                "r":np.array(loci_all[:,l2:(2*l2-mt2)]),
+                "n":np.array(loci_all[:,(2*l2-mt2):]), "a":loci_all}
+
         for l in llist:
+            check1_var = np.zeros(dims[l])
+            check1_mean = copy.deepcopy(check1_var)
+            check1_mean[:] = ns1-1 # all genotypes maximal
+            check2_mean = np.mean(loci[l],0)
+            check2_var = np.var(loci[l],0)
+            print obj1_var[l].shape
+            print check1_var.shape
+            assert np.array_equal(obj1_var[l], check1_var)
+            assert np.array_equal(obj1_mean[l], check1_mean)
+            assert np.allclose(obj2_mean[l][0], check2_mean)
+            assert np.allclose(obj2_var[l][0], check2_var)
+
+    # TODO resolve issue - right now I don't believe the current variance
+    # calculation is correct
+    @pytest.mark.xfail(reason="test needs to be finished")
+    def test_compute_surv_repr_probabilities_true(self, rec1, pop2, rec2):
+        """Test that compute_surv_repr_probabilities_true performs
+        correctly for a genome filled with 1's and one randomly generated."""
+        rec1.compute_surv_repr_probabilities_true()
+        rec2.compute_surv_repr_probabilities_true()
+        llist = ["repr", "surv"]
+        for k in ["mean", "var"]: assert sorted(rec1["prob_"+k].keys()) == llist
+        for k in ["mean", "var"]: assert sorted(rec2["prob_"+k].keys()) == llist
+
+        # Define parameters
+        n_snap,l1 = rec1["number_of_snapshots"], rec1["max_ls"]
+        ns1,mt1= rec1["n_states"], rec1["maturity"]
+        dims = {"surv":[n_snap,l1], "repr":[n_snap,l1-mt1]}
+        vmax = {"surv":rec1.p_surv(ns1-1), "repr":rec1.p_repr(ns1-1)}
+
+        l2,mt2,ns2 = pop2.max_ls, pop2.maturity, rec2["n_states"]
+        loci_all = pop2.sorted_loci()
+        loci = {"s":np.array(loci_all[:,:l2]),
+                "r":np.array(loci_all[:,l2:(2*l2-mt2)]),
+                "n":np.array(loci_all[:,(2*l2-mt2):]), "a":loci_all}
+
+        # Test vs expectation
+        for l in llist:
+            print l
+            data = loci[l[0]]
+            print "\ndata\n", data[:5]
+            values = rec2[l[0]+"_range"]
+            print "\nvalues\n", values
+            print "\nvalues[data]\n", (values[data])[:5]
+            print "...\n"
+            print "\nnp.var(data[values],0)\n", np.var((values[data]),0)
+            print "\nrec2\n", rec2["prob_var"][l][0]
+            check_mean = np.mean(values[data],0)
+            if l=="repr": check_var = np.var(values[data],0)#/20*pop2.N
+            else: check_var = np.var(values[data],0)#*pop2.N
+#            print check_var[0]/rec2["prob_var"][l][0][0]
+#            print check_var[1]/rec2["prob_var"][l][0][1]
+            # TODO why is this scaled like this ???
             assert np.array_equal(rec1["prob_mean"][l], np.tile(vmax[l], dims[l]))
             assert np.array_equal(rec1["prob_var"][l], np.zeros(dims[l]))
+            assert np.allclose(check_mean, rec2["prob_mean"][l][0])
+            assert np.allclose(check_var, rec2["prob_var"][l][0])
 
+    # TODO general case
     def test_surv_repr_probabilities_junk(self, rec1):
         """Test that compute_surv_repr_probabilities_junk performs
-        correctly for a genome filled with 1's.""" #! TODO: How about in a normal case?
+        correctly for a genome filled with 1's."""
         rec1.compute_surv_repr_probabilities_junk()
         # Define parameters
         m,nn,ns = rec1["number_of_snapshots"],rec1["n_neutral"],rec1["n_states"]
@@ -318,38 +435,76 @@ class TestRecord:
             assert np.array_equal(rec1["junk_mean"][l], np.tile(vmax[l], [m,nn]))
             assert np.array_equal(rec1["junk_var"][l], np.zeros([m,nn]))
 
-    def test_compute_cmv_surv(self, rec1):
+    # DONE
+    def test_compute_cmv_surv(self, rec1, pop2, rec2):
         """Test that cumulative survival probabilities are computed
-        correctly for a genome filled with 1's."""
+        correctly for a genome filled with 1's and one randomly generated."""
         rec1.compute_cmv_surv()
-        # Define parameters
-        m,ls,ns = rec1["number_of_snapshots"], rec1["max_ls"], rec1["n_states"]
-        # Test vs expectation
-        cs = np.tile(rec1.p_surv(ns-1)**np.arange(ls), [m,1])
-        assert np.allclose(rec1["cmv_surv"], cs)
-        assert np.allclose(rec1["junk_cmv_surv"], cs)
+        rec2.compute_surv_repr_probabilities_junk()
+        rec2.compute_cmv_surv()
 
-    def test_compute_mean_repr(self, rec1):
+        # Define parameters
+        n_snap,l1,ns1 = rec1["number_of_snapshots"], rec1["max_ls"],\
+                rec1["n_states"]
+        check1 = np.tile(rec1.p_surv(ns1-1)**np.arange(l1), [n_snap,1])
+
+        l2,mt2,ns2 = pop2.max_ls, pop2.maturity, rec2["n_states"]
+        loci_all = pop2.sorted_loci()
+        loci = {"s":np.array(loci_all[:,:l2]),
+                "r":np.array(loci_all[:,l2:(2*l2-mt2)]),
+                "n":np.array(loci_all[:,(2*l2-mt2):]), "a":loci_all}
+        values = rec2["s_range"]
+        check2 = np.ones(l2)
+        check2[1:] = np.cumprod(np.mean(values[loci["s"]],0))[:-1]
+        check2_junk = np.ones(l2)
+        check2_junk[1:] = np.cumprod(np.tile(np.mean(values[loci["n"]]),l2-1))
+        # Test vs expectation
+        assert np.allclose(rec1["cmv_surv"], check1)
+        assert np.allclose(rec1["junk_cmv_surv"], check1)
+        assert np.allclose(rec2["cmv_surv"][0], check2)
+        assert np.allclose(rec2["junk_cmv_surv"][0], check2_junk)
+
+    # DONE
+    def test_compute_mean_repr(self, rec1, pop2, rec2):
         """Test that mean reproduction probability calculations are
-        computed correctly for a genome filled with 1's."""
+        computed correctly for a genome filled with 1's and one randomly generated.
+        """
         rec1.compute_mean_repr()
+        rec2.compute_mean_repr()
+
         # Define parameters
         sex = rec1["repr_mode"] in ["sexual", "assort_only"]
-        div = 2 if sex else 1
-        m,ns = rec1["number_of_snapshots"], rec1["n_states"]
-        ls,mt = rec1["max_ls"], rec1["maturity"]
+        div = 2.0 if sex else 1.0
+        n_snap,ns1 = rec1["number_of_snapshots"], rec1["n_states"]
+        l1,mt1 = rec1["max_ls"], rec1["maturity"]
+        mr = np.tile(rec1.p_repr(ns1-1), [n_snap,l1])
+        mr[:,:mt1] = 0
+
+        l2,mt2,ns2 = pop2.max_ls, pop2.maturity, rec2["n_states"]
+        loci_all = pop2.sorted_loci()
+        loci = {"s":np.array(loci_all[:,:l2]),
+                "r":np.array(loci_all[:,l2:(2*l2-mt2)]),
+                "n":np.array(loci_all[:,(2*l2-mt2):]), "a":loci_all}
+        values = rec2["r_range"]
+        check2 = np.zeros(l2)
+        check2[mt2:] = np.mean(values[loci["r"]],0)[:]
+        check2_junk = np.zeros(l2)
+        check2_junk[mt2:] = np.tile(np.mean(values[loci["n"]]), l2-mt2)[:]
+
         # Test vs expectation
-        mr = np.tile(rec1.p_repr(ns-1), [m,ls])
-        mr[:,:mt] = 0
         assert np.allclose(rec1["mean_repr"], mr/div)
         assert np.allclose(rec1["junk_repr"], mr/div)
+        assert np.allclose(rec2["mean_repr"], check2/div)
+        assert np.allclose(rec2["junk_repr"][0], check2_junk/div)
 
-    def test_compute_fitness(self, rec1):
+    # DONE
+    def test_compute_fitness(self, rec1, rec2):
         """Test that per-age and total fitness are computed correctly
-        for a genome filled with 1's."""
+        for a genome filled with 1's and one randomly generated."""
         # Update record
         rec1.compute_fitness()
-        # Test vs expectation
+        rec2.compute_fitness()
+        # 1's genome
         assert np.allclose(rec1["fitness_term"],
                 rec1["cmv_surv"]*rec1["mean_repr"])
         assert np.allclose(rec1["junk_fitness_term"],
@@ -357,26 +512,75 @@ class TestRecord:
         assert np.allclose(rec1["fitness"], np.sum(rec1["fitness_term"], 1))
         assert np.allclose(rec1["junk_fitness"],
                 np.sum(rec1["junk_fitness_term"], 1))
+        # random genome
+        assert np.allclose(rec2["fitness_term"],
+                rec2["cmv_surv"]*rec2["mean_repr"])
+        assert np.allclose(rec2["junk_fitness_term"],
+                rec2["junk_cmv_surv"]*rec2["junk_repr"])
+        assert np.allclose(rec2["fitness"], np.sum(rec2["fitness_term"], 1))
+        assert np.allclose(rec2["junk_fitness"],
+                np.sum(rec2["junk_fitness_term"], 1))
 
-    def test_compute_reproductive_value(self, rec1):
+    # DONE
+    def test_compute_reproductive_value(self, rec1, rec2):
         # Update record
         rec1.compute_reproductive_value()
+        rec2.compute_reproductive_value()
         # Test vs expectation
-        f = np.fliplr(np.cumsum(np.fliplr(rec1["fitness_term"]),1))
-        jf = np.fliplr(np.cumsum(np.fliplr(rec1["junk_fitness_term"]),1))
-        assert np.allclose(rec1["repr_value"], f/rec1["cmv_surv"])
-        assert np.allclose(rec1["junk_repr_value"], jf/rec1["junk_cmv_surv"])
+        f1 = np.fliplr(np.cumsum(np.fliplr(rec1["fitness_term"]),1))
+        jf1 = np.fliplr(np.cumsum(np.fliplr(rec1["junk_fitness_term"]),1))
+        f2 = np.fliplr(np.cumsum(np.fliplr(rec2["fitness_term"]),1))
+        jf2 = np.fliplr(np.cumsum(np.fliplr(rec2["junk_fitness_term"]),1))
+        assert np.allclose(rec1["repr_value"], f1/rec1["cmv_surv"])
+        assert np.allclose(rec1["junk_repr_value"], jf1/rec1["junk_cmv_surv"])
+        assert np.allclose(rec2["repr_value"], f2/rec2["cmv_surv"])
+        assert np.allclose(rec2["junk_repr_value"], jf2/rec2["junk_cmv_surv"])
 
-    def test_compute_bits(self, rec1):
+    # DONE
+    def test_compute_bits(self, rec1, pop2, rec2):
         """Test computation of mean and variance in bit value along
-        chromosome for a genome filled with 1's."""
+        chromosome for a genome filled with 1's and one randomly generated."""
         rec1.compute_bits()
-        # Define parameters
-        m,c = rec1["number_of_snapshots"],rec1["chr_len"]
-        # Test against expectation
-        assert np.array_equal(rec1["n1"], np.ones([m,c]))
-        assert np.array_equal(rec1["n1_var"], np.zeros([m,c]))
+        rec2.compute_bits()
 
+        # 1's genome
+        n_snap,chr_len1 = rec1["number_of_snapshots"],rec1["chr_len"]
+        assert np.array_equal(rec1["n1"], np.ones([n_snap,chr_len1]))
+        assert np.array_equal(rec1["n1_var"], np.zeros([n_snap,chr_len1]))
+
+        # random genome
+        nbase = rec2["n_base"]
+        # choose one locus at random and fill with ones to check for correct order
+        rbit = np.random.choice(xrange(len(pop2.genmap)))
+        print "rbit: ", rbit
+        print "pop2.genmap[rbit]: ", pop2.genmap[rbit]
+        rlocus = np.array([rbit*nbase + c for c in xrange(nbase)])
+        rlocus = np.stack([rlocus, rlocus+pop2.chr_len])
+        # get the regarding locus in sorted genome
+        apo = pop2.genmap[rbit] # age + offset
+        if apo/pop2.neut_offset > 0:
+            abit = 2*pop2.max_ls - pop2.maturity + apo%pop2.neut_offset
+        elif apo/pop2.repr_offset > 0:
+            abit = pop2.max_ls - pop2.maturity + apo%pop2.repr_offset
+        else:
+            abit = apo
+        alocus = np.array([abit*nbase + c for c in xrange(nbase)])
+        genomes = copy.deepcopy(pop2.genomes)
+        genomes[:,rlocus] = 1
+        genomes = genomes.reshape(pop2.N*2, pop2.chr_len)
+        order = np.ndarray.flatten(np.array([pop2.genmap_argsort*nbase + c for c in\
+                xrange(nbase)]), order="F")
+        check1 = np.mean(genomes,0)[order]
+        check11 = rec2["n1"][0]
+        check11[alocus] = 1
+        check2 = np.var(genomes,0)[order]
+        check22 = rec2["n1_var"][0]
+        check22[alocus] = 0
+        np.set_printoptions(threshold=np.nan)
+        assert np.allclose(check11, check1)
+        assert np.allclose(check22, check2)
+
+    # TODO general case
     def test_compute_entropies(self, rec1):
         """Test computation of per-bit and per-locus entropy in a
         population, for a genome filled with 1's."""
@@ -388,6 +592,7 @@ class TestRecord:
         assert sorted(rec1["entropy_gt"].keys()) == ["a", "n", "r", "s"]
         for v in rec1["entropy_gt"].values(): assert np.array_equal(v,z)
 
+    # TODO general case
     def test_compute_actual_death(self, rec1):
         """Test if compute_actual_death stores expected results for
         artificial data."""
@@ -446,23 +651,22 @@ class TestRecord:
             assert np.array_equal(rec1[s+"_window_mean"],
                     np.tile(exp_val[s],shape))
 
-    def test_finalise(self, rec1, rec2):
+    # DONE (maybe do it with rec2, since more genereal)
+    def test_finalise(self, rec1, rec1_copy):
         """Test that finalise is equivalent to calling all finalisation
         methods separately."""
-        print rec1["snapshot_generation_distribution"]
-        print rec2["snapshot_generation_distribution"]
-        # First check that rec1 is finalised and rec2 is not
-        assert rec2["actual_death_rate"] == 0
+        # First check that rec1 is finalised and rec1_copy is not
+        print "rec1_copy[actual_death_rate]\n", rec1_copy["actual_death_rate"]
+        print "rec1[actual_death_rate]\n", rec1["actual_death_rate"]
+        assert rec1_copy["actual_death_rate"] == 0
         assert type(rec1["actual_death_rate"]) is np.ndarray
-        # Then finalise rec2 and compare
-        rec2.finalise()
-        print rec1["snapshot_generation_distribution"]
-        print rec2["snapshot_generation_distribution"]
-        assert type(rec2["actual_death_rate"]) is np.ndarray
-        for k in rec2.keys():
+        # Then finalise rec1_copy and compare
+        rec1_copy.finalise()
+        assert type(rec1_copy["actual_death_rate"]) is np.ndarray
+        for k in rec1_copy.keys():
             print k
             if k in ["snapshot_pops", "final_pop", "snapshot_age_distribution"]: continue
-            o1, o2 = rec1[k], rec2[k]
+            o1, o2 = rec1[k], rec1_copy[k]
             if k == "actual_death_rate":
                 assert o1.shape == o2.shape
                 assert np.sometrue(np.isnan(o1))

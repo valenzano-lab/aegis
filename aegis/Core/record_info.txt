@@ -32,7 +32,10 @@ n_neutral
 n_base
 max_fail
 max_ls
-# float
+
+#########
+# float #
+#########
 g_dist_n
 g_dist_s
 g_dist_r
