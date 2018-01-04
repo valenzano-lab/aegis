@@ -134,7 +134,7 @@ class Run:
         if self.complete and not self.dieoff:
             self.record.finalise()
         #! TODO: What about if dieoff?
-    
+
     def record_stage(self):
         """Record and report population information, as appropriate for
         the stage number and run settings."""
@@ -153,7 +153,7 @@ class Run:
         # Decide whether to take a detailed snapshot
         snapshot = -1
         if not self.conf.auto():
-            if self.n_stage in self.conf["snapshot_stages"]: 
+            if self.n_stage in self.conf["snapshot_stages"]:
                 snapshot = self.n_snap
         else:
             obs = np.min(self.population.generations)
@@ -175,7 +175,6 @@ class Run:
     def test_complete(self):
         """Test whether a run is complete following a given stage,
         under fixed and automatic stage counting."""
-        self.complete = self.dieoff
         if not self.dieoff and self.conf.auto():
             gen = (np.min(self.population.generations) >= self.conf["min_gen"])
             stg = (self.n_stage >= self.conf["max_stages"])
