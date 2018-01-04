@@ -4,7 +4,7 @@ import pytest, random, copy
 import numpy as np
 
 # Import fixtures
-from test_1_Config import conf, conf_path
+from test_1_Config import conf, conf_path, ran_str
 from test_2a_Population_init import pop
 
 precision = 0.02
@@ -23,10 +23,12 @@ class TestPopulationSubpop:
         ab, vr = age_range, np.linspace(0,1,2*p.n_base+1)
         # 1: Selection probability of 1
         p.genomes[:,:] = 1
+        p.loci = p.sorted_loci()
         gs = p.get_subpop(ab, p.sorted_loci()[:,which_loci], vr)
         assert np.sum(gs) == p.N
         # 2: Selection probability of 0
         p.genomes[:,:] = 0
+        p.loci = p.sorted_loci()
         gs = p.get_subpop(ab, p.sorted_loci()[:,which_loci], vr)
         assert np.sum(gs) == 0
 
@@ -44,6 +46,7 @@ class TestPopulationSubpop:
         x = random.random()
         # Iid Bernoulli-distributed bits in all genomes
         p.genomes = chance(x, p.genomes.shape).astype(int)
+        p.loci = p.sorted_loci()
         gs = p.get_subpop(ab, p.sorted_loci()[:,which_loci], vr)
         assert np.isclose(np.mean(gs), x, atol=precision*2)
 
@@ -59,6 +62,7 @@ class TestPopulationSubpop:
         which_loci = np.random.randint(0, len(p.genmap), np.diff(age_range))
         ab, vr = age_range, np.linspace(0,1,2*p.n_base+1)
         p.genomes[:,:] = 1 # Selection probability of 1 if included
+        p.loci = p.sorted_loci()
         # 1: All too young
         p.ages[:] = min_age - 1
         gs = p.get_subpop(ab, p.sorted_loci()[:,which_loci], vr)
@@ -91,6 +95,7 @@ class TestPopulationSubpop:
         p.genomes[:x,:] = 0
         p.genomes[x:2*x,:] = 1
         p.genomes[2*x:,:] = chance(y,p.genomes[2*x:,:].shape)
+        p.loci = p.sorted_loci()
         # Calculate subpop
         age_range = np.array([0,p.max_ls])
         which_loci = np.random.randint(0, len(p.genmap), np.diff(age_range))
@@ -111,10 +116,12 @@ class TestPopulationSubpop:
         ab,vr = age_range, np.linspace(-n, n, 2 * p.n_base + 1)
         # 1: Selection probability > 1 -> probability == 1
         p.genomes[:,:] = 1
+        p.loci = p.sorted_loci()
         gs = p.get_subpop(ab, p.sorted_loci()[:,which_loci], vr)
         assert np.sum(gs) == p.N
         # 2: Selection probability < 0 -> probability == 0
         p.genomes[:,:] = 0
+        p.loci = p.sorted_loci()
         gs = p.get_subpop(ab, p.sorted_loci()[:,which_loci], vr)
         assert np.sum(gs) == 0
 
@@ -128,9 +135,11 @@ class TestPopulationDeath:
         """Test if self.death() correctly inverts death probabilities
         and incorporates starvation factor to get survivor probabilities
         and survivor array."""
+        # Generate and validate test population
         p,x = pop.clone(), random.random()
         p.add_members(p)
         p.add_members(p)
+        assert len(p.genomes) == len(p.loci) == len(p.ages)
         pmin, pmax = 0.8, 0.99
         n,surv_r = float(p.N), np.linspace(pmin, pmax, 2*pop.n_base+1)
         starvation = random.uniform(2,5)
@@ -141,7 +150,8 @@ class TestPopulationDeath:
         surv_pos = np.array([range(p.n_base) + y for y in surv_loci*p.n_base])
         surv_pos = np.append(surv_pos, surv_pos + p.chr_len)
         p.genomes[:, surv_pos] =\
-                chance(x, [p.N, len(surv_pos)]).astype(int)
+                chance(x, (p.N, len(surv_pos))).astype(int)
+        p.loci = p.sorted_loci() # Update loci for new genomes
         # Call and test death function, with and without starvation
         p2 = p.clone()
         p.death(surv_r, 1)
@@ -149,9 +159,9 @@ class TestPopulationDeath:
         # Define observation and expectation in terms of possible range
         s1 = pmin + (pmax-pmin)*x
         s2 = 1-(1-s1)*starvation
-        print p.N/n, x
+        print p.N/n, s1, x, p.N/n - s1
         assert np.isclose(p.N/n, s1, atol=precision)
-        print p2.N/n
+        print p2.N/n, s2, p2.N/n - s2
         assert np.isclose(p2.N/n, s2, atol=precision)
 
     def test_death_extreme_starvation(self, pop):
@@ -213,6 +223,7 @@ class TestPopulationGrowth:
         # Set chromosome 1 to 0's and chromosome 2 to 1's
         p.genomes[:,:p.chr_len] = 0
         p.genomes[:,p.chr_len:] = 1
+        p.loci = p.sorted_loci()
         # Condition 1: rrate = 0, chromosomes unchanged
         p1 = p.clone()
         p1.recombination(0.0)
@@ -236,6 +247,7 @@ class TestPopulationGrowth:
         # Set chromosome 1 to 0's and chromosome 2 to 1's
         p.genomes[:,:p.chr_len] = 0
         p.genomes[:,p.chr_len:] = 1
+        p.loci = p.sorted_loci()
         p.recombination(rrate)
         # Compute expected mean value of chromosome 1 (somewhat complicated)
         m, s = float(p.chr_len), 1-2*rrate
@@ -290,6 +302,41 @@ class TestPopulationGrowth:
         # All four child chromosomes from a different parent
         assert np.array_equal(np.unique(parent), np.sort(parent))
 
+    def test_assortment_genstats_pair(self, pop):
+        """Test that child generations and gentimes are correctly
+        computed for a single assorted parental pair."""
+        p,n = pop.clone(), 2
+        p.shuffle()
+        p.ages = np.random.randint(0, p.max_ls, p.N)
+        p.generations = np.random.randint(0, 100, p.N)
+        p.subtract_members(xrange(n,p.N)) # n random parents
+        # Make a copy, assort and test
+        p2 = p.clone()
+        p2.assortment()
+        assert p2.ages == np.mean(p.ages).astype(int)
+        assert p2.generations == np.max(p.generations)
+
+    def test_assortment_gentimes(self, pop):
+        """Test that child generations and gentimes are within expected
+        parameters for a larger assorted parental group."""
+        # Generate populations with random ages and n pairs
+        p,n = pop.clone(), 10
+        p.shuffle()
+        p.ages = np.random.randint(0, p.max_ls, p.N)
+        p.generations = np.random.randint(0, 100, p.N)
+        p.subtract_members(xrange(n*2,p.N)) # 2n random parents in n pairs
+        # Make a copy and assort
+        p2 = p.clone()
+        p2.assortment()
+        # Test that age sums match
+        s1, s2, n2 = np.sum(p.ages), np.sum(p2.ages), p2.N
+        print s1, 2*s2, s1-2*s2, n2
+        assert s1 - 2*s2 < n2
+        # Test that generation
+        g, outsum = np.sort(p.generations), np.sum(p2.generations)
+        minsum,maxsum = np.sum(g[1::2]), np.sum(g[n:])
+        assert minsum <= outsum and outsum <= maxsum
+
     # 4: Make_children (all modes)
     def test_make_children_child_ages_generations(self, pop):
         """Test that individuals produced by make_children are all of
@@ -303,14 +350,30 @@ class TestPopulationGrowth:
             assert np.array_equal(c.ages, np.zeros(c.N))
             assert np.array_equal(c.generations, np.ones(c.N))
 
+    def test_make_children_gentimes_noassort(self, pop):
+        """Test that individuals produced by make_children all have
+        generation times matching parental ages, in the absence of
+        assortment."""
+        p, rr = pop.clone(), np.linspace(1, 1, pop.n_base*2+1)
+        p.generations[:] = 0
+        assert np.array_equal(np.tile(0, p.N), p.gentimes)
+        for mode in ["asexual", "recombine_only"]:
+            print mode
+            p.repr_mode = mode
+            p.set_attributes(p.params())
+            c = p.make_children(rr, 1, 0, 1, 0)
+            assert np.array_equal(np.sort(p.ages[p.ages >= p.maturity]),
+                    np.sort(c.gentimes))
+        # See assortment tests for test of correct computation in sexual case
+
     def test_make_children_starvation(self, pop):
         """Test if make_children correctly incorporates starvation
         factors to get parentage probability."""
         # Define parameters and expected output
-        p,x = pop.clone(), 1.0
+        p,x,y = pop.clone(), 1.0, 3
         print x
-        p.add_members(p)
-        p.add_members(p)
+        for n in xrange(y): # Increase population by 2**y
+            p.add_members(p)
         pmin, pmax = 0.01, 0.2
         n = float(np.sum(p.ages >= p.maturity)) # of adults
         repr_r = np.linspace(pmin, pmax, 2*pop.n_base+1)
@@ -323,7 +386,8 @@ class TestPopulationGrowth:
         repr_pos = np.array([range(p.n_base) + y for y in repr_loci*p.n_base])
         repr_pos = np.append(repr_pos, repr_pos + p.chr_len)
         p.genomes[:, repr_pos] =\
-                chance(x, [p.N, len(repr_pos)]).astype(int)
+                chance(x, (p.N, len(repr_pos))).astype(int)
+        p.loci = p.sorted_loci()
         # Call and test death function, with and without starvation
         for mode in ["sexual", "asexual", "recombine_only", "assort_only"]:
             p.repr_mode = mode
@@ -395,6 +459,7 @@ class TestPopulationGrowth:
         them to the population."""
         p = pop.clone()
         p.genomes[:,:] = 1
+        p.loci = p.sorted_loci()
         r_range = np.linspace(0,1,2*p.n_base+1)
         c = p.make_children(r_range, 1, 0, 1, 0)
         p.growth(r_range, 1, 0, 1, 0)

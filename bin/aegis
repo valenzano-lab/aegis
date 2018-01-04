@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 
 # Import libraries and define arguments
-import argparse,os,sys,warnings,pyximport; pyximport.install()
+import argparse,os,sys,warnings
+# import pyximport; pyximport.install()
 # ignore pandas warnings, but also all FutureWarning
 # TODO: handle this better
 warnings.simplefilter(action='ignore', category=FutureWarning)
