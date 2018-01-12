@@ -14,6 +14,7 @@ parser = argparse.ArgumentParser(description='Run the genome ageing simulation.'
 parser.add_argument('script', help="AEGIS script to run:\n\
     run - run the simulation with the config file specified in\n\
           infile\n\
+    plot - plot data from record object specified in infile\n\
     getconfig - copies the default config file to infile")
 parser.add_argument('infile', help="path to input config file")
 parser.add_argument('-m', '--module', metavar='<str>', default="Core",
