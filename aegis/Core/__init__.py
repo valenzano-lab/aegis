@@ -23,9 +23,17 @@ def getconfig(outpath):
     """Create a default config file at the specified destination."""
     dirpath = os.path.dirname(os.path.realpath(__file__))
     inpath = os.path.join(dirpath, "config_default.py")
-    shutil.copyfile(inpath, outpath) 
+    shutil.copyfile(inpath, outpath)
 
 def plot(record_file):
     a = Plotter(record_file)
     a.generate_plots()
     a.save_plots()
+
+def plot_n1_sliding_window(record_file, wsize):
+    a = Plotter(record_file)
+    a.compute_n1_windows(wsize)
+    a.gen_save_single("n1_mean_sliding_window")
+    a.gen_save_single("n1_var_sliding_window")
+    a.gen_save_single("n1_mean_sliding_window_grid")
+    a.gen_save_single("n1_var_sliding_window_grid")

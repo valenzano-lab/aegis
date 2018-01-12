@@ -25,7 +25,12 @@ parser.add_argument('-r', type=int, metavar="<int>", default=100,
         help="report information every <int> stages (default: 100)")
 parser.add_argument('-p', '--profile', metavar='<str>', default="",
         help="profile genome simulation with cProfile and save to given path")
+parser.add_argument('-ws', '--window-size', type=int, metavar='<int>',
+        help="set window size for n1 plots")
 args = parser.parse_args()
+
+if args.script!="plot_n1_sliding_window" and args.window_size:
+    parser.error("--window-size can only be set when script=plot_n1_sliding_window")
 
 if args.profile != "":
     import cProfile, pstats, StringIO
@@ -43,6 +48,9 @@ elif args.script == "getconfig":
 
 elif args.script == "plot":
     module.plot(inpath)
+
+elif args.script == "plot_n1_sliding_window":
+    module.plot_n1_sliding_window(inpath, args.window_size)
 
 if args.profile != "":
     pr.create_stats()

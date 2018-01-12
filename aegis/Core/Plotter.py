@@ -92,6 +92,23 @@ class Plotter:
         finally:
             rfile.close()
 
+    def compute_n1_windows(self, wsize):
+        """Compute sliding windows for n1 with desired window size."""
+        w = self.record.get_window("n1", wsize)
+        self.record["n1_window_mean"] = np.mean(w, 2)
+        self.record["n1_window_var"] = np.var(w, 2)
+
+    def gen_save_single(self, key):
+        """Generate and save a single plot."""
+        plot = getattr(self, "plot_"+key)()
+        outdir = self.record["output_prefix"] + "_plots"
+        outpath = os.path.join(outdir, key+".png")
+        if os.path.exists(outpath): # overwrite existing plot
+            os.unlink(outpath)
+        if not os.path.exists(outdir):
+            os.makedirs(outdir)
+        plot.save(outpath)
+
     def generate_plots(self):
         for m in self.plot_methods:
             self.plots.append(getattr(self, m)())
