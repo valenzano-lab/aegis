@@ -378,9 +378,15 @@ class Config(Infodict):
             return
         # Compute analytical parameters
         alpha, beta = self["m_rate"], self["m_rate"]*self["m_ratio"]
-        a, p = 1 - alpha - beta, beta/(alpha+beta)
-        A, P = abs(a), abs(p - self["g_dist_n"])
-        k = (math.log10(self["delta"]) - math.log10(P))/math.log10(A)
+        # Will's computation
+#        a, p = 1 - alpha - beta, beta/(alpha+beta)
+#        A, P = abs(a), abs(p - self["g_dist_n"])
+#        k = (math.log10(self["delta"]) - math.log10(P))/math.log10(A)
+        # Arian's computation
+        y = self["g_dist_n"]
+        x = 1-y
+        k = math.log10(self["delta"]*(alpha+beta)/abs(alpha*y-beta*x)) / \
+                math.log10(abs(1-alpha-beta))
         # Assign generation threshold
         self.put("min_gen", int(k*self["scale"]),
                 "Minimum generation for automatic stage counting.")
@@ -390,7 +396,7 @@ class Config(Infodict):
             ).astype(int), "Generation states at which to record detailed\
                     population information, under automatic stage counting.\
                     [int array]")
-        self.put("snapshot_generations_remaining", 
+        self.put("snapshot_generations_remaining",
                 np.copy(self["snapshot_generations"]),
                 "Remaining snapshot generation points in simulation run;\
                         eliminated as each point is reached. [int array].")
