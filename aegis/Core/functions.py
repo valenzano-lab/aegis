@@ -30,12 +30,12 @@ def init_genomes():
     return np.array([[-1],[-1]])
 
 def init_generations():
-    """Return an array specifying that a new generation vector should be 
+    """Return an array specifying that a new generation vector should be
     generated during Population initialisation."""
     return np.array([-1])
 
 def init_gentimes():
-    """Return an array specifying that a new generation-time vector should be 
+    """Return an array specifying that a new generation-time vector should be
     generated during Population initialisation."""
     return np.array([-1])
 
@@ -60,7 +60,7 @@ def timediff(starttime, endtime):
     for n in xrange(len(units)):
         g = getattr(time, units[n])
         report = (g != 0)
-        if report: outstr += "{0} {1}{2}".format(g, unit, after[n])
+        if report: outstr += "{0} {1}{2}".format(g, units[n], after[n])
     return outstr
 # TODO: Test this
 
