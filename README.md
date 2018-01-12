@@ -46,9 +46,10 @@ investigate different questions of evolutionary biology without sacrificing
 functionality attained so far.
 
 Other practices we work by:
+
 * [GitFlow](https://datasift.github.io/gitflow/IntroducingGitFlow.html)
 * [Git housekeeping](https://railsware.com/blog/2014/08/11/git-housekeeping-tutorial-clean-up-outdated-branches-in-local-and-remote-repositories/")
-* [pytest](https://docs.pytest.org/en/latest/) testing
+* [pytest testing](https://docs.pytest.org/en/latest/)
 
 #### Helpful material for developing
 This is a schematic representation of aegis class hierarchy in the Core module:
@@ -109,9 +110,10 @@ aegis run my_config -v -r 20
 Once simulation has finished, a directory will have been written in your cwd.
 In *my_config.py* you had to designate what files will be saved at completion.
 This could have been:
-- 0: records only
-- 1: records and final populations
-- 2: records and final populations and all snapshot populations
+
+* 0: records only
+* 1: records and final populations
+* 2: records and final populations and all snapshot populations
 
 Also you had to designate the prefix of the output directory; say `sim1`,
 then your files are saved in  `./sim1_files`.
