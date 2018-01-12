@@ -72,7 +72,7 @@ class Record(Infodict):
             "Distribution of ages in the population at each snapshot.")
         self.put("snapshot_gentime_distribution", np.zeros([ns,ml]),
             "Distribution of gentimes in the population at each snapshot.")
-        self.put("snapshot_generation_distribution", 
+        self.put("snapshot_generation_distribution",
             np.zeros([ns, np.ceil(n/float(mt)).astype(int)+1]),
             "Distribution of generations in the population at each snapshot.")
         # Genotype sum statistics (density and average)
@@ -218,8 +218,8 @@ class Record(Infodict):
                 key = "snapshot_{}_distribution".format(k)
                 newval = np.bincount(getattr(p, "{}s".format(k)),
                         minlength=minlen[k])/float(p.N)
-                print key, minlen[k], newval.shape
-                print newval
+                #print key, minlen[k], newval.shape
+                #print newval
                 self[key][s] = newval
 
     def compute_locus_density(self):

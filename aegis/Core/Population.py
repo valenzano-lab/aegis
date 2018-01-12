@@ -108,7 +108,7 @@ class Population:
         self.genomes = np.copy(genomes)
         self.generations = np.copy(generations)
         self.gentimes = np.copy(gentimes)
-        self.loci = self.sorted_loci() 
+        self.loci = self.sorted_loci()
 
     def make_genome_array(self):
         """Generate initial genomes for start_pop individuals according to
@@ -154,7 +154,7 @@ class Population:
         return Population(self.params(), self.genmap,
                 self.ages, self.genomes, self.generations, self.gentimes)
 
-    def attrib_rep(self, function, pop2="", 
+    def attrib_rep(self, function, pop2="",
             attrs=["ages", "genomes", "generations", "gentimes", "loci"]):
         """Repeat an operation over all relevant attributes, then update N."""
         for attr in attrs:
@@ -205,7 +205,7 @@ class Population:
     ## CHROMOSOMES AND LOCI ##
 
     def chrs(self, reshape):
-        """Return an array containing the first and second chromosomes 
+        """Return an array containing the first and second chromosomes
         of each individual in the population, in either 2D individual/bit
         or 3D individual/locus/bit configuration."""
         if not reshape:
@@ -216,15 +216,15 @@ class Population:
             # [chromosome, individual, locus, bit]
             return self.genomes.reshape((self.N,2,len(self.genmap),self.n_base)
                     ).transpose(1,0,2,3)
-        #! Not happy with the transposition efficiency-wise, but having 
+        #! Not happy with the transposition efficiency-wise, but having
         # individuals first screws up recombination/assortment in ways I
         # don't know how to efficiently fix...
 
     def sorted_loci(self):
-        """Return the sorted locus genotypes of the individuals in the 
+        """Return the sorted locus genotypes of the individuals in the
         population, summed within each locus and across chromosomes."""
         # Get chromosomes of population, arranged by locus
-        chrx = self.chrs(True) 
+        chrx = self.chrs(True)
         # Collapse bits into locus sums and add chromosome values together
         # to get total genotype value for each locus (dim1=indiv, dim2=locus)
         locs = np.einsum("ijkl->jk", chrx)
@@ -250,7 +250,7 @@ class Population:
 
     ## GROWTH AND DEATH ##
 
-    def get_subpop(self, 
+    def get_subpop(self,
             age_bounds, # Age cohorts to consider
             genotypes, # Relevant per-age GT sums
             val_range): # GT:probability map
@@ -269,7 +269,7 @@ class Population:
                 self.ages<age_bounds[1])
         return subpop * inc
 
-    def death(self, 
+    def death(self,
             s_range, # Survival probabilities
             penf): # Starvation penalty factor
         """Select survivors and kill rest of population."""
@@ -282,7 +282,7 @@ class Population:
         survivors = self.get_subpop(age_bounds, self.surv_loci(), s_range)
         self.subset_members(survivors)
 
-    def make_children(self, 
+    def make_children(self,
             r_range, # Reprodn probabilities
             penf, # Starvation penalty factor
             m_rate, # Per-bit mutation rate
@@ -303,7 +303,7 @@ class Population:
         if self.recombine: children.recombination(r_rate)
         if self.assort: children.assortment()
         # Mutate children and add to population
-        children.mutate(m_rate, m_ratio) 
+        children.mutate(m_rate, m_ratio)
         children.increment_generations()
         children.gentimes = children.ages + 0L # Record parental ages
         children.ages[:] = 0L # Make newborn
@@ -341,7 +341,7 @@ class Population:
             r_sites = chance(r_rate, (self.N, self.chr_len)).astype(int)
             # Convert into [1,-1]
             r_sites = np.array([1,-1])[r_sites]
-            # Determine crossover status of each position 
+            # Determine crossover status of each position
             # (1 = no crossover, -1 = crossover)
             which_chr = np.cumprod(r_sites, 1)
             # Convert to 0 = no crossover, 1 = crossover
@@ -354,7 +354,7 @@ class Population:
     def assortment(self):
         """Pair individuals into breeding pairs and generate children
         through random assortment."""
-        print self.N, len(self.generations)
+        #print self.N, len(self.generations)
         if self.N == 1:
             raise ValueError("Cannot perform assortment with a single parent.")
         if self.N % 2 != 0: # If odd number of parents, discard one at random
@@ -377,8 +377,8 @@ class Population:
         self.genomes[::2,:self.chr_len] = chrs[which_chr_0, parent_0]
         self.genomes[::2,self.chr_len:] = chrs[which_chr_1, parent_1]
         # Update generations as the max of two parents
-        print self.N, len(self.generations)
-        self.generations[::2] = np.maximum(self.generations[::2], 
+        #print self.N, len(self.generations)
+        self.generations[::2] = np.maximum(self.generations[::2],
                 self.generations[1::2])
         # Update ages as rounded mean of two parents (for gentime recording)
         self.ages[::2] += self.ages[1::2]
@@ -386,7 +386,7 @@ class Population:
         self.subset_members(np.tile([True,False], self.N/2))
         # TODO: Consider implemeting more sophisticated rounding, e.g.
         # randomise between upper and lower integer
- 
+
     # Startpop method
 
     def __startpop__(self, pop_number):
@@ -428,7 +428,7 @@ class Outpop:
 
     def toPop(self):
         """Make cythonised Population object from this Outpop."""
-        return Population(self.params(), self.genmap, self.ages, 
+        return Population(self.params(), self.genmap, self.ages,
                 self.genomes, self.generations, self.gentimes)
 
     def clone(self):
@@ -449,7 +449,7 @@ class Outpop:
         if isinstance(other, self.__class__): return not self.__eq__(other)
         return NotImplemented
     def __hash__(self):
-        return hash(tuple(self.ages, self.genomes, self.generations, 
+        return hash(tuple(self.ages, self.genomes, self.generations,
             self.gentimes, self.params()))
 
     # Startpop method
