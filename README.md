@@ -53,7 +53,7 @@ Other practices we work by:
 #### Helpful material for developing
 This is a schematic representation of aegis class hierarchy in the Core module:
 
-![aegis class hierarchy](./ach.png)
+![aegis class hierarchy](./readme_metadata/ach.png)
 
 ## Features
 It is highly advised to read **this publication** to better understand both the 
@@ -109,9 +109,9 @@ aegis run my_config -v -r 20
 Once simulation has finished, a directory will have been written in your cwd.
 In *my_config.py* you had to designate what files will be saved at completion.
 This could have been:
-* 0: records only
-* 1: records and final populations
-* 2: records and final populations and all snapshot populations
+- 0: records only
+- 1: records and final populations
+- 2: records and final populations and all snapshot populations
 
 Also you had to designate the prefix of the output directory; say `sim1`,
 then your files are saved in  `./sim1_files`.
@@ -138,7 +138,7 @@ TODO Link configuration file and explain them.
 TODO Link configuration file and explain them.
 
 ## Related publications
-[An In Silico Model to Simulate the Evolution of Biological Aging](www.biorxiv.org/content/early/2016/01/26/037952)
+[An In Silico Model to Simulate the Evolution of Biological Aging](https://www.biorxiv.org/content/early/2016/01/26/037952)
 
 ## Team
 * Dario Valenzano   Dario.Valenzano@age.mpg.de
