@@ -72,8 +72,9 @@ class Record(Infodict):
             "Distribution of ages in the population at each snapshot.")
         self.put("snapshot_gentime_distribution", np.zeros([ns,ml]),
             "Distribution of gentimes in the population at each snapshot.")
+        print conf["object_max_age"]
         self.put("snapshot_generation_distribution",
-            np.zeros([ns, np.ceil(n/float(mt)).astype(int)+1]),
+            np.zeros([ns, np.ceil(conf["object_max_age"]/float(mt)).astype(int)+1]),
             "Distribution of generations in the population at each snapshot.")
         # Genotype sum statistics (density and average)
         putzero("density_per_locus",
@@ -209,18 +210,38 @@ class Record(Infodict):
     def compute_snapshot_properties(self):
         """Compute basic properties (ages, gentimes, etc) of snapshot
         populations during finalisation."""
-        n = self["number_of_stages"] if not self.auto() else self["max_stages"]
-        g = np.ceil(n/float(self["maturity"])).astype(int)+1
         for s in xrange(self["number_of_snapshots"]):
             p = self["snapshot_pops"][s]
+            n = p.object_max_age
+            g = np.ceil(n/float(self["maturity"])).astype(int)+1
             minlen = {"age":p.max_ls, "gentime":p.max_ls, "generation":g}
             for k in ["age", "gentime", "generation"]:
                 key = "snapshot_{}_distribution".format(k)
                 newval = np.bincount(getattr(p, "{}s".format(k)),
                         minlength=minlen[k])/float(p.N)
-                #print key, minlen[k], newval.shape
-                #print newval
+#                print key, minlen[k], newval.shape
+#                print newval
                 self[key][s] = newval
+#        for s in xrange(self["number_of_snapshots"]):
+#            p = self["snapshot_pops"][s]
+#            minlen = {"age":p.max_ls, "gentime":p.max_ls}
+#            for k in ["age", "gentime"]:
+#                key = "snapshot_{}_distribution".format(k)
+#                newval = np.bincount(getattr(p, "{}s".format(k)),
+#                        minlength=minlen[k])/float(p.N)
+#                print key, minlen[k], newval.shape
+#                print newval
+#                self[key][s] = newval
+#            # snapshot_generation_distribution
+#            gen_max = np.max(p.generations)
+#            gen_min = np.min(p.generations)
+#            minlen1 = gen_max - gen_min
+#            temp = p.generations-gen_min +1 #!!!
+#            temp[temp < 0] = 0
+#            newval = np.bincount(temp, minlength=minlen1)/float(p.N)
+#            print "snapshot_generation_distribution", minlen1, newval.shape
+#            print newval
+#            self["snapshot_generation_distribution"][s] = np.concatenate((np.zeros(gen_min),newval))
 
     def compute_locus_density(self):
         """Compute normalised distributions of sum genotypes for each locus in

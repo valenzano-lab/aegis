@@ -51,6 +51,7 @@ class Population:
         self.g_dist = params["g_dist"].copy() # Proportions of 1's in initial loci
         self.repr_offset = params["repr_offset"] # Genmap offset for repr loci
         self.neut_offset = params["neut_offset"] # Genmap offset for neut loci
+        self.object_max_age = params["object_max_age"] # Maximum age this Object can have in stages
 
     def set_initial_size(self, params, ages, genomes, generations, gentimes):
         """Determine population size from initial inputs."""
@@ -145,7 +146,8 @@ class Population:
                 "maturity":self.maturity,
                 "g_dist":self.g_dist,
                 "repr_offset":self.repr_offset,
-                "neut_offset":self.neut_offset
+                "neut_offset":self.neut_offset,
+                "object_max_age":self.object_max_age
                 }
         return p_dict
 
@@ -411,6 +413,7 @@ class Outpop:
         self.generations = np.copy(pop.generations)
         self.gentimes = np.copy(pop.gentimes)
         self.N = pop.N
+        self.object_max_age = pop.object_max_age
 
     def params(self):
         """Get population-initiation parameters from present population."""
@@ -422,7 +425,8 @@ class Outpop:
                 "maturity":self.maturity,
                 "g_dist":self.g_dist,
                 "repr_offset":self.repr_offset,
-                "neut_offset":self.neut_offset
+                "neut_offset":self.neut_offset,
+                "object_max_age":self.object_max_age
                 }
         return p_dict
 
@@ -455,6 +459,6 @@ class Outpop:
     # Startpop method
 
     def __startpop__(self, pop_number):
-        msg = "Setting seed directly from imported population."
+        msg = "Seed type: Outpop object.\nSetting seed directly from imported population."
         pop = self
         return (pop, msg)

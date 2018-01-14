@@ -84,17 +84,17 @@ class TestSimulationInit:
         s1.set_startpop(opop, -1)
         s2.set_startpop(opop, random.randint(-1e6, 1e6))
         s3.set_startpop(opop, random.random())
-        assert s1.startpop == opop
-        assert s2.startpop == opop
-        assert s3.startpop == opop
+        assert s1.startpop[0] == opop
+        assert s2.startpop[0] == opop
+        assert s3.startpop[0] == opop
         del s1.startpop, s2.startpop, s3.startpop
         # 2: Population
         s1.set_startpop(pop, -1)
         s2.set_startpop(pop, random.randint(-1e6, 1e6))
         s3.set_startpop(pop, random.random())
-        assert s1.startpop == opop
-        assert s2.startpop == opop
-        assert s3.startpop == opop
+        assert s1.startpop[0] == opop
+        assert s2.startpop[0] == opop
+        assert s3.startpop[0] == opop
 
     # TODO: Add tests for setting startpops from Record, Run and
     #       Simulation objects

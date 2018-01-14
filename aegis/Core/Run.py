@@ -20,30 +20,40 @@ from .Record import Record
 ## CLASS ##
 class Run:
     def __init__(self, config, startpop, n_run, report_n, verbose):
+        # init Run parameters
         self.log = ""
         self.conf = config.copy()
         self.surv_penf = 1.0
         self.repr_penf = 1.0
+        self.n_stage = 0
+        self.n_snap = 0
+        self.n_run = n_run
+        self.dieoff = False
+        self.complete = False
+        self.report_n = report_n
+        self.verbose = verbose
         self.resources = self.conf["res_start"]
         np.random.shuffle(self.conf["genmap"])
         self.genmap = self.conf["genmap"] # Not a copy
+        # init Population
+        #n = self.conf["number_of_stages"] if not self.auto() else self.conf["max_stages"]
         if startpop != "": # If given a seeding population
             self.population = startpop.clone()
             # Adopt from population: genmap, n_base, chr_len
             self.conf["genmap"] = self.population.genmap
             self.conf["chr_len"] = self.population.chr_len
             self.conf["n_base"] = self.population.n_base
+            self.population.object_max_age += self.conf["object_max_age"]
+            self.conf["object_max_age"] = self.population.object_max_age
             # Keep new max_ls, maturity, sexual, g_dist, offsets
             self.population.repr_mode = self.conf["repr_mode"]
             self.population.maturity = self.conf["maturity"]
             self.population.g_dist = self.conf["g_dist"]
             self.population.repr_offset = self.conf["repr_offset"]
             self.population.neut_offset = self.conf["neut_offset"]
-            # NOTE subdict is an Infodict method, not value attribute
-            # shouldn't it be called as self.conf.subdict(_key_list_)?
-            self.conf["params"] = self.conf["subdict"](
+            self.conf["params"] = self.conf.subdict(
                     ["repr_mode", "chr_len", "n_base", "maturity", "start_pop",
-                        "max_ls", "g_dist", "repr_offset", "neut_offset"])
+                        "max_ls", "g_dist", "repr_offset", "neut_offset", "object_max_age"])
         else:
             # NOTE why is this neccesary? can't we convert it to Outpop only right
             # after Run completion? (I understand this is needed in order for
@@ -51,14 +61,8 @@ class Run:
             self.population = Outpop(Population(self.conf["params"],
                 self.conf["genmap"], init_ages(), init_genomes(),
                 init_generations(), init_gentimes()))
-        self.n_stage = 0
-        self.n_snap = 0
-        self.n_run = n_run
+        # init Record
         self.record = Record(self.conf)
-        self.dieoff = False
-        self.complete = False
-        self.report_n = report_n
-        self.verbose = verbose
 
     def update_resources(self):
         """If resources are variable, update them based on current

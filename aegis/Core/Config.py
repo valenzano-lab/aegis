@@ -354,10 +354,14 @@ class Config(Infodict):
             self["repr_bound"][1], self["n_states"]), "Reproduction \
                     probability for each genotype sum value, linearly spaced. \
                     [float array]")
+        self.put("object_max_age", self["number_of_stages"] if not self.auto()\
+                else self["max_stages"], "Maximum age of this Object in stages\
+                [int]")
         # Params dict
         self.put("params", self.subdict(
             ["repr_mode", "chr_len", "n_base", "maturity", "start_pop",
-                "max_ls", "g_dist", "repr_offset", "neut_offset"]),
+                "max_ls", "g_dist", "repr_offset", "neut_offset",\
+                        "object_max_age"]),
             "Key information for generating a new population object: \
                     reproduction mode, chromosome length, bases per \
                     chromosome, age of maturity, maximum lifespan, \

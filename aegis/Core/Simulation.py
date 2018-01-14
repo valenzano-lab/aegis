@@ -86,7 +86,7 @@ class Simulation:
                 self.abort(pop, msg)
             else:
                 self.logprint(msg)
-                self.startpop = pop
+                self.startpop = [pop] # NOTE
         else:
             msg = "No method for extracting seed from object type: {}"
             msg = msg.format(type(obj))
