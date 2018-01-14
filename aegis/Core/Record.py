@@ -222,26 +222,6 @@ class Record(Infodict):
 #                print key, minlen[k], newval.shape
 #                print newval
                 self[key][s] = newval
-#        for s in xrange(self["number_of_snapshots"]):
-#            p = self["snapshot_pops"][s]
-#            minlen = {"age":p.max_ls, "gentime":p.max_ls}
-#            for k in ["age", "gentime"]:
-#                key = "snapshot_{}_distribution".format(k)
-#                newval = np.bincount(getattr(p, "{}s".format(k)),
-#                        minlength=minlen[k])/float(p.N)
-#                print key, minlen[k], newval.shape
-#                print newval
-#                self[key][s] = newval
-#            # snapshot_generation_distribution
-#            gen_max = np.max(p.generations)
-#            gen_min = np.min(p.generations)
-#            minlen1 = gen_max - gen_min
-#            temp = p.generations-gen_min +1 #!!!
-#            temp[temp < 0] = 0
-#            newval = np.bincount(temp, minlength=minlen1)/float(p.N)
-#            print "snapshot_generation_distribution", minlen1, newval.shape
-#            print newval
-#            self["snapshot_generation_distribution"][s] = np.concatenate((np.zeros(gen_min),newval))
 
     def compute_locus_density(self):
         """Compute normalised distributions of sum genotypes for each locus in
