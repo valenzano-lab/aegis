@@ -97,6 +97,7 @@ class Plotter:
         w = self.record.get_window("n1", wsize)
         self.record["n1_window_mean"] = np.mean(w, 2)
         self.record["n1_window_var"] = np.var(w, 2)
+        self.record["windows"]["n1"] = wsize
 
     def gen_save_single(self, key):
         """Generate and save a single plot."""

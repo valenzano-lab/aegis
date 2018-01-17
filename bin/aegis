@@ -14,6 +14,7 @@ parser = argparse.ArgumentParser(description='Run the genome ageing simulation.'
 parser.add_argument('script', help="AEGIS script to run:\n\
     run - run the simulation with the config file specified in\n\
           infile\n\
+    plot - plot data from record object specified in infile\n\
     getconfig - copies the default config file to infile")
 parser.add_argument('infile', help="path to input config file")
 parser.add_argument('-m', '--module', metavar='<str>', default="Core",
@@ -25,12 +26,12 @@ parser.add_argument('-r', type=int, metavar="<int>", default=100,
         help="report information every <int> stages (default: 100)")
 parser.add_argument('-p', '--profile', metavar='<str>', default="",
         help="profile genome simulation with cProfile and save to given path")
-parser.add_argument('-ws', '--window-size', type=int, metavar='<int>',
-        help="set window size for n1 plots")
+parser.add_argument('-ws', '--window-size', type=int, metavar='<int>', default=0,
+        help="if called with plot, generates n1 plots with desired window size")
 args = parser.parse_args()
 
-if args.script!="plot_n1_sliding_window" and args.window_size:
-    parser.error("--window-size can only be set when script=plot_n1_sliding_window")
+if args.script!="plot" and args.window_size:
+    parser.error("--window-size can only be set when script=plot")
 
 if args.profile != "":
     import cProfile, pstats, StringIO
@@ -46,10 +47,10 @@ if args.script == "run":
 elif args.script == "getconfig":
     module.getconfig(inpath)
 
-elif args.script == "plot":
+elif args.script == "plot" and args.window_size == 0:
     module.plot(inpath)
 
-elif args.script == "plot_n1_sliding_window":
+elif args.script == "plot" and args.window_size > 0:
     module.plot_n1_sliding_window(inpath, args.window_size)
 
 if args.profile != "":
