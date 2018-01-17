@@ -72,7 +72,7 @@ class Record(Infodict):
             "Distribution of ages in the population at each snapshot.")
         self.put("snapshot_gentime_distribution", np.zeros([ns,ml]),
             "Distribution of gentimes in the population at each snapshot.")
-        print conf["object_max_age"]
+        #print conf["object_max_age"]
         self.put("snapshot_generation_distribution",
             np.zeros([ns, np.ceil(conf["object_max_age"]/float(mt)).astype(int)+1]),
             "Distribution of generations in the population at each snapshot.")

@@ -56,13 +56,12 @@ class Simulation:
             self.logprint("Reading seed population from {}".format(seed_path))
             infile = open(seed_path, "rb")
             obj = pickle.load(infile)
+            infile.close()
             self.logprint("Import succeeded. Seed type = {}".format(type(obj)))
             return obj
         except IOError:
             s = "Seed import failed: no such file or directory."
             self.abort(IOError, s)
-        finally:
-            infile.close()
 
     def get_startpop(self, seed="", pop_number=-1):
         """Import a population seed from a pickled AEGIS object, or
@@ -86,7 +85,7 @@ class Simulation:
                 self.abort(pop, msg)
             else:
                 self.logprint(msg)
-                self.startpop = [pop] # NOTE
+                self.startpop = pop # NOTE
         else:
             msg = "No method for extracting seed from object type: {}"
             msg = msg.format(type(obj))
@@ -94,6 +93,7 @@ class Simulation:
 
         # TODO: Require pop_number to be an integer.
 
+    # NOTE needs to be changed if we are going to use "seed_run_n"
     def init_runs(self):
         self.logprint("Initialising runs...")
         y,x = (len(self.startpop) == 1), xrange(self.conf["number_of_runs"])

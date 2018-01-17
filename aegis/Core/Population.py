@@ -461,4 +461,4 @@ class Outpop:
     def __startpop__(self, pop_number):
         msg = "Seed type: Outpop object.\nSetting seed directly from imported population."
         pop = self
-        return (pop, msg)
+        return ([pop], msg)

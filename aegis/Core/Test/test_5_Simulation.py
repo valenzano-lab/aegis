@@ -31,6 +31,22 @@ def sim(request, conf_path):
     #return Simulation(conf_path, "", 0, 100, False)
     return Simulation(conf_path, 100, False)
 
+# alternatively use fixture pop from test_2a_Population_init
+# scope="module" ? but then watch out when the file is deleted
+@pytest.fixture(scope="function")
+def seed(request, sim):
+    """Generate a Population that progressed some stages in Simulation
+    and save it."""
+    s = sim.copy()
+    s.conf["output_mode"] = 1
+    s.init_runs()
+    s.execute()
+    f = open("test.pop", "wb")
+    pop = s.runs[0].record["final_pop"]
+    pickle.dump(pop, f)
+    f.close()
+    return pop
+
 ###########
 ## TESTS ##
 ###########
@@ -67,7 +83,32 @@ class TestSimulationInit:
     # def test_get_seed(self, ...)
     #def test_get_startpop(self, ...)
 
+    def test_get_seed_degen(self, sim, ran_str):
+        """Confirm that AEGIS raises an error if given an invalid
+        seed file path."""
+        with pytest.raises(IOError):
+            sim.get_seed(ran_str)
+
+    def test_get_seed_good(self, sim, seed):
+        """Test that get_seed correctly imports Population from
+        test.pop."""
+        s = sim.copy()
+        opop1 = Outpop(s.get_seed("test.pop"))
+        os.remove("test.pop")
+        opop2 = Outpop(seed)
+        assert opop1.__eq__(opop2)
+
+    # written for testing single Population object seeding
+    def test_get_startpop_good(self, sim, seed):
+        s = sim.copy()
+        s.get_startpop("test.pop")
+        os.remove("test.pop")
+        opop1 = Outpop(s.startpop[0])
+        opop2 = Outpop(seed)
+        assert opop1.__eq__(opop2)
+
     def test_get_startpop_degen(self, sim):
+        """Test that AEGIS correctly returns [""] when no seed."""
         s = sim.copy()
         for n in xrange(3):
             s.get_startpop("", random.randint(-1e6,1e6))
