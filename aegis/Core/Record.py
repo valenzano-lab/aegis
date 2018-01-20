@@ -72,8 +72,9 @@ class Record(Infodict):
             "Distribution of ages in the population at each snapshot.")
         self.put("snapshot_gentime_distribution", np.zeros([ns,ml]),
             "Distribution of gentimes in the population at each snapshot.")
+        #print conf["object_max_age"]
         self.put("snapshot_generation_distribution",
-            np.zeros([ns, np.ceil(n/float(mt)).astype(int)+1]),
+            np.zeros([ns, np.ceil(conf["object_max_age"]/float(mt)).astype(int)+1]),
             "Distribution of generations in the population at each snapshot.")
         # Genotype sum statistics (density and average)
         putzero("density_per_locus",
@@ -209,17 +210,15 @@ class Record(Infodict):
     def compute_snapshot_properties(self):
         """Compute basic properties (ages, gentimes, etc) of snapshot
         populations during finalisation."""
-        n = self["number_of_stages"] if not self.auto() else self["max_stages"]
-        g = np.ceil(n/float(self["maturity"])).astype(int)+1
         for s in xrange(self["number_of_snapshots"]):
             p = self["snapshot_pops"][s]
+            n = p.object_max_age
+            g = np.ceil(n/float(self["maturity"])).astype(int)+1
             minlen = {"age":p.max_ls, "gentime":p.max_ls, "generation":g}
             for k in ["age", "gentime", "generation"]:
                 key = "snapshot_{}_distribution".format(k)
                 newval = np.bincount(getattr(p, "{}s".format(k)),
                         minlength=minlen[k])/float(p.N)
-                #print key, minlen[k], newval.shape
-                #print newval
                 self[key][s] = newval
 
     def compute_locus_density(self):
@@ -393,7 +392,6 @@ class Record(Infodict):
         # Genotypic entropy for each set of loci
         entropy_gt = {}
         for k in ["s","r","n","a"]: # Survival, reproductive, neutral, all
-            # NOTE transposed
             d = self["density"][k].T
             entropy_gt[k] = np.apply_along_axis(st.entropy, 0, d)
         self["entropy_gt"] = entropy_gt
@@ -461,26 +459,6 @@ class Record(Infodict):
             self["final_pop"] = self["snapshot_pops"][-1]
         if self["output_mode"] < 2:
             self["snapshot_pops"] = 0
-
-    # __startpop__ method
-
-    def __startpop__(self, pop_number):
-            if pop_number < 0 and isinstance(self["final_pop"], Population):
-                msg = "Setting seed from final population in Record."
-                pop = self["final_pop"]
-            elif pop_number < 0:
-                msg = "Failed to set seed from final population in Record; {}"
-                msg = msg.format("(no such population).")
-                pop = ValueError
-            elif pop_number >= self["number_of_snapshots"]:
-                msg = "Seed number ({0}) greater than highest snapshot ({1})."
-                msg = msg.format(pop_number, self["number_of_snapshots"]-1)
-                pop = ValueError
-            else:
-                msg = "Setting seed from specified snapshot population ({})."
-                msg = msg.format(pop_number)
-                pop = self["snapshot_pops"][pop_number]
-            return (pop, msg)
 
     # copy method
 

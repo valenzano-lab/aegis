@@ -25,8 +25,6 @@ def run(request, conf):
 ## TESTS ##
 ###########
 
-# TODO: Test seeding
-
 class TestRun:
 
     @pytest.mark.parametrize("report_n, verbose",
@@ -55,7 +53,7 @@ class TestRun:
         run1 = run.copy()
         r,v,rl = run1.conf["R"], run1.conf["V"], run1.conf["res_limit"]
         print r,v,rl
-        def R(val=-1): 
+        def R(val=-1):
             if val > 0: run1.resources = val
             else: return run1.resources
         def N(val=-1):

@@ -219,9 +219,9 @@ class TestConfig:
         # Remove stuff that gets introduced/changed during generation
         del_keys = ("g_dist", "genmap", "chr_len", "s_range", "r_range",
                 "params", "surv_step", "repr_step", "genmap_argsort",
-                "n_states", "surv_bound")
+                "n_states", "surv_bound", "object_max_age")
         if c.auto():
-            del_keys += ("min_gen", "snapshot_generations", 
+            del_keys += ("min_gen", "snapshot_generations",
                     "snapshot_generations_remaining")
         else:
             del_keys += ("snapshot_stages",)
@@ -281,7 +281,7 @@ class TestConfig:
                 "params", "surv_step", "repr_step", "genmap_argsort",
                 "n_states", "surv_bound")
         if c.auto():
-            del_keys += ("min_gen", "snapshot_generations", 
+            del_keys += ("min_gen", "snapshot_generations",
                     "snapshot_generations_remaining")
         else:
             del_keys += ("snapshot_stages",)
@@ -311,10 +311,10 @@ class TestConfig:
         # Survival and reproduction
         assert c["repr_bound"][1]/crb1 == 2 if sexvar else 1
         assert np.array_equal(c["surv_bound"],1-c["death_bound"][::-1])
-        assert np.array_equal(c["s_range"], 
+        assert np.array_equal(c["s_range"],
                 np.linspace(c["surv_bound"][0],c["surv_bound"][1],
                     c["n_states"]))
-        assert np.array_equal(c["r_range"], 
+        assert np.array_equal(c["r_range"],
                 np.linspace(c["repr_bound"][0],c["repr_bound"][1],
                     c["n_states"]))
         assert c["surv_step"] == np.diff(c["surv_bound"])/(c["n_states"]-1)

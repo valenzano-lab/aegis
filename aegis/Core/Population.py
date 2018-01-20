@@ -51,6 +51,7 @@ class Population:
         self.g_dist = params["g_dist"].copy() # Proportions of 1's in initial loci
         self.repr_offset = params["repr_offset"] # Genmap offset for repr loci
         self.neut_offset = params["neut_offset"] # Genmap offset for neut loci
+        self.object_max_age = params["object_max_age"] # Maximum age this Object can have in stages
 
     def set_initial_size(self, params, ages, genomes, generations, gentimes):
         """Determine population size from initial inputs."""
@@ -133,7 +134,7 @@ class Population:
         return genome_array.astype(int)
 
 
-    ## REARRANGEMENT AND COMBINATION ## #! TODO: Cythonise these methods?
+    ## REARRANGEMENT AND COMBINATION ##
 
     def params(self):
         """Get population-initiation parameters from present population."""
@@ -145,7 +146,8 @@ class Population:
                 "maturity":self.maturity,
                 "g_dist":self.g_dist,
                 "repr_offset":self.repr_offset,
-                "neut_offset":self.neut_offset
+                "neut_offset":self.neut_offset,
+                "object_max_age":self.object_max_age
                 }
         return p_dict
 
@@ -332,7 +334,6 @@ class Population:
         self.loci = self.sorted_loci() # Renew loci (inc. recomb./assortment)
         # TODO: Test that loci update following mutation
 
-
     def recombination(self, r_rate): # Per-bit recombination rate
         """Recombine between the two chromosomes of each individual
         in the population."""
@@ -387,11 +388,6 @@ class Population:
         # TODO: Consider implemeting more sophisticated rounding, e.g.
         # randomise between upper and lower integer
 
-    # Startpop method
-
-    def __startpop__(self, pop_number):
-        return Outpop(self).__startpop__(pop_number)
-
 class Outpop:
     # TODO: Delete this? (Somewhat redundant without Cython)
     """Non-cythonised, pickle-able I/O form of Population class."""
@@ -411,6 +407,7 @@ class Outpop:
         self.generations = np.copy(pop.generations)
         self.gentimes = np.copy(pop.gentimes)
         self.N = pop.N
+        self.object_max_age = pop.object_max_age
 
     def params(self):
         """Get population-initiation parameters from present population."""
@@ -422,7 +419,8 @@ class Outpop:
                 "maturity":self.maturity,
                 "g_dist":self.g_dist,
                 "repr_offset":self.repr_offset,
-                "neut_offset":self.neut_offset
+                "neut_offset":self.neut_offset,
+                "object_max_age":self.object_max_age
                 }
         return p_dict
 
@@ -451,10 +449,3 @@ class Outpop:
     def __hash__(self):
         return hash(tuple(self.ages, self.genomes, self.generations,
             self.gentimes, self.params()))
-
-    # Startpop method
-
-    def __startpop__(self, pop_number):
-        msg = "Setting seed directly from imported population."
-        pop = self
-        return (pop, msg)

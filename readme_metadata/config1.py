@@ -6,27 +6,23 @@
 random_seed = "" # If numeric, sets random seed to that value before execution
 output_prefix = "test" # Prefix for output files within simulation directory
 number_of_runs = 1 # Total number of independent runs
-number_of_stages = 10 # Total number of stages per run [int/"auto"]
-number_of_snapshots = 2 # Points in run at which to record detailed data
-path_to_seed_file = "" # Path to simulation seed file
-    # if no seed then ""
-    # if one seed for all runs then path to a *.pop file
-    # if corresponding seed for each run then path to a dir containing
-    # *.pop files
+number_of_stages = 1000 # Total number of stages per run [int/"auto"]
+number_of_snapshots = 5 # Points in run at which to record detailed data
+path_to_seed_file = "" # Path to simulation seed file, if no seed then ""
     # see README for which parameters are inherited from seed, which are
     # defined anew in this config file
-output_mode = 1 # 0 = return records only, 1 = return records + final pop,
+output_mode = 0 # 0 = return records only, 1 = return records + final pop,
                 # 2 = return records + all snapshot populations
 max_fail = 10 # Maximum number of failed attempts tolerated for each run
 
 ## STARTING PARAMETERS ##
-repr_mode = 'sexual' # sexual, asexual, assort_only or recombine_only
+repr_mode = 'asexual' # sexual, asexual, assort_only or recombine_only
 res_start = 1000 # Starting resource value
-res_var = True # Resources vary with population and time; else constant
-start_pop = res_start # Starting population size
+res_var = False # Resources vary with population and time; else constant
+start_pop = 500 # Starting population size
 
 ## RESOURCE PARAMETERS ##
-V = 1.1 # Geometric resource regrowth factor, if variable
+V = 1.6 # Geometric resource regrowth factor, if variable
 R = res_start # Arithmetic resource increment, if variable
 res_limit = res_start*5 # Maximum resource value, if variable; -1 = infinite
 
