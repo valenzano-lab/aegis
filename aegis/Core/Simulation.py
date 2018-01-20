@@ -65,15 +65,14 @@ class Simulation:
 
     def get_seed_all(self, seed_path):
         """Import N = number of runs populations from given seed path."""
-        self.logprint("Reading seed population from {}".format("./"+seed_path))
+        self.logprint("Reading seed population from ./{}".format(seed_path))
         if seed_path.endswith(".pop"):
             self.logprint("Import succeeded.")
             return [self.get_seed(seed_path)]
         elif os.path.isdir(seed_path):
             pop_files = [f for f in os.listdir(seed_path) if f.endswith(".pop")]
             if len(pop_files) != self.conf["number_of_runs"]:
-                s = "Number of seed files and number of runs not compatible.\n\
-                        Tried getting seeds from: " + seed_path
+                s = "Number of seed files does not equal to number of runs.\nTried getting seeds from: ./{}.".format(seed_path)
                 self.abort(ImportError, s)
             pop_files.sort()
             seeds = [self.get_seed(os.path.join(seed_path,l)) for l in pop_files]

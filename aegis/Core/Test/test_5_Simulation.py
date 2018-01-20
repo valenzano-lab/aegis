@@ -47,7 +47,7 @@ def seed(request, sim):
 def random_n_runs(request):
     return random.randint(2,5)
 
-@pytest.fixture(scope="function")
+@pytest.fixture(scope="module")
 def seed2(request, sim, random_n_runs):
     """Generate Populations that progressed some stages in Simulation
     and save them."""
@@ -113,6 +113,16 @@ class TestSimulationInit:
         seed file path."""
         with pytest.raises(ImportError):
             sim.get_seed_all(ran_str)
+
+    def test_get_seed_all_degen2(self, sim, random_n_runs, seed2):
+        """Confirm that AEGIS raises an error if number of seed
+        files and number of runs not the same."""
+        with pytest.raises(ImportError):
+            opops1 = seed2
+            s = sim.copy()
+            s.conf["number_of_runs"] = random_n_runs-1
+            opops2 = s.get_seed_all(s.conf["output_prefix"]+\
+                "_files/populations/final")
 
     def test_get_seed_all_good(self, sim, random_n_runs, seed2):
         opops1 = seed2
