@@ -6,7 +6,7 @@ import os, shutil, numpy as np
 #        )}, reload_support=True)
 from aegis.Core.functions import chance, quantile, fivenum, init_gentimes
 from aegis.Core.functions import init_ages, init_genomes, init_generations
-from aegis.Core.Population import Population, Outpop
+from aegis.Core.Population import Population
 from aegis.Core.Config import Config, Infodict, deepeq
 from aegis.Core.Record import Record
 from aegis.Core.Run import Run
@@ -16,7 +16,7 @@ from aegis.Core.Plotter import Plotter
 def run(config_file, report_n, verbose):
     """Execute a complete simulation from a specified config file."""
     s = Simulation(config_file, report_n, verbose)
-    s.execute() # TODO: Implement parallelisation
+    s.execute()
     s.finalise()
 
 def getconfig(outpath):

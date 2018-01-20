@@ -1,4 +1,4 @@
-from aegis.Core import Config, Population, Outpop # Classes
+from aegis.Core import Config, Population # Classes
 from aegis.Core import chance, init_ages, init_genomes, init_generations
 import pytest, random, copy
 import numpy as np

@@ -13,7 +13,7 @@ import copy, datetime, time, os, importlib, inspect, numbers, shutil
 from .functions import chance, init_ages, init_genomes, init_generations
 from .functions import timenow, timediff, get_runtime, init_gentimes
 from .Config import Infodict, Config
-from .Population import Population, Outpop
+from .Population import Population
 from .Record import Record
 from .Run import Run
 try:
@@ -53,7 +53,7 @@ class Simulation:
         try:
             infile = open(seed_path, "rb")
             obj = pickle.load(infile)
-            if not isinstance(obj, Outpop):
+            if not isinstance(obj, Population):
                 s = "See import failed: {} does not hold a Population\
                         object.".format(seed_path)
                 self.abort(TypeError, s)
@@ -121,7 +121,7 @@ class Simulation:
         """Print an error message to the Simulation log, then abort."""
         self.log += "\n{0}: {1}\n".format(errtype.__name__, message)
         self.endtime = timenow(False)
-        self.log += "\nSimulation terminated{}.".format(timenow())
+        self.log += "\nSimulation terminated {}.".format(timenow())
         self.logsave()
         raise errtype(message)
 

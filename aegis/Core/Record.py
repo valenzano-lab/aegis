@@ -15,7 +15,7 @@ import numpy as np
 import scipy.stats as st
 from .functions import fivenum
 from .Config import Infodict
-from .Population import Population, Outpop
+from .Population import Population
 import copy
 
 ## CLASS ##
@@ -200,7 +200,7 @@ class Record(Infodict):
         self["generation_dist"][n_stage] = fivenum(population.generations)
         self["gentime_dist"][n_stage] = fivenum(population.gentimes)
         if n_snap >= 0:
-            self["snapshot_pops"][n_snap] = Outpop(population)
+            self["snapshot_pops"][n_snap] = population
         #! Consider snapshot_pops recording: write to a tempdir instead?
 
     ##  FINALISATION  ##
@@ -226,7 +226,7 @@ class Record(Infodict):
         the genome at each snapshot, for survival, reproduction, neutral and
         all loci."""
         l,m,ns = self["max_ls"], self["maturity"], self["n_states"]
-        loci_all = np.array([p.toPop().sorted_loci() \
+        loci_all = np.array([p.sorted_loci() \
                 for p in self["snapshot_pops"]])
         loci = {"s":np.array([L[:,:l] for L in loci_all]),
                 "r":np.array([L[:,l:(2*l-m)] for L in loci_all]),
@@ -371,11 +371,11 @@ class Record(Infodict):
         l,m,b = self["max_ls"], self["maturity"], self["n_base"]
         # Reshape genomes to stack chromosomes
         # [snapshot, individual, bit]
-        stacked_chrs = [p.toPop().genomes.reshape(p.N*2,p.chr_len) \
+        stacked_chrs = [p.genomes.reshape(p.N*2,p.chr_len) \
                 for p in self["snapshot_pops"]]
         # Compute order of bits in genome map
         order = np.ndarray.flatten(
-            np.array([p.toPop().genmap_argsort*b + c for c in xrange(b)]),
+            np.array([p.genmap_argsort*b + c for c in xrange(b)]),
             order="F") # Using last population; genmaps should all be same
         # Average across individuals and sort [snapshot, bit]
         n1 = np.array([np.mean(sc, axis=0)[order] for sc in stacked_chrs])
