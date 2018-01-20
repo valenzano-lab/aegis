@@ -1,4 +1,4 @@
-from aegis.Core import Infodict, Config, Population, Outpop
+from aegis.Core import Infodict, Config, Population
 from aegis.Core import Record, Run, Simulation
 from aegis.Core import chance, init_ages, init_genomes, init_generations, deepeq
 from aegis.Core import init_gentimes
@@ -19,7 +19,6 @@ except:
 
 from test_1_Config import conf, conf_path
 from test_2a_Population_init import pop
-from test_2d_Outpop import opop
 from test_3_Record import rec, pop1, rec1
 from test_4_Run import run, ran_str
 
@@ -257,11 +256,11 @@ class TestSimulationFinalisation:
                 dirname = os.path.join(dirpref, "populations/snapshots")
                 for n in xrange(sim.conf["number_of_runs"]):
                     for m in xrange(sim.conf["number_of_snapshots"]):
-                        testfile(dirname, "run{0}_s{1}.pop".format(n,m), Outpop)
+                        testfile(dirname, "run{0}_s{1}.pop".format(n,m), Population)
             if output_mode >= 1:
                 dirname = os.path.join(dirpref, "populations/final")
                 for n in xrange(sim.conf["number_of_runs"]):
-                    testfile(dirname, "run{}.pop".format(n), Outpop)
+                    testfile(dirname, "run{}.pop".format(n), Population)
             if output_mode >= 0:
                 dirname = os.path.join(dirpref, "records")
                 for n in xrange(sim.conf["number_of_runs"]):

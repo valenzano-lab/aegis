@@ -10,7 +10,6 @@ import aegis
 
 parser = argparse.ArgumentParser(description='Run the genome ageing simulation.',\
         formatter_class=argparse.RawTextHelpFormatter)
-# TODO: add README and instruct the user to read it on the webpage before running
 parser.add_argument('script', help="AEGIS script to run:\n\
     run - run the simulation with the config file specified in\n\
           infile\n\

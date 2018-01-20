@@ -14,7 +14,7 @@ from .functions import chance, init_ages, init_genomes, init_generations
 from .functions import init_gentimes
 from .functions import timenow, timediff, get_runtime
 from .Config import Infodict, Config, deepeq
-from .Population import Population, Outpop
+from .Population import Population
 from .Record import Record
 
 ## CLASS ##
@@ -55,9 +55,9 @@ class Run:
                     ["repr_mode", "chr_len", "n_base", "maturity", "start_pop",
                         "max_ls", "g_dist", "repr_offset", "neut_offset", "object_max_age"])
         else:
-            self.population = Outpop(Population(self.conf["params"],
+            self.population = Population(self.conf["params"],
                 self.conf["genmap"], init_ages(), init_genomes(),
-                init_generations(), init_gentimes()))
+                init_generations(), init_gentimes())
         # init Record
         self.record = Record(self.conf)
 
@@ -103,9 +103,6 @@ class Run:
     def execute_stage(self):
         """Perform one stage of a simulation run and test for completion."""
         # Make sure population is in cythonised form
-        if not isinstance(self.population, Population):
-            m="Convert Outpop objects to Population before running execute_stage."
-            raise TypeError(m)
         full_report =  self.record_stage()
         if not self.dieoff:
             # Update ages, resources and starvation
@@ -186,7 +183,6 @@ class Run:
 
     def execute_attempt(self):
         """Execute a single run attempt from start to completion or failure."""
-        self.population = self.population.toPop() # Convert from Outpop
         # Compute starting time and announce run start
         if not hasattr(self, "starttime"): self.starttime = timenow(False)
         f,r = self.record["prev_failed"]+1, self.n_run
@@ -198,8 +194,6 @@ class Run:
         # Execute stages until completion
         while not self.complete:
             self.execute_stage()
-            #print self.population.N
-        self.population = Outpop(self.population) # Convert back to Outpop
         # Compute end time and announce run end
         self.endtime = timenow(False)
         b = "Extinction" if self.dieoff else "Completion"

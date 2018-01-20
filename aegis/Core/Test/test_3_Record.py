@@ -1,4 +1,4 @@
-from aegis.Core import Infodict, Config, Population, Outpop, Record
+from aegis.Core import Infodict, Config, Population, Record
 from aegis.Core import chance, init_ages, init_genomes, init_generations
 from aegis.Core import init_gentimes
 from aegis.Core import fivenum
@@ -235,7 +235,7 @@ class TestRecord:
             assert r("snapshot_pops")[n] == 0
         # Snapshot population
         p = r("snapshot_pops")[0]
-        assert isinstance(p, Outpop)
+        assert isinstance(p, Population)
         assert np.array_equal(p.genmap, pop2.genmap)
         assert np.array_equal(p.ages, pop2.ages)
         assert np.array_equal(p.genomes, pop2.genomes)

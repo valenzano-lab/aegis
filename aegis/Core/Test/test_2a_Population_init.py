@@ -1,4 +1,4 @@
-from aegis.Core import Config, Population, Outpop # Classes
+from aegis.Core import Config, Population # Classes
 from aegis.Core import chance, init_ages, init_genomes, init_generations
 from aegis.Core import init_gentimes
 import pytest, random, copy
@@ -8,7 +8,7 @@ import numpy as np
 ## FIXTURES ##
 ##############
 
-from test_1_Config import conf, conf_path, ran_str 
+from test_1_Config import conf, conf_path, ran_str
 # (will run descendent tests for all parameterisations)
 
 @pytest.fixture(scope="module")
@@ -185,14 +185,14 @@ class TestPopulationInit:
         c["start_pop"] *= 10
         x = random.random()
         ages_r = np.random.randint(0, 10, c["params"]["start_pop"])
-        genomes_r = chance(1-x**2, 
+        genomes_r = chance(1-x**2,
                 (c["params"]["start_pop"],c["params"]["chr_len"]*2)).astype(int)
         generations_r = np.random.randint(0, 10, c["params"]["start_pop"])
         x = random.random()
         c["params"]["g_dist"] = {"s":x,"r":x,"n":x}
         # Initialise populations
         def pop(ages, genomes, generations, gentimes):
-            return Population(c["params"], c["genmap"], ages, genomes, 
+            return Population(c["params"], c["genmap"], ages, genomes,
                     generations, gentimes)
         pops = [pop(ages_r, genomes_r, generations_r, init_gentimes()),
                 pop(ages_r, genomes_r, init_generations(), init_gentimes()),
@@ -203,7 +203,7 @@ class TestPopulationInit:
                 pop(init_ages(), init_genomes(), generations_r, init_gentimes()),
                 pop(init_ages(), init_genomes(), init_generations(), init_gentimes())]
         # Check ages
-        for n in [0,1,2,3]: 
+        for n in [0,1,2,3]:
             assert np.array_equal(ages_r, pops[n].ages)
         for n in [4,5,6,7]:
             assert not np.array_equal(ages_r, pops[n].ages)
@@ -244,7 +244,7 @@ class TestPopulationInit:
         # Refill
         pop2.set_genmap(pop.genmap)
         pop2.set_attributes(pop.params())
-        pop2.set_initial_size(pop.params(), pop.ages, 
+        pop2.set_initial_size(pop.params(), pop.ages,
                 pop.genomes, pop.generations, pop.gentimes)
         pop2.fill(pop.ages, pop.genomes, pop.generations, pop.gentimes)
         # Test that pop2 and pop are identical
@@ -264,7 +264,7 @@ class TestPopulationInit:
         P1 = pop.clone()
         P2 = Population(P1.params(), P1.genmap, P1.ages, P1.genomes,
                 P1.generations, P1.gentimes)
-        P3 = Population(P1.params(), P1.genmap, P1.ages[:100], 
+        P3 = Population(P1.params(), P1.genmap, P1.ages[:100],
                 P1.genomes[:100], P1.generations[:100], P1.gentimes[:100])
         P4 = Population(P3.params(), P3.genmap, P3.ages, P3.genomes,
                 P3.generations, P3.gentimes)
@@ -292,7 +292,7 @@ class TestPopulationInit:
         assert np.array_equal(pop.gentimes, P2.gentimes)
         assert np.array_equal(pop.gentimes[:100], P3.gentimes)
         assert np.array_equal(pop.gentimes[:100], P4.gentimes)
-    
+
     #! TODO: Tests for individual parts of initialisation
 
     def test_make_genome_array(self, pop):
@@ -322,7 +322,7 @@ class TestPopulationInit:
                 tstat = abs(np.mean(ga[:,pos])-gd[k])
                 assert tstat < precision
         # First with simple linear genmap, then with shuffled form
-        genmap1 = np.concatenate((np.arange(25), 
+        genmap1 = np.concatenate((np.arange(25),
             np.arange(24) + pop2.repr_offset,
             np.arange(5) + pop2.neut_offset), 0)
         genmap2 = np.copy(genmap1)

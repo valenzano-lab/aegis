@@ -388,52 +388,7 @@ class Population:
         # TODO: Consider implemeting more sophisticated rounding, e.g.
         # randomise between upper and lower integer
 
-class Outpop:
-    # TODO: Delete this? (Somewhat redundant without Cython)
-    """Non-cythonised, pickle-able I/O form of Population class."""
-    def __init__(self, pop):
-        """Generate an Outpop from a Population object."""
-        self.repr_mode = pop.repr_mode
-        self.chr_len = pop.chr_len
-        self.n_base = pop.n_base
-        self.max_ls = pop.max_ls
-        self.maturity = pop.maturity
-        self.g_dist = pop.g_dist
-        self.repr_offset = pop.repr_offset
-        self.neut_offset = pop.neut_offset
-        self.genmap = np.copy(pop.genmap)
-        self.ages = np.copy(pop.ages)
-        self.genomes = np.copy(pop.genomes)
-        self.generations = np.copy(pop.generations)
-        self.gentimes = np.copy(pop.gentimes)
-        self.N = pop.N
-        self.object_max_age = pop.object_max_age
-
-    def params(self):
-        """Get population-initiation parameters from present population."""
-        p_dict = {
-                "repr_mode":self.repr_mode,
-                "chr_len":self.chr_len,
-                "n_base":self.n_base,
-                "max_ls":self.max_ls,
-                "maturity":self.maturity,
-                "g_dist":self.g_dist,
-                "repr_offset":self.repr_offset,
-                "neut_offset":self.neut_offset,
-                "object_max_age":self.object_max_age
-                }
-        return p_dict
-
-    def toPop(self):
-        """Make cythonised Population object from this Outpop."""
-        return Population(self.params(), self.genmap, self.ages,
-                self.genomes, self.generations, self.gentimes)
-
-    def clone(self):
-        """Generate a new, identical Outpop object."""
-        return Outpop(self)
-
-    # Comparison methods (TODO: Copy these to Population object itself?)
+    # Comparison methods
 
     def __eq__(self, other):
         if not isinstance(other, self.__class__): return NotImplemented
@@ -442,7 +397,6 @@ class Outpop:
                 np.array_equal(self.generations, other.generations) and \
                 np.array_equal(self.gentimes, other.gentimes) and \
                 deepeq(self.params(), other.params())
-        return NotImplemented
     def __ne__(self, other):
         if isinstance(other, self.__class__): return not self.__eq__(other)
         return NotImplemented
