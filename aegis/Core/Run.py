@@ -55,9 +55,6 @@ class Run:
                     ["repr_mode", "chr_len", "n_base", "maturity", "start_pop",
                         "max_ls", "g_dist", "repr_offset", "neut_offset", "object_max_age"])
         else:
-            # NOTE why is this neccesary? can't we convert it to Outpop only right
-            # after Run completion? (I understand this is needed in order for
-            # Simulation to be able to save it.)
             self.population = Outpop(Population(self.conf["params"],
                 self.conf["genmap"], init_ages(), init_genomes(),
                 init_generations(), init_gentimes()))
@@ -194,7 +191,7 @@ class Run:
         if not hasattr(self, "starttime"): self.starttime = timenow(False)
         f,r = self.record["prev_failed"]+1, self.n_run
         a = "run {0}, attempt {1}".format(r,f) if f>1 else "run {0}".format(r)
-        self.logprint("Beginning {0} at {1}.".format(a, timenow(True)))
+        self.logprint("Beginning {0} {1}.".format(a, timenow(True)))
         if self.conf.auto():
             self.logprint("Automatic stage counting. Target generation: {}."\
                     .format(self.conf["min_gen"]))
@@ -206,7 +203,7 @@ class Run:
         # Compute end time and announce run end
         self.endtime = timenow(False)
         b = "Extinction" if self.dieoff else "Completion"
-        self.logprint("{0} at {1}. Final population: {2}"\
+        self.logprint("{0} {1}. Final population: {2}"\
                 .format(b, timenow(True), self.population.N))
         if f>0 and not self.dieoff:
             self.logprint("Total attempts required: {0}.".format(f))
@@ -249,17 +246,6 @@ class Run:
     # Basic methods
     def copy(self):
         return copy.deepcopy(self)
-
-    # __startpop__ method
-
-    def __startpop__(self, pop_number):
-            if self.record["final_pop"] != 0 or pop_number >= 0:
-                msg = "Setting seed from embedded Record of Run object."
-                return self.record.__startpop__(pop_number)
-            else:
-                msg = "Setting seed from current Run population."
-                pop = self.population
-            return (pop, msg)
 
     # Comparison methods
 

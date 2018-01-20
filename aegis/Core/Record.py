@@ -219,8 +219,6 @@ class Record(Infodict):
                 key = "snapshot_{}_distribution".format(k)
                 newval = np.bincount(getattr(p, "{}s".format(k)),
                         minlength=minlen[k])/float(p.N)
-#                print key, minlen[k], newval.shape
-#                print newval
                 self[key][s] = newval
 
     def compute_locus_density(self):
@@ -394,7 +392,6 @@ class Record(Infodict):
         # Genotypic entropy for each set of loci
         entropy_gt = {}
         for k in ["s","r","n","a"]: # Survival, reproductive, neutral, all
-            # NOTE transposed
             d = self["density"][k].T
             entropy_gt[k] = np.apply_along_axis(st.entropy, 0, d)
         self["entropy_gt"] = entropy_gt
@@ -462,26 +459,6 @@ class Record(Infodict):
             self["final_pop"] = self["snapshot_pops"][-1]
         if self["output_mode"] < 2:
             self["snapshot_pops"] = 0
-
-    # __startpop__ method
-
-    def __startpop__(self, pop_number):
-            if pop_number < 0 and isinstance(self["final_pop"], Population):
-                msg = "Setting seed from final population in Record."
-                pop = self["final_pop"]
-            elif pop_number < 0:
-                msg = "Failed to set seed from final population in Record; {}"
-                msg = msg.format("(no such population).")
-                pop = ValueError
-            elif pop_number >= self["number_of_snapshots"]:
-                msg = "Seed number ({0}) greater than highest snapshot ({1})."
-                msg = msg.format(pop_number, self["number_of_snapshots"]-1)
-                pop = ValueError
-            else:
-                msg = "Setting seed from specified snapshot population ({})."
-                msg = msg.format(pop_number)
-                pop = self["snapshot_pops"][pop_number]
-            return (pop, msg)
 
     # copy method
 

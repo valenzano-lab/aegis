@@ -134,7 +134,7 @@ class Population:
         return genome_array.astype(int)
 
 
-    ## REARRANGEMENT AND COMBINATION ## #! TODO: Cythonise these methods?
+    ## REARRANGEMENT AND COMBINATION ##
 
     def params(self):
         """Get population-initiation parameters from present population."""
@@ -334,7 +334,6 @@ class Population:
         self.loci = self.sorted_loci() # Renew loci (inc. recomb./assortment)
         # TODO: Test that loci update following mutation
 
-
     def recombination(self, r_rate): # Per-bit recombination rate
         """Recombine between the two chromosomes of each individual
         in the population."""
@@ -388,11 +387,6 @@ class Population:
         self.subset_members(np.tile([True,False], self.N/2))
         # TODO: Consider implemeting more sophisticated rounding, e.g.
         # randomise between upper and lower integer
-
-    # Startpop method
-
-    def __startpop__(self, pop_number):
-        return Outpop(self).__startpop__(pop_number)
 
 class Outpop:
     # TODO: Delete this? (Somewhat redundant without Cython)
@@ -455,10 +449,3 @@ class Outpop:
     def __hash__(self):
         return hash(tuple(self.ages, self.genomes, self.generations,
             self.gentimes, self.params()))
-
-    # Startpop method
-
-    def __startpop__(self, pop_number):
-        msg = "Seed type: Outpop object.\nSetting seed directly from imported population."
-        pop = self
-        return ([pop], msg)

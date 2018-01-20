@@ -8,7 +8,11 @@ output_prefix = "test" # Prefix for output files within simulation directory
 number_of_runs = 1 # Total number of independent runs
 number_of_stages = 10 # Total number of stages per run [int/"auto"]
 number_of_snapshots = 2 # Points in run at which to record detailed data
-path_to_seed_file = "" # Path to simulation seed file, if no seed then ""
+path_to_seed_file = "" # Path to simulation seed file
+    # if no seed then ""
+    # if one seed for all runs then path to a *.pop file
+    # if corresponding seed for each run then path to a dir containing
+    # *.pop files
     # see README for which parameters are inherited from seed, which are
     # defined anew in this config file
 output_mode = 1 # 0 = return records only, 1 = return records + final pop,
