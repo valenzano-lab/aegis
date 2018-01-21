@@ -28,9 +28,9 @@ def conf(request, conf_path, ran_str):
         # c["random_seed"] = random.random() # TODO: Add seed value here?
         c["output_prefix"] = os.path.join(tempfile.gettempdir(), ran_str)
         c["number_of_runs"] = random.randint(1,3)
-        nstage = random.randint(10,80)
+        nstage = random.randint(15,80)
         c["number_of_stages"] = "auto" if request.param == "auto" else nstage
-        c["number_of_snapshots"] = random.randint(2,10)
+        c["number_of_snapshots"] = random.randint(2,5)
         # c["output_mode"] = random.randrange(3) # TODO: Test with this?
         # c["max_fail"] = random.randrange(10) # TODO: Test with this?
         ## STARTING PARAMETERS ##

@@ -138,7 +138,6 @@ class TestRun:
         status reporting."""
         run1 = run.copy()
         # Normal
-        run1.population = run1.population
         run1.execute_stage()
         assert run1.n_stage == run.n_stage + 1
         assert run1.n_snap == run.n_snap + 1
@@ -152,7 +151,6 @@ class TestRun:
         #! TODO: Add tests of age incrementation, record updating, growth, death
         # Last stage
         run2 = run.copy()
-        run2.population = run2.population
         n = 0
         while not run2.complete:
             print run2.n_stage, run2.population.N, len(run2.population.generations),
@@ -168,7 +166,7 @@ class TestRun:
         elif not run2.conf.auto(): # Set stage count + dieoff
             print run2.conf["snapshot_stages"]
             assert run2.n_snap == 1+np.max(
-                    np.nonzero(run2.conf["snapshot_stages"]<=run2.n_stage)[0])
+                    np.nonzero(run2.conf["snapshot_stages"]<run2.n_stage)[0])
         else: # Auto stage count + dieoff
             print run2.conf["snapshot_generations"]
             print run2.conf["snapshot_generations_remaining"]
