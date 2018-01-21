@@ -59,7 +59,7 @@ def timediff(starttime, endtime):
     after = [", ", ", ", " and ", ""]
     for n in xrange(len(units)):
         g = getattr(time, units[n])
-        report = (g != 0)
+        report = (g != 0) or (units[n]=="seconds")
         if report: outstr += "{0} {1}{2}".format(g, units[n], after[n])
     return outstr
 # TODO: Test this
