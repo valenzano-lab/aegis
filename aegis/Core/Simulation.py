@@ -9,7 +9,7 @@
 ## PACKAGE IMPORT ##
 import numpy as np
 import scipy.stats as st
-import copy, datetime, time, os, importlib, inspect, numbers, shutil
+import copy, datetime, time, os, importlib, inspect, numbers, shutil, random
 from .functions import chance, init_ages, init_genomes, init_generations
 from .functions import timenow, timediff, get_runtime, init_gentimes
 from .Config import Infodict, Config
@@ -36,6 +36,10 @@ class Simulation:
         self.conf.generate()
         if isinstance(self.conf["random_seed"], numbers.Number):
             random.seed(self.conf["random_seed"])
+        else:
+            rseed = random.getstate()
+            self.conf["random_seed"] = rseed
+            random.seed(rseed)
         self.report_n, self.verbose = report_n, verbose
         self.get_startpop(self.conf["path_to_seed_file"])
         self.init_runs()
