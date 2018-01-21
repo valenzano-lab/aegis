@@ -206,13 +206,15 @@ class Run:
     def execute(self):
         """Execute the run, repeating until either an attempt is
         successful or the maximum number of failures is reached."""
+        prev_failed = self.record["prev_failed"]
         if self.conf["max_fail"] > 1: save_state = self.copy()
         self.execute_attempt()
         if self.dieoff:
-            nfail = save_state.record["prev_failed"] + 1
+            nfail =  prev_failed + 1
             self.logprint("Run failed. Total failures = {}.".format(nfail))
             if nfail >= self.conf["max_fail"]: # Accept failure and terminate
                 self.logprint("Failure limit reached. Accepting failed run.")
+                self.record.finalise()
                 self.logprint(get_runtime(self.starttime, self.endtime))
             else: # Reset to saved state (except for log and prev_failed)
                 save_state.record["prev_failed"] = nfail
