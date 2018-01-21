@@ -130,8 +130,11 @@ class Run:
         self.n_stage += 1
         self.test_complete()
         if self.complete and not self.dieoff:
+            # for "auto" last snapshot not taken otherwise
+            # TODO is there a better way of doing this?
+            if self.conf.auto():
+                self.record_stage()
             self.record.finalise()
-        #! TODO: What about if dieoff?
 
     def record_stage(self):
         """Record and report population information, as appropriate for
@@ -158,6 +161,8 @@ class Run:
             exp = self.conf["snapshot_generations_remaining"][0]
             if obs >= exp:
                 snapshot = self.n_snap
+                # Save at which stages are the snapshots taken
+                self.record["snapshot_stages"].append(self.n_stage)
                 # Prevent same min generation triggering multiple snapshots:
                 self.conf["snapshot_generations_remaining"] = \
                         self.conf["snapshot_generations_remaining"][1:]
