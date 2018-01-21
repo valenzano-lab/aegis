@@ -102,7 +102,6 @@ class Run:
 
     def execute_stage(self):
         """Perform one stage of a simulation run and test for completion."""
-        # Make sure population is in cythonised form
         full_report =  self.record_stage()
         if not self.dieoff:
             # Update ages, resources and starvation
@@ -131,7 +130,6 @@ class Run:
         self.test_complete()
         if self.complete and not self.dieoff:
             self.record.finalise()
-        #! TODO: What about if dieoff?
 
     def record_stage(self):
         """Record and report population information, as appropriate for
@@ -213,6 +211,7 @@ class Run:
             self.logprint("Run failed. Total failures = {}.".format(nfail))
             if nfail >= self.conf["max_fail"]: # Accept failure and terminate
                 self.logprint("Failure limit reached. Accepting failed run.")
+                self.record.finalise()
                 self.logprint(get_runtime(self.starttime, self.endtime))
             else: # Reset to saved state (except for log and prev_failed)
                 save_state.record["prev_failed"] = nfail

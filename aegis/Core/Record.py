@@ -200,7 +200,7 @@ class Record(Infodict):
         self["generation_dist"][n_stage] = fivenum(population.generations)
         self["gentime_dist"][n_stage] = fivenum(population.gentimes)
         if n_snap >= 0:
-            self["snapshot_pops"][n_snap] = population
+            self["snapshot_pops"][n_snap] = population.clone()
         #! Consider snapshot_pops recording: write to a tempdir instead?
 
     ##  FINALISATION  ##
@@ -436,6 +436,13 @@ class Record(Infodict):
 
     def finalise(self):
         """Calculate additional stats from recorded data of a completed run."""
+        # If dieoff, truncate data to last snapshot pop
+        if self["dieoff"]:
+            pops = np.array(self["snapshot_pops"])
+            pops = pops[np.nonzero(pops)]
+            self["snapshot_pops"] = list(pops)
+            self["number_of_snapshots"] = len(self["snapshot_pops"])
+            self["snapshot_stages"] = self["snapshot_stages"][:self["number_of_snapshots"]]
         # Compute basic properties of snapshot pops
         self.compute_snapshot_properties()
         # Genotype distributions and statistics
