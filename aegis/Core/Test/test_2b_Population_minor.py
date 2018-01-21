@@ -61,6 +61,7 @@ class TestPopulationReComb:
         assert pop.params() == pop2.params()
         assert pop.N == pop2.N
 
+    # this can fail by chance when shuffle is identity
     def test_shuffle(self, pop, conf):
         """Test if all ages, therefore individuals, present before the
         shuffle are also present after it."""
