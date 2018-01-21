@@ -13,10 +13,6 @@ from .Config import deepeq
 import numpy as np
 import random, copy
 
-# TODO: Remove maximum lifespan
-# TODO: Add init test for correct params keys
-# TODO: Remove age_random from config
-
 class Population:
     """A simulated population with genomes, ages and generation numbers,
     capable of undergoing growth and death."""
@@ -104,7 +100,7 @@ class Population:
         if new_generations:
             generations = np.repeat(0L, self.N)
         if new_gentimes:
-            gentimes = np.repeat(0L, self.N) # TODO: Consider other options
+            gentimes = np.repeat(0L, self.N)
         self.ages = np.copy(ages)
         self.genomes = np.copy(genomes)
         self.generations = np.copy(generations)
@@ -218,9 +214,6 @@ class Population:
             # [chromosome, individual, locus, bit]
             return self.genomes.reshape((self.N,2,len(self.genmap),self.n_base)
                     ).transpose(1,0,2,3)
-        #! Not happy with the transposition efficiency-wise, but having
-        # individuals first screws up recombination/assortment in ways I
-        # don't know how to efficiently fix...
 
     def sorted_loci(self):
         """Return the sorted locus genotypes of the individuals in the
@@ -246,9 +239,6 @@ class Population:
         """Return the sorted neutral locus genotypes of each individual in
         the population."""
         return self.loci[:,(2*self.max_ls-self.maturity):]
-
-    #! TODO: Fix the above 3 functions to use internal index information,
-    #  rather than assuming a particular hard-coded order
 
     ## GROWTH AND DEATH ##
 
@@ -332,7 +322,6 @@ class Population:
             self.genomes[is_0] = positive_mut
             self.genomes[is_1] = negative_mut
         self.loci = self.sorted_loci() # Renew loci (inc. recomb./assortment)
-        # TODO: Test that loci update following mutation
 
     def recombination(self, r_rate): # Per-bit recombination rate
         """Recombine between the two chromosomes of each individual
@@ -385,8 +374,6 @@ class Population:
         self.ages[::2] += self.ages[1::2]
         self.ages /= 2
         self.subset_members(np.tile([True,False], self.N/2))
-        # TODO: Consider implemeting more sophisticated rounding, e.g.
-        # randomise between upper and lower integer
 
     # Comparison methods
 

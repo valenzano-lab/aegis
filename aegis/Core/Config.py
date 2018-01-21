@@ -402,4 +402,3 @@ class Config(Infodict):
                 "Remaining snapshot generation points in simulation run;\
                         eliminated as each point is reached. [int array].")
         self.put("snapshot_stages", [], "Stages of a Run at which snapshots were taken.")
-        # TODO: Finish docstring, write tests

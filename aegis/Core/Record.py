@@ -6,9 +6,6 @@
 #   the course of a simulation, as well as methods for computing       #
 #   more advanced statistics from that information.                    #
 ########################################################################
-# TODO: add generation and parental-age recording
-# TODO: add detailed per-snapshot generation recording
-# TODO: convert some output into pandas data frames for easier plotting
 
 ## PACKAGE IMPORT ##
 import numpy as np
@@ -43,7 +40,6 @@ class Record(Infodict):
                 "Number of run repeats before this one that ended in dieoff.")
         # Arrays for per-stage data entry
         n = self["number_of_stages"] if not self.auto() else self["max_stages"]
-        # TODO: Add pre-finalisation truncating of unused stages in auto case
         a0, a1 = np.zeros(n), np.zeros([n, self["max_ls"]])
         self.put("population_size", np.copy(a0),
                 "Size of population at each stage.")
@@ -332,7 +328,7 @@ class Record(Infodict):
         q = np.mean(self["junk_mean"]["repr"], 1)
         junk_repr = np.tile(q[:,np.newaxis], [1,self["max_ls"]])
         junk_repr[:,:self["maturity"]] = 0
-        junk_repr /= 2.0 if sex else 1.0 #! TODO: Check this
+        junk_repr /= 2.0 if sex else 1.0
         self["junk_repr"] = junk_repr
 
     def compute_fitness(self):
@@ -400,7 +396,6 @@ class Record(Infodict):
         bit_distr = np.vstack((n1_total,1-n1_total))
         entropy_bits = np.apply_along_axis(st.entropy, 0, bit_distr)
         self["entropy_bits"] = entropy_bits
-        #! TODO: Also separate bit entropy by type of locus (s,r,n,a)
 
     # ACTUAL DEATH RATES
 

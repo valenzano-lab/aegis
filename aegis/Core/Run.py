@@ -82,7 +82,6 @@ class Run:
             v,r,l = self.conf["V"], self.conf["R"], self.conf["res_limit"]
             new_res = max(0, self.resources - self.N) * v + r
             self.resources = new_res if r < 0 else min(r, new_res)
-        #! TODO: Test and implement this
 
     def starving(self):
         """Determine whether population is starving based on resource level."""
@@ -102,7 +101,6 @@ class Run:
 
     def execute_stage(self):
         """Perform one stage of a simulation run and test for completion."""
-        # Make sure population is in cythonised form
         full_report =  self.record_stage()
         if not self.dieoff:
             # Update ages, resources and starvation
@@ -131,7 +129,6 @@ class Run:
         self.test_complete()
         if self.complete and not self.dieoff:
             # for "auto" last snapshot not taken otherwise
-            # TODO is there a better way of doing this?
             if self.conf.auto():
                 self.record_stage()
             self.record.finalise()
@@ -166,7 +163,6 @@ class Run:
                 # Prevent same min generation triggering multiple snapshots:
                 self.conf["snapshot_generations_remaining"] = \
                         self.conf["snapshot_generations_remaining"][1:]
-                        # TODO: Reconstruct this in Record finalisation
         # Record information and return verbosity boolean
         self.record.update(self.population, self.resources, self.surv_penf,
                 self.repr_penf, self.n_stage, snapshot)
@@ -184,7 +180,6 @@ class Run:
         elif not self.dieoff and not self.conf.auto():
             stg, gen = (self.n_stage >= self.conf["number_of_stages"]), False
         self.complete = self.dieoff or gen or stg
-        # TODO: Test this
 
     def execute_attempt(self):
         """Execute a single run attempt from start to completion or failure."""
@@ -225,7 +220,6 @@ class Run:
                 attrs = vars(save_state)
                 for key in attrs: # Revert everything else
                     setattr(self, key, attrs[key])
-                #! TODO: Test that this does not change start time
                 return self.execute()
         self.logprint(get_runtime(self.starttime, self.endtime))
 
@@ -233,7 +227,7 @@ class Run:
         """Print message to stdout and save in log object."""
         # Compute numbers of spaces to keep all messages aligned
         n, r = self.conf["number_of_stages"], self.conf["number_of_runs"]
-        if n == "auto": n = self.conf["max_stages"] # TODO: test this
+        if n == "auto": n = self.conf["max_stages"]
         nspace_run = len(str(r-1))-len(str(self.n_run))
         nspace_stg = len(str(n)) - len(str(self.n_stage))
         # Create string

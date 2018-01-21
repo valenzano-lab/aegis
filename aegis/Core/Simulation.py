@@ -82,7 +82,6 @@ class Simulation:
         s = "Seed path must point to a *.pop file or a directory containing *.pop files."
         self.abort(ImportError, s)
 
-    # TODO maybe some logprints here
     def get_startpop(self, seed=""):
         """Import a population seed from a pickled AEGIS object, or
         return blank to generate a new starting population."""
@@ -163,7 +162,6 @@ class Simulation:
                 for m in xrange(self.conf["number_of_snapshots"]):
                     pop = self.runs[n].record["snapshot_pops"][m]
                     filename = dirname + "/run{0}_s{1}.pop".format(n,m)
-                    #! TODO: Correct file name for number of digits
                     save(pop, filename)
                 del self.runs[n].record["snapshot_pops"]
                 outro("snapshot populations")
@@ -173,7 +171,7 @@ class Simulation:
                 pop = self.runs[n].record["final_pop"]
                 filename = dirname + "/run{}.pop".format(n)
                 save(pop, filename)
-                del self.runs[n].record["final_pop"] #! TODO: Test that this works
+                del self.runs[n].record["final_pop"]
             outro("final populations")
         if self.conf["output_mode"] >= 0: # Save records
             dirname = intro("run records", "records")
