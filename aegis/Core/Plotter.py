@@ -417,17 +417,18 @@ class Plotter:
         return plot
 
     def plot_actual_death_rate(self, window_size=100):
+        n_stage = self.record["number_of_stages"] if not self.record.auto() \
+                else self.record["max_stages"]
         # check window size is OK
         if window_size*(self.record["number_of_snapshots"]+1) > \
-                self.record["number_of_stages"]:
+                n_stage:
             raise ValueError("Window size is too big; overlap.")
         windows = [range(window_size)]
         window_size /= 2
         for s in self.record["snapshot_stages"][1:-1]:
             windows += [range(s-window_size,s+window_size)]
         window_size *= 2
-        windows += [range(self.record["number_of_stages"]-\
-                window_size, self.record["number_of_stages"])]
+        windows += [range(n_stage-window_size, n_stage)]
 
         data = self.make_dataframe(["actual_death_rate"], ["stage","age"])
 

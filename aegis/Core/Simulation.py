@@ -9,7 +9,7 @@
 ## PACKAGE IMPORT ##
 import numpy as np
 import scipy.stats as st
-import copy, datetime, time, os, importlib, inspect, numbers, shutil
+import copy, datetime, time, os, importlib, inspect, numbers, shutil, random
 from .functions import chance, init_ages, init_genomes, init_generations
 from .functions import timenow, timediff, get_runtime, init_gentimes
 from .Config import Infodict, Config
@@ -36,6 +36,10 @@ class Simulation:
         self.conf.generate()
         if isinstance(self.conf["random_seed"], numbers.Number):
             random.seed(self.conf["random_seed"])
+        else:
+            rseed = random.getstate()
+            self.conf["random_seed"] = rseed
+            random.seed(rseed)
         self.report_n, self.verbose = report_n, verbose
         self.get_startpop(self.conf["path_to_seed_file"])
         self.init_runs()
@@ -82,7 +86,6 @@ class Simulation:
         s = "Seed path must point to a *.pop file or a directory containing *.pop files."
         self.abort(ImportError, s)
 
-    # TODO maybe some logprints here
     def get_startpop(self, seed=""):
         """Import a population seed from a pickled AEGIS object, or
         return blank to generate a new starting population."""
@@ -163,7 +166,6 @@ class Simulation:
                 for m in xrange(self.conf["number_of_snapshots"]):
                     pop = self.runs[n].record["snapshot_pops"][m]
                     filename = dirname + "/run{0}_s{1}.pop".format(n,m)
-                    #! TODO: Correct file name for number of digits
                     save(pop, filename)
                 del self.runs[n].record["snapshot_pops"]
                 outro("snapshot populations")
@@ -173,7 +175,7 @@ class Simulation:
                 pop = self.runs[n].record["final_pop"]
                 filename = dirname + "/run{}.pop".format(n)
                 save(pop, filename)
-                del self.runs[n].record["final_pop"] #! TODO: Test that this works
+                del self.runs[n].record["final_pop"]
             outro("final populations")
         if self.conf["output_mode"] >= 0: # Save records
             dirname = intro("run records", "records")

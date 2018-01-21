@@ -7,7 +7,7 @@ magnitude = 3
 precision = 0.01
 
 class TestFunctionsChance:
-    """Tests for functions involved in generating random boolean 
+    """Tests for functions involved in generating random boolean
     arrays."""
 
     @pytest.mark.parametrize("p", [0,1])
@@ -36,9 +36,6 @@ class TestFunctionsInit:
         assert np.array_equal(init_genomes(), np.array([[-1],[-1]]))
         assert np.array_equal(init_generations(), np.array([-1]))
         assert np.array_equal(init_gentimes(), np.array([-1]))
-
-
-#! TODO: Test time functions
 
 class TestFunctionsFivenum:
     """Tests for functions involved in generating five-number summaries

@@ -401,4 +401,4 @@ class Config(Infodict):
                 np.copy(self["snapshot_generations"]),
                 "Remaining snapshot generation points in simulation run;\
                         eliminated as each point is reached. [int array].")
-        # TODO: Finish docstring, write tests
+        self.put("snapshot_stages", [], "Stages of a Run at which snapshots were taken.")
