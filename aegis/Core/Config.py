@@ -379,11 +379,6 @@ class Config(Infodict):
             return
         # Compute analytical parameters
         alpha, beta = self["m_rate"], self["m_rate"]*self["m_ratio"]
-        # Will's computation
-#        a, p = 1 - alpha - beta, beta/(alpha+beta)
-#        A, P = abs(a), abs(p - self["g_dist_n"])
-#        k = (math.log10(self["delta"]) - math.log10(P))/math.log10(A)
-        # Arian's computation
         y = self["g_dist_n"]
         x = 1-y
         k = math.log10(self["delta"]*(alpha+beta)/abs(alpha*y-beta*x)) / \
