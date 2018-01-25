@@ -3,13 +3,11 @@ import random
 import numpy as np
 import datetime
 from dateutil.relativedelta import relativedelta as delta
-#import numba
 
 ###################
 ## Randomisation ##
 ###################
 
-#@numba.jit(nopython=True)
 def chance(p,n=1):
     """Generate array (of shape specified by n, where n is either an integer
     or a tuple of integers) of independent booleans with P(True)=z."""
@@ -59,10 +57,9 @@ def timediff(starttime, endtime):
     after = [", ", ", ", " and ", ""]
     for n in xrange(len(units)):
         g = getattr(time, units[n])
-        report = (g != 0)
+        report = (g != 0) or (units[n]=="seconds")
         if report: outstr += "{0} {1}{2}".format(g, units[n], after[n])
     return outstr
-# TODO: Test this
 
 def get_runtime(starttime, endtime, prefix = "Total runtime"):
     """Compute the runtime of a process from the start and end times

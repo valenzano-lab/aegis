@@ -25,12 +25,12 @@ def conf(request, conf_path, ran_str):
     c["setup"] = request.param
     if request.param != "import": # Randomise config parameters
         ## CORE PARAMETERS ##
-        # c["random_seed"] = random.random() # TODO: Add seed value here?
+        c["random_seed"] = random.random() # TODO: Add seed value here?
         c["output_prefix"] = os.path.join(tempfile.gettempdir(), ran_str)
         c["n_runs"] = random.randint(1,3)
-        nstage = random.randint(10,80)
+        nstage = random.randint(15,80)
         c["n_stages"] = "auto" if request.param == "auto" else nstage
-        c["n_snapshots"] = random.randint(2,10)
+        c["n_snapshots"] = random.randint(2,5)
         # c["output_mode"] = random.randrange(3) # TODO: Test with this?
         # c["max_fail"] = random.randrange(10) # TODO: Test with this?
         ## STARTING PARAMETERS ##
@@ -118,7 +118,7 @@ class TestConfig:
         # Remove stuff that gets introduced/changed during generation
         del_keys = ("g_dist", "genmap", "chr_len", "s_range", "r_range",
                 "params", "surv_step", "repr_step", "genmap_argsort",
-                "n_states", "surv_bound", "auto")
+                "n_states", "surv_bound", "auto", "object_max_age")
         if c["auto"]:
             del_keys += ("min_gen", "snapshot_generations", 
                     "snapshot_generations_remaining")
@@ -207,10 +207,10 @@ class TestConfig:
         # Survival and reproduction
         assert c["repr_bound"][1]/crb1 == 2 if sexvar else 1
         assert np.array_equal(c["surv_bound"],1-c["death_bound"][::-1])
-        assert np.array_equal(c["s_range"], 
+        assert np.array_equal(c["s_range"],
                 np.linspace(c["surv_bound"][0],c["surv_bound"][1],
                     c["n_states"]))
-        assert np.array_equal(c["r_range"], 
+        assert np.array_equal(c["r_range"],
                 np.linspace(c["repr_bound"][0],c["repr_bound"][1],
                     c["n_states"]))
         assert c["surv_step"] == np.diff(c["surv_bound"])/(c["n_states"]-1)

@@ -1,4 +1,4 @@
-from aegis.Core import Config, Population, Outpop # Classes
+from aegis.Core import Config, Population # Classes
 from aegis.Core import chance, init_ages, init_genomes, init_generations
 import pytest, random, copy
 import numpy as np
@@ -404,8 +404,8 @@ class TestPopulationGrowth:
             assert np.isclose(c2.N/n, exp2, atol=precision*2)
 
     def test_make_children_solo(self, pop):
-        """Test that make_children correctly does nothing when given 
-        exactly one parent, under assorting reproductive modes, and 
+        """Test that make_children correctly does nothing when given
+        exactly one parent, under assorting reproductive modes, and
         returns exactly one child otherwise."""
         p = pop.clone()
         p.shuffle()

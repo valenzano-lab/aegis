@@ -1,4 +1,4 @@
-from aegis.Core import Config, Population, Outpop # Classes
+from aegis.Core import Config, Population # Classes
 from aegis.Core import chance, init_ages, init_genomes, init_generations
 import pytest, random, copy
 import numpy as np
@@ -61,6 +61,7 @@ class TestPopulationReComb:
         assert pop.params() == pop2.params()
         assert pop.N == pop2.N
 
+    # this can fail by chance when shuffle is identity
     def test_shuffle(self, pop, conf):
         """Test if all ages, therefore individuals, present before the
         shuffle are also present after it."""
@@ -194,7 +195,7 @@ class TestPopulationIncrement:
         P2 = pop.clone()
         P2.increment_ages()
         assert np.array_equal(pop.ages+1, P2.ages)
- 
+
     def test_increment_generations(self, pop, conf):
         """Test if all generations are incremented by one."""
         #if conf["setup"] == "random": return
@@ -203,7 +204,7 @@ class TestPopulationIncrement:
         assert np.array_equal(pop.generations+1, P2.generations)
 
 class TestPopulationLoci:
-    """Test methods of Population object relating to obtaining and 
+    """Test methods of Population object relating to obtaining and
     manipulated lists of chromosomes and loci."""
 
     def test_chrs(self, pop):
@@ -273,6 +274,3 @@ class TestPopulationLoci:
         for s in sublocus_tests:
             assert s(pop2, pop2.loci)
             assert s(pop2, pop2.sorted_loci())
-
-
-

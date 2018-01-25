@@ -9,11 +9,11 @@
 ## PACKAGE IMPORT ##
 import numpy as np
 import scipy.stats as st
-import copy, datetime, time, os, importlib, inspect, numbers, shutil
+import copy, datetime, time, os, importlib, inspect, numbers, shutil, random
 from .functions import chance, init_ages, init_genomes, init_generations
 from .functions import timenow, timediff, get_runtime, init_gentimes
 from .Config import Config
-from .Population import Population, Outpop
+from .Population import Population
 from .Record import Record
 from .Run import Run
 try:
@@ -34,11 +34,7 @@ class Simulation:
         self.logprint("Working directory: "+os.getcwd())
         self.get_conf(config_file)
         self.conf.generate()
-        # NOTE what does this do? "cong" should be "conf"
-        if isinstance(self.conf["random_seed"], numbers.Number):
-            random.seed(self.conf["random_seed"])
         self.report_n, self.verbose = report_n, verbose
-        #self.get_startpop(self.conf["path_to_seed_file"], self.conf["seed_run_n"])
         self.get_startpop(self.conf["path_to_seed_file"])
         self.init_runs()
 
@@ -53,18 +49,38 @@ class Simulation:
     def get_seed(self, seed_path):
         """Import a population seed from a pickled AEGIS object."""
         try:
-            self.logprint("Reading seed population from {}".format(seed_path))
             infile = open(seed_path, "rb")
             obj = pickle.load(infile)
-            self.logprint("Import succeeded. Seed type = {}".format(type(obj)))
+            if not isinstance(obj, Population):
+                s = "See import failed: {} does not hold a Population\
+                        object.".format(seed_path)
+                self.abort(TypeError, s)
+            infile.close()
             return obj
         except IOError:
-            s = "Seed import failed: no such file or directory."
+            s = "Seed import failed: no file or directory under {}".format(seed_path)
             self.abort(IOError, s)
-        finally:
-            infile.close()
 
-    def get_startpop(self, seed="", pop_number=-1):
+    def get_seed_all(self, seed_path):
+        """Import N = number of runs populations from given seed path."""
+        self.logprint("Reading seed population from ./{}".format(seed_path))
+        if seed_path.endswith(".pop"):
+            self.logprint("Import succeeded.")
+            return [self.get_seed(seed_path)]
+        elif os.path.isdir(seed_path):
+            pop_files = [f for f in os.listdir(seed_path) if f.endswith(".pop")]
+            if len(pop_files) != self.conf["n_runs"]:
+                s = "Number of seed files does not equal to number of runs.\nTried getting seeds from: ./{}.".format(seed_path)
+                self.abort(ImportError, s)
+            pop_files.sort()
+            seeds = [self.get_seed(os.path.join(seed_path,l)) for l in pop_files]
+            self.logprint("Import succeeded.")
+            return seeds
+        # Otherwise abort
+        s = "Seed path must point to a *.pop file or a directory containing *.pop files."
+        self.abort(ImportError, s)
+
+    def get_startpop(self, seed=""):
         """Import a population seed from a pickled AEGIS object, or
         return blank to generate a new starting population."""
         # Return a blank string list if no seed given
@@ -72,27 +88,9 @@ class Simulation:
             self.logprint("Seed: None.")
             self.startpop = [""]
             return
-        # Otherwise, import seed object and act based on type
-        obj = self.get_seed(seed)
-        # Obtain Population object based on type of imported object
-        self.set_startpop(obj, pop_number)
-
-    def set_startpop(self, obj, pop_number=-1):
-        """Set self.startpop from an AEGIS object based on its type."""
-        # Dispatch to __startpop__ method of input object
-        if hasattr(obj, "__startpop__"):
-            pop, msg = obj.__startpop__(pop_number)
-            if inspect.isclass(pop) and issubclass(pop, Exception):
-                self.abort(pop, msg)
-            else:
-                self.logprint(msg)
-                self.startpop = pop
-        else:
-            msg = "No method for extracting seed from object type: {}"
-            msg = msg.format(type(obj))
-            self.abort(ValueError, msg)
-
-        # TODO: Require pop_number to be an integer.
+        # Otherwise, get list of seed populations
+        pops = self.get_seed_all(seed)
+        self.startpop = pops
 
     def init_runs(self):
         self.logprint("Initialising runs...")
@@ -120,7 +118,7 @@ class Simulation:
         """Print an error message to the Simulation log, then abort."""
         self.log += "\n{0}: {1}\n".format(errtype.__name__, message)
         self.endtime = timenow(False)
-        self.log += "\nSimulation terminated{}.".format(timenow())
+        self.log += "\nSimulation terminated {}.".format(timenow())
         self.logsave()
         raise errtype(message)
 
@@ -140,7 +138,6 @@ class Simulation:
 
     def save_output(self):
         """Save output data according to the specified output mode."""
-        #! TODO: Higher output levels (save runs, save sim)?
         # Auxiliary functions
         def intro(otype, suffix):
             self.logprint("Saving {}...".format(otype))
@@ -163,7 +160,6 @@ class Simulation:
                 for m in xrange(self.conf["n_snapshots"]):
                     pop = self.runs[n].record["snapshot_pops"][m]
                     filename = dirname + "/run{0}_s{1}.pop".format(n,m)
-                    #! TODO: Correct file name for number of digits
                     save(pop, filename)
                 del self.runs[n].record["snapshot_pops"]
                 outro("snapshot populations")
@@ -173,7 +169,7 @@ class Simulation:
                 pop = self.runs[n].record["final_pop"]
                 filename = dirname + "/run{}.pop".format(n)
                 save(pop, filename)
-                del self.runs[n].record["final_pop"] #! TODO: Test that this works
+                del self.runs[n].record["final_pop"]
             outro("final populations")
         if self.conf["output_mode"] >= 0: # Save records
             dirname = intro("run records", "records")
@@ -184,7 +180,6 @@ class Simulation:
             outro("run records")
 
     def finalise(self):
-        # self.average_records() #! TODO: Decide what to do about averaging
         # Log simulation completion
         self.endtime = timenow(False)
         self.logprint("\nSimulation completed at {}.".format(timenow(True)))

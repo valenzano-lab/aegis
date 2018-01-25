@@ -92,6 +92,24 @@ class Plotter:
         finally:
             rfile.close()
 
+    def compute_n1_windows(self, wsize):
+        """Compute sliding windows for n1 with desired window size."""
+        w = self.record.get_window("n1", wsize)
+        self.record["n1_window_mean"] = np.mean(w, 2)
+        self.record["n1_window_var"] = np.var(w, 2)
+        self.record["windows"]["n1"] = wsize
+
+    def gen_save_single(self, key):
+        """Generate and save a single plot."""
+        plot = getattr(self, "plot_"+key)()
+        outdir = self.record["output_prefix"] + "_plots"
+        outpath = os.path.join(outdir, key+".png")
+        if os.path.exists(outpath): # overwrite existing plot
+            os.unlink(outpath)
+        if not os.path.exists(outdir):
+            os.makedirs(outdir)
+        plot.save(outpath)
+
     def generate_plots(self):
         for m in self.plot_methods:
             self.plots.append(getattr(self, m)())
@@ -399,18 +417,18 @@ class Plotter:
         return plot
 
     def plot_actual_death_rate(self, window_size=100):
+        n_stage = self.record["n_stages"] if not self.record.auto() \
+                else self.record["max_stages"]
         # check window size is OK
         if window_size*(self.record["n_snapshots"]+1) > \
-                self.record["n_stages"]:
+                n_stage:
             raise ValueError("Window size is too big; overlap.")
         windows = [range(window_size)]
         window_size /= 2
         for s in self.record["snapshot_stages"][1:-1]:
             windows += [range(s-window_size,s+window_size)]
         window_size *= 2
-        windows += [range(self.record["n_stages"]-\
-                window_size, self.record["n_stages"])]
-
+        windows += [range(n_stage-window_size, n_stage)]
         data = self.make_dataframe(["actual_death_rate"], ["stage","age"])
 
         mean_data = pd.DataFrame()

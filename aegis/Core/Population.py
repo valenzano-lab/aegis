@@ -13,10 +13,6 @@ from .Config import deep_eq
 import numpy as np
 import random, copy
 
-# TODO: Remove maximum lifespan
-# TODO: Add init test for correct params keys
-# TODO: Remove age_random from config
-
 class Population:
     """A simulated population with genomes, ages and generation numbers,
     capable of undergoing growth and death."""
@@ -51,6 +47,7 @@ class Population:
         self.g_dist = params["g_dist"].copy() # Proportions of 1's in initial loci
         self.repr_offset = params["repr_offset"] # Genmap offset for repr loci
         self.neut_offset = params["neut_offset"] # Genmap offset for neut loci
+        self.object_max_age = params["object_max_age"] # Maximum age this Object can have in stages
 
     def set_initial_size(self, params, ages, genomes, generations, gentimes):
         """Determine population size from initial inputs."""
@@ -103,7 +100,7 @@ class Population:
         if new_generations:
             generations = np.repeat(0L, self.N)
         if new_gentimes:
-            gentimes = np.repeat(0L, self.N) # TODO: Consider other options
+            gentimes = np.repeat(0L, self.N)
         self.ages = np.copy(ages)
         self.genomes = np.copy(genomes)
         self.generations = np.copy(generations)
@@ -133,7 +130,7 @@ class Population:
         return genome_array.astype(int)
 
 
-    ## REARRANGEMENT AND COMBINATION ## #! TODO: Cythonise these methods?
+    ## REARRANGEMENT AND COMBINATION ##
 
     def params(self):
         """Get population-initiation parameters from present population."""
@@ -145,7 +142,8 @@ class Population:
                 "maturity":self.maturity,
                 "g_dist":self.g_dist,
                 "repr_offset":self.repr_offset,
-                "neut_offset":self.neut_offset
+                "neut_offset":self.neut_offset,
+                "object_max_age":self.object_max_age
                 }
         return p_dict
 
@@ -216,9 +214,6 @@ class Population:
             # [chromosome, individual, locus, bit]
             return self.genomes.reshape((self.N,2,len(self.genmap),self.n_base)
                     ).transpose(1,0,2,3)
-        #! Not happy with the transposition efficiency-wise, but having
-        # individuals first screws up recombination/assortment in ways I
-        # don't know how to efficiently fix...
 
     def sorted_loci(self):
         """Return the sorted locus genotypes of the individuals in the
@@ -244,9 +239,6 @@ class Population:
         """Return the sorted neutral locus genotypes of each individual in
         the population."""
         return self.loci[:,(2*self.max_ls-self.maturity):]
-
-    #! TODO: Fix the above 3 functions to use internal index information,
-    #  rather than assuming a particular hard-coded order
 
     ## GROWTH AND DEATH ##
 
@@ -330,8 +322,6 @@ class Population:
             self.genomes[is_0] = positive_mut
             self.genomes[is_1] = negative_mut
         self.loci = self.sorted_loci() # Renew loci (inc. recomb./assortment)
-        # TODO: Test that loci update following mutation
-
 
     def recombination(self, r_rate): # Per-bit recombination rate
         """Recombine between the two chromosomes of each individual
@@ -384,58 +374,8 @@ class Population:
         self.ages[::2] += self.ages[1::2]
         self.ages /= 2
         self.subset_members(np.tile([True,False], self.N/2))
-        # TODO: Consider implemeting more sophisticated rounding, e.g.
-        # randomise between upper and lower integer
 
-    # Startpop method
-
-    def __startpop__(self, pop_number):
-        return Outpop(self).__startpop__(pop_number)
-
-class Outpop:
-    # TODO: Delete this? (Somewhat redundant without Cython)
-    """Non-cythonised, pickle-able I/O form of Population class."""
-    def __init__(self, pop):
-        """Generate an Outpop from a Population object."""
-        self.repr_mode = pop.repr_mode
-        self.chr_len = pop.chr_len
-        self.n_base = pop.n_base
-        self.max_ls = pop.max_ls
-        self.maturity = pop.maturity
-        self.g_dist = pop.g_dist
-        self.repr_offset = pop.repr_offset
-        self.neut_offset = pop.neut_offset
-        self.genmap = np.copy(pop.genmap)
-        self.ages = np.copy(pop.ages)
-        self.genomes = np.copy(pop.genomes)
-        self.generations = np.copy(pop.generations)
-        self.gentimes = np.copy(pop.gentimes)
-        self.N = pop.N
-
-    def params(self):
-        """Get population-initiation parameters from present population."""
-        p_dict = {
-                "repr_mode":self.repr_mode,
-                "chr_len":self.chr_len,
-                "n_base":self.n_base,
-                "max_ls":self.max_ls,
-                "maturity":self.maturity,
-                "g_dist":self.g_dist,
-                "repr_offset":self.repr_offset,
-                "neut_offset":self.neut_offset
-                }
-        return p_dict
-
-    def toPop(self):
-        """Make cythonised Population object from this Outpop."""
-        return Population(self.params(), self.genmap, self.ages,
-                self.genomes, self.generations, self.gentimes)
-
-    def clone(self):
-        """Generate a new, identical Outpop object."""
-        return Outpop(self)
-
-    # Comparison methods (TODO: Copy these to Population object itself?)
+    # Comparison methods
 
     def __eq__(self, other):
         if not isinstance(other, self.__class__): return NotImplemented
@@ -451,10 +391,3 @@ class Outpop:
     def __hash__(self):
         return hash(tuple(self.ages, self.genomes, self.generations,
             self.gentimes, self.params()))
-
-    # Startpop method
-
-    def __startpop__(self, pop_number):
-        msg = "Setting seed directly from imported population."
-        pop = self
-        return (pop, msg)

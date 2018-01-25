@@ -3,7 +3,7 @@
 ################################################
 
 ## CORE PARAMETERS ##
-random_seed = "" # If numeric, sets random seed to that value before execution
+random_seed = 0 # If numeric, sets random seed to that value before execution
 output_prefix = "test" # Prefix for output files within simulation directory
 n_runs = 1 # Total number of independent runs
 n_stages = 10 # Total number of stages per run [int/"auto"]

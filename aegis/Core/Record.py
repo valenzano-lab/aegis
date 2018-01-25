@@ -6,16 +6,13 @@
 #   the course of a simulation, as well as methods for computing       #
 #   more advanced statistics from that information.                    #
 ########################################################################
-# TODO: add generation and parental-age recording
-# TODO: add detailed per-snapshot generation recording
-# TODO: convert some output into pandas data frames for easier plotting
 
 ## PACKAGE IMPORT ##
 import numpy as np
 import scipy.stats as st
 from .functions import fivenum, deep_eq, deep_key
 from .Config import Config
-from .Population import Population, Outpop
+from .Population import Population
 import copy
 
 ## CLASS ##
@@ -53,8 +50,10 @@ class Record(dict):
         for l in ["age", "gentime"]:
             self["snapshot_{}_distribution".format(l)] = np.zeros([ns,ml])
         self["snapshot_generation_distribution"] = np.zeros(
-                [ns, np.ceil(n/float(mt)).astype(int)+1])
+                [ns, np.ceil(conf["object_max_age"]/float(mt)).astype(int)+1])
         #! TODO: Compute these
+        if conf["auto"]:
+            self["snapshot_stages"] = np.zeros([ns])
 
     # CALCULATING PROBABILITIES
     def p_calc(self, gt, bound):
@@ -89,7 +88,7 @@ class Record(dict):
         self["generation_dist"][n_stage] = fivenum(population.generations)
         self["gentime_dist"][n_stage] = fivenum(population.gentimes)
         if n_snap >= 0:
-            self["snapshot_pops"][n_snap] = Outpop(population)
+            self["snapshot_pops"][n_snap] = population.clone()
         #! Consider snapshot_pops recording: write to a tempdir instead?
 
     ##  FINALISATION  ##
@@ -99,7 +98,8 @@ class Record(dict):
     def compute_snapshot_properties(self):
         """Compute basic properties (ages, gentimes, etc) of snapshot
         populations during finalisation."""
-        n = self["n_stages"] if not self["auto"] else self["max_stages"]
+        #n = self["n_stages"] if not self["auto"] else self["max_stages"]
+        n = self["object_max_age"]
         g = np.ceil(n/float(self["maturity"])).astype(int)+1
         for s in xrange(self["n_snapshots"]):
             p = self["snapshot_pops"][s]
@@ -108,8 +108,6 @@ class Record(dict):
                 key = "snapshot_{}_distribution".format(k)
                 newval = np.bincount(getattr(p, "{}s".format(k)),
                         minlength=minlen[k])/float(p.N)
-                #print key, minlen[k], newval.shape
-                #print newval
                 self[key][s] = newval
 
     def compute_locus_density(self):
@@ -117,7 +115,7 @@ class Record(dict):
         the genome at each snapshot, for survival, reproduction, neutral and
         all loci."""
         l,m,ns = self["max_ls"], self["maturity"], self["n_states"]
-        loci_all = np.array([p.toPop().sorted_loci() \
+        loci_all = np.array([p.sorted_loci() \
                 for p in self["snapshot_pops"]])
         loci = {"s":np.array([L[:,:l] for L in loci_all]),
                 "r":np.array([L[:,l:(2*l-m)] for L in loci_all]),
@@ -223,7 +221,7 @@ class Record(dict):
         q = np.mean(self["junk_mean"]["repr"], 1)
         junk_repr = np.tile(q[:,np.newaxis], [1,self["max_ls"]])
         junk_repr[:,:self["maturity"]] = 0
-        junk_repr /= 2.0 if sex else 1.0 #! TODO: Check this
+        junk_repr /= 2.0 if sex else 1.0
         self["junk_repr"] = junk_repr
 
     def compute_fitness(self):
@@ -262,11 +260,11 @@ class Record(dict):
         l,m,b = self["max_ls"], self["maturity"], self["n_base"]
         # Reshape genomes to stack chromosomes
         # [snapshot, individual, bit]
-        stacked_chrs = [p.toPop().genomes.reshape(p.N*2,p.chr_len) \
+        stacked_chrs = [p.genomes.reshape(p.N*2,p.chr_len) \
                 for p in self["snapshot_pops"]]
         # Compute order of bits in genome map
         order = np.ndarray.flatten(
-            np.array([p.toPop().genmap_argsort*b + c for c in xrange(b)]),
+            np.array([p.genmap_argsort*b + c for c in xrange(b)]),
             order="F") # Using last population; genmaps should all be same
         # Average across individuals and sort [snapshot, bit]
         n1 = np.array([np.mean(sc, axis=0)[order] for sc in stacked_chrs])
@@ -283,7 +281,6 @@ class Record(dict):
         # Genotypic entropy for each set of loci
         entropy_gt = {}
         for k in ["s","r","n","a"]: # Survival, reproductive, neutral, all
-            # NOTE transposed
             d = self["density"][k].T
             entropy_gt[k] = np.apply_along_axis(st.entropy, 0, d)
         self["entropy_gt"] = entropy_gt
@@ -292,7 +289,6 @@ class Record(dict):
         bit_distr = np.vstack((n1_total,1-n1_total))
         entropy_bits = np.apply_along_axis(st.entropy, 0, bit_distr)
         self["entropy_bits"] = entropy_bits
-        #! TODO: Also separate bit entropy by type of locus (s,r,n,a)
 
     # ACTUAL DEATH RATES
 
@@ -328,6 +324,13 @@ class Record(dict):
 
     def finalise(self):
         """Calculate additional stats from recorded data of a completed run."""
+        # If dieoff, truncate data to last snapshot pop
+        if self["dieoff"]:
+            pops = np.array(self["snapshot_pops"])
+            pops = pops[np.nonzero(pops)]
+            self["snapshot_pops"] = list(pops)
+            self["n_snapshots"] = len(self["snapshot_pops"])
+            self["snapshot_stages"] = self["snapshot_stages"][:self["n_snapshots"]]
         # Compute basic properties of snapshot pops
         self.compute_snapshot_properties()
         # Genotype distributions and statistics
@@ -351,26 +354,6 @@ class Record(dict):
             self["final_pop"] = self["snapshot_pops"][-1]
         if self["output_mode"] < 2:
             self["snapshot_pops"] = 0
-
-    # __startpop__ method
-
-    def __startpop__(self, pop_number):
-            if pop_number < 0 and isinstance(self["final_pop"], Population):
-                msg = "Setting seed from final population in Record."
-                pop = self["final_pop"]
-            elif pop_number < 0:
-                msg = "Failed to set seed from final population in Record; {}"
-                msg = msg.format("(no such population).")
-                pop = ValueError
-            elif pop_number >= self["n_snapshots"]:
-                msg = "Seed number ({0}) greater than highest snapshot ({1})."
-                msg = msg.format(pop_number, self["n_snapshots"]-1)
-                pop = ValueError
-            else:
-                msg = "Setting seed from specified snapshot population ({})."
-                msg = msg.format(pop_number)
-                pop = self["snapshot_pops"][pop_number]
-            return (pop, msg)
 
     # copy method
 

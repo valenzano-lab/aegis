@@ -1,8 +1,8 @@
-from aegis.Core import Config, Population, Outpop
+from aegis.Core import Config, Population
 from aegis.Core import Record, Run, Simulation
 from aegis.Core import chance, init_ages, init_genomes, init_generations, deep_eq
-from aegis.Core import init_gentimes
-import pytest, imp, types, random, copy, string, tempfile, os, shutil
+from aegis.Core import init_gentimes, deep_key
+import pytest, imp, types, random, copy, string, tempfile, os, shutil, random
 import numpy as np
 try:
        import cPickle as pickle
@@ -19,10 +19,8 @@ except:
 
 from test_1_Config import conf, conf_path
 from test_2a_Population_init import pop
-from test_2d_Outpop import opop
 from test_3_Record import rec, pop1, rec1
 from test_4_Run import run, ran_str
-
 
 @pytest.fixture(scope="module")
 def sim(request, conf_path):
@@ -30,6 +28,37 @@ def sim(request, conf_path):
     test file."""
     #return Simulation(conf_path, "", 0, 100, False)
     return Simulation(conf_path, 100, False)
+
+@pytest.fixture(scope="function")
+def seed(request, sim):
+    """Generate one Population that progressed some stages in Simulation
+    and save it."""
+    s = sim.copy()
+    s.conf["output_mode"] = 1
+    s.conf["n_runs"] = 1
+    s.init_runs()
+    s.execute()
+    pop = [s.runs[0].record["final_pop"]]
+    s.save_output()
+    return pop
+
+@pytest.fixture(scope="module")
+def random_n_runs(request):
+    return random.randint(2,5)
+
+@pytest.fixture(scope="module")
+def seed2(request, sim, random_n_runs):
+    """Generate Populations that progressed some stages in Simulation
+    and save them."""
+    s = sim.copy()
+    s.conf["output_mode"] = 1
+    s.conf["n_runs"] = random_n_runs
+    s.init_runs()
+    s.execute()
+    pops = [s.runs[n].record["final_pop"] for n in \
+            xrange(s.conf["n_runs"])]
+    s.save_output()
+    return pops
 
 ###########
 ## TESTS ##
@@ -63,59 +92,62 @@ class TestSimulationInit:
             assert s.conf[k] == getattr(c, k)
         # TODO: Implement for multiple input files to avoid hardcoding
 
-    # TODO: Expert sample objects for testing seed setting and get_startpop
-    # def test_get_seed(self, ...)
-    #def test_get_startpop(self, ...)
+    def test_get_seed_degen(self, sim, ran_str):
+        """Confirm that AEGIS raises an error if given an invalid
+        seed file path."""
+        with pytest.raises(IOError):
+            sim.get_seed(ran_str)
+
+    def test_get_seed_good(self, sim, seed):
+        """Test that get_seed correctly imports a Population file."""
+        opop1 = seed
+        s = sim.copy()
+        opop2 = s.get_seed(s.conf["output_prefix"]+\
+                "_files/populations/final/run0.pop")
+        shutil.rmtree(s.conf["output_prefix"]+"_files")
+        assert opop1.__eq__(opop2)
+
+    def test_get_seed_all_degen(self, sim, ran_str):
+        """Confirm that AEGIS raises an error if given an invalid
+        seed file path."""
+        with pytest.raises(ImportError):
+            sim.get_seed_all(ran_str)
+
+    def test_get_seed_all_degen2(self, sim, random_n_runs, seed2):
+        """Confirm that AEGIS raises an error if number of seed
+        files and number of runs not the same."""
+        with pytest.raises(ImportError):
+            opops1 = seed2
+            s = sim.copy()
+            s.conf["n_runs"] = random_n_runs-1
+            opops2 = s.get_seed_all(s.conf["output_prefix"]+\
+                "_files/populations/final")
+
+    def test_get_seed_all_good(self, sim, random_n_runs, seed2):
+        opops1 = seed2
+        s = sim.copy()
+        s.conf["n_runs"] = random_n_runs
+        opops2 = s.get_seed_all(s.conf["output_prefix"]+\
+            "_files/populations/final")
+        shutil.rmtree(s.conf["output_prefix"]+"_files")
+        for i in xrange(len(opops1)):
+            assert opops1[i].__eq__(opops2[i])
 
     def test_get_startpop_degen(self, sim):
+        """Test that AEGIS correctly returns [""] when no seed."""
         s = sim.copy()
-        for n in xrange(3):
-            s.get_startpop("", random.randint(-1e6,1e6))
-            assert s.startpop == [""]
+        s.get_startpop("")
+        assert s.startpop == [""]
 
-    def test_set_startpop_opop_pop(self, sim, opop, pop):
-        """Test set_startpop functionality for Population and Outpop
-        seed objects."""
-        s1 = sim.copy()
-        del s1.startpop
-        s2 = s1.copy()
-        s3 = s1.copy()
-        # 1: Outpop
-        s1.set_startpop(opop, -1)
-        s2.set_startpop(opop, random.randint(-1e6, 1e6))
-        s3.set_startpop(opop, random.random())
-        assert s1.startpop == opop
-        assert s2.startpop == opop
-        assert s3.startpop == opop
-        del s1.startpop, s2.startpop, s3.startpop
-        # 2: Population
-        s1.set_startpop(pop, -1)
-        s2.set_startpop(pop, random.randint(-1e6, 1e6))
-        s3.set_startpop(pop, random.random())
-        assert s1.startpop == opop
-        assert s2.startpop == opop
-        assert s3.startpop == opop
-
-    # TODO: Add tests for setting startpops from Record, Run and
-    #       Simulation objects
-#    def test_set_startpop(self, sim, opop, pop, rec, rec1, run):
-#        """Test set_startpop functionality for different classes and
-#        parameter values."""
-#        print vars(sim)
-#        print sim.startpop
-#
-#        # 3: Record (failed)
-#        with pytest.raises(ValueError):
-#            sim.set_startpop(rec, -1)
-#        with pytest.raises(ValueError):
-#            sim.set_startpop(rec, rec["n_snapshots"]+1)
-#        ao.uao.eoe
-#        # 4: Run
-#        sim.set_startpop(run, -1)
-#        sim2.set_startpop(run, random.randint(-1e6, -1))
-#        assert sim.startpop == run.pop
-#        assert sim2.startpop == run.pop
-#        assert 1 == 2
+    def test_get_startpop_good(self, sim, seed):
+        """Test that get_startpop correctly imports single file."""
+        s = sim.copy()
+        s.get_startpop(s.conf["output_prefix"]+\
+                "_files/populations/final/run0.pop")
+        shutil.rmtree(s.conf["output_prefix"]+"_files")
+        opop1 = s.startpop[0]
+        opop2 = seed[0]
+        assert opop1.__eq__(opop2)
 
     def test_init_runs(self, sim):
         """Test that init_runs correctly generates new Run objects with
@@ -232,13 +264,14 @@ class TestSimulationFinalisation:
         def confirm_output(dirpref):
             if output_mode >= 2:
                 dirname = os.path.join(dirpref, "populations/snapshots")
+
                 for n in xrange(sim.conf["n_runs"]):
                     for m in xrange(sim.conf["n_snapshots"]):
-                        testfile(dirname, "run{0}_s{1}.pop".format(n,m), Outpop)
+                        testfile(dirname, "run{0}_s{1}.pop".format(n,m), Population)
             if output_mode >= 1:
                 dirname = os.path.join(dirpref, "populations/final")
                 for n in xrange(sim.conf["n_runs"]):
-                    testfile(dirname, "run{}.pop".format(n), Outpop)
+                    testfile(dirname, "run{}.pop".format(n), Population)
             if output_mode >= 0:
                 dirname = os.path.join(dirpref, "records")
                 for n in xrange(sim.conf["n_runs"]):

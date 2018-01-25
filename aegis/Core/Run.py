@@ -14,25 +14,37 @@ from .functions import chance, init_ages, init_genomes, init_generations
 from .functions import init_gentimes, deep_eq
 from .functions import timenow, timediff, get_runtime
 from .Config import Config
-from .Population import Population, Outpop
+from .Population import Population
 from .Record import Record
 
 ## CLASS ##
 class Run:
     def __init__(self, config, startpop, n_run, report_n, verbose):
+        # init Run parameters
         self.log = ""
         self.conf = config.copy()
         self.surv_penf = 1.0
         self.repr_penf = 1.0
+        self.n_stage = 0
+        self.n_snap = 0
+        self.n_run = n_run
+        self.dieoff = False
+        self.complete = False
+        self.report_n = report_n
+        self.verbose = verbose
         self.resources = self.conf["res_start"]
         np.random.shuffle(self.conf["genmap"])
         self.genmap = self.conf["genmap"] # Not a copy
+        # init Population
+        #n = self.conf["n_stages"] if not self.auto() else self.conf["max_stages"]
         if startpop != "": # If given a seeding population
             self.population = startpop.clone()
             # Adopt from population: genmap, n_base, chr_len
             self.conf["genmap"] = self.population.genmap
             self.conf["chr_len"] = self.population.chr_len
             self.conf["n_base"] = self.population.n_base
+            self.population.object_max_age += self.conf["object_max_age"]
+            self.conf["object_max_age"] = self.population.object_max_age
             # Keep new max_ls, maturity, sexual, g_dist, offsets
             self.population.repr_mode = self.conf["repr_mode"]
             self.population.maturity = self.conf["maturity"]
@@ -41,20 +53,11 @@ class Run:
             self.population.neut_offset = self.conf["neut_offset"]
             self.conf.set_params()
         else:
-            # NOTE why is this neccesary? can't we convert it to Outpop only right
-            # after Run completion? (I understand this is needed in order for
-            # Simulation to be able to save it.)
-            self.population = Outpop(Population(self.conf["params"],
+            self.population = Population(self.conf["params"],
                 self.conf["genmap"], init_ages(), init_genomes(),
-                init_generations(), init_gentimes()))
-        self.n_stage = 0
-        self.n_snap = 0
-        self.n_run = n_run
+                init_generations(), init_gentimes())
+        # init Record
         self.record = Record(self.conf)
-        self.dieoff = False
-        self.complete = False
-        self.report_n = report_n
-        self.verbose = verbose
 
     def update_resources(self):
         """If resources are variable, update them based on current
@@ -77,7 +80,6 @@ class Run:
             v,r,l = self.conf["V"], self.conf["R"], self.conf["res_limit"]
             new_res = max(0, self.resources - self.N) * v + r
             self.resources = new_res if r < 0 else min(r, new_res)
-        #! TODO: Test and implement this
 
     def starving(self):
         """Determine whether population is starving based on resource level."""
@@ -97,10 +99,6 @@ class Run:
 
     def execute_stage(self):
         """Perform one stage of a simulation run and test for completion."""
-        # Make sure population is in cythonised form
-        if not isinstance(self.population, Population):
-            m="Convert Outpop objects to Population before running execute_stage."
-            raise TypeError(m)
         full_report =  self.record_stage()
         if not self.dieoff:
             # Update ages, resources and starvation
@@ -128,8 +126,10 @@ class Run:
         self.n_stage += 1
         self.test_complete()
         if self.complete and not self.dieoff:
+            # for "auto" last snapshot not taken otherwise
+            if self.conf.auto():
+                self.record_stage()
             self.record.finalise()
-        #! TODO: What about if dieoff?
 
     def record_stage(self):
         """Record and report population information, as appropriate for
@@ -156,10 +156,11 @@ class Run:
             exp = self.conf["snapshot_generations_remaining"][0]
             if obs >= exp:
                 snapshot = self.n_snap
+                # Save at which stages are the snapshots taken
+                self.record["snapshot_stages"][snapshot] = self.n_stage
                 # Prevent same min generation triggering multiple snapshots:
                 self.conf["snapshot_generations_remaining"] = \
                         self.conf["snapshot_generations_remaining"][1:]
-                        # TODO: Reconstruct this in Record finalisation
         # Record information and return verbosity boolean
         self.record.update(self.population, self.resources, self.surv_penf,
                 self.repr_penf, self.n_stage, snapshot)
@@ -177,11 +178,9 @@ class Run:
         elif not self.dieoff and not self.conf["auto"]:
             stg, gen = (self.n_stage >= self.conf["n_stages"]), False
         self.complete = self.dieoff or gen or stg
-        # TODO: Test this
 
     def execute_attempt(self):
         """Execute a single run attempt from start to completion or failure."""
-        self.population = self.population.toPop() # Convert from Outpop
         # Compute starting time and announce run start
         if not hasattr(self, "starttime"): self.starttime = timenow(False)
         f,r = self.record["prev_failed"]+1, self.n_run
@@ -193,12 +192,10 @@ class Run:
         # Execute stages until completion
         while not self.complete:
             self.execute_stage()
-            #print self.population.N
-        self.population = Outpop(self.population) # Convert back to Outpop
         # Compute end time and announce run end
         self.endtime = timenow(False)
         b = "Extinction" if self.dieoff else "Completion"
-        self.logprint("{0} at {1}. Final population: {2}"\
+        self.logprint("{0} {1}. Final population: {2}"\
                 .format(b, timenow(True), self.population.N))
         if f>0 and not self.dieoff:
             self.logprint("Total attempts required: {0}.".format(f))
@@ -207,13 +204,15 @@ class Run:
     def execute(self):
         """Execute the run, repeating until either an attempt is
         successful or the maximum number of failures is reached."""
+        prev_failed = self.record["prev_failed"]
         if self.conf["max_fail"] > 1: save_state = self.copy()
         self.execute_attempt()
         if self.dieoff:
-            nfail = save_state.record["prev_failed"] + 1
+            nfail =  prev_failed + 1
             self.logprint("Run failed. Total failures = {}.".format(nfail))
             if nfail >= self.conf["max_fail"]: # Accept failure and terminate
                 self.logprint("Failure limit reached. Accepting failed run.")
+                self.record.finalise()
                 self.logprint(get_runtime(self.starttime, self.endtime))
             else: # Reset to saved state (except for log and prev_failed)
                 save_state.record["prev_failed"] = nfail
@@ -221,7 +220,6 @@ class Run:
                 attrs = vars(save_state)
                 for key in attrs: # Revert everything else
                     setattr(self, key, attrs[key])
-                #! TODO: Test that this does not change start time
                 return self.execute()
         self.logprint(get_runtime(self.starttime, self.endtime))
 
@@ -241,17 +239,6 @@ class Run:
     # Basic methods
     def copy(self):
         return copy.deepcopy(self)
-
-    # __startpop__ method
-
-    def __startpop__(self, pop_number):
-            if self.record["final_pop"] != 0 or pop_number >= 0:
-                msg = "Setting seed from embedded Record of Run object."
-                return self.record.__startpop__(pop_number)
-            else:
-                msg = "Setting seed from current Run population."
-                pop = self.population
-            return (pop, msg)
 
     # Comparison methods
 

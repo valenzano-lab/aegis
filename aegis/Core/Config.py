@@ -10,7 +10,7 @@
 
 ## PACKAGE IMPORT ##
 import numpy as np
-import copy, imp, math
+import copy, imp, math, numbers, random
 from .functions import deep_key, deep_eq
 
 class Config(dict):
@@ -56,7 +56,7 @@ class Config(dict):
 
     def make_params(self):
         key_list = ["repr_mode", "chr_len", "n_base", "maturity", "start_pop",
-                "max_ls", "g_dist", "repr_offset", "neut_offset"]
+                "max_ls", "g_dist", "repr_offset", "neut_offset", "object_max_age"]
         return dict([(k, self[k]) for k in key_list])
 
     # Generate derived attributes
@@ -64,8 +64,11 @@ class Config(dict):
     def generate(self):
         """Generate derived configuration attributes from simple ones and
         add to configuration object."""
-        # Compute values
         self.check()
+        # Compute random seed
+        if not isinstance(self["random_seed"], numbers.Number):
+            self["random_seed"] = random.random()
+        random.seed(self["random_seed"])
         # Genome structure
         self["genmap"] = np.concatenate([
             np.arange(self["max_ls"]),
@@ -90,6 +93,8 @@ class Config(dict):
             self["repr_bound"][1], self["n_states"])
         # Check whether stage counting is automatic
         self["auto"] = (self["n_stages"] == "auto")
+        self["object_max_age"] = self["n_stages"] if not self["auto"]\
+                else self["max_stages"]
         # Params dict
         self["params"] = self.make_params()
         # Compute automatic stage numbering (if required)
@@ -111,6 +116,7 @@ class Config(dict):
                     math.log10(abs(1-alpha-beta))
             # Assign generation threshold
             self["min_gen"] = int(k*self["scale"])
+
         # Compute snapshot generations
         ss_key = "generations" if self["auto"] else "stages"
         ss_max = self["min_gen"] if self["auto"] else self["n_stages"] - 1
@@ -136,4 +142,3 @@ class Config(dict):
     # COPYING
 
     def copy(self): return copy.deepcopy(self)
-    

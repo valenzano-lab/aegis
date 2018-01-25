@@ -2,15 +2,12 @@
 
 # Import libraries and define arguments
 import argparse,os,sys,warnings
-# import pyximport; pyximport.install()
 # ignore pandas warnings, but also all FutureWarning
-# TODO: handle this better
 warnings.simplefilter(action='ignore', category=FutureWarning)
 import aegis
 
 parser = argparse.ArgumentParser(description='Run the genome ageing simulation.',\
         formatter_class=argparse.RawTextHelpFormatter)
-# TODO: add README and instruct the user to read it on the webpage before running
 parser.add_argument('script', help="AEGIS script to run:\n\
     run - run the simulation with the config file specified in\n\
           infile\n\
@@ -26,7 +23,12 @@ parser.add_argument('-r', type=int, metavar="<int>", default=100,
         help="report information every <int> stages (default: 100)")
 parser.add_argument('-p', '--profile', metavar='<str>', default="",
         help="profile genome simulation with cProfile and save to given path")
+parser.add_argument('-ws', '--window-size', type=int, metavar='<int>', default=0,
+        help="if called with plot, generates n1 plots with desired window size")
 args = parser.parse_args()
+
+if args.script!="plot" and args.window_size:
+    parser.error("--window-size can only be set when script=plot")
 
 if args.profile != "":
     import cProfile, pstats, StringIO
@@ -42,8 +44,11 @@ if args.script == "run":
 elif args.script == "getconfig":
     module.getconfig(inpath)
 
-elif args.script == "plot":
+elif args.script == "plot" and args.window_size == 0:
     module.plot(inpath)
+
+elif args.script == "plot" and args.window_size > 0:
+    module.plot_n1_sliding_window(inpath, args.window_size)
 
 if args.profile != "":
     pr.create_stats()

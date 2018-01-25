@@ -15,7 +15,7 @@ setup(name='aegis',
             'numpy>=1.13.3',
             'scipy>=0.19.1',
             'python-dateutil>=2.6.1'
-            # add plotting package
+            # TODO add plotting package
             ],
         scripts=['bin/aegis'],
         # Medadata for upload to PyPI
