@@ -1,5 +1,5 @@
-from aegis.Core import Infodict, Config
-import pytest,importlib,types,random,copy,string,os,tempfile,math
+from aegis.Core import Config
+import pytest,importlib,types,random,copy,string,os,tempfile,math,imp
 import numpy as np
 
 ##############
@@ -15,22 +15,22 @@ def ran_str(request):
 @pytest.fixture(scope="module")
 def conf_path(request):
     dirpath = os.path.dirname(os.path.realpath(__file__))
-    filepath = os.path.join(dirpath, "config_test.py")
+    filepath = os.path.join(dirpath, "tconfig.py")
     return filepath
 
 @pytest.fixture(params=["import", "random", "auto"], scope="module")
 def conf(request, conf_path, ran_str):
     """Create a default configuration object."""
     c = Config(conf_path)
-    c.put("setup", request.param, "Method of fixture generation.")
+    c["setup"] = request.param
     if request.param != "import": # Randomise config parameters
         ## CORE PARAMETERS ##
         # c["random_seed"] = random.random() # TODO: Add seed value here?
         c["output_prefix"] = os.path.join(tempfile.gettempdir(), ran_str)
-        c["number_of_runs"] = random.randint(1,3)
+        c["n_runs"] = random.randint(1,3)
         nstage = random.randint(10,80)
-        c["number_of_stages"] = "auto" if request.param == "auto" else nstage
-        c["number_of_snapshots"] = random.randint(2,10)
+        c["n_stages"] = "auto" if request.param == "auto" else nstage
+        c["n_snapshots"] = random.randint(2,10)
         # c["output_mode"] = random.randrange(3) # TODO: Test with this?
         # c["max_fail"] = random.randrange(10) # TODO: Test with this?
         ## STARTING PARAMETERS ##
@@ -91,109 +91,6 @@ def ranstr(m,n=10):
     l = [''.join(r(s) for _ in xrange(n)) for _ in xrange(m)]
     return l
 
-class TestInfodict:
-
-    #! TODO: Implement this
-#    def test_infodict_init(self):
-#        x = Infodict()
-#        assert True #! ...
-
-    def test_infodict_getput(self):
-        """Test basic constructors and selectors for Infodict object."""
-        # Set up random inputs
-        keystr0, valstr0, infstr0 = ranstr(3)
-        # Test basic put/get methods
-        i = Infodict()
-        i.put(keystr0, valstr0, infstr0)
-        assert i.get_value(keystr0) == valstr0
-        assert i.get_info(keystr0) == infstr0
-        assert i[keystr0] == valstr0
-        # Test single puts on existing key
-        keystr1, valstr1, infstr1 = ranstr(3)
-        i.put_value(keystr0,valstr1)
-        i.put_info(keystr0,infstr1)
-        assert i.get_value(keystr0) == valstr1
-        assert i.get_info(keystr0) == infstr1
-        assert i[keystr0] == valstr1
-        i[keystr0] = infstr1
-        assert i[keystr0] == infstr1
-        # Test single puts on new key
-        with pytest.raises(SyntaxError):
-            i.put_value(keystr1,valstr1)
-        with pytest.raises(SyntaxError):
-            i.put_info(keystr1,infstr1)
-        with pytest.raises(SyntaxError):
-            i[keystr1] = valstr1
-        # Test multiple-get methods
-        i.put(keystr0, valstr0, infstr0)
-        i.put(keystr1, valstr1, infstr1)
-        assert i.get_values([keystr0,keystr1]) == [valstr0,valstr1]
-        assert i.get_infos([keystr0,keystr1]) == [infstr0,infstr1]
-        assert i[keystr0,keystr1,keystr0] == [valstr0,valstr1,valstr0]
-
-    def test_infodict_dictmethods(self):
-        """Test that dictionary methods like keys(), values() etc still work
-        as expected for Infodicts."""
-        keystr0, valstr0, infstr0 = ranstr(3)
-        keystr1, valstr1, infstr1 = ranstr(3)
-        i = Infodict()
-        # keys(), values(), infos()
-        i.put(keystr0, valstr0, infstr0)
-        assert i.keys() == [keystr0]
-        assert i.values() == [valstr0]
-        assert i.infos() == [infstr0]
-        assert i.has_key(keystr0)
-        assert not i.has_key(keystr1)
-        i.put(keystr1, valstr1, infstr1)
-        assert sorted(i.keys()) == sorted([keystr0, keystr1])
-        assert sorted(i.values()) == sorted([valstr0, valstr1])
-        assert sorted(i.infos()) == sorted([infstr0, infstr1])
-        assert i.has_key(keystr0)
-        assert i.has_key(keystr1)
-        # equality
-        j = Infodict()
-        j.put(keystr0, valstr0, infstr0)
-        j.put(keystr1, valstr1, infstr1)
-        assert i == i and i == j and j == j
-        #! Update as more dict methods added to Infodict
-
-    def test_infodict_delete(self):
-        keystr0, valstr0, infstr0 = ranstr(3)
-        keystr1, valstr1, infstr1 = ranstr(3)
-        i = Infodict()
-        i.put(keystr0, valstr0, infstr0)
-        i.put(keystr1, valstr1, infstr1)
-        i.delete_item(keystr1)
-        assert i.keys() == [keystr0]
-        assert i.values() == [valstr0]
-        assert i.infos() == [infstr0]
-        assert i.has_key(keystr0)
-        assert not i.has_key(keystr1)
-        i.put(keystr1, valstr1, infstr1)
-        del i[keystr0]
-        assert i.keys() == [keystr1]
-        assert i.values() == [valstr1]
-        assert i.infos() == [infstr1]
-        assert i.has_key(keystr1)
-        assert not i.has_key(keystr0)
-
-    def test_infodict_subdict(self):
-        # Setup
-        keystr0, valstr0, infstr0 = ranstr(3)
-        keystr1, valstr1, infstr1 = ranstr(3)
-        keystr2, valstr2, infstr2 = ranstr(3)
-        i = Infodict()
-        i.put(keystr0, valstr0, infstr0)
-        i.put(keystr1, valstr1, infstr1)
-        i.put(keystr2, valstr2, infstr2)
-        j = Infodict()
-        j.put(keystr1, valstr1, infstr1)
-        j.put(keystr2, valstr2, infstr2)
-        # Test
-        assert i.subdict([keystr0,keystr2]) == \
-                {keystr0:valstr0, keystr2:valstr2}
-        assert i.subdict([keystr1,keystr2],False) == j
-
 class TestConfig:
 
     def test_config_copy(self, conf):
@@ -205,13 +102,15 @@ class TestConfig:
 
     def test_config_auto(self, conf):
         c = conf.copy()
-        assert c.auto() == (c["number_of_stages"] == "auto")
-        c["number_of_stages"] = "auto"
-        assert c.auto()
-        c["number_of_stages"] = random.randrange(1000)
-        assert not c.auto()
+        assert c["auto"] == (c["n_stages"] == "auto")
+        c["n_stages"] = "auto"
+        c.generate()
+        assert c["auto"]
+        c["n_stages"] = random.randrange(1000)
+        c.generate()
+        assert not c["auto"]
 
-    def test_config_init(self, conf):
+    def test_config_init(self, conf, conf_path):
         """Test that Config objects are correctly initialised from an imported
         configuration file."""
         if conf["setup"] != "import": return
@@ -219,8 +118,8 @@ class TestConfig:
         # Remove stuff that gets introduced/changed during generation
         del_keys = ("g_dist", "genmap", "chr_len", "s_range", "r_range",
                 "params", "surv_step", "repr_step", "genmap_argsort",
-                "n_states", "surv_bound")
-        if c.auto():
+                "n_states", "surv_bound", "auto")
+        if c["auto"]:
             del_keys += ("min_gen", "snapshot_generations", 
                     "snapshot_generations_remaining")
         else:
@@ -228,13 +127,11 @@ class TestConfig:
         for key in del_keys: del c[key]
         if c["repr_mode"] in ["sexual", "assort_only"]: c["repr_bound"] /= 2
         # Compare remaining keys to directly imported config file
-        c_import = importlib.import_module("config_test")
+        c_import = imp.load_source('ConfFile', conf_path)
         for key in c.keys():
-            if key in ["setup", "info_dict"]: continue
+            if key in ["setup"]: continue
             print key
-            assert type(c.get_info(key)) is str
-            assert len(c.get_info(key)) > 0
-            attr = c.get_value(key)
+            attr = c[key]
             impt = getattr(c_import,key)
             if type(attr) in [int, str, float, dict, bool]:
                 assert attr == impt
@@ -277,10 +174,10 @@ class TestConfig:
         c = conf.copy()
         np.set_printoptions(threshold=np.nan)
         # Remove stuff that gets introduced/changed during generation
-        del_keys = ("g_dist", "genmap", "chr_len", "s_range", "r_range",
+        del_keys = ("genmap", "chr_len", "s_range", "r_range",
                 "params", "surv_step", "repr_step", "genmap_argsort",
                 "n_states", "surv_bound")
-        if c.auto():
+        if c["auto"]:
             del_keys += ("min_gen", "snapshot_generations", 
                     "snapshot_generations_remaining")
         else:
@@ -297,7 +194,6 @@ class TestConfig:
         print c["neut_offset"] - c["repr_offset"]
         print c["neut_offset"] - c["repr_offset"] < c["max_ls"]
         print c["genmap"]
-        assert c["g_dist"] == {"s":c["g_dist_s"], "r":c["g_dist_r"], "n":c["g_dist_n"]}
         assert len(c["genmap"]) == c["max_ls"] + (c["max_ls"]-c["maturity"]) +\
                 c["n_neutral"]
         assert np.sum(c["genmap"] < c["repr_offset"]) == c["max_ls"]
@@ -335,20 +231,25 @@ class TestConfig:
         assert c["params"]["start_pop"] == c["start_pop"]
         assert c["params"]["g_dist"] == c["g_dist"]
         # Snapshot stages
-        if c.auto():
-            m,r = c["m_rate"], c["m_ratio"]
-            A, P = abs(1 - m - m*r), abs(r/(1+r) - c["g_dist_n"])
-            k = (math.log10(c["delta"]) - math.log10(P))/math.log10(A)
+        if c["auto"]:
+            #m,r = c["m_rate"], c["m_ratio"]
+            #A, P = abs(1 - m - m*r), abs(r/(1+r) - c["g_dist_n"])
+            #k = (math.log10(c["delta"]) - math.log10(P))/math.log10(A)
+            alpha, beta = c["m_rate"], c["m_rate"]*c["m_ratio"]
+            y = c["g_dist"]["n"]
+            x = 1-y
+            k = math.log10(c["delta"]*(alpha+beta)/abs(alpha*y-beta*x)) / \
+                    math.log10(abs(1-alpha-beta))
             assert c["min_gen"] == int(k * c["scale"])
-            assert len(c["snapshot_generations"]) == c["number_of_snapshots"]
-            assert len(c["snapshot_generations"]) == c["number_of_snapshots"]
+            assert len(c["snapshot_generations"]) == c["n_snapshots"]
+            assert len(c["snapshot_generations"]) == c["n_snapshots"]
             assert c["snapshot_generations"].dtype is np.dtype(int)
             assert np.array_equal(c["snapshot_generations"],np.around(
-                np.linspace(0, c["min_gen"], c["number_of_snapshots"])))
+                np.linspace(0, c["min_gen"], c["n_snapshots"])))
             assert np.array_equal(c["snapshot_generations"],
                     c["snapshot_generations_remaining"])
         else:
-            assert len(c["snapshot_stages"]) == c["number_of_snapshots"]
+            assert len(c["snapshot_stages"]) == c["n_snapshots"]
             assert c["snapshot_stages"].dtype is np.dtype(int)
             assert np.array_equal(c["snapshot_stages"],np.around(np.linspace(
-                0, c["number_of_stages"]-1, c["number_of_snapshots"])))
+                0, c["n_stages"]-1, c["n_snapshots"])))

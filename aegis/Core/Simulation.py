@@ -12,7 +12,7 @@ import scipy.stats as st
 import copy, datetime, time, os, importlib, inspect, numbers, shutil
 from .functions import chance, init_ages, init_genomes, init_generations
 from .functions import timenow, timediff, get_runtime, init_gentimes
-from .Config import Infodict, Config
+from .Config import Config
 from .Population import Population, Outpop
 from .Record import Record
 from .Run import Run
@@ -96,22 +96,10 @@ class Simulation:
 
     def init_runs(self):
         self.logprint("Initialising runs...")
-        y,x = (len(self.startpop) == 1), xrange(self.conf["number_of_runs"])
+        y,x = (len(self.startpop) == 1), xrange(self.conf["n_runs"])
         self.runs = [Run(self.conf, self.startpop[0 if y else n], n,
             self.report_n, self.verbose) for n in x]
         self.logprint("Runs initialised.\n")
-
-    # __startpop__ METHOD
-
-    def __startpop__(self, pop_number):
-        if pop_number < 0:
-            msg = "No method for obtaining seed '-1' from Simulation object."
-            pop = ValueError
-        else:
-            pop, msg = self.runs[pop_number].__startpop__(-1)
-            msg = "Setting seed from embedded Run of Simulation object ({})."
-            msg = msg.format(pop_number)
-        return (pop, msg)
 
     # LOGGING, SAVING & ABORTING
 
@@ -141,7 +129,7 @@ class Simulation:
     def execute_series(self):
         """Execute simulation runs in series, with no external
         parallelisation."""
-        for n in xrange(self.conf["number_of_runs"]):
+        for n in xrange(self.conf["n_runs"]):
             self.runs[n].execute()
 
     def execute(self):
@@ -171,8 +159,8 @@ class Simulation:
         # Saving output
         if self.conf["output_mode"] >= 2: # Save all snapshot pops
             dirname = intro("snapshot populations", "populations/snapshots")
-            for n in xrange(self.conf["number_of_runs"]):
-                for m in xrange(self.conf["number_of_snapshots"]):
+            for n in xrange(self.conf["n_runs"]):
+                for m in xrange(self.conf["n_snapshots"]):
                     pop = self.runs[n].record["snapshot_pops"][m]
                     filename = dirname + "/run{0}_s{1}.pop".format(n,m)
                     #! TODO: Correct file name for number of digits
@@ -181,7 +169,7 @@ class Simulation:
                 outro("snapshot populations")
         if self.conf["output_mode"] >= 1: # Save final populations
             dirname = intro("final populations", "populations/final")
-            for n in xrange(self.conf["number_of_runs"]):
+            for n in xrange(self.conf["n_runs"]):
                 pop = self.runs[n].record["final_pop"]
                 filename = dirname + "/run{}.pop".format(n)
                 save(pop, filename)
@@ -189,7 +177,7 @@ class Simulation:
             outro("final populations")
         if self.conf["output_mode"] >= 0: # Save records
             dirname = intro("run records", "records")
-            for n in xrange(self.conf["number_of_runs"]):
+            for n in xrange(self.conf["n_runs"]):
                 rec = self.runs[n].record
                 filename = dirname + "/run{}.rec".format(n)
                 save(rec, filename)

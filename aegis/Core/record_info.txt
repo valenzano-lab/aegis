@@ -18,11 +18,11 @@ death_inc
 res_regen_constant
 n_states
 neut_offset
-number_of_snapshots
+n_snapshots
 chr_len
 repr_dec
 output_mode
-number_of_runs
+n_runs
 repr_offset
 start_pop
 R
@@ -62,8 +62,8 @@ dieoff
 res_var
 
 # use in further text
-number_of_loci = max_ls + (max_ls-maturity) + n_neutral
-number_of_bits = number_of_loci * n_base
+n_loci = max_ls + (max_ls-maturity) + n_neutral
+n_bits = n_loci * n_base
 
 ###################             ##### 
 ## numpy.ndarray ##             shape
@@ -72,38 +72,38 @@ number_of_bits = number_of_loci * n_base
 #############
 # per stage #
 #############
-population_size                 (number_of_stages,)
-resources                       (number_of_stages,)
-repr_penf                       (number_of_stages,)
-surv_penf                       (number_of_stages,)
-age_distribution                (number_of_stages, max_ls)
-actual_death_rate               (number_of_stages-1, max_ls-1)
+population_size                 (n_stages,)
+resources                       (n_stages,)
+repr_penf                       (n_stages,)
+surv_penf                       (n_stages,)
+age_distribution                (n_stages, max_ls)
+actual_death_rate               (n_stages-1, max_ls-1)
 
 ################
 # per snapshot #
 ################
-snapshot_stages                 (number_of_snapshots,)
-fitness                         (number_of_snapshots,)
-junk_fitness                    (number_of_snapshots,)
-entropy_bits                    (number_of_snapshots,)
-repr_value                      (number_of_snapshots, max_ls)
-mean_repr                       (number_of_snapshots, max_ls)
-junk_repr_value                 (number_of_snapshots, max_ls)
-junk_repr                       (number_of_snapshots, max_ls)
-cmv_surv                        (number_of_snapshots, max_ls)
-junk_cmv_surv                   (number_of_snapshots, max_ls)
-fitness_term                    (number_of_snapshots, max_ls)
-junk_fitness_term               (number_of_snapshots, max_ls)
-snapshot_age_distribution       (number_of_snapshots, max_ls)
-n1                              (number_of_snapshots, number_of_bits)
-n1_var                          (number_of_snapshots, number_of_bits)
+snapshot_stages                 (n_snapshots,)
+fitness                         (n_snapshots,)
+junk_fitness                    (n_snapshots,)
+entropy_bits                    (n_snapshots,)
+repr_value                      (n_snapshots, max_ls)
+mean_repr                       (n_snapshots, max_ls)
+junk_repr_value                 (n_snapshots, max_ls)
+junk_repr                       (n_snapshots, max_ls)
+cmv_surv                        (n_snapshots, max_ls)
+junk_cmv_surv                   (n_snapshots, max_ls)
+fitness_term                    (n_snapshots, max_ls)
+junk_fitness_term               (n_snapshots, max_ls)
+snapshot_age_distribution       (n_snapshots, max_ls)
+n1                              (n_snapshots, n_bits)
+n1_var                          (n_snapshots, n_bits)
 
 TODO: fill these out
 ####################
 # genome and other #
 ####################
-genmap                          (number_of_loci,)
-genmap_argsort                  (number_of_loci,)
+genmap                          (n_loci,)
+genmap_argsort                  (n_loci,)
 s_range                         (n_states,)
 r_range                         (n_states,)
 death_bound                     (2,)
@@ -115,8 +115,8 @@ population_size_window_mean     ?
 population_size_window_var      ?
 resources_window_mean           ?
 resources_window_var            ?
-n1_window_mean                  (number_of_snapshots,number_of_loci-windows["n1"]+1)
-n1_window_var                   (number_of_snapshots,number_of_loci-windows["n1"]+1)
+n1_window_mean                  (n_snapshots,n_loci-windows["n1"]+1)
+n1_window_var                   (n_snapshots,n_loci-windows["n1"]+1)
 prev_failed                     ?
 
 ##########                      ####
@@ -139,9 +139,9 @@ params                          ['g_dist','repr_offset','neut_offset','repr_mode
 ################                #####
 # dict objects #                shape
 ################                #####
-density['a']                    (number_of_snapshots,n_states)
-density_per_locus['a']          (number_of_snapshots,number_of_loci,n_states)
-mean_gt['a']                    (number_of_snapshots,number_of_loci)
-var_gt['a']                     (number_of_snapshots,number_of_loci)
-entropy_gt['?']                 (number_of_snapshots)
-prob/junk_mean/var              (number_of_snapshots,max_ls)
+density['a']                    (n_snapshots,n_states)
+density_per_locus['a']          (n_snapshots,n_loci,n_states)
+mean_gt['a']                    (n_snapshots,n_loci)
+var_gt['a']                     (n_snapshots,n_loci)
+entropy_gt['?']                 (n_snapshots)
+prob/junk_mean/var              (n_snapshots,max_ls)

@@ -1,5 +1,5 @@
-from aegis.Core import Infodict, Config, Population, Outpop, Record, Run
-from aegis.Core import chance, init_ages, init_genomes, init_generations, deepeq
+from aegis.Core import Config, Population, Outpop, Record, Run
+from aegis.Core import chance, init_ages, init_genomes, init_generations, deep_eq
 from aegis.Core import init_gentimes
 import pytest,importlib,types,random,copy,string
 import numpy as np
@@ -32,7 +32,7 @@ class TestRun:
     @pytest.mark.parametrize("report_n, verbose",
             [(random.randint(1, 100), True), (random.randint(1, 100), False)])
     def test_init_run(self, conf, report_n, verbose):
-        run1 = Run(conf, "", conf["number_of_runs"]-1, report_n, verbose)
+        run1 = Run(conf, "", conf["n_runs"]-1, report_n, verbose)
         assert run1.log == ""
         assert run1.surv_penf == run1.repr_penf == 1.0
         assert run1.resources == conf["res_start"]
@@ -40,7 +40,7 @@ class TestRun:
         assert not np.array_equal(run1.genmap, conf["genmap"])
         #! TODO: Test correct inheritance of conf vs population parameters
         assert run1.n_snap == run1.n_stage == 0
-        assert run1.n_run == conf["number_of_runs"]-1
+        assert run1.n_run == conf["n_runs"]-1
         #! TODO: Test initial state of record vs conf?
         assert np.array_equal(run1.record["genmap"], run1.genmap)
         assert run1.dieoff == run1.complete == False
@@ -165,8 +165,8 @@ class TestRun:
         assert (run2.dieoff == (run2.population.N == 0))
         print run2.n_stage, run2.n_snap
         if not run2.dieoff: # Run completion
-            assert run2.n_snap == run.conf["number_of_snapshots"]
-            assert run2.n_stage == run.conf["number_of_stages"]
+            assert run2.n_snap == run.conf["n_snapshots"]
+            assert run2.n_stage == run.conf["n_stages"]
         elif not run2.conf.auto(): # Set stage count + dieoff
             print run2.conf["snapshot_stages"]
             assert run2.n_snap == 1+np.max(
@@ -174,7 +174,7 @@ class TestRun:
         else: # Auto stage count + dieoff
             print run2.conf["snapshot_generations"]
             print run2.conf["snapshot_generations_remaining"]
-            assert run2.n_snap == run.conf["number_of_snapshots"] - \
+            assert run2.n_snap == run.conf["n_snapshots"] - \
                     len(run2.conf["snapshot_generations_remaining"])
         # Dead
         run3 = run.copy()
@@ -194,14 +194,14 @@ class TestRun:
         """Test logging (and especially newline) functionality."""
         R2 = run.copy()
         R2.log = ""
-        R2.conf["number_of_runs"] = 1
-        R2.conf["number_of_stages"] = 1
+        R2.conf["n_runs"] = 1
+        R2.conf["n_stages"] = 1
         R2.n_run = 0
         R2.n_stage = 0
         R2.logprint(ran_str)
         assert R2.log == "RUN 0 | STAGE 0 | {0}\n".format(ran_str)
         R2.log = ""
-        R2.conf["number_of_runs"] = 101
-        R2.conf["number_of_stages"] = 101
+        R2.conf["n_runs"] = 101
+        R2.conf["n_stages"] = 101
         R2.logprint(ran_str)
         assert R2.log == "RUN   0 | STAGE   0 | {0}\n".format(ran_str)

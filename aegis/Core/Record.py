@@ -2,7 +2,7 @@
 # AEGIS - Ageing of Evolving Genomes in Silico                         #
 # Module: Core                                                         #
 # Classes: Record                                                      #
-# Description: Infodict class containing information recorded during   #
+# Description: Dictionary class containing information recorded during #
 #   the course of a simulation, as well as methods for computing       #
 #   more advanced statistics from that information.                    #
 ########################################################################
@@ -13,158 +13,48 @@
 ## PACKAGE IMPORT ##
 import numpy as np
 import scipy.stats as st
-from .functions import fivenum
-from .Config import Infodict
+from .functions import fivenum, deep_eq, deep_key
+from .Config import Config
 from .Population import Population, Outpop
 import copy
 
 ## CLASS ##
 
-class Record(Infodict):
-    """Infodict object for recording and processing simulation data."""
+class Record(dict):
+    """Dictionary object for recording and processing simulation data."""
 
     # INITIALISATION
     def __init__(self, conf):
         """Import run parameters from a Config object and prepare for
         further data input."""
         # Inherit run parameters from Config object
-        self.__valdict__ = conf.__valdict__.copy()
-        self.__infdict__ = conf.__infdict__.copy()
+        for k in conf.keys(): self[k] = conf[k]
         #for k in self.keys(): # Put numeric data in arrays #!: Why?
         #    if type(self[k]) in [int, float]:
         #        self[k] = np.array([self[k]]) #! Check required data is there
         # Clearer name for R and V parameters
-        self.put("res_regen_constant", self.get_value("R"), self.get_info("R"))
-        self.put("res_regen_prop", self.get_value("V"), self.get_info("V"))
+        self["res_regen_constant"] = self["R"]
+        self["res_regen_prop"] = self["V"]
         # Basic run info
-        self.put("dieoff", np.array(False),
-                "Boolean specifying whether run ended in extinction.")
-        self.put("prev_failed", np.array(0),
-                "Number of run repeats before this one that ended in dieoff.")
+        self["dieoff"] = np.array(False)
+        self["prev_failed"] = np.array(0)
         # Arrays for per-stage data entry
-        n = self["number_of_stages"] if not self.auto() else self["max_stages"]
-        # TODO: Add pre-finalisation truncating of unused stages in auto case
-        a0, a1 = np.zeros(n), np.zeros([n, self["max_ls"]])
-        self.put("population_size", np.copy(a0),
-                "Size of population at each stage.")
-        self.put("resources", np.copy(a0),
-                "Number of resources available at each stage.")
-        self.put("surv_penf", np.copy(a0),
-                "Survival penalty due to starvation at each stage.")
-        self.put("repr_penf", np.copy(a0),
-                "Reproduction penalty due to starvation at each stage.")
-        self.put("age_distribution", np.copy(a1),
-                "Proportion of population in each age group at each stage.")
-        self.put("generation_dist", np.zeros([n,5]), "Five-number summary of\
-                the population's generation distribution at each stage.")
-        self.put("gentime_dist", np.zeros([n,5]), "Five-number summary of\
-                the population's generation-time distribution at each stage.")
+        n = self["n_stages"] if not self["auto"] else self["max_stages"]
+        #! TODO: Add pre-finalisation truncating of unused stages in auto case
+        ns,ml,mt = self["n_snapshots"], self["max_ls"], self["maturity"]
+        for k in ["population_size", "resources", "surv_penf", "repr_penf"]:
+            self[k] = np.zeros(n)
+        self["age_distribution"] = np.zeros([n, ml])
+        for k in ["generation_dist", "gentime_dist"]:
+            self[k] = np.zeros([n,5]) # Five-number summaries
         # Space for saving population state for each snapshot
-        self.put("snapshot_pops", [0]*self["number_of_snapshots"],
-                "Complete population state at each snapshot stage.")
-        # Initialise arrays for data entry
-        def putzero(name, infstr): self.put(name, 0, infstr)
-        # Final population
-        putzero("final_pop", "Final population state at end of simulation.")
+        self["snapshot_pops"] = [0]*ns
         # Basic properties of snapshot populations
-        ns,ml,mt = self["number_of_snapshots"], self["max_ls"], self["maturity"]
-        self.put("snapshot_age_distribution", np.zeros([ns,ml]),
-            "Distribution of ages in the population at each snapshot.")
-        self.put("snapshot_gentime_distribution", np.zeros([ns,ml]),
-            "Distribution of gentimes in the population at each snapshot.")
-        self.put("snapshot_generation_distribution",
-            np.zeros([ns, np.ceil(n/float(mt)).astype(int)+1]),
-            "Distribution of generations in the population at each snapshot.")
-        # Genotype sum statistics (density and average)
-        putzero("density_per_locus",
-                "Density distributions of genotype sums (from 0 to maximum)\
-                        at each locus in genome map at each snapshot,\
-                        for survival, reproduction, neutral and all loci.")
-        putzero("density",
-                "Density distribution of genotype sums (from 0 to maximum)\
-                        over all loci of each type, for survival,\
-                        reproduction, neutral and all loci.")
-        putzero("mean_gt", "Mean genotype sum value at each locus at each\
-                snapshot, for survival, reproduction, neutral and all loci.")
-        putzero("var_gt", "Variance in genotype sum value at each locus\
-                at each snapshot, for survival, reproduction, neutral and\
-                all loci.")
-        putzero("entropy_gt", "Shannon entropy measurement of genotype\
-                sum diversity over all loci at each snapshot, for survival,\
-                reproduction, neutral and all loci.")
-        # Survival and reproduction
-        putzero("cmv_surv", "Cumulative survival probability from age\
-                0 to age n at each snapshot, based on corresponding\
-                survival loci.")
-        putzero("junk_cmv_surv", "Cumulative survival probability from \
-                age 0 to age n at each snapshot, based on average over \
-                neutral loci.")
-        putzero("mean_repr", "True mean reproductive probability at each age,\
-                including juvenile ages, adjusted for sexuality.")
-        putzero("junk_repr", "Junk mean reproductive probability at each age,\
-                including juvenile ages, adjusted for sexuality.")
-        putzero("prob_mean", "Mean probability of survival/reproduction\
-                at each age at each snapshot, \
-                based on corresponding locus genotypes")
-        putzero("prob_var", "Variance in  probability of survival/\
-                reproduction at each age at each snapshot, \
-                based on corresponding locus genotypes")
-        putzero("junk_mean", "Mean probability of survival/reproduction\
-                at each age at each snapshot, \
-                based on average over neutral loci")
-        putzero("junk_var", "Variance in  probability of survival/\
-                reproduction at each age at each snapshot, \
-                based on average over neutral loci")
-        putzero("fitness_term", "Expected offspring at each age at each\
-                snapshot, equal to cumulative survival to that age * \
-                probability of reproduction at that age, based on \
-                corresponding survival/reproduction loci.")
-        putzero("junk_fitness_term", "Expected offspring at each age at \
-                each snapshot, equal to cumulative survival to that age * \
-                probability of reproduction at that age, based on \
-                average over neutral loci.")
-        putzero("fitness", "Mean true \
-                genotypic fitness for population at each snapshot, equal to \
-                the sum of true fitness terms over all ages.")
-        putzero("junk_fitness", "Mean junk \
-                genotypic fitness for population at each snapshot, equal to \
-                the sum of junk fitness terms over all ages.")
-        putzero("repr_value", "Mean reproductive value of individuals \
-                at each age at each snapshot, assuming the population is \
-                stable (equivalent to expected future offspring).")
-        putzero("junk_repr_value", "Mean junk reproductive value of \
-                individuals at each age in each snapshot, assuming the \
-                population is stable (computed from mean over neutral loci.")
-        # Per-bit statistics, actual death
-        putzero("n1",
-                "Mean value at each bit position in genome at each snapshot,\
-                ordered by age-value of corresponding locus.")
-        putzero("n1_var",
-                "Variance in value at each bit position in genome at each \
-                snapshot, ordered by age-value of corresponding locus.")
-        putzero("entropy_bits",
-                "Shannon-entropy measurement of bit-value diversity over \
-                all bit positions at each snapshot.")
-        putzero("actual_death_rate",
-                "Actual death rate for each age cohort at each stage.")
-        # Sliding windows
-        putzero("population_size_window_mean", "Sliding-window mean of\
-                population sizes over stages of simulation.")
-        putzero("population_size_window_var", "Sliding-window variance in\
-                population sizes over stages of simulation.")
-        putzero("resources_window_mean", "Sliding-window mean of\
-                resource levels over stages of simulation.")
-        putzero("resources_window_var", "Sliding-window variance in\
-                resource levels over stages of simulation.")
-        putzero("n1_window_mean", "Sliding-window mean of\
-                average bit value over age-ordered bits in the chromosome")
-        putzero("n1_window_var", "Sliding-window variance in\
-                average bit value over age-ordered bits in the chromosome")
-
-    # Test whether stage counting is automatic
-
-    def auto(self):
-        return self["number_of_stages"] == "auto"
+        for l in ["age", "gentime"]:
+            self["snapshot_{}_distribution".format(l)] = np.zeros([ns,ml])
+        self["snapshot_generation_distribution"] = np.zeros(
+                [ns, np.ceil(n/float(mt)).astype(int)+1])
+        #! TODO: Compute these
 
     # CALCULATING PROBABILITIES
     def p_calc(self, gt, bound):
@@ -209,9 +99,9 @@ class Record(Infodict):
     def compute_snapshot_properties(self):
         """Compute basic properties (ages, gentimes, etc) of snapshot
         populations during finalisation."""
-        n = self["number_of_stages"] if not self.auto() else self["max_stages"]
+        n = self["n_stages"] if not self["auto"] else self["max_stages"]
         g = np.ceil(n/float(self["maturity"])).astype(int)+1
-        for s in xrange(self["number_of_snapshots"]):
+        for s in xrange(self["n_snapshots"]):
             p = self["snapshot_pops"][s]
             minlen = {"age":p.max_ls, "gentime":p.max_ls, "generation":g}
             for k in ["age", "gentime", "generation"]:
@@ -257,7 +147,7 @@ class Record(Infodict):
     def compute_genotype_mean_var(self):
         """Compute the mean and variance in genotype sums at each locus
         and snapshot."""
-        ss = self["snapshot_generations" if self.auto() else "snapshot_stages"]
+        ss = self["snapshot_generations" if self["auto"] else "snapshot_stages"]
         gt = np.arange(self["n_states"])
         mean_gt_dict, var_gt_dict = {}, {}
         for k in ["s","r","n","a"]: # Survival, reproductive, neutral, all
@@ -472,9 +362,9 @@ class Record(Infodict):
                 msg = "Failed to set seed from final population in Record; {}"
                 msg = msg.format("(no such population).")
                 pop = ValueError
-            elif pop_number >= self["number_of_snapshots"]:
+            elif pop_number >= self["n_snapshots"]:
                 msg = "Seed number ({0}) greater than highest snapshot ({1})."
-                msg = msg.format(pop_number, self["number_of_snapshots"]-1)
+                msg = msg.format(pop_number, self["n_snapshots"]-1)
                 pop = ValueError
             else:
                 msg = "Setting seed from specified snapshot population ({})."
@@ -485,3 +375,15 @@ class Record(Infodict):
     # copy method
 
     def copy(self): return copy.deepcopy(self)
+
+    # COMPARISON (same as Config)
+
+    def __eq__(self, other):
+        if isinstance(other, self.__class__): 
+            return deep_eq(self, other, True)
+        return NotImplemented
+    def __ne__(self, other):
+        if isinstance(other, self.__class__): return not self.__eq__(other)
+        return NotImplemented
+    def __hash__(self):
+        return hash(tuple(sorted(self.items())))

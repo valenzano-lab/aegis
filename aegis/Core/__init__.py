@@ -6,8 +6,9 @@ import os, shutil, numpy as np
 #        )}, reload_support=True)
 from aegis.Core.functions import chance, quantile, fivenum, init_gentimes
 from aegis.Core.functions import init_ages, init_genomes, init_generations
+from aegis.Core.functions import deep_key, deep_eq
 from aegis.Core.Population import Population, Outpop
-from aegis.Core.Config import Config, Infodict, deepeq
+from aegis.Core.Config import Config
 from aegis.Core.Record import Record
 from aegis.Core.Run import Run
 from aegis.Core.Simulation import Simulation

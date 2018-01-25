@@ -5,9 +5,9 @@
 ## CORE PARAMETERS ##
 random_seed = "" # If numeric, sets random seed to that value before execution
 output_prefix = "test" # Prefix for output files within simulation directory
-number_of_runs = 1 # Total number of independent runs
-number_of_stages = 10 # Total number of stages per run [int/"auto"]
-number_of_snapshots = 2 # Points in run at which to record detailed data
+n_runs = 1 # Total number of independent runs
+n_stages = 10 # Total number of stages per run [int/"auto"]
+n_snapshots = 2 # Points in run at which to record detailed data
 path_to_seed_file = "" # Path to simulation seed file, if no seed then ""
     # see README for which parameters are inherited from seed, which are
     # defined anew in this config file
@@ -37,9 +37,9 @@ repr_bound = [0, 0.2] # min and max reproduction rates
 r_rate = 0.01 # recombination rate, if sexual
 m_rate = 0.001 # mutation rate
 m_ratio = 0.1 # Ratio of positive (0->1) to negative (1->0) mutations
-g_dist_s = 0.5 # Proportion of 1's in survival loci of initial genomes
-g_dist_r = g_dist_s #                       reproductive loci
-g_dist_n = g_dist_s #                       neutral loci
+g_dist = {"s": 0.5, # Proportion of 1's in survival loci of initial genomes
+        "r": 0.5,   #                      reproductive loci
+        "n": 0.5}   #                      neutral loci
 n_neutral = 10 # Number of neutral loci in genome
 n_base = 10 # Number of bits per locus
 repr_offset = 100 # Offset for repr loci in genome map (must be <= max_ls)

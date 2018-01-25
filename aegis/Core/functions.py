@@ -81,3 +81,24 @@ def quantile(array, p, interpolation="linear"):
 def fivenum(array):
     """Return the five-number summary of a numeric array."""
     return np.array([quantile(array, p) for p in np.arange(0, 1.1, 0.25)])
+
+#################################################
+## Comparing Dictionaries with Compound Values ##
+#################################################
+
+def deep_key(key, dict1, dict2, exact=True):
+    """Compare the values linked to a given key in two dictionaries
+    according to the types of those values."""
+    v1, v2 = dict1[key], dict2[key]
+    f = np.allclose if not exact else np.array_equal
+    if type(v1) is not type(v2): return False
+    elif isinstance(v1, dict): return deep_eq(v1, v2)
+    elif isinstance(v1, np.ndarray): return f(v1,v2)
+    else: return v1 == v2
+
+def deep_eq(d1, d2, exact=True):
+    """Compare two dictionaries element-wise according to the types of
+    their constituent values."""
+    if sorted(d1.keys()) != sorted(d2.keys()): return False
+    return np.prod([deep_key(k,d1,d2,exact) for k in d1.keys()]).astype(bool)
+#! TODO: Test these

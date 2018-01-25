@@ -1,6 +1,6 @@
-from aegis.Core import Infodict, Config, Population, Outpop
+from aegis.Core import Config, Population, Outpop
 from aegis.Core import Record, Run, Simulation
-from aegis.Core import chance, init_ages, init_genomes, init_generations, deepeq
+from aegis.Core import chance, init_ages, init_genomes, init_generations, deep_eq
 from aegis.Core import init_gentimes
 import pytest, imp, types, random, copy, string, tempfile, os, shutil
 import numpy as np
@@ -42,7 +42,7 @@ class TestSimulationInit:
         """Confirm that config fixture and simulation config attribute
         match, in the case that both were imported from conf_path."""
         if conf["setup"] == "import":
-            sim.conf.put("setup", "import", "Method of fixture generation.")
+            sim.conf["setup"] = "import"
             assert sim.conf == conf
 
     def test_get_conf_degen(self, sim, ran_str):
@@ -108,7 +108,7 @@ class TestSimulationInit:
 #        with pytest.raises(ValueError):
 #            sim.set_startpop(rec, -1)
 #        with pytest.raises(ValueError):
-#            sim.set_startpop(rec, rec["number_of_snapshots"]+1)
+#            sim.set_startpop(rec, rec["n_snapshots"]+1)
 #        ao.uao.eoe
 #        # 4: Run
 #        sim.set_startpop(run, -1)
@@ -137,16 +137,6 @@ class TestSimulationInit:
             assert not r.complete
             assert r.report_n == s.report_n
             assert r.verbose == s.verbose
-
-    def test_startpop_simulation(self, sim):
-        """Test that the __startpop__ method for the Simulation class
-        behaves appropriately."""
-        for n in xrange(2): # Check that process fails if input is -ve
-            x = sim.__startpop__(random.randint(-1e6,-1))
-            assert x[0] == ValueError
-            m = random.randrange(sim.conf["number_of_runs"])
-            y = sim.__startpop__(m)
-            assert y[0] == sim.runs[m].__startpop__(-1)[0]
 
 class TestSimulationLogSaveAbort:
     """Test methods relating to logging, saving and aborting of a
@@ -209,7 +199,7 @@ class TestSimulationExecution:
             assert not r.complete
         s.execute_series()
         for r in s.runs:
-            assert r.n_stage == r.conf["number_of_stages"] or r.dieoff
+            assert r.n_stage == r.conf["n_stages"] or r.dieoff
             assert r.complete
 
 class TestSimulationFinalisation:
@@ -242,16 +232,16 @@ class TestSimulationFinalisation:
         def confirm_output(dirpref):
             if output_mode >= 2:
                 dirname = os.path.join(dirpref, "populations/snapshots")
-                for n in xrange(sim.conf["number_of_runs"]):
-                    for m in xrange(sim.conf["number_of_snapshots"]):
+                for n in xrange(sim.conf["n_runs"]):
+                    for m in xrange(sim.conf["n_snapshots"]):
                         testfile(dirname, "run{0}_s{1}.pop".format(n,m), Outpop)
             if output_mode >= 1:
                 dirname = os.path.join(dirpref, "populations/final")
-                for n in xrange(sim.conf["number_of_runs"]):
+                for n in xrange(sim.conf["n_runs"]):
                     testfile(dirname, "run{}.pop".format(n), Outpop)
             if output_mode >= 0:
                 dirname = os.path.join(dirpref, "records")
-                for n in xrange(sim.conf["number_of_runs"]):
+                for n in xrange(sim.conf["n_runs"]):
                     testfile(dirname, "run{}.rec".format(n), Record)
         # Set-up
         s = sim.copy()
@@ -263,7 +253,7 @@ class TestSimulationFinalisation:
         s.execute()
         # Test output
         if output_mode == 2:
-            for n in xrange(sim.conf["number_of_runs"]):
+            for n in xrange(sim.conf["n_runs"]):
                 print n, s.runs[n].record["snapshot_pops"]
         s.save_output()
         check_output_dirs(outdir)

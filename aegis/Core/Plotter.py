@@ -149,8 +149,8 @@ class Plotter:
         elif snapshot == "all":
             snapshot = -1
         elif snapshot == "":
-            snapshot = self.record["number_of_snapshots"]-1
-        elif snapshot < -1 or snapshot >= self.record["number_of_snapshots"]:
+            snapshot = self.record["n_snapshots"]-1
+        elif snapshot < -1 or snapshot >= self.record["n_snapshots"]:
             raise ValueError("Invalid snapshot value: {}".format(snapshot))
         # set source
         source = source if isinstance(source,dict) or isinstance(source,np.ndarray)\
@@ -173,7 +173,7 @@ class Plotter:
                 for n in xrange(len(dimlabels)):
                     ddict[dimlabels[n]] = self.get_flattened_coords(n, val)
                 df = df.append(pd.DataFrame(ddict))
-                if self.record["number_of_snapshots"] in val.shape and snapshot>-1:
+                if self.record["n_snapshots"] in val.shape and snapshot>-1:
                     df = df[df.snapshot == snapshot]
 
         return df
@@ -209,8 +209,8 @@ class Plotter:
         elif snapshot == "all":
             snapshot = -1
         elif snapshot == "":
-            snapshot = self.record["number_of_snapshots"]-1
-        elif snapshot < -1 or snapshot >= self.record["number_of_snapshots"]:
+            snapshot = self.record["n_snapshots"]-1
+        elif snapshot < -1 or snapshot >= self.record["n_snapshots"]:
             raise ValueError("Invalid snapshot value: {}".format(snapshot))
 
         # add snapshot info to title
@@ -400,16 +400,16 @@ class Plotter:
 
     def plot_actual_death_rate(self, window_size=100):
         # check window size is OK
-        if window_size*(self.record["number_of_snapshots"]+1) > \
-                self.record["number_of_stages"]:
+        if window_size*(self.record["n_snapshots"]+1) > \
+                self.record["n_stages"]:
             raise ValueError("Window size is too big; overlap.")
         windows = [range(window_size)]
         window_size /= 2
         for s in self.record["snapshot_stages"][1:-1]:
             windows += [range(s-window_size,s+window_size)]
         window_size *= 2
-        windows += [range(self.record["number_of_stages"]-\
-                window_size, self.record["number_of_stages"])]
+        windows += [range(self.record["n_stages"]-\
+                window_size, self.record["n_stages"])]
 
         data = self.make_dataframe(["actual_death_rate"], ["stage","age"])
 

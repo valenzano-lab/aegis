@@ -1,8 +1,8 @@
-from aegis.Core import Infodict, Config, Population, Outpop, Record
+from aegis.Core import Config, Population, Outpop, Record
 from aegis.Core import chance, init_ages, init_genomes, init_generations
 from aegis.Core import init_gentimes
 from aegis.Core import fivenum
-from aegis.Core.Config import deepeq, deepkey
+from aegis.Core.Config import deep_eq, deep_key
 import pytest,importlib,types,random,copy,string
 import numpy as np
 
@@ -14,8 +14,8 @@ def static_fill(rec_obj, pop_obj):
     """Fill a whole record object with the same initial
     population state."""
     r = copy.deepcopy(rec_obj)
-    n = r["number_of_stages"] if not r.auto() else r["max_stages"]
-    s = r["snapshot_generations"] if r.auto() else r["snapshot_stages"]
+    n = r["n_stages"] if not r["auto"] else r["max_stages"]
+    s = r["snapshot_generations"] if r["auto"] else r["snapshot_stages"]
     c = 0
     for x in xrange(n):
         snapshot = c if x in s else -1
@@ -93,14 +93,6 @@ class TestRecord:
         r2 = copy.deepcopy(rec)
         assert r1 == r2
 
-    def test_config_auto(self, rec):
-        r = rec.copy()
-        assert r.auto() == (r["number_of_stages"] == "auto")
-        r["number_of_stages"] = "auto"
-        assert r.auto()
-        r["number_of_stages"] = random.randrange(1000)
-        assert not r.auto()
-
     ## INITIALISATION ##
 
     def test_record_init(self, conf, rec):
@@ -108,19 +100,16 @@ class TestRecord:
         # Conf param entries should be inherited in Record
         for k in conf.keys():
             print k, R[k], np.array(conf[k])
-            assert deepkey(k, R, conf, True)
+            assert deep_key(k, R, conf, True)
             assert np.array_equal(R[k], np.array(conf[k]))
-            assert R.get_info(k) == conf.get_info(k)
         # R and V successfully renamed
         assert np.array_equal(R["res_regen_constant"], R["R"])
         assert np.array_equal(R["res_regen_prop"], R["V"])
-        assert R.get_info("res_regen_constant") == R.get_info("R")
-        assert R.get_info("res_regen_prop") == R.get_info("V")
         # Check basic run info
         assert np.array_equal(R["dieoff"], np.array(False))
         assert np.array_equal(R["prev_failed"], np.array(0))
         # Per-stage data entry
-        n = R["number_of_stages"] if not R.auto() else R["max_stages"]
+        n = R["n_stages"] if not R["auto"] else R["max_stages"]
         a0, a1 = np.zeros(n), np.zeros([n, R["max_ls"]])
         assert np.array_equal(R["population_size"], a0)
         assert np.array_equal(R["resources"], a0)
@@ -130,22 +119,22 @@ class TestRecord:
         assert np.array_equal(R["generation_dist"], np.zeros([n,5]))
         assert np.array_equal(R["gentime_dist"], np.zeros([n,5]))
         # Snapshot population placeholders
-        assert R["snapshot_pops"] == [0]*R["number_of_snapshots"]
+        assert R["snapshot_pops"] == [0]*R["n_snapshots"]
         # Empty names for final computation
         def iszero(*names):
             for name in names: assert R[name] == 0
         # Genotype sum statistics (density and average)
-        iszero("density_per_locus", "density", "mean_gt", "var_gt", "entropy_gt")
+        #iszero("density_per_locus", "density", "mean_gt", "var_gt", "entropy_gt")
         # Survival and reproduction
-        iszero("cmv_surv", "junk_cmv_surv", "prob_mean", "prob_var", "junk_mean",
-                "junk_var", "fitness_term", "junk_fitness_term", "repr_value",
-                "junk_repr_value")
+        #iszero("cmv_surv", "junk_cmv_surv", "prob_mean", "prob_var", "junk_mean",
+        #        "junk_var", "fitness_term", "junk_fitness_term", "repr_value",
+        #        "junk_repr_value")
         # Per-bit statistics, actual death
-        iszero("n1", "n1_var", "entropy_bits", "actual_death_rate")
+        #iszero("n1", "n1_var", "entropy_bits", "actual_death_rate")
         # Sliding windows
-        iszero("population_size_window_mean", "population_size_window_var",
-                "resources_window_mean", "resources_window_var",
-                "n1_window_mean", "n1_window_var")
+        #iszero("population_size_window_mean", "population_size_window_var",
+        #        "resources_window_mean", "resources_window_var",
+        #        "n1_window_mean", "n1_window_var")
 
     ## PROBABILITIES ##
 
@@ -196,20 +185,19 @@ class TestRecord:
     def test_update_quick(self, rec, pop):
         """Test that every-stage update function records correctly."""
         rec2 = rec.copy()
-        r = rec2.get_value
         rec2.update(pop, 100, 1, 1, 0, -1)
         agedist=np.bincount(pop.ages,minlength=pop.max_ls)/float(pop.N)
-        assert r("resources")[0] == 100
-        assert r("population_size")[0] == pop.N
-        assert r("surv_penf")[0] == 1
-        assert r("repr_penf")[0] == 1
-        assert np.array_equal(r("age_distribution")[0], agedist)
-        assert np.allclose(r("generation_dist")[0],
+        assert rec2["resources"][0] == 100
+        assert rec2["population_size"][0] == pop.N
+        assert rec2["surv_penf"][0] == 1
+        assert rec2["repr_penf"][0] == 1
+        assert np.array_equal(rec2["age_distribution"][0], agedist)
+        assert np.allclose(rec2["generation_dist"][0],
                 fivenum(pop.generations))
-        assert np.allclose(r("gentime_dist")[0],
+        assert np.allclose(rec2["gentime_dist"][0],
                 fivenum(pop.gentimes))
-        for n in xrange(len(r("snapshot_pops"))):
-            assert r("snapshot_pops")[n] == 0
+        for n in xrange(len(rec2["snapshot_pops"])):
+            assert rec2["snapshot_pops"][n] == 0
 
     def test_update_full(self, rec, pop):
         """Test that snapshot update function records correctly."""
@@ -219,22 +207,21 @@ class TestRecord:
         np.random.shuffle(pop2.ages)
         np.random.shuffle(pop2.genomes)
         rec2.update(pop2, 200, 2, 2, 0, 0)
-        r = rec2.get_value
         agedist=np.bincount(pop2.ages,minlength=pop2.max_ls)/float(pop2.N)
         # Per-stage factors
-        assert r("population_size")[0] == pop2.N
-        assert r("resources")[0] == 200
-        assert r("surv_penf")[0] == 2
-        assert r("repr_penf")[0] == 2
-        assert np.array_equal(r("age_distribution")[0], agedist)
-        assert np.allclose(r("generation_dist")[0],
+        assert rec2["population_size"][0] == pop2.N
+        assert rec2["resources"][0] == 200
+        assert rec2["surv_penf"][0] == 2
+        assert rec2["repr_penf"][0] == 2
+        assert np.array_equal(rec2["age_distribution"][0], agedist)
+        assert np.allclose(rec2["generation_dist"][0],
                 fivenum(pop.generations))
-        assert np.allclose(r("gentime_dist")[0],
+        assert np.allclose(rec2["gentime_dist"][0],
                 fivenum(pop.gentimes))
-        for n in xrange(1,len(r("snapshot_pops"))):
-            assert r("snapshot_pops")[n] == 0
+        for n in xrange(1,len(rec2["snapshot_pops"])):
+            assert rec2["snapshot_pops"][n] == 0
         # Snapshot population
-        p = r("snapshot_pops")[0]
+        p = rec2["snapshot_pops"][0]
         assert isinstance(p, Outpop)
         assert np.array_equal(p.genmap, pop2.genmap)
         assert np.array_equal(p.ages, pop2.ages)
@@ -247,11 +234,11 @@ class TestRecord:
     def test_compute_snapshot_properties(self, pop1, rec1, rec2):
         """Test that compute_snapshot_properties performs correctly for
         a genome filled with 1's.""" #! TODO: How about in a normal case?
-        n = rec1["number_of_stages"] if not rec1.auto() else rec1["max_stages"]
+        n = rec1["n_stages"] if not rec1["auto"] else rec1["max_stages"]
         mt = float(rec1["maturity"])
         g = np.ceil(n/mt).astype(int)+1
         print n, mt, g
-        print rec1["number_of_snapshots"]
+        print rec1["n_snapshots"]
         print rec1["snapshot_generation_distribution"].shape
         rec1.compute_snapshot_properties()
         rec2.compute_snapshot_properties() # do here because of finalisation
@@ -281,7 +268,7 @@ class TestRecord:
         assert sorted(obj1.keys()) == llist
         assert sorted(obj2.keys()) == llist
 
-        n_snap,l1,ns1 = rec1["number_of_snapshots"], rec1["max_ls"],\
+        n_snap,l1,ns1 = rec1["n_snapshots"], rec1["max_ls"],\
                 rec1["n_states"]
         g,nn,mt1 = len(rec1["genmap"]), rec1["n_neutral"], rec1["maturity"]
         dims = {"a":[n_snap,g,ns1],"n":[n_snap,nn,ns1],"r":[n_snap,l1-mt1,ns1], \
@@ -316,7 +303,7 @@ class TestRecord:
         assert sorted(obj1.keys()) == llist
         assert sorted(obj2.keys()) == llist
 
-        n_snap,ns1 = rec1["number_of_snapshots"], rec1["n_states"]
+        n_snap,ns1 = rec1["n_snapshots"], rec1["n_states"]
         l2,mt2,ns2 = pop2.max_ls, pop2.maturity, rec2["n_states"]
         loci_all = pop2.sorted_loci()
         loci = {"s":np.array(loci_all[:,:l2]),
@@ -350,7 +337,7 @@ class TestRecord:
         assert sorted(obj2_mean.keys()) == llist
         assert sorted(obj2_var.keys()) == llist
 
-        n_snap,l1,ns1 = rec1["number_of_snapshots"], rec1["max_ls"],\
+        n_snap,l1,ns1 = rec1["n_snapshots"], rec1["max_ls"],\
                 rec1["n_states"]
         g,nn,mt1 = len(rec1["genmap"]), rec1["n_neutral"], rec1["maturity"]
         dims = {"a":[n_snap,g],"n":[n_snap,nn],"r":[n_snap,l1-mt1],"s":[n_snap,l1]}
@@ -387,7 +374,7 @@ class TestRecord:
         for k in ["mean", "var"]: assert sorted(rec2["prob_"+k].keys()) == llist
 
         # Define parameters
-        n_snap,l1 = rec1["number_of_snapshots"], rec1["max_ls"]
+        n_snap,l1 = rec1["n_snapshots"], rec1["max_ls"]
         ns1,mt1= rec1["n_states"], rec1["maturity"]
         dims = {"surv":[n_snap,l1], "repr":[n_snap,l1-mt1]}
         vmax = {"surv":rec1.p_surv(ns1-1), "repr":rec1.p_repr(ns1-1)}
@@ -426,7 +413,7 @@ class TestRecord:
         correctly for a genome filled with 1's."""
         rec1.compute_surv_repr_probabilities_junk()
         # Define parameters
-        m,nn,ns = rec1["number_of_snapshots"],rec1["n_neutral"],rec1["n_states"]
+        m,nn,ns = rec1["n_snapshots"],rec1["n_neutral"],rec1["n_states"]
         llist = ["repr", "surv"]
         vmax = {"surv":rec1.p_surv(ns-1), "repr":rec1.p_repr(ns-1)}
         # Test vs expectation
@@ -444,7 +431,7 @@ class TestRecord:
         rec2.compute_cmv_surv()
 
         # Define parameters
-        n_snap,l1,ns1 = rec1["number_of_snapshots"], rec1["max_ls"],\
+        n_snap,l1,ns1 = rec1["n_snapshots"], rec1["max_ls"],\
                 rec1["n_states"]
         check1 = np.tile(rec1.p_surv(ns1-1)**np.arange(l1), [n_snap,1])
 
@@ -475,7 +462,7 @@ class TestRecord:
         # Define parameters
         sex = rec1["repr_mode"] in ["sexual", "assort_only"]
         div = 2.0 if sex else 1.0
-        n_snap,ns1 = rec1["number_of_snapshots"], rec1["n_states"]
+        n_snap,ns1 = rec1["n_snapshots"], rec1["n_states"]
         l1,mt1 = rec1["max_ls"], rec1["maturity"]
         mr = np.tile(rec1.p_repr(ns1-1), [n_snap,l1])
         mr[:,:mt1] = 0
@@ -544,7 +531,7 @@ class TestRecord:
         rec2.compute_bits()
 
         # 1's genome
-        n_snap,chr_len1 = rec1["number_of_snapshots"],rec1["chr_len"]
+        n_snap,chr_len1 = rec1["n_snapshots"],rec1["chr_len"]
         assert np.array_equal(rec1["n1"], np.ones([n_snap,chr_len1]))
         assert np.array_equal(rec1["n1_var"], np.zeros([n_snap,chr_len1]))
 
@@ -586,7 +573,7 @@ class TestRecord:
         population, for a genome filled with 1's."""
         rec1.compute_entropies()
         # Define parameters
-        z = np.zeros(rec1["number_of_snapshots"])
+        z = np.zeros(rec1["n_snapshots"])
         # Test against expectation
         assert np.array_equal(rec1["entropy_bits"], z)
         assert sorted(rec1["entropy_gt"].keys()) == ["a", "n", "r", "s"]
@@ -602,7 +589,7 @@ class TestRecord:
         r["age_distribution"] = np.tile(1/float(maxls), (3, maxls))
         r["population_size"] = np.array([maxls*4,maxls*2,maxls])
         r.compute_actual_death()
-        n = r["number_of_stages"] if not r.auto() else r["max_stages"]
+        n = r["n_stages"] if not r["auto"] else r["max_stages"]
         print r["age_distribution"].shape, r["population_size"].shape
         print r["actual_death_rate"].shape, n, r["max_ls"]
         assert np.array_equal(r["actual_death_rate"],
@@ -656,9 +643,7 @@ class TestRecord:
         """Test that finalise is equivalent to calling all finalisation
         methods separately."""
         # First check that rec1 is finalised and rec1_copy is not
-        print "rec1_copy[actual_death_rate]\n", rec1_copy["actual_death_rate"]
-        print "rec1[actual_death_rate]\n", rec1["actual_death_rate"]
-        assert rec1_copy["actual_death_rate"] == 0
+        assert not "actual_death_rate" in rec1_copy.keys()
         assert type(rec1["actual_death_rate"]) is np.ndarray
         # Then finalise rec1_copy and compare
         rec1_copy.finalise()

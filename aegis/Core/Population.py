@@ -9,7 +9,7 @@
 ## PACKAGE IMPORT ##
 from .functions import chance
 from .functions import init_ages, init_genomes, init_generations, init_gentimes
-from .Config import deepeq
+from .Config import deep_eq
 import numpy as np
 import random, copy
 
@@ -443,7 +443,7 @@ class Outpop:
                 np.array_equal(self.ages, other.ages) and \
                 np.array_equal(self.generations, other.generations) and \
                 np.array_equal(self.gentimes, other.gentimes) and \
-                deepeq(self.params(), other.params())
+                deep_eq(self.params(), other.params())
         return NotImplemented
     def __ne__(self, other):
         if isinstance(other, self.__class__): return not self.__eq__(other)

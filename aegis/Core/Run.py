@@ -11,9 +11,9 @@ import numpy as np
 import scipy.stats as st
 import copy, datetime, time
 from .functions import chance, init_ages, init_genomes, init_generations
-from .functions import init_gentimes
+from .functions import init_gentimes, deep_eq
 from .functions import timenow, timediff, get_runtime
-from .Config import Infodict, Config, deepeq
+from .Config import Config
 from .Population import Population, Outpop
 from .Record import Record
 
@@ -39,11 +39,7 @@ class Run:
             self.population.g_dist = self.conf["g_dist"]
             self.population.repr_offset = self.conf["repr_offset"]
             self.population.neut_offset = self.conf["neut_offset"]
-            # NOTE subdict is an Infodict method, not value attribute
-            # shouldn't it be called as self.conf.subdict(_key_list_)?
-            self.conf["params"] = self.conf["subdict"](
-                    ["repr_mode", "chr_len", "n_base", "maturity", "start_pop",
-                        "max_ls", "g_dist", "repr_offset", "neut_offset"])
+            self.conf.set_params()
         else:
             # NOTE why is this neccesary? can't we convert it to Outpop only right
             # after Run completion? (I understand this is needed in order for
@@ -142,7 +138,7 @@ class Run:
         report_stage = (self.n_stage % self.report_n == 0)
         if report_stage:
             s = "Population = {0}.".format(self.population.N)
-            if self.conf.auto():
+            if self.conf["auto"]:
                 g = " Min generation = {0}/{1}."
                 s += g.format(np.min(self.population.generations),
                         self.conf["min_gen"])
@@ -152,7 +148,7 @@ class Run:
             return
         # Decide whether to take a detailed snapshot
         snapshot = -1
-        if not self.conf.auto():
+        if not self.conf["auto"]:
             if self.n_stage in self.conf["snapshot_stages"]:
                 snapshot = self.n_snap
         else:
@@ -175,11 +171,11 @@ class Run:
     def test_complete(self):
         """Test whether a run is complete following a given stage,
         under fixed and automatic stage counting."""
-        if not self.dieoff and self.conf.auto():
+        if not self.dieoff and self.conf["auto"]:
             gen = (np.min(self.population.generations) >= self.conf["min_gen"])
             stg = (self.n_stage >= self.conf["max_stages"])
-        elif not self.dieoff and not self.conf.auto():
-            stg, gen = (self.n_stage >= self.conf["number_of_stages"]), False
+        elif not self.dieoff and not self.conf["auto"]:
+            stg, gen = (self.n_stage >= self.conf["n_stages"]), False
         self.complete = self.dieoff or gen or stg
         # TODO: Test this
 
@@ -191,7 +187,7 @@ class Run:
         f,r = self.record["prev_failed"]+1, self.n_run
         a = "run {0}, attempt {1}".format(r,f) if f>1 else "run {0}".format(r)
         self.logprint("Beginning {0} at {1}.".format(a, timenow(True)))
-        if self.conf.auto():
+        if self.conf["auto"]:
             self.logprint("Automatic stage counting. Target generation: {}."\
                     .format(self.conf["min_gen"]))
         # Execute stages until completion
@@ -232,7 +228,7 @@ class Run:
     def logprint(self, message):
         """Print message to stdout and save in log object."""
         # Compute numbers of spaces to keep all messages aligned
-        n, r = self.conf["number_of_stages"], self.conf["number_of_runs"]
+        n, r = self.conf["n_stages"], self.conf["n_runs"]
         if n == "auto": n = self.conf["max_stages"] # TODO: test this
         nspace_run = len(str(r-1))-len(str(self.n_run))
         nspace_stg = len(str(n)) - len(str(self.n_stage))
