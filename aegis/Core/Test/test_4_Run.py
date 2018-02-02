@@ -129,7 +129,7 @@ class TestRun:
         while not run2.complete:
             print run2.n_stage, run2.population.N, len(run2.population.generations),
             print np.min(run2.population.generations),
-            print run2.conf["min_gen"] if run2.conf.auto() else ""
+            print run2.conf["min_gen"] if run2.conf["auto"] else ""
             run2.execute_stage()
         assert run2.complete
         assert (run2.dieoff == (run2.population.N == 0))
@@ -137,7 +137,7 @@ class TestRun:
         if not run2.dieoff: # Run completion
             assert run2.n_snap == run.conf["n_snapshots"]
             assert run2.n_stage == run.conf["n_stages"]
-        elif not run2.conf.auto(): # Set stage count + dieoff
+        elif not run2.conf["auto"]: # Set stage count + dieoff
             print run2.conf["snapshot_stages"]
             assert run2.n_snap == 1+np.max(
                     np.nonzero(run2.conf["snapshot_stages"]<run2.n_stage)[0])

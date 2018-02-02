@@ -21,8 +21,6 @@ res_start = 1000 # Starting resource value
 start_pop = res_start # Starting population size
 
 ## RESOURCE PARAMETERS ##
-V = 1.1 # Geometric resource regrowth factor, if variable
-R = res_start # Arithmetic resource increment, if variable
 res_limit = res_start*5 # Maximum resource value, if variable; -1 = infinite
 res_function = lambda n,r: r # Function for updating resources; here constant
 stv_function = lambda n,r: n > r # Function for identifying starvation

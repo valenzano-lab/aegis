@@ -22,7 +22,7 @@ class Config(dict):
         self.__valdict__ = {}
         self.__infdict__ = {}
         c = imp.load_source('ConfFile', filepath)
-        for k in [d for d in dir(c) if not d.startswith("_")]: 
+        for k in [d for d in dir(c) if not d.startswith("_")]:
             self[k] = getattr(c, k) # Copy all keys from config file
         self.check()
 
@@ -46,13 +46,6 @@ class Config(dict):
             s = "Difference between offset values must be >= max lifespan."
             raise ValueError(s)
         return True
-
-    # Test whether stage counting is automatic
-
-    def auto(self):
-        return self["n_stages"] == "auto"
-
-    # 
 
     def make_params(self):
         key_list = ["repr_mode", "chr_len", "n_base", "maturity", "start_pop",
@@ -130,7 +123,7 @@ class Config(dict):
     # COMPARISON
 
     def __eq__(self, other):
-        if isinstance(other, self.__class__): 
+        if isinstance(other, self.__class__):
             return deep_eq(self, other, True)
         return NotImplemented
     def __ne__(self, other):
