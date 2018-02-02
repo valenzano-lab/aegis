@@ -36,7 +36,7 @@ class Run:
         np.random.shuffle(self.conf["genmap"])
         self.genmap = self.conf["genmap"] # Not a copy
         # init Population
-        #n = self.conf["n_stages"] if not self.auto() else self.conf["max_stages"]
+        #n = self.conf["n_stages"] if not self.conf["auto"] else self.conf["max_stages"]
         if startpop != "": # If given a seeding population
             self.population = startpop.clone()
             # Adopt from population: genmap, n_base, chr_len
@@ -109,7 +109,7 @@ class Run:
         self.test_complete()
         if self.complete and not self.dieoff:
             # for "auto" last snapshot not taken otherwise
-            if self.conf.auto():
+            if self.conf["auto"]:
                 self.record_stage()
             self.record.finalise()
 
