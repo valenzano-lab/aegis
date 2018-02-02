@@ -51,75 +51,49 @@ class TestRun:
         """Test resource updating between bounds and confirm resources
         cannot go outside them."""
         run1 = run.copy()
-        r,v,rl = run1.conf["R"], run1.conf["V"], run1.conf["res_limit"]
-        print r,v,rl
-        def R(val=-1):
-            if val > 0: run1.resources = val
-            else: return run1.resources
-        def N(val=-1):
-            if val > 0: run1.population.N = val
-            else: return run1.population.N
-        ## Constant resources
-        run1.conf["res_var"] = False
-        old_res = run1.resources
-        run1.update_resources()
-        assert R() == old_res
-        ## Variable resources
-        run1.conf["res_var"] = True
-        # State 1: R > N, regrowth hits limit
-        R(random.randint(rl-r/2,rl)); N(random.randint(0, r/2))
-        run1.update_resources()
-        assert R() == rl
-        # State 2: R > N, regrowth stays  within limits
-        print r+1, int((rl-r)/v)
-        R(random.randint(r+1, int((rl-r)/v)))
-        N(random.randint(int((R()-r)/v), int(R()-1)))
-        r_old = R()
-        run1.update_resources()
-        assert R() == int((r_old - N())*v + r)
-        # State 3: R < N, difference > R
-        R(random.randint(0, rl-r)); N(random.randint(int(R()+r), rl))
-        run1.update_resources()
-        assert R() == 0
-        # State 4: R < N, difference < R
-        R(random.randint(0, rl-r)); N(random.randint(R(), int(R()+r)))
-        r_old = R()
-        run1.update_resources()
-        assert R() == int((r_old - N()) + r)
+        rl,rf = run1.conf["res_limit"], run1.conf["res_function"]
+        def rtest():
+            old_r = run1.resources
+            run1.update_resources()
+            assert run1.resources == min(rl,max(0,rf(run1.population.N,old_r)))
+        ## Test conditions (initial, overgrowth, undergrowth, midpoint)
+        cond = [run1.resources, rl * 2, -rl, rl / 2]
+        for c in cond:
+            run1.resources = c
+            rtest()
 
     def test_starving(self, run):
-        """Test run enters starvation state under correct conditions for
-        constant and variable resources."""
+        """Test run enters starvation state under correct conditions."""
         run1 = run.copy()
-        # Constant resources
-        run1.conf["res_var"] = False
-        run1.resources, run1.population.N = 5000, 4999
-        assert not run1.starving()
-        run1.resources, run1.population.N = 4999, 5000
-        assert run1.starving()
-        # Variable resources
-        run1.conf["res_var"] = True
-        run1.resources = 1
-        assert not run1.starving()
-        run1.resources = 0
-        assert run1.starving()
+        # 1: Deterministic test
+        if run1.conf["setup"] == "import":
+            test = {-1:True, 0:False, 1:False}
+            for c in test.keys():
+                run1.resources = run1.population.N + c
+                assert run1.starving() == test[c]
+        # 2: Random test
+        for n in xrange(3):
+            r,n = np.random.uniform(0, run1.conf["res_limit"], size=2)
+            run1.population.N, run1.resources = n,r
+            assert run1.starving() == run1.conf["stv_function"](n,r)
 
     @pytest.mark.parametrize("spen", [True, False])
     @pytest.mark.parametrize("rpen", [True, False])
     def test_update_starvation_factors(self, run, spen, rpen):
         """Test that starvation factors update correctly under various
-        conditions."""
+        conditions for standard starvation function."""
         run1 = run.copy()
         run1.conf["surv_pen"], run1.conf["repr_pen"] = spen, rpen
+        run1.conf["stv_function"] = lambda n,r: n > r
         # Expected changes
         ec_s = run1.conf["death_inc"] if spen else 1.0
         ec_r = run1.conf["repr_dec"]  if rpen else 1.0
         # 1: Under non-starvation, factors stay at 1.0
-        run1.conf["res_var"], run1.resources = True, 1
+        run1.resources = run1.population.N + 1
         run1.update_starvation_factors()
         assert run1.surv_penf == run1.repr_penf == 1.0
         # 2: Under starvation, factors increase
-        run1.resources = 0
+        run1.resources = run1.population.N - 1
         run1.update_starvation_factors()
         assert run1.surv_penf == ec_s
         assert run1.repr_penf == ec_r
@@ -128,7 +102,7 @@ class TestRun:
         assert run1.surv_penf == ec_s**2
         assert run1.repr_penf == ec_r**2
         # 4: After starvation ends factors reset to 1.0
-        run1.resources = 1
+        run1.resources = run1.population.N + 1
         run1.update_starvation_factors()
         assert run1.surv_penf == 1.0
         assert run1.repr_penf == 1.0

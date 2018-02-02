@@ -62,31 +62,13 @@ class Run:
     def update_resources(self):
         """If resources are variable, update them based on current
         population."""
-        if self.conf["res_var"]: # Else do nothing
-            k = 1 if self.population.N > self.resources else self.conf["V"]
-            new_res = int((self.resources-self.population.N)*k + self.conf["R"])
-            self.resources = np.clip(new_res, 0, self.conf["res_limit"])
-
-    # NOTE WARNING: this is conceptually different from the old method since
-    # now resources can never be lesser than self.conf["R"]? what do you mean by
-    # checking "if r < 0" when r is a user-defined constant?
-    #
-    # if you mean that this method should be written in a way that we can do:
-    # def starving: return self.population.N > self.resources
-    # than I agree, but I think this as it is is wrong
-    def update_resources_new(self):
-        """Simpler, more intuitive resource updating."""
-        if self.conf["res_var"]: # Else do nothing
-            v,r,l = self.conf["V"], self.conf["R"], self.conf["res_limit"]
-            new_res = max(0, self.resources - self.N) * v + r
-            self.resources = new_res if r < 0 else min(r, new_res)
+        new_res = self.conf["res_function"](
+                self.population.N, self.resources)
+        self.resources = np.clip(new_res, 0, self.conf["res_limit"])
 
     def starving(self):
         """Determine whether population is starving based on resource level."""
-        if self.conf["res_var"]:
-            return self.resources == 0
-        else:
-            return self.population.N > self.resources
+        return self.conf["stv_function"](self.population.N, self.resources)
 
     def update_starvation_factors(self):
         """Update starvation factors under starvation."""

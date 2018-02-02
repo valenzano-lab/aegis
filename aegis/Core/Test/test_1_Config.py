@@ -37,12 +37,12 @@ def conf(request, conf_path, ran_str):
         c["repr_mode"] = random.choice(
                 ['sexual','asexual','assort_only','recombine_only'])
         c["res_start"] = random.randint(500,1000)
-        c["res_var"] = random.choice([True, False])
         c["start_pop"] = random.randint(200,500)
         ## RESOURCE PARAMETERS ##
         c["res_limit"] = random.randint(5000,10000)
-        c["V"] = random.uniform(1,3)
-        c["R"] = random.randint(500,1000)
+        a,b,d,e = np.random.uniform(size=4)
+        c["res_function"] = lambda n,r: int((r-n)*a + b) # Random affine
+        c["stv_function"] = lambda n,r: e*n > d*r
         ## AUTOCOMPUTING STAGE NUMBER ##
         c["delta"] = 10**-random.randint(5,15)
         c["scale"] = random.randint(9, 19)/10.0
@@ -133,7 +133,11 @@ class TestConfig:
             print key
             attr = c[key]
             impt = getattr(c_import,key)
-            if type(attr) in [int, str, float, dict, bool]:
+            if callable(attr):
+                for n in xrange(3):
+                    n,r = np.random.uniform(size=2)
+                    assert attr(n,r) == impt(n,r)
+            elif type(attr) in [int, str, float, dict, bool]:
                 assert attr == impt
             elif type(attr) is np.ndarray:
                 assert np.array_equal(attr, impt)

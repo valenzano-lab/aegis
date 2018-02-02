@@ -25,13 +25,14 @@ class Record(dict):
         """Import run parameters from a Config object and prepare for
         further data input."""
         # Inherit run parameters from Config object
-        for k in conf.keys(): self[k] = conf[k]
+        for k in conf.keys():
+            if k in ["res_function", "stv_function"]: # Can't save function objects
+                self[k] = 0
+            else:
+                self[k] = conf[k]
         #for k in self.keys(): # Put numeric data in arrays #!: Why?
         #    if type(self[k]) in [int, float]:
         #        self[k] = np.array([self[k]]) #! Check required data is there
-        # Clearer name for R and V parameters
-        self["res_regen_constant"] = self["R"]
-        self["res_regen_prop"] = self["V"]
         # Basic run info
         self["dieoff"] = np.array(False)
         self["prev_failed"] = np.array(0)

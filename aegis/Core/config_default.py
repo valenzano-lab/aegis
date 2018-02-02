@@ -18,13 +18,14 @@ max_fail = 10 # Maximum number of failed attempts tolerated for each run
 ## STARTING PARAMETERS ##
 repr_mode = 'sexual' # sexual, asexual, assort_only or recombine_only
 res_start = 1000 # Starting resource value
-res_var = True # Resources vary with population and time; else constant
 start_pop = res_start # Starting population size
 
 ## RESOURCE PARAMETERS ##
 V = 1.1 # Geometric resource regrowth factor, if variable
 R = res_start # Arithmetic resource increment, if variable
 res_limit = res_start*5 # Maximum resource value, if variable; -1 = infinite
+res_function = lambda n,r: r # Function for updating resources; here constant
+stv_function = lambda n,r: n > r # Function for identifying starvation
 
 ## AUTOCOMPUTING STAGE NUMBER ##
 delta = 10**-10 # Maximum difference between final and equilibrium neutral genotypes
