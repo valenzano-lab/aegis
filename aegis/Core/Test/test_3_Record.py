@@ -100,11 +100,12 @@ class TestRecord:
         # Conf param entries should be inherited in Record
         for k in conf.keys():
             print k, R[k], np.array(conf[k])
-            assert deep_key(k, R, conf, True)
-            assert np.array_equal(R[k], np.array(conf[k]))
+            if k in ["res_function", "stv_function"]: # Can't save function objects
+                assert R[k] == 0
+            else:
+                assert deep_key(k, R, conf, True)
+                assert np.array_equal(R[k], np.array(conf[k]))
         # R and V successfully renamed
-        assert np.array_equal(R["res_regen_constant"], R["R"])
-        assert np.array_equal(R["res_regen_prop"], R["V"])
         # Check basic run info
         assert np.array_equal(R["dieoff"], np.array(False))
         assert np.array_equal(R["prev_failed"], np.array(0))
