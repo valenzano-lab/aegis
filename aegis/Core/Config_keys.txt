@@ -1,0 +1,106 @@
+## Set data elements and information ##
+"random_seed"	"If numeric, sets random seed to that value before executing simulation; otherwise, no seed is set."
+# Reproductive mode
+"repr_mode"	"The reproductive mode of the population: 'sexual' (recombination and assortment), 'recombine_only', 'assort_only', or 'asexual' (no recombination or assortment). [str]" # Test that this is a valid value
+# Run parameters
+"n_runs"	"The number of runs to be  executed in parallel to generate summary data. [int]"
+"n_stages"	"The number of stages per run. [int]"
+"n_snapshots"	"The number of stages in the run at which to save detailed data (evenly distributed). [int]"
+"path_to_seed_file"	"Path to simulation seed file. [str]"
+#        "seed_run_n"	"Run number in seed file from which to take seed  #                population (default: seed each run with the corresponding seed run) #                . [int]"
+"start_pop"	"Population size at stage 0. [int]"
+"max_fail"	"Maximum number of failed attempts per run. [int]"
+# Death and reproduction
+"death_bound"	"Min and max death rates. [float array]"
+"repr_bound"	"Min and max reproduction rates. [float array]"
+"r_rate"	"Per-bit recombination rate, if applicable.  [float]"
+"m_rate"	"Per-bit mutation rate during reproduction.  [float]"
+"m_ratio"	"The ratio of positive (0 -> 1) to negative (1 -> 0) mutations during reproduction. Typically negative. [float]"
+# Genome structure
+"g_dist_s"	"Initial proportion of 1's in survival loci at stage 0. [float]"
+"g_dist_r"	"Initial proportion of 1's in reproduction loci at stage 0. [float]"
+"g_dist_n"	"Initial proportion of 1's in neutral loci at stage 0. [float]"
+"n_base"	"Number of bits per locus in the genome. [int]"
+"n_neutral"	"Number of neutral loci per genome; more loci reduces the effect of linkage at any given one. [int]"
+"repr_offset"	"Number by which to offset reproductive loci in genome map (must > maximum lifespan). [int]"
+"neut_offset"	"Number by which to offset neutral loci in genome map (must > repr_offset + max lifespan - maturity). [int]"
+# Resources and starvation
+"res_start"	"The resource level at stage 0. [int]"
+"res_var"	"Whether resources vary through consumption and regrowth (True) or remain constant (False). [bool]"
+"res_limit"	"Maximum resource level (-1 = infinite). [int]" #!
+"R"	"Arithmetic regrowth increment under variable resources. [int]"
+"V"	"Geometric regrowth rate under variable resources. [float]"
+"surv_pen"	"Whether to penalise survival under  starvation by multiplying the death rate. [bool]"
+"repr_pen"	"Whether to penalise reproduction under  starvation by dividing the reproduction rate. [bool]"
+"death_inc"	"Factor for multiplying death rate of  individuals under starvation. [float]"
+"repr_dec"	"Factor for dividing reproduction rate of  individuals under starvation. [float]"
+# Life history
+"max_ls"	"Maximum lifespan for the population in stages (-1 = indefinite). [int]" #!
+"maturity"	"Age of reproductive maturation in stages; before this, P(reproduction) = 0. [int]"
+# Sliding windows
+"windows"	"Width of sliding windows for recording  along-genome variation in bit value and along-run  variation in population size and resource levels. [dict]"
+# Output mode
+"output_prefix"	"Prefix for output file names. [str]"
+"output_mode"	"Level of information to retain in simulation output: 0 = records only, 1 = records + final population, 2 = records + all snapshot populations. [int]"
+# Autocomputing stage number
+"delta"	"Greatest allowed difference between expected final mean neutral genotype and predicted equilibrium value [float]."
+"scale"	"Scaling factor applied to target generation estimated for delta to ensure sufficient equilibration. [float]."
+"max_stages"	"Maximum possible number of stages. [int]"
+
+DERIVED VALUES
+
+
+        self.put("g_dist", g_dist_dict, "Dictionary of values specifying\
+                initial proportion of 1's in each locus type (s/r/n) during\
+                population initialisation. [dict of floats]")
+        self.put("genmap", genmap, "Genome map specifying the relative \
+                position of each survival, reproduction and neutral locus \
+                in the genome of each individual. [int array]")
+        self.put("genmap_argsort", np.argsort(self["genmap"]), "Array specifying\
+                how to sort the genome map (or the genome) to correctly order\
+                the loci (survival 0-maxls, reproduction maturity-maxls, \
+                neutral. [int array]")
+        self.put("chr_len", len(self["genmap"]) * self["n_base"], "Length of one\
+                chromosome in bits. [int]")
+        self.put("n_states", 2*self["n_base"]+1, "Number of possible genotype \
+                states (from 0 to 2*n_base). [int]")
+        self.put("surv_bound", 1-self["death_bound"][::-1], "Min and max \
+                survival rates. [float array].")
+        self.put("surv_step", np.diff(self["surv_bound"])/(self["n_states"]-1),
+                "Difference in survival probability between adjacent \
+                        reproduction genotype values. [float]")
+        self.put("repr_step", np.diff(self["repr_bound"])/(self["n_states"]-1),
+                "Difference in reproduction probability between adjacent \
+                        reproduction genotype values. [float]")
+        self.put("s_range", np.linspace(self["surv_bound"][0],
+            self["surv_bound"][1], self["n_states"]), "Survival probability \
+                    for each genotype sum value, linearly spaced. \
+                    [float array]")
+        self.put("r_range", np.linspace(self["repr_bound"][0],
+            self["repr_bound"][1], self["n_states"]), "Reproduction \
+                    probability for each genotype sum value, linearly spaced. \
+                    [float array]")
+        self.put("params", self.subdict(
+            ["repr_mode", "chr_len", "n_base", "maturity", "start_pop",
+                "max_ls", "g_dist", "repr_offset", "neut_offset"]),
+            "Key information for generating a new population object: \
+                    reproduction mode, chromosome length, bases per \
+                    chromosome, age of maturity, maximum lifespan, \
+                    starting population size, and initial bit value \
+                    distribution. [dict]")
+            self.put("snapshot_stages", np.around(
+                np.linspace(0,self["n_stages"]-1,
+                    self["n_snapshots"])).astype(int), "Stages of a \
+                            run at which to record detailed information about \
+                            the state of the population. [int array]")
+        self.put("min_gen", int(k*self["scale"]),
+                "Minimum generation for automatic stage counting.")
+        self.put("snapshot_generations", np.around(
+            np.linspace(0, self["min_gen"], self["n_snapshots"])
+            ).astype(int), "Generation states at which to record detailed\
+                    population information, under automatic stage counting.\
+                    [int array]")
+        self.put("snapshot_generations_remaining",
+                np.copy(self["snapshot_generations"]),
+                "Remaining snapshot generation points in simulation run;\
+                        eliminated as each point is reached. [int array].")
