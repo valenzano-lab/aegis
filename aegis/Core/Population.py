@@ -11,7 +11,7 @@ from .functions import chance
 from .functions import init_ages, init_genomes, init_generations, init_gentimes
 from .Config import deep_eq
 import numpy as np
-import random, copy
+import copy
 
 class Population:
     """A simulated population with genomes, ages and generation numbers,
@@ -48,6 +48,7 @@ class Population:
         self.repr_offset = params["repr_offset"] # Genmap offset for repr loci
         self.neut_offset = params["neut_offset"] # Genmap offset for neut loci
         self.object_max_age = params["object_max_age"] # Maximum age this Object can have in stages
+        self.prng = params["prng"] # numpy pseudo-random number generator
 
     def set_initial_size(self, params, ages, genomes, generations, gentimes):
         """Determine population size from initial inputs."""
@@ -94,7 +95,7 @@ class Population:
         new_gentimes = np.array_equal(gentimes, init_gentimes())
         # Specify individual value arrays
         if new_ages:
-            ages = np.random.randint(0,self.max_ls-1,self.N)
+            ages = self.prng.randint(0,self.max_ls-1,self.N)
         if new_genomes:
             genomes = self.make_genome_array()
         if new_generations:
@@ -126,7 +127,7 @@ class Population:
             pos = np.array([range(self.n_base) + x for x in loci[k]*self.n_base])
             pos = np.append(pos, pos + self.chr_len)
             # Add values to positions according to appropriate distributio
-            genome_array[:, pos] = chance(self.g_dist[k], (self.N, len(pos)))
+            genome_array[:, pos] = chance(self.g_dist[k], (self.N, len(pos)), self.prng)
         return genome_array.astype(int)
 
 
@@ -143,7 +144,8 @@ class Population:
                 "g_dist":self.g_dist,
                 "repr_offset":self.repr_offset,
                 "neut_offset":self.neut_offset,
-                "object_max_age":self.object_max_age
+                "object_max_age":self.object_max_age,
+                "prng":self.prng
                 }
         return p_dict
 
@@ -163,7 +165,7 @@ class Population:
     def shuffle(self):
         """Rearrange order of individuals in population."""
         index = np.arange(self.N)
-        np.random.shuffle(index)
+        self.prng.shuffle(index)
         def f(x): return x[index]
         self.attrib_rep(f)
 
@@ -253,7 +255,7 @@ class Population:
         gt = genotypes[np.arange(self.N), ages]
         # Convert to inclusion probabilities and compute inclusion
         inc_probs = val_range[gt]
-        subpop = chance(inc_probs, self.N) # Binary array of inclusion statuses
+        subpop = chance(inc_probs, self.N, self.prng) # Binary array of inclusion statuses
         # Subset by age boundaries and return
         # COMMENT: we can't subset by age boundaries before this point because
         # we need the output to be of length pop.N
@@ -317,8 +319,8 @@ class Population:
         if m_rate > 0: # Else do nothing
             is_0 = self.genomes==0
             is_1 = np.invert(is_0)
-            positive_mut = chance(m_rate*m_ratio, np.sum(is_0)).astype(int)
-            negative_mut = 1-chance(m_rate, np.sum(is_1))
+            positive_mut = chance(m_rate*m_ratio, np.sum(is_0), self.prng).astype(int)
+            negative_mut = 1-chance(m_rate, np.sum(is_1), self.prng)
             self.genomes[is_0] = positive_mut
             self.genomes[is_1] = negative_mut
         self.loci = self.sorted_loci() # Renew loci (inc. recomb./assortment)
@@ -328,7 +330,7 @@ class Population:
         in the population."""
         if (r_rate > 0): # Otherwise do nothing
             # Randomly generate recombination sites
-            r_sites = chance(r_rate, (self.N, self.chr_len)).astype(int)
+            r_sites = chance(r_rate, (self.N, self.chr_len), self.prng).astype(int)
             # Convert into [1,-1]
             r_sites = np.array([1,-1])[r_sites]
             # Determine crossover status of each position
@@ -348,7 +350,7 @@ class Population:
         if self.N == 1:
             raise ValueError("Cannot perform assortment with a single parent.")
         if self.N % 2 != 0: # If odd number of parents, discard one at random
-            index = random.sample(range(self.N), 1)
+            index = self.prng.choice(self.N, 1)
             self.subtract_members(index)
         self.shuffle() # Randomly assign mating partners
         # Randomly combine parental chromatids
@@ -357,11 +359,11 @@ class Population:
         # could just do:
         # parent_0 = np.arange(self.N/2)*2
         # parent_1 = parent_0 + 1
-        which_partner = chance(0.5,self.N/2)*1 # Member within pair (0 or 1)
+        which_partner = chance(0.5,self.N/2, self.prng)*1 # Member within pair (0 or 1)
         parent_0 = which_pair + which_partner # Parent 0
         parent_1 = which_pair + (1-which_partner) # Parent 1
-        which_chr_0 = chance(0.5,self.N/2)*1 # Chromosome from parent 0
-        which_chr_1 = chance(0.5,self.N/2)*1 # Chromosome from parent 1
+        which_chr_0 = chance(0.5,self.N/2, self.prng)*1 # Chromosome from parent 0
+        which_chr_1 = chance(0.5,self.N/2, self.prng)*1 # Chromosome from parent 1
         # Update population chromosomes
         chrs = np.copy(self.chrs(False))
         self.genomes[::2,:self.chr_len] = chrs[which_chr_0, parent_0]

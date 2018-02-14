@@ -17,7 +17,7 @@ except:
 ## FIXTURES ##
 ##############
 
-from test_1_Config import conf, conf_path
+from test_1_Config import conf, conf_path, gen_trseed
 from test_2a_Population_init import pop
 from test_3_Record import rec, pop1, rec1
 from test_4_Run import run, ran_str
@@ -72,6 +72,11 @@ class TestSimulationInit:
         match, in the case that both were imported from conf_path."""
         if conf["setup"] == "import":
             sim.conf["setup"] = "import"
+            conf["prng"] = sim.conf["prng"]
+            conf["params"]["prng"] = sim.conf["params"]["prng"]
+            # needed because sim.conf["prng"] progresses with
+            # Runs init (and Pop init in every Run init) in Sim init
+            # while conf["prng"] stays in state of seed
             assert sim.conf == conf
 
     def test_get_conf_degen(self, sim, ran_str):

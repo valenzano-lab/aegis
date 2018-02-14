@@ -10,7 +10,7 @@
 
 ## PACKAGE IMPORT ##
 import numpy as np
-import copy, imp, math, numbers, random
+import copy, imp, math, pickle
 from .functions import deep_key, deep_eq
 
 class Config(dict):
@@ -49,7 +49,8 @@ class Config(dict):
 
     def make_params(self):
         key_list = ["repr_mode", "chr_len", "n_base", "maturity", "start_pop",
-                "max_ls", "g_dist", "repr_offset", "neut_offset", "object_max_age"]
+                "max_ls", "g_dist", "repr_offset", "neut_offset", "object_max_age",\
+                "prng"]
         return dict([(k, self[k]) for k in key_list])
 
     # Generate derived attributes
@@ -59,9 +60,22 @@ class Config(dict):
         add to configuration object."""
         self.check()
         # Compute random seed
-        if not isinstance(self["random_seed"], numbers.Number):
-            self["random_seed"] = random.random()
-        random.seed(self["random_seed"])
+        def get_random_seed(path):
+            try:
+                infile = open(path, "rb")
+                obj = pickle.load(infile)
+                if not isinstance(obj, tuple):
+                    s = "Random seed must be a tuple representing the internal"\
+                        " state of the generator"
+                    raise ImportError(s)
+                infile.close()
+                return obj
+            except IOError:
+                print "Random seed import failed: no such file under {}".format(path)
+        self["prng"] = np.random.RandomState()
+        if isinstance(self["random_seed"], str) and self["random_seed"]!="":
+            self["prng"].set_state(get_random_seed(self["random_seed"]))
+        else: self["random_seed"] = self["prng"].get_state()
         # Genome structure
         self["genmap"] = np.concatenate([
             np.arange(self["max_ls"]),
@@ -134,4 +148,8 @@ class Config(dict):
 
     # COPYING
 
-    def copy(self): return copy.deepcopy(self)
+    def copy(self):
+        self_copy = copy.deepcopy(self)
+        self_copy["prng"] = self["prng"]
+        self_copy["params"]["prng"] = self["params"]["prng"]
+        return self_copy

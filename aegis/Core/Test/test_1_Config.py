@@ -1,6 +1,6 @@
 from aegis.Core import Config
 import pytest,importlib,types,random,copy,string,os,tempfile,math,imp
-import numpy as np
+import numpy as np, pickle
 
 ##############
 ## FIXTURES ##
@@ -18,14 +18,25 @@ def conf_path(request):
     filepath = os.path.join(dirpath, "tconfig.py")
     return filepath
 
+@pytest.fixture(scope="module")
+def gen_trseed(request):
+    """Generate random seed and save it to  file trseed.
+    tconfig contains a path to this file so that conf can import it."""
+    f = open("./aegis/Core/Test/trseed", "w")
+    rseed = np.random.RandomState().get_state()
+    pickle.dump(rseed, f)
+    f.close()
+    return
+
 @pytest.fixture(params=["import", "random", "auto"], scope="module")
-def conf(request, conf_path, ran_str):
+def conf(request, conf_path, ran_str, gen_trseed):
     """Create a default configuration object."""
+    if request.param == "import": gen_trseed
     c = Config(conf_path)
     c["setup"] = request.param
     if request.param != "import": # Randomise config parameters
         ## CORE PARAMETERS ##
-        c["random_seed"] = random.random() # TODO: Add seed value here?
+        c["random_seed"] = ""
         c["output_prefix"] = os.path.join(tempfile.gettempdir(), ran_str)
         c["n_runs"] = random.randint(1,3)
         nstage = random.randint(15,80)
@@ -98,6 +109,8 @@ class TestConfig:
         copy.deepcopy()."""
         c1 = conf.copy()
         c2 = copy.deepcopy(conf)
+        c2["prng"] = c1["prng"]
+        c2["params"]["prng"] = c1["params"]["prng"]
         assert c1 == c2
 
     def test_config_auto(self, conf):
@@ -118,9 +131,10 @@ class TestConfig:
         # Remove stuff that gets introduced/changed during generation
         del_keys = ("g_dist", "genmap", "chr_len", "s_range", "r_range",
                 "params", "surv_step", "repr_step", "genmap_argsort",
-                "n_states", "surv_bound", "auto", "object_max_age")
+                "n_states", "surv_bound", "auto", "object_max_age",\
+                "random_seed", "prng")
         if c["auto"]:
-            del_keys += ("min_gen", "snapshot_generations", 
+            del_keys += ("min_gen", "snapshot_generations",
                     "snapshot_generations_remaining")
         else:
             del_keys += ("snapshot_stages",)
@@ -182,7 +196,7 @@ class TestConfig:
                 "params", "surv_step", "repr_step", "genmap_argsort",
                 "n_states", "surv_bound")
         if c["auto"]:
-            del_keys += ("min_gen", "snapshot_generations", 
+            del_keys += ("min_gen", "snapshot_generations",
                     "snapshot_generations_remaining")
         else:
             del_keys += ("snapshot_stages",)

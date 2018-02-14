@@ -1,14 +1,15 @@
-import datetime, random, warnings, numpy as np, scipy.stats as st
+import datetime, warnings, numpy as np, scipy.stats as st, copy
 from dateutil.relativedelta import relativedelta as delta
 
 ###################
 ## Randomisation ##
 ###################
 
-def chance(p,n=1):
+def chance(p,n=1,prng=0):
     """Generate array (of shape specified by n, where n is either an integer
     or a tuple of integers) of independent booleans with P(True)=z."""
-    return np.random.random(n) < p
+    if prng==0: prng = np.random.RandomState()
+    return prng.random_sample(n) < p
 
 ###############################
 ## Population Initialisation ##
@@ -86,12 +87,19 @@ def deep_key(key, dict1, dict2, exact=True):
     print key, # for debugging
     v1, v2 = dict1[key], dict2[key]
     f = np.allclose if not exact else np.array_equal
-    if type(v1) is not type(v2): return False
-    elif callable(v1): 
+    if key=="prng":
+        w1,w2 = copy.copy(v1),copy.copy(v2)
+        return f(w1.rand(100), w2.rand(100))
+    elif type(v1) is not type(v2): return False
+    elif callable(v1):
         warnings.warn("Cannot compare callable values.", UserWarning)
         return True
     elif isinstance(v1, dict): return deep_eq(v1, v2)
     elif isinstance(v1, np.ndarray): return f(v1,v2)
+    elif isinstance(v1, tuple): # state of numpy prng
+        for w1,w2 in zip(v1,v2):
+            if isinstance(w1, np.ndarray): return f(w1,w2)
+            else: return w1==w2
     else: return v1 == v2
 
 def deep_eq(d1, d2, exact=True):

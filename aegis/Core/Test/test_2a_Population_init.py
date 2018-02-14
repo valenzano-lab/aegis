@@ -8,7 +8,7 @@ import numpy as np
 ## FIXTURES ##
 ##############
 
-from test_1_Config import conf, conf_path, ran_str
+from test_1_Config import conf, conf_path, ran_str, gen_trseed
 # (will run descendent tests for all parameterisations)
 
 @pytest.fixture(scope="module")
@@ -39,9 +39,9 @@ class TestPopulationInit:
         """Test inheritance of Population attributes from a params
         dictionary, and independence of these values after cloning."""
         pop2 = pop.clone()
-        # Permute parameter values (other than g_dist or repr_mode)
+        # Permute parameter values (other than g_dist,repr_mode and prng)
         for a in pop.params().keys():
-            if a in ["repr_mode","g_dist"]: continue
+            if a in ["repr_mode","g_dist", "prng"]: continue
             setattr(pop2, a, getattr(pop2, a) + random.randint(1,11))
         # Permute g_dist
         for k in pop.g_dist.keys():
@@ -55,7 +55,10 @@ class TestPopulationInit:
         pop3 = pop.clone()
         pop3.set_attributes(pop2.params())
         for a in pop.params().keys():
-            if type(getattr(pop, a)) is np.ndarray:
+            if a=="prng":
+                assert getattr(pop, a) == getattr(pop2, a) \
+                        == getattr(pop3, a)
+            elif type(getattr(pop, a)) is np.ndarray:
                 assert np.array_equal(getattr(pop2, a), getattr(pop3, a))
                 assert not np.array_equal(getattr(pop, a), getattr(pop3, a))
             else:
