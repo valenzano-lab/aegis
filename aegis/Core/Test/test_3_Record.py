@@ -362,9 +362,6 @@ class TestRecord:
             assert np.allclose(obj2_mean[l][0], check2_mean)
             assert np.allclose(obj2_var[l][0], check2_var)
 
-    # TODO resolve issue - right now I don't believe the current variance
-    # calculation is correct
-    @pytest.mark.xfail(reason="test needs to be finished")
     def test_compute_surv_repr_probabilities_true(self, rec1, pop2, rec2):
         """Test that compute_surv_repr_probabilities_true performs
         correctly for a genome filled with 1's and one randomly generated."""
@@ -400,8 +397,8 @@ class TestRecord:
             check_mean = np.mean(values[data],0)
             if l=="repr": check_var = np.var(values[data],0)#/20*pop2.N
             else: check_var = np.var(values[data],0)#*pop2.N
-#            print check_var[0]/rec2["prob_var"][l][0][0]
-#            print check_var[1]/rec2["prob_var"][l][0][1]
+            print check_var[0]/rec2["prob_var"][l][0][0]
+            print check_var[1]/rec2["prob_var"][l][0][1]
             # TODO why is this scaled like this ???
             assert np.array_equal(rec1["prob_mean"][l], np.tile(vmax[l], dims[l]))
             assert np.array_equal(rec1["prob_var"][l], np.zeros(dims[l]))

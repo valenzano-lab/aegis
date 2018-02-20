@@ -214,6 +214,14 @@ class TestPopulationGrowth:
         assert np.isclose(np.mean(g0[is0] != g1[is0]), mrate*mratio,
                 atol=precision/2)
 
+    def test_mutate_loci(self, pop):
+        """Test that loci update correctly following genome mutation."""
+        p, mrate, mratio = pop.clone(), random.random(), random.random()
+        assert np.array_equal(p.loci, p.sorted_loci())
+        p.mutate(mrate, mratio)
+        assert np.array_equal(p.loci, p.sorted_loci())
+        assert not np.array_equal(p.loci, pop.sorted_loci())
+
     # 2: Recombination (recombine_only, sexual)
 
     def test_recombine_degen(self, pop):
