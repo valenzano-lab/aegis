@@ -9,8 +9,8 @@
 ## PACKAGE IMPORT ##
 import numpy as np
 import scipy.stats as st
-import copy, datetime, time, os, importlib, inspect, numbers, shutil, random
-from .functions import chance, init_ages, init_genomes, init_generations
+import copy, datetime, time, os, importlib, inspect, shutil
+from .functions import init_ages, init_genomes, init_generations
 from .functions import timenow, timediff, get_runtime, init_gentimes
 from .Config import Config
 from .Population import Population
@@ -52,7 +52,7 @@ class Simulation:
             infile = open(seed_path, "rb")
             obj = pickle.load(infile)
             if not isinstance(obj, Population):
-                s = "See import failed: {} does not hold a Population\
+                s = "Seed import failed: {} does not hold a Population\
                         object.".format(seed_path)
                 self.abort(TypeError, s)
             infile.close()
@@ -199,4 +199,8 @@ class Simulation:
 
     # OTHER
 
-    def copy(self): return copy.deepcopy(self)
+    def copy(self):
+        self_copy = copy.deepcopy(self)
+        self_copy.conf["prng"] = self.conf["prng"]
+        self_copy.conf["params"]["prng"] = self.conf["params"]["prng"]
+        return self_copy

@@ -10,7 +10,7 @@
 import numpy as np
 import scipy.stats as st
 import copy, datetime, time
-from .functions import chance, init_ages, init_genomes, init_generations
+from .functions import init_ages, init_genomes, init_generations
 from .functions import init_gentimes, deep_eq
 from .functions import timenow, timediff, get_runtime
 from .Config import Config
@@ -33,10 +33,10 @@ class Run:
         self.report_n = report_n
         self.verbose = verbose
         self.resources = self.conf["res_start"]
-        np.random.shuffle(self.conf["genmap"])
+        self.conf["prng"].shuffle(self.conf["genmap"])
         self.genmap = self.conf["genmap"] # Not a copy
         # init Population
-        #n = self.conf["n_stages"] if not self.auto() else self.conf["max_stages"]
+        #n = self.conf["n_stages"] if not self.conf["auto"] else self.conf["max_stages"]
         if startpop != "": # If given a seeding population
             self.population = startpop.clone()
             # Adopt from population: genmap, n_base, chr_len
@@ -111,7 +111,7 @@ class Run:
         self.test_complete()
         if self.complete and not self.dieoff:
             # for "auto" last snapshot not taken otherwise
-            if self.conf.auto():
+            if self.conf["auto"]:
                 self.record_stage()
             self.record.finalise()
 
@@ -222,7 +222,10 @@ class Run:
 
     # Basic methods
     def copy(self):
-        return copy.deepcopy(self)
+        self_copy = copy.deepcopy(self)
+        self_copy.conf["prng"] = self.conf["prng"]
+        self_copy.conf["params"]["prng"] = self.conf["params"]["prng"]
+        return self_copy
 
     # Comparison methods
 

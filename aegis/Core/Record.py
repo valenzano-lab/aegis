@@ -372,12 +372,16 @@ class Record(dict):
 
     # copy method
 
-    def copy(self): return copy.deepcopy(self)
+    def copy(self):
+        self_copy = copy.deepcopy(self)
+        self_copy["prng"] = self["prng"]
+        self_copy["params"]["prng"] = self["params"]["prng"]
+        return self_copy
 
     # COMPARISON (same as Config)
 
     def __eq__(self, other):
-        if isinstance(other, self.__class__): 
+        if isinstance(other, self.__class__):
             return deep_eq(self, other, True)
         return NotImplemented
     def __ne__(self, other):

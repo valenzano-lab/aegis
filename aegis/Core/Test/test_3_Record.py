@@ -27,8 +27,7 @@ def static_fill(rec_obj, pop_obj):
 ## FIXTURES ##
 ##############
 
-from test_1_Config import conf, conf_path, ran_str
-#from test_2a_Population_init import pop
+from test_1_Config import conf, conf_path, ran_str, gen_trseed
 
 @pytest.fixture(scope="module")
 def pop(request, conf):
@@ -91,6 +90,8 @@ class TestRecord:
         copy.deepcopy()."""
         r1 = rec.copy()
         r2 = copy.deepcopy(rec)
+        r2["prng"] = r1["prng"]
+        r2["params"]["prng"] = r1["params"]["prng"]
         assert r1 == r2
 
     ## INITIALISATION ##
@@ -99,13 +100,11 @@ class TestRecord:
         R = rec.copy()
         # Conf param entries should be inherited in Record
         for k in conf.keys():
-            print k, R[k], np.array(conf[k])
+            #print k, R[k], np.array(conf[k])
             if k in ["res_function", "stv_function"]: # Can't save function objects
                 assert R[k] == 0
             else:
                 assert deep_key(k, R, conf, True)
-                assert np.array_equal(R[k], np.array(conf[k]))
-        # R and V successfully renamed
         # Check basic run info
         assert np.array_equal(R["dieoff"], np.array(False))
         assert np.array_equal(R["prev_failed"], np.array(0))
@@ -659,7 +658,16 @@ class TestRecord:
                 assert np.isclose(np.mean(np.isnan(o1)),np.mean(np.isnan(o2)))
             elif isinstance(o1, dict):
                 for l in o1.keys():
-                    assert np.array_equal(np.array(o1[l]),np.array(o2[l]))
+                    if l=="prng":
+                        assert np.array_equal(o1[l].rand(100),o2[l].rand(100))
+                    else:
+                        assert np.array_equal(np.array(o1[l]),np.array(o2[l]))
+            elif isinstance(o1, np.random.RandomState):
+                assert np.array_equal(o1.rand(100),o2.rand(100))
+            elif isinstance(o1, tuple): # numpy pseudo-random number generator seed
+                for w1,w2 in zip(o1,o2):
+                    if isinstance(w1, np.ndarray): assert np.array_equal(w1,w2)
+                    else: return w1==w2
             elif not callable(o1):
                 assert np.array_equal(np.array(o1), np.array(o2))
         # TODO: Test different snapshot_pops saving options

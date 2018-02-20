@@ -12,7 +12,7 @@ import numpy as np
 ## FIXTURES ##
 ##############
 
-from test_1_Config import conf, conf_path, ran_str
+from test_1_Config import conf, conf_path, ran_str, gen_trseed
 from test_2a_Population_init import pop
 from test_3_Record import rec, pop1, rec1
 
@@ -129,7 +129,7 @@ class TestRun:
         while not run2.complete:
             print run2.n_stage, run2.population.N, len(run2.population.generations),
             print np.min(run2.population.generations),
-            print run2.conf["min_gen"] if run2.conf.auto() else ""
+            print run2.conf["min_gen"] if run2.conf["auto"] else ""
             run2.execute_stage()
         assert run2.complete
         assert (run2.dieoff == (run2.population.N == 0))
@@ -137,7 +137,7 @@ class TestRun:
         if not run2.dieoff: # Run completion
             assert run2.n_snap == run.conf["n_snapshots"]
             assert run2.n_stage == run.conf["n_stages"]
-        elif not run2.conf.auto(): # Set stage count + dieoff
+        elif not run2.conf["auto"]: # Set stage count + dieoff
             print run2.conf["snapshot_stages"]
             assert run2.n_snap == 1+np.max(
                     np.nonzero(run2.conf["snapshot_stages"]<run2.n_stage)[0])
