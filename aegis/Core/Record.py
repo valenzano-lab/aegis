@@ -36,6 +36,7 @@ class Record(dict):
         # Basic run info
         self["dieoff"] = np.array(False)
         self["prev_failed"] = np.array(0)
+        self["finalised"] = False
         # Arrays for per-stage data entry
         n = self["n_stages"] if not self["auto"] else self["max_stages"]
         #! TODO: Add pre-finalisation truncating of unused stages in auto case
@@ -367,6 +368,7 @@ class Record(dict):
             self["final_pop"] = self["snapshot_pops"][-1]
         if self["output_mode"] < 2:
             self["snapshot_pops"] = 0
+        self["finalised"] = True
 
     # copy method
 
