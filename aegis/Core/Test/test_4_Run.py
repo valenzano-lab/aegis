@@ -158,6 +158,52 @@ class TestRun:
         assert run3.dieoff and run3.complete
         #! TODO: Add test for status reporting?
 
+    def test_test_complete(self, run):
+        """Test that completion is correctly identified in auto,
+        non-auto, and dieoff cases."""
+        # Setup test run
+        run1 = run.copy()
+        assert not run1.dieoff
+        assert not run1.complete
+        # Auxiliary function
+        def check_complete(s=True):
+            run1.test_complete()
+            assert run1.complete == s
+        # Tests
+        # 1: Dieoff case
+        for x in [True, False]:
+            run1.dieoff = x
+            check_complete(x)
+        # 2: No dieoff, non-auto
+        if not run1.conf["setup"] == "auto":
+            assert not hasattr(run1, "min_gen")
+            assert run1.n_stage < run1.conf["n_stages"]
+            for n in [0, 1, 0]:
+                run1.n_stage = run1.conf["n_stages"] - 1 + n
+                check_complete(n)
+        # 3: No dieoff, auto
+        else:
+            assert run1.n_stage < run1.conf["max_stages"]
+            assert np.min(run1.population.generations) < run1.conf["min_gen"]
+            for n in [0, 1, 0]: # Stage requirement only
+                run1.n_stage = run1.conf["max_stages"] - 1 + n
+                check_complete(n)
+            for m in [0, 1, 0]: # Gen requirement only
+                run1.population.generations[:] = run1.conf["min_gen"] - 1 + n
+                check_complete(n)
+            # Both requirements together
+            run1.n_stage = run1.conf["max_stages"] + 1
+            run1.population.generations[:] = run1.conf["min_gen"] + 1
+            check_complete(True)
+
+    #def test_execute_attempt(self, run):
+    #    """Test that a given run attempt is correctly executed to
+    #    completion in auto, non-auto, and dieoff cases."""
+        # 1: Non-auto, no dieoff
+        # 2: Auto, no dieoff
+        # 3: Dieoff
+
+
     #! TODO: Add test for Run.execute (that will actually run...)
 
     def test_logprint_run(self, run, ran_str):
