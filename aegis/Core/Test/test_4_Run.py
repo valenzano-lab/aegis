@@ -158,6 +158,128 @@ class TestRun:
         assert run3.dieoff and run3.complete
         #! TODO: Add test for status reporting?
 
+    def test_test_complete(self, run):
+        """Test that completion is correctly identified in auto,
+        non-auto, and dieoff cases."""
+        # Setup test run
+        run1 = run.copy()
+        assert not run1.dieoff
+        assert not run1.complete
+        # Auxiliary function
+        def check_complete(s=True):
+            run1.test_complete()
+            assert run1.complete == s
+        # Tests
+        # 1: Dieoff case
+        for x in [True, False]:
+            run1.dieoff = x
+            check_complete(x)
+        # 2: No dieoff, non-auto
+        if not run1.conf["setup"] == "auto":
+            assert not hasattr(run1, "min_gen")
+            assert run1.n_stage < run1.conf["n_stages"]
+            for n in [0, 1, 0]:
+                run1.n_stage = run1.conf["n_stages"] - 1 + n
+                check_complete(n)
+        # 3: No dieoff, auto
+        else:
+            assert run1.n_stage < run1.conf["max_stages"]
+            assert np.min(run1.population.generations) < run1.conf["min_gen"]
+            for n in [0, 1, 0]: # Stage requirement only
+                run1.n_stage = run1.conf["max_stages"] - 1 + n
+                check_complete(n)
+            for m in [0, 1, 0]: # Gen requirement only
+                run1.population.generations[:] = run1.conf["min_gen"] - 1 + n
+                check_complete(n)
+            # Both requirements together
+            run1.n_stage = run1.conf["max_stages"] + 1
+            run1.population.generations[:] = run1.conf["min_gen"] + 1
+            check_complete(True)
+
+    def test_execute_attempt_completion(self, run):
+        """Test that a given run attempt is correctly executed to
+        completion under execute_attempt."""
+        # Test normal execution
+        run1 = run.copy()
+        assert not run1.complete
+        run1.execute_attempt()
+        assert run1.complete # Check automatic completion
+        run1.complete = False
+        run1.test_complete() # Check completion conditions
+        assert run1.complete
+        # Force dieoff
+        run2 = run.copy()
+        run2.population.subtract_members(np.arange(run2.population.N))
+        assert run2.population.N == 0 # Check pop correctly emptied
+        assert not run2.complete
+        run2.execute_attempt()
+        assert run2.dieoff
+        assert run2.complete
+
+    def test_execute_attempt_starttime(self, run):
+        """Test that execute_attempt generates a new start time for a
+        run if one is absent, but keeps the old one otherwise."""
+        run1 = run.copy()
+        # Generate initial start time
+        assert not hasattr(run1, "starttime")
+        run1.execute_attempt()
+        assert hasattr(run1, "starttime")
+        start = run1.starttime
+        # Rerun and preserve start time
+        run1.n_stage, run1.n_snap, run1.complete = 0, 0, False
+        run1.record["snapshot_pops"] = [0]*run1.record["n_snapshots"]
+        run1.execute_attempt()
+        assert run1.starttime == start
+
+    def test_execute_baseline(self, run):
+        """Test, as a basic requirement, that after execution a run is
+        complete and finalised correctly."""
+        run1 = run.copy()
+        assert not run1.complete
+        assert not run1.record["finalised"]
+        assert run1.record["prev_failed"] == 0
+        run1.execute()
+        assert run1.complete
+        assert run1.record["finalised"]
+        print run1.record["prev_failed"], "/", run1.record["max_fail"]
+        if not run1.dieoff:
+            assert run1.record["prev_failed"] == 0
+        else:
+            assert run1.record["prev_failed"] == run1.record["max_fail"] - 1
+
+    def test_execute_repeats(self, run):
+        """Test repeat functionality for execute under controlled
+        dieoff conditions."""
+        if run.conf["setup"] != "import": return
+        maxfail = run.record["max_fail"]
+        for M in np.arange(maxfail):
+            # Initialise test run
+            run1 = run.copy()
+            #run1.verbose=True
+            #run1.report_n = 1
+            assert not run1.complete
+            assert not run1.record["finalised"]
+            assert run1.record["prev_failed"] == 0
+            # Define resource function
+            res_function = run1.conf["res_function"]
+            def induced_death_resources(n,r):
+                """Force dieoff through starvation in first n 
+                attempts."""
+                #print run1.record["prev_failed"], M
+                #print run1.record["prev_failed"] < M
+                if run1.record["prev_failed"] < M:
+                    return 0
+                else:
+                    return res_function(n,r)
+            run1.conf["res_function"] = induced_death_resources
+            # Run and test
+            run1.execute()
+            assert run1.complete
+            assert run1.record["finalised"]
+            print M, ":", run1.record["prev_failed"], "/", maxfail
+            assert run1.record["prev_failed"] == min(M,maxfail)
+
+
     #! TODO: Add test for Run.execute (that will actually run...)
 
     def test_logprint_run(self, run, ran_str):

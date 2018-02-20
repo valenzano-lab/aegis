@@ -86,6 +86,8 @@ class Run:
             # Update ages, resources and starvation
             self.population.increment_ages()
             self.update_resources()
+            if full_report: 
+                self.logprint("Resources = {}".format(self.resources))
             self.update_starvation_factors()
             if full_report: self.logprint(
                     "Starvation factors = {0} (survival), {1} (reproduction)."\
@@ -120,7 +122,7 @@ class Run:
         report_stage = (self.n_stage % self.report_n == 0)
         if report_stage:
             s = "Population = {0}.".format(self.population.N)
-            if self.conf["auto"]:
+            if self.conf["auto"] and self.population.N > 0:
                 g = " Min generation = {0}/{1}."
                 s += g.format(np.min(self.population.generations),
                         self.conf["min_gen"])

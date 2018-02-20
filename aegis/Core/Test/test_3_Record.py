@@ -361,9 +361,6 @@ class TestRecord:
             assert np.allclose(obj2_mean[l][0], check2_mean)
             assert np.allclose(obj2_var[l][0], check2_var)
 
-    # TODO resolve issue - right now I don't believe the current variance
-    # calculation is correct
-    @pytest.mark.xfail(reason="test needs to be finished")
     def test_compute_surv_repr_probabilities_true(self, rec1, pop2, rec2):
         """Test that compute_surv_repr_probabilities_true performs
         correctly for a genome filled with 1's and one randomly generated."""
@@ -399,8 +396,8 @@ class TestRecord:
             check_mean = np.mean(values[data],0)
             if l=="repr": check_var = np.var(values[data],0)#/20*pop2.N
             else: check_var = np.var(values[data],0)#*pop2.N
-#            print check_var[0]/rec2["prob_var"][l][0][0]
-#            print check_var[1]/rec2["prob_var"][l][0][1]
+            print check_var[0]/rec2["prob_var"][l][0][0]
+            print check_var[1]/rec2["prob_var"][l][0][1]
             # TODO why is this scaled like this ???
             assert np.array_equal(rec1["prob_mean"][l], np.tile(vmax[l], dims[l]))
             assert np.array_equal(rec1["prob_var"][l], np.zeros(dims[l]))
@@ -646,11 +643,13 @@ class TestRecord:
         assert not "actual_death_rate" in rec1_copy.keys()
         assert type(rec1["actual_death_rate"]) is np.ndarray
         # Then finalise rec1_copy and compare
+        rec1["finalised"] = True
         rec1_copy.finalise()
         assert type(rec1_copy["actual_death_rate"]) is np.ndarray
         for k in rec1_copy.keys():
             print k
-            if k in ["snapshot_pops", "final_pop", "snapshot_age_distribution"]: continue
+            if k in ["snapshot_pops","final_pop","snapshot_age_distribution"]:
+                continue
             o1, o2 = rec1[k], rec1_copy[k]
             if k == "actual_death_rate":
                 assert o1.shape == o2.shape

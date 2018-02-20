@@ -36,6 +36,7 @@ class Record(dict):
         # Basic run info
         self["dieoff"] = np.array(False)
         self["prev_failed"] = np.array(0)
+        self["finalised"] = False
         # Arrays for per-stage data entry
         n = self["n_stages"] if not self["auto"] else self["max_stages"]
         #! TODO: Add pre-finalisation truncating of unused stages in auto case
@@ -57,16 +58,26 @@ class Record(dict):
             self["snapshot_stages"] = np.zeros([ns])
 
     # CALCULATING PROBABILITIES
+    def p_scale(self, bound):
+        """Compute the scaling factor relating genotype sums to
+        probabilities for a given set of probability bounds."""
+        p_min,p_max = np.array(bound).astype(float)
+        return (p_max - p_min)/(2*self["n_base"])
+    def p_shift(self, bound):
+        """Compute the shifting factor relating genotype sums to
+        probabilities for a given set of probability bounds."""
+        p_min,p_max = np.array(bound).astype(float)
+        return p_min
     def p_calc(self, gt, bound):
         """Derive a probability array from a genotype array and list of
         max/min values."""
-        minval, maxval, limit = np.min(gt), np.max(gt), 2*self["n_base"]
+        # Check for invalid genotype values
+        minval, maxval = np.min(gt), np.max(gt)
         if minval < 0:
             raise ValueError("Invalid genotype value: {}".format(minval))
-        if maxval > limit:
+        if maxval > 2*self["n_base"]:
             raise ValueError("Invalid genotype value: {}".format(maxval))
-        p_min,p_max = np.array(bound).astype(float)
-        return p_min + (p_max - p_min)*gt/limit
+        return self.p_scale(bound)*gt + self.p_shift(bound) # Y=aX+b
     def p_surv(self, gt):
         """Derive an array of survival probabilities from a genotype array."""
         return self.p_calc(gt, self["surv_bound"])
@@ -169,12 +180,14 @@ class Record(dict):
         distributions at survival and reproduction loci."""
         # Get mean and variance in genotype sums
         mean_gt, var_gt = self["mean_gt"], self["var_gt"]
-        keys, functions = ["surv","repr"], [self.p_surv, self.p_repr]
+        keys = ["surv","repr"]
         prob_mean, prob_var = {}, {}
         for n in xrange(2):
-            k,f = keys[n], functions[n]
-            prob_mean[k] = f(mean_gt[k[0]])
-            prob_var[k] = var_gt[k[0]]*self[k+"_step"]
+            k = keys[n]
+            bound = self["{}_bound".format(k)]
+            scale, shift = self.p_scale(bound), self.p_shift(bound)
+            prob_mean[k] = scale*mean_gt[k[0]] + shift # E(Y) = aE(X)+b
+            prob_var[k] = (scale**2)*var_gt[k[0]] # Var(Y) = (a^2)Var(X)
         self["prob_mean"] = prob_mean
         self["prob_var"] = prob_var
 
@@ -355,6 +368,7 @@ class Record(dict):
             self["final_pop"] = self["snapshot_pops"][-1]
         if self["output_mode"] < 2:
             self["snapshot_pops"] = 0
+        self["finalised"] = True
 
     # copy method
 
