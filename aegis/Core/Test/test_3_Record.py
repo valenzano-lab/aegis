@@ -644,11 +644,13 @@ class TestRecord:
         assert not "actual_death_rate" in rec1_copy.keys()
         assert type(rec1["actual_death_rate"]) is np.ndarray
         # Then finalise rec1_copy and compare
+        rec1["finalised"] = True
         rec1_copy.finalise()
         assert type(rec1_copy["actual_death_rate"]) is np.ndarray
         for k in rec1_copy.keys():
             print k
-            if k in ["snapshot_pops", "final_pop", "snapshot_age_distribution"]: continue
+            if k in ["snapshot_pops","final_pop","snapshot_age_distribution"]:
+                continue
             o1, o2 = rec1[k], rec1_copy[k]
             if k == "actual_death_rate":
                 assert o1.shape == o2.shape
