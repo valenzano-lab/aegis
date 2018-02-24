@@ -86,7 +86,7 @@ class Run:
             # Update ages, resources and starvation
             self.population.increment_ages()
             self.update_resources()
-            if full_report: 
+            if full_report:
                 self.logprint("Resources = {}".format(self.resources))
             self.update_starvation_factors()
             if full_report: self.logprint(
