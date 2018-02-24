@@ -12,7 +12,7 @@ parser.add_argument('script', help="AEGIS script to run:\n\
     run - run the simulation with the config file specified in\n\
           infile\n\
     plot - plot data from record object specified in infile\n\
-    getconfig - copies the default config file to infile")
+    get - copies an aegis file in option to infile (config by default)")
 parser.add_argument('infile', help="path to input config file")
 parser.add_argument('-m', '--module', metavar='<str>', default="Core",
         help="AEGIS module to use for simulation run (default: 'Core')")
@@ -25,10 +25,14 @@ parser.add_argument('-p', '--profile', metavar='<str>', default="",
         help="profile genome simulation with cProfile and save to given path")
 parser.add_argument('-ws', '--window-size', type=int, metavar='<int>', default=0,
         help="if called with plot, generates n1 plots with desired window size")
+parser.add_argument('-rseed', '--random-seed', metavar='<str>', default="",
+        help="if called with get, gets random seed from record file")
 args = parser.parse_args()
 
 if args.script!="plot" and args.window_size:
     parser.error("--window-size can only be set when script=plot")
+if args.script!="get" and args.random_seed:
+    parser.error("--random-seed can only be set when script=get")
 
 if args.profile != "":
     import cProfile, pstats, StringIO
@@ -41,8 +45,11 @@ inpath = os.path.expanduser(args.infile)
 if args.script == "run":
     module.run(inpath, args.r, args.verbose)
 
-elif args.script == "getconfig":
-    module.getconfig(inpath)
+elif args.script == "get":
+    if args.random_seed != "":
+        module.getrseed(args.random_seed, inpath)
+    else:
+        module.getconfig(inpath)
 
 elif args.script == "plot" and args.window_size == 0:
     module.plot(inpath)
