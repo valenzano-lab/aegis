@@ -29,22 +29,6 @@ def sim(request, conf_path):
     #return Simulation(conf_path, "", 0, 100, False)
     return Simulation(conf_path, 100, False)
 
-# TODO do also for max_fail>1
-#@pytest.mark.parametrize("max_fail",[1,5])
-@pytest.fixture(scope="module")
-def simdf(request, conf_path):
-    """Generate an unseeded Simulation object that dies off upun execution."""
-    simdf = Simulation(conf_path, 100, False)
-    simdf.conf["n_snapshots"] = 4
-    simdf.conf["n_stages"] = 100
-    simdf.conf["res_start"] = 500
-    simdf.conf["startpop"] = 500
-    simdf.conf["max_fail"] = 1
-    simdf.conf["res_function"] = lambda n,r: r-10
-    simdf.conf.generate()
-    simdf.init_runs()
-    return simdf
-
 @pytest.fixture(scope="function")
 def seed(request, sim):
     """Generate one Population that progressed some stages in Simulation
@@ -255,10 +239,21 @@ class TestSimulationExecution:
             assert r.n_stage == r.conf["n_stages"] or r.dieoff
             assert r.complete
 
-    def test_execute_series_dieoff(self, simdf):
+    @pytest.mark.parametrize("max_fail", [1,np.random.randint(2,11)])
+    def test_execute_series_dieoff(self, conf_path, max_fail):
         """Test that simdf dies off so that first two snapshots are saved and
         the other are not."""
-        s = simdf.copy()
+        # setup
+        s = Simulation(conf_path, 100, False)
+        s.conf["n_snapshots"] = 4
+        s.conf["n_stages"] = 100
+        s.conf["res_start"] = 500
+        s.conf["startpop"] = 500
+        s.conf["max_fail"] = max_fail
+        s.conf["res_function"] = lambda n,r: r-10
+        s.conf.generate()
+        s.init_runs()
+        # assertions
         assert s.runs[0].n_stage == 0
         assert not s.runs[0].complete
         s.execute()
