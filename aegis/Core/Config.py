@@ -112,11 +112,6 @@ class Config(dict):
         if self["auto"]:
             # Compute analytical parameters
             alpha, beta = self["m_rate"], self["m_rate"]*self["m_ratio"]
-            # Will's computation
-    #        a, p = 1 - alpha - beta, beta/(alpha+beta)
-    #        A, P = abs(a), abs(p - self["g_dist_n"])
-    #        k = (math.log10(self["delta"]) - math.log10(P))/math.log10(A)
-            # Arian's computation
             y = self["g_dist"]["n"]
             x = 1-y
             k = math.log10(self["delta"]*(alpha+beta)/abs(alpha*y-beta*x)) / \
@@ -129,7 +124,6 @@ class Config(dict):
         ss_max = self["min_gen"] if self["auto"] else self["n_stages"] - 1
         self["snapshot_{}".format(ss_key)] = np.around(np.linspace(
                 0, ss_max, self["n_snapshots"])).astype(int)
-        # TODO: Finish docstring, write tests
         if self["auto"]:
             self["snapshot_generations_remaining"] = np.copy(
                     self["snapshot_generations"])

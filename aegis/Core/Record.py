@@ -30,16 +30,12 @@ class Record(dict):
                 self[k] = 0
             else:
                 self[k] = conf[k]
-        #for k in self.keys(): # Put numeric data in arrays #!: Why?
-        #    if type(self[k]) in [int, float]:
-        #        self[k] = np.array([self[k]]) #! Check required data is there
         # Basic run info
         self["dieoff"] = np.array(False)
         self["prev_failed"] = np.array(0)
         self["finalised"] = False
         # Arrays for per-stage data entry
         n = self["n_stages"] if not self["auto"] else self["max_stages"]
-        #! TODO: Add pre-finalisation truncating of unused stages in auto case
         ns,ml,mt = self["n_snapshots"], self["max_ls"], self["maturity"]
         for k in ["population_size", "resources", "surv_penf", "repr_penf"]:
             self[k] = np.zeros(n)
@@ -53,7 +49,6 @@ class Record(dict):
             self["snapshot_{}_distribution".format(l)] = np.zeros([ns,ml])
         self["snapshot_generation_distribution"] = np.zeros(
                 [ns, np.ceil(conf["object_max_age"]/float(mt)).astype(int)+1])
-        #! TODO: Compute these
         if conf["auto"]:
             self["snapshot_stages"] = np.zeros([ns])
 
@@ -101,7 +96,6 @@ class Record(dict):
         self["gentime_dist"][n_stage] = fivenum(population.gentimes)
         if n_snap >= 0:
             self["snapshot_pops"][n_snap] = population.clone()
-        #! Consider snapshot_pops recording: write to a tempdir instead?
 
     ##  FINALISATION  ##
 
@@ -210,7 +204,6 @@ class Record(dict):
         """Compute true and junk cumulative survival probabilities at each age
         and snapshot from the corresponding survival probability arrays."""
         l = self["max_ls"]
-        #init_surv = np.tile(1,len(self["prob_mean"]["surv"]))
         # (P(survival from age 0 to age 0) = 1)
         cmv_surv = np.ones(self["prob_mean"]["surv"].shape)
         cmv_surv[:,1:] = np.cumprod(self["prob_mean"]["surv"],1)[:,:-1]

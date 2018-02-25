@@ -20,7 +20,7 @@ from .Record import Record
 ## CLASS ##
 class Run:
     def __init__(self, config, startpop, n_run, report_n, verbose):
-        # init Run parameters
+        # Init Run parameters
         self.log = ""
         self.conf = config.copy()
         self.surv_penf = 1.0
@@ -35,8 +35,7 @@ class Run:
         self.resources = self.conf["res_start"]
         self.conf["prng"].shuffle(self.conf["genmap"])
         self.genmap = self.conf["genmap"] # Not a copy
-        # init Population
-        #n = self.conf["n_stages"] if not self.conf["auto"] else self.conf["max_stages"]
+        # Init Population
         if startpop != "": # If given a seeding population
             self.population = startpop.clone()
             # Adopt from population: genmap, n_base, chr_len
@@ -56,7 +55,7 @@ class Run:
             self.population = Population(self.conf["params"],
                 self.conf["genmap"], init_ages(), init_genomes(),
                 init_generations(), init_gentimes())
-        # init Record
+        # Init Record
         self.record = Record(self.conf)
 
     def update_resources(self):
@@ -211,7 +210,7 @@ class Run:
         """Print message to stdout and save in log object."""
         # Compute numbers of spaces to keep all messages aligned
         n, r = self.conf["n_stages"], self.conf["n_runs"]
-        if n == "auto": n = self.conf["max_stages"] # TODO: test this
+        if n == "auto": n = self.conf["max_stages"]
         nspace_run = len(str(r-1))-len(str(self.n_run))
         nspace_stg = len(str(n)) - len(str(self.n_stage))
         # Create string

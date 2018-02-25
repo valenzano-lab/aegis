@@ -48,7 +48,7 @@ class Population:
         self.repr_offset = params["repr_offset"] # Genmap offset for repr loci
         self.neut_offset = params["neut_offset"] # Genmap offset for neut loci
         self.object_max_age = params["object_max_age"] # Maximum age this Object can have in stages
-        self.prng = params["prng"] # numpy pseudo-random number generator
+        self.prng = params["prng"] # Numpy pseudo-random number generator
 
     def set_initial_size(self, params, ages, genomes, generations, gentimes):
         """Determine population size from initial inputs."""
@@ -126,7 +126,7 @@ class Population:
             # Identify genome positions corresponding to locus type
             pos = np.array([range(self.n_base) + x for x in loci[k]*self.n_base])
             pos = np.append(pos, pos + self.chr_len)
-            # Add values to positions according to appropriate distributio
+            # Add values to positions according to appropriate distribution
             genome_array[:, pos] = chance(self.g_dist[k], (self.N, len(pos)), self.prng)
         return genome_array.astype(int)
 
@@ -256,8 +256,8 @@ class Population:
         inc_probs = val_range[gt]
         subpop = chance(inc_probs, self.N, self.prng) # Binary array of inclusion statuses
         # Subset by age boundaries and return
-        # COMMENT: we can't subset by age boundaries before this point because
-        # we need the output to be of length pop.N
+        # Can not subset by age boundaries before this point because
+        # need the output to be of length pop.N
         inc = np.logical_and(self.ages>=age_bounds[0],
                 self.ages<age_bounds[1])
         return subpop * inc
@@ -343,7 +343,6 @@ class Population:
     def assortment(self):
         """Pair individuals into breeding pairs and generate children
         through random assortment."""
-        #print self.N, len(self.generations)
         if self.N == 1:
             raise ValueError("Cannot perform assortment with a single parent.")
         if self.N % 2 != 0: # If odd number of parents, discard one at random
@@ -360,7 +359,6 @@ class Population:
         self.genomes[::2,:self.chr_len] = chrs[which_chr_0, parent_0]
         self.genomes[::2,self.chr_len:] = chrs[which_chr_1, parent_1]
         # Update generations as the max of two parents
-        #print self.N, len(self.generations)
         self.generations[::2] = np.maximum(self.generations[::2],
                 self.generations[1::2])
         # Update ages as rounded mean of two parents (for gentime recording)

@@ -38,7 +38,7 @@ class Plotter:
                                  "plot_entropy_gt",\
                                  "plot_entropy_bits",\
                                  "plot_age_distribution",\
-                                 "plot_density_per_locus",\
+                                 #"plot_density_per_locus",\
                                  "plot_density",\
                                  "plot_mean_gt",\
                                  "plot_var_gt",\
@@ -67,7 +67,7 @@ class Plotter:
                                "plot_entropy_gt",\
                                "plot_entropy_bits",\
                                "age_distribution",\
-                               "density_per_locus",\
+                               #"density_per_locus",\
                                "density",\
                                "mean_gt",\
                                "var_gt",\
@@ -128,7 +128,6 @@ class Plotter:
             outpath = os.path.join(outdir, self.plot_names[n] + ".png")
             self.plots[n].save(outpath)
 
-    # TODO check if pandas.melt does a better job with this
     def get_flattened_coords(self, dim, arr):
         """Given an array and a dimension, returns the original
         co-ordinate in that dimension of each element in a flattened
@@ -243,9 +242,6 @@ class Plotter:
         plot += ggplot.labs(title=title)
         return plot
 
-    # TODO make this work and make use of it
-    # for instance for n1 series and mean_gt
-    # age_distr? maybe better just as overlay
     def grid_plot(self, key, dimlabels, facet, subkey="", title=""):
         """Create a grid of plots, showing corresponding slices of one
         or more data series (e.g. at different time points."""
