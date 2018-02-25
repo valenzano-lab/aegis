@@ -14,13 +14,16 @@ setup(name='aegis',
         install_requires=[
             'numpy>=1.13.3',
             'scipy>=0.19.1',
-            'python-dateutil>=2.6.1'
-            # TODO add plotting package
+            'python-dateutil>=2.6.1',
+            'pandas>=0.22.0',
+            'matplotlib>=2.1.2',
+            'ggplot>=0.11.5'
+            # pytest?
             ],
         scripts=['bin/aegis'],
         # Medadata for upload to PyPI
-        author='Will Bradshaw & Dario Valenzano',
-        author_email='wbradshaw@age.mpg.de',
+        author='Will Bradshaw, Dario Valenzano and Arian Sajina',
+        author_email='wbradshaw@age.mpg.de, asajina@age.mpg.de',
         description='AEGIS - Ageing of Evolving Genomes In Silico',
         license='MIT',
         url="tbc"
