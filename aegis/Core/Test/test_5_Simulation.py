@@ -303,6 +303,13 @@ class TestSimulationFinalisation:
                 dirname = os.path.join(dirpref, "records")
                 for n in xrange(sim.conf["n_runs"]):
                     testfile(dirname, "run{}.rec".format(n), Record)
+        def confirm_deleted_pops(sim):
+            if output_mode >= 2:
+                for run in sim.runs:
+                    assert "snapshot_pops" not in run.record.keys()
+            if output_mode >= 1:
+                for run in sim.runs:
+                    assert "final_pop" not in run.record.keys()
         # Set-up
         s = sim.copy()
         outpref = os.path.join(tempfile.gettempdir(), ran_str)
@@ -316,6 +323,7 @@ class TestSimulationFinalisation:
             for n in xrange(sim.conf["n_runs"]):
                 print n, s.runs[n].record["snapshot_pops"]
         s.save_output()
+        confirm_deleted_pops(s)
         check_output_dirs(outdir)
         confirm_output(outdir)
         shutil.rmtree(outdir)
