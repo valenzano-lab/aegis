@@ -251,7 +251,6 @@ class Population:
         # Get age array for suitably-aged individuals
         ages = np.clip(self.ages - age_bounds[0], 0, np.diff(age_bounds)-1)
         # Get relevant genotype sum for each individual of appropriate age
-        # NOTE len(age)=pop.N, so why not just use that?
         gt = genotypes[np.arange(self.N), ages]
         # Convert to inclusion probabilities and compute inclusion
         inc_probs = val_range[gt]
@@ -285,8 +284,6 @@ class Population:
         """Generate new mutated children from selected parents."""
         if self.N == 0:# If no individuals in population, do nothing
             return self.subset_clone(np.zeros(self.N).astype(bool))
-        # NOTE this is obsolete since x in (0,1) implies x/y in (0,1) for all y > 1
-        # meaning if everything else well written and input ok, then obsolete
         r_range = np.clip(r_range / penf, 0, 1) # Limit to real probabilities
         age_bounds = np.array([self.maturity,self.max_ls])
         parents = self.get_subpop(age_bounds, self.repr_loci(), r_range)
@@ -354,14 +351,8 @@ class Population:
             self.subtract_members(index)
         self.shuffle() # Randomly assign mating partners
         # Randomly combine parental chromatids
-        which_pair = np.arange(self.N/2)*2 # First of each pair (0,2,4,...)
-        # NOTE this is shuffling the second time? we can leave out this chance call?
-        # could just do:
-        # parent_0 = np.arange(self.N/2)*2
-        # parent_1 = parent_0 + 1
-        which_partner = chance(0.5,self.N/2, self.prng)*1 # Member within pair (0 or 1)
-        parent_0 = which_pair + which_partner # Parent 0
-        parent_1 = which_pair + (1-which_partner) # Parent 1
+        parent_0 = np.arange(self.N/2)*2    # Parent 0
+        parent_1 = parent_0 + 1             # Parent 1
         which_chr_0 = chance(0.5,self.N/2, self.prng)*1 # Chromosome from parent 0
         which_chr_1 = chance(0.5,self.N/2, self.prng)*1 # Chromosome from parent 1
         # Update population chromosomes
