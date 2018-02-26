@@ -46,9 +46,12 @@ class Record(dict):
         self["snapshot_pops"] = [0]*ns
         # Basic properties of snapshot populations
         for l in ["age", "gentime"]:
+            # NOTE ns x ml is reasonably small
             self["snapshot_{}_distribution".format(l)] = np.zeros([ns,ml])
-        self["snapshot_generation_distribution"] = np.zeros(
-                [ns, np.ceil(conf["object_max_age"]/float(mt)).astype(int)+1])
+        # NOTE this however is huge
+#        self["snapshot_generation_distribution"] = np.zeros(
+#                [ns, np.ceil(conf["object_max_age"]/float(mt)).astype(int)+1])
+        self["snapshot_generation_distribution"] = []
         if conf["auto"]:
             self["snapshot_stages"] = np.zeros([ns])
 
@@ -114,7 +117,15 @@ class Record(dict):
                 key = "snapshot_{}_distribution".format(k)
                 newval = np.bincount(getattr(p, "{}s".format(k)),
                         minlength=minlen[k])/float(p.N)
-                self[key][s] = newval
+                if k == "generation":
+                    # save only nonzero values in a 2 column matrix, where
+                    # the first column is the generation and the second it's
+                    # distribution
+                    nonzero = np.nonzero(newval)
+                    newval = np.dstack((nonzero, newval[nonzero]))[0]
+                    self[key].append(newval)
+                else:
+                    self[key][s] = newval
 
     def compute_locus_density(self):
         """Compute normalised distributions of sum genotypes for each locus in

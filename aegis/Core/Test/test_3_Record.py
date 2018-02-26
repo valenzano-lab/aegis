@@ -239,22 +239,24 @@ class TestRecord:
         g = np.ceil(n/mt).astype(int)+1
         print n, mt, g
         print rec1["n_snapshots"]
-        print rec1["snapshot_generation_distribution"].shape
         rec1.compute_snapshot_properties()
+        print len(rec1["snapshot_generation_distribution"])
         rec2.compute_snapshot_properties() # do here because of finalisation
         # Compute expected values
         exp_dist = {"age": np.zeros(rec1["max_ls"]),
                 "gentime": np.zeros(rec1["max_ls"]),
-                "generation": np.zeros(g)}
+                "generation": np.zeros(2)}
         exp_dist["age"][int(mt)] = 1 # Everyone is the same age
         exp_dist["gentime"][0] = 1 # Everyone is from initial pop
-        exp_dist["generation"][0] = 1 # Everyone is of generation 0
+        exp_dist["generation"][1] = 1 # Everyone is of generation 0
+        sum_dim = {"age": 1, "gentime": 1, "generation": 2}
         # Test output
         for k in ["age", "gentime", "generation"]:
             o = rec1["snapshot_{}_distribution".format(k)]
+            print exp_dist[k]
             print k,o
             assert np.all(o == exp_dist[k])
-            assert np.allclose(np.sum(o, 1), 1)
+            assert np.allclose(np.sum(o, sum_dim[k]), 1)
 
     # DONE
     def test_compute_locus_density(self, rec1, pop2, rec2):
