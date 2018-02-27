@@ -413,6 +413,7 @@ class Plotter:
         return plot
 
     def plot_actual_death_rate(self, window_size=100):
+        self.record.compute_actual_death()
         n_stage = self.record["n_stages"] if not self.record["auto"] \
                 else self.record["max_stages"]
         # check window size is OK

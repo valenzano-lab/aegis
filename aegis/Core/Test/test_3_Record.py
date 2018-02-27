@@ -647,18 +647,19 @@ class TestRecord:
         # Then finalise rec1_copy and compare
         rec1["finalised"] = True
         rec1_copy.finalise()
-        assert type(rec1_copy["actual_death_rate"]) is np.ndarray
+        assert not "actual_death_rate" in rec1_copy.keys()
+        #assert type(rec1_copy["actual_death_rate"]) is np.ndarray
         for k in rec1_copy.keys():
             print k
             if k in ["snapshot_pops","final_pop","snapshot_age_distribution"]:
                 continue
             o1, o2 = rec1[k], rec1_copy[k]
-            if k == "actual_death_rate":
-                assert o1.shape == o2.shape
-                assert np.sometrue(np.isnan(o1))
-                assert np.sometrue(np.isnan(o2))
-                assert np.isclose(np.mean(np.isnan(o1)),np.mean(np.isnan(o2)))
-            elif isinstance(o1, dict):
+#            if k == "actual_death_rate":
+#                assert o1.shape == o2.shape
+#                assert np.sometrue(np.isnan(o1))
+#                assert np.sometrue(np.isnan(o2))
+#                assert np.isclose(np.mean(np.isnan(o1)),np.mean(np.isnan(o2)))
+            if isinstance(o1, dict):
                 for l in o1.keys():
                     if l=="prng":
                         assert np.array_equal(o1[l].rand(100),o2[l].rand(100))

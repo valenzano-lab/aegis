@@ -365,7 +365,7 @@ class Record(dict):
         # Other values
         self.compute_bits()
         self.compute_entropies()
-        self.compute_actual_death()
+        #self.compute_actual_death() # do this in Plotter instead
         self.compute_windows()
         # Remove snapshot pops as appropriate
         if self["output_mode"] > 0:
