@@ -110,7 +110,16 @@ class Plotter:
             os.makedirs(outdir)
         plot.save(outpath)
 
+    def filter_one_snap(self):
+        if self.record["n_snapshots"] == 1:
+            print "Not plotting grid plots since only one snapshot available."
+            nmethods = [k for k in self.plot_methods if "grid" not in k]
+            nnames = [k for k in self.plot_names if "grid" not in k]
+            self.plot_methods = nmethods
+            self.plot_names = nnames
+
     def generate_plots(self):
+        self.filter_one_snap()
         for m in self.plot_methods:
             self.plots.append(getattr(self, m)())
 
