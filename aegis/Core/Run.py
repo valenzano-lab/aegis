@@ -67,7 +67,19 @@ class Run:
 
     def starving(self):
         """Determine whether population is starving based on resource level."""
-        return self.conf["stv_function"](self.population.N, self.resources)
+        # starvation function
+        strv = self.conf["stv_function"](self.population.N, self.resources)
+        stg = gen = False
+        # if forced starvation set
+        if self.conf["starve_at"] > 0:
+            if self.conf["auto"]:
+                gen = (np.min(self.population.generations) >= \
+                        self.conf["starve_at"])
+                stg = False
+            elif not self.conf["auto"]:
+                stg, gen = (self.n_stage >= self.conf["starve_at"]), False
+        return strv or stg or gen
+        #return self.conf["stv_function"](self.population.N, self.resources)
 
     def update_starvation_factors(self):
         """Update starvation factors under starvation."""
@@ -200,6 +212,7 @@ class Run:
             else: # Reset to saved state (except for log and prev_failed)
                 save_state.record["prev_failed"] = nfail
                 save_state.log = self.log + "\n"
+                #save_state.conf["pnrg"] = self.conf["prng"]
                 attrs = vars(save_state)
                 for key in attrs: # Revert everything else
                     setattr(self, key, attrs[key])
@@ -221,19 +234,17 @@ class Run:
 
     # Basic methods
     def copy(self):
+        sc_prng = self.conf["prng"]
         self_copy = copy.deepcopy(self)
-        self_copy.conf["prng"] = self.conf["prng"]
-        self_copy.conf["params"]["prng"] = self.conf["params"]["prng"]
+        self_copy.conf["prng"] = sc_prng
+        self_copy.conf["params"]["prng"] = sc_prng
         return self_copy
 
     # Comparison methods
 
     def __eq__(self, other):
         if not isinstance(other, self.__class__): return NotImplemented
-        return deepeq(vars(self), vars(other))
-        #for a in ["log", "conf", "surv_penf", "other_penf", "resources",
-        #        "genmap", "population", "n_stage", "n_snap", "n_run"
-        return NotImplemented
+        return deep_eq(vars(self), vars(other))
 
     def __ne__(self, other):
         if isinstance(other, self.__class__): return not self.__eq__(other)
