@@ -81,15 +81,24 @@ def fivenum(array):
 ## Comparing Dictionaries with Compound Values ##
 #################################################
 
-def deep_key(key, dict1, dict2, exact=True):
+def deep_key(key, dict1, dict2, exact=True, prng_id=True):
     """Compare the values linked to a given key in two dictionaries
     according to the types of those values."""
     print key, # for debugging
     v1, v2 = dict1[key], dict2[key]
     f = np.allclose if not exact else np.array_equal
     if key=="prng":
-        w1,w2 = copy.copy(v1),copy.copy(v2)
-        return f(w1.rand(100), w2.rand(100))
+        if prng_id:
+            sc_prng = copy.copy(v1)
+            return f(v2.rand(100), sc_prng.rand(100)) and \
+                    f(v1.rand(100), sc_prng.rand(100)) and not \
+                    f(v1.rand(100), v2.rand(100))
+        else:
+            sc_prng1 = copy.copy(v1)
+            check1 = f(v2.rand(100), sc_prng1.rand(100))
+            sc_prng2 = copy.copy(v1)
+            check2 = not f(sc_prng1.rand(100), sc_prng2.rand(100))
+            return check1 and check2
     elif type(v1) is not type(v2): return False
     elif callable(v1):
         warnings.warn("Cannot compare callable values.", UserWarning)
@@ -102,10 +111,10 @@ def deep_key(key, dict1, dict2, exact=True):
             else: return w1==w2
     else: return v1 == v2
 
-def deep_eq(d1, d2, exact=True):
+def deep_eq(d1, d2, exact=True, prng_id=True):
     """Compare two dictionaries element-wise according to the types of
     their constituent values."""
     if sorted(d1.keys()) != sorted(d2.keys()): return False
     for k in d1.keys():
-        if not deep_key(k,d1,d2,exact): return False
+        if not deep_key(k,d1,d2,exact,prng_id): return False
     return True

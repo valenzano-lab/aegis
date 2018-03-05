@@ -201,6 +201,9 @@ class Simulation:
 
     def copy(self):
         self_copy = copy.deepcopy(self)
-        self_copy.conf["prng"] = self.conf["prng"]
-        self_copy.conf["params"]["prng"] = self.conf["params"]["prng"]
+        self_copy.conf = self.conf.copy()
+        for i in range(self.conf["n_runs"]):
+            self_copy.runs[i] = self.runs[i].copy()
         return self_copy
+
+    # TODO write __eq__ method for sim

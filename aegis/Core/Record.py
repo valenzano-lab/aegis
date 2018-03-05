@@ -369,9 +369,10 @@ class Record(dict):
     # copy method
 
     def copy(self):
+        sc_prng = self["prng"]
         self_copy = copy.deepcopy(self)
-        self_copy["prng"] = self["prng"]
-        self_copy["params"]["prng"] = self["params"]["prng"]
+        self_copy["prng"] = sc_prng
+        self_copy["params"]["prng"] = sc_prng
         return self_copy
 
     # COMPARISON (same as Config)

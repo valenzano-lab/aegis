@@ -47,6 +47,11 @@ class TestRun:
         # Quick test of correct genmap transition from run -> pop -> record;
         # Population and Record initiation tested more thoroughly elsewhere
 
+    def test_copy(self, run):
+        """Test that copy of object is equal to the object."""
+        run1 = run.copy()
+        assert run == run1
+
     def test_update_resources(self, run):
         """Test resource updating between bounds and confirm resources
         cannot go outside them."""
@@ -263,7 +268,7 @@ class TestRun:
             # Define resource function
             res_function = run1.conf["res_function"]
             def induced_death_resources(n,r):
-                """Force dieoff through starvation in first n 
+                """Force dieoff through starvation in first n
                 attempts."""
                 #print run1.record["prev_failed"], M
                 #print run1.record["prev_failed"] < M

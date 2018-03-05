@@ -45,6 +45,11 @@ class TestPopulationReComb:
             assert not np.array_equal(getattr(pop3, a), getattr(pop2,a))
         assert np.array_equal(pop2.genmap, pop3.genmap)
 
+    def test_clone2(self,pop):
+        """Test that cloned populations are equal via the equal method."""
+        pop2 = pop.clone()
+        assert pop == pop2
+
     def test_attrib_rep(self, pop):
         """Test repetition of function over attributes."""
         pop2 = pop.clone()
