@@ -88,12 +88,12 @@ def deep_key(key, dict1, dict2, exact=True, prng_id=True):
     v1, v2 = dict1[key], dict2[key]
     f = np.allclose if not exact else np.array_equal
     if key=="prng":
-        if prng_id:
+        if prng_id: # check identical objects (not independent)
             sc_prng = copy.copy(v1)
             return f(v2.rand(100), sc_prng.rand(100)) and \
                     f(v1.rand(100), sc_prng.rand(100)) and not \
                     f(v1.rand(100), v2.rand(100))
-        else:
+        else: # check same but independent
             sc_prng1 = copy.copy(v1)
             check1 = f(v2.rand(100), sc_prng1.rand(100))
             sc_prng2 = copy.copy(v1)
