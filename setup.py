@@ -16,8 +16,8 @@ setup(name='aegis',
             'scipy>=0.19.1',
             'python-dateutil>=2.6.1',
             'pandas>=0.22.0',
-            'matplotlib>=2.1.2',
-            'ggplot>=0.11.5'
+            #'matplotlib>=2.1.2',
+            #'ggplot>=0.11.5'
             # pytest?
             ],
         scripts=['bin/aegis'],
