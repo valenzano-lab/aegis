@@ -37,8 +37,10 @@ class Record(dict):
         # Arrays for per-stage data entry
         n = self["n_stages"] if not self["auto"] else self["max_stages"]
         ns,ml,mt = self["n_snapshots"], self["max_ls"], self["maturity"]
-        for k in ["population_size", "resources", "surv_penf", "repr_penf"]:
+        for k in ["population_size", "resources"]:
             self[k] = np.zeros(n)
+        for k in ["surv_pen", "repr_pen"]:
+            if self[k]: self[k+"f"] = np.zeros(n)
         self["age_distribution"] = np.zeros([n, ml])
         for k in ["generation_dist", "gentime_dist"]:
             self[k] = np.zeros([n,5]) # Five-number summaries
@@ -91,8 +93,8 @@ class Record(dict):
         as a whole."""
         self["population_size"][n_stage] = population.N
         self["resources"][n_stage] = resources
-        self["surv_penf"][n_stage] = surv_penf
-        self["repr_penf"][n_stage] = repr_penf
+        if self["surv_pen"]: self["surv_penf"][n_stage] = surv_penf
+        if self["repr_pen"]: self["repr_penf"][n_stage] = repr_penf
         self["age_distribution"][n_stage] = np.bincount(population.ages,
                 minlength = population.max_ls)/float(population.N)
         self["generation_dist"][n_stage] = fivenum(population.generations)

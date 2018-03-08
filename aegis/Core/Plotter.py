@@ -307,7 +307,10 @@ class Plotter:
 
     def plot_starvation(self):
         # TODO: plot y-axis in log-space of base matching starvation increment
-        return self.stage_trace(["surv_penf","repr_penf"], "Survival and reproduction penalty factors upon starvation")
+        keys = []
+        if self.record["surv_pen"]: keys.append("surv_penf")
+        if self.record["repr_pen"]: keys.append("repr_penf")
+        return self.stage_trace(keys, "Survival and reproduction penalty factors upon starvation")
 
     ##################
     # snapshot_trace #

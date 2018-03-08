@@ -113,8 +113,8 @@ class TestRecord:
         a0, a1 = np.zeros(n), np.zeros([n, R["max_ls"]])
         assert np.array_equal(R["population_size"], a0)
         assert np.array_equal(R["resources"], a0)
-        assert np.array_equal(R["surv_penf"], a0)
-        assert np.array_equal(R["repr_penf"], a0)
+        if R["surv_pen"]: assert np.array_equal(R["surv_penf"], a0)
+        if R["repr_pen"]: assert np.array_equal(R["repr_penf"], a0)
         assert np.array_equal(R["age_distribution"], a1)
         assert np.array_equal(R["generation_dist"], np.zeros([n,5]))
         assert np.array_equal(R["gentime_dist"], np.zeros([n,5]))
@@ -189,8 +189,8 @@ class TestRecord:
         agedist=np.bincount(pop.ages,minlength=pop.max_ls)/float(pop.N)
         assert rec2["resources"][0] == 100
         assert rec2["population_size"][0] == pop.N
-        assert rec2["surv_penf"][0] == 1
-        assert rec2["repr_penf"][0] == 1
+        if rec2["surv_pen"]: assert rec2["surv_penf"][0] == 1
+        if rec2["repr_pen"]: assert rec2["repr_penf"][0] == 1
         assert np.array_equal(rec2["age_distribution"][0], agedist)
         assert np.allclose(rec2["generation_dist"][0],
                 fivenum(pop.generations))
@@ -211,8 +211,8 @@ class TestRecord:
         # Per-stage factors
         assert rec2["population_size"][0] == pop2.N
         assert rec2["resources"][0] == 200
-        assert rec2["surv_penf"][0] == 2
-        assert rec2["repr_penf"][0] == 2
+        if rec2["surv_pen"]: assert rec2["surv_penf"][0] == 2
+        if rec2["repr_pen"]: assert rec2["repr_penf"][0] == 2
         assert np.array_equal(rec2["age_distribution"][0], agedist)
         assert np.allclose(rec2["generation_dist"][0],
                 fivenum(pop.generations))
