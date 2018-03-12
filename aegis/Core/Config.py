@@ -11,7 +11,7 @@
 ## PACKAGE IMPORT ##
 import numpy as np
 import copy, imp, math, pickle
-from .functions import deep_key, deep_eq
+from .functions import deep_key, deep_eq, make_windows
 
 class Config(dict):
     """Object derived from imported config module."""
@@ -45,6 +45,15 @@ class Config(dict):
         if self["neut_offset"] - self["repr_offset"] < self["max_ls"]:
             s = "Difference between offset values must be >= max lifespan."
             raise ValueError(s)
+        if type(self["age_dist_N"])!=int and self["age_dist_N"]!="all" or \
+                self["age_dist_N"] < 0:
+            s = "age_dist_N of invalid value. Valid input is only 'all' or a positive integer."
+            raise ValueError(s)
+        elif type(self["age_dist_N"])==int:
+            n = self["n_stages"] if not self["n_stages"] == "auto" else self["max_stages"]
+            if self["age_dist_N"]*self["n_snapshots"]>n:
+                s = "Age distribution windows must be disjoint."
+                raise ValueError(s)
         return True
 
     def make_params(self):
@@ -106,6 +115,7 @@ class Config(dict):
         self["params"] = self.make_params()
         # Compute automatic stage numbering (if required)
         self.autostage()
+        self.age_dist_windows()
 
     def autostage(self):
         """Compute automatic running behaviour ... UNTESTED"""
@@ -119,7 +129,7 @@ class Config(dict):
             # Assign generation threshold
             self["min_gen"] = int(k*self["scale"])
 
-        # Compute snapshot generations
+        # Compute snapshot generations/stages
         ss_key = "generations" if self["auto"] else "stages"
         ss_max = self["min_gen"] if self["auto"] else self["n_stages"] - 1
         self["snapshot_{}".format(ss_key)] = np.around(np.linspace(
@@ -127,6 +137,13 @@ class Config(dict):
         if self["auto"]:
             self["snapshot_generations_remaining"] = np.copy(
                     self["snapshot_generations"])
+
+    def age_dist_windows(self):
+        """Compute stages at which to record age distribution."""
+        if self["age_dist_N"] != "all":
+            ss_key = "generations" if self["auto"] else "stages"
+            self["age_dist_{}".format(ss_key)] = \
+                    make_windows(self["snapshot_{}".format(ss_key)], self["age_dist_N"])
 
     # COMPARISON
 

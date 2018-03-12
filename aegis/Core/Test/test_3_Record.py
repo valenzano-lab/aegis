@@ -118,6 +118,8 @@ class TestRecord:
         assert np.array_equal(R["age_distribution"], a1)
         assert np.array_equal(R["generation_dist"], np.zeros([n,5]))
         assert np.array_equal(R["gentime_dist"], np.zeros([n,5]))
+        if R["auto"]:
+            assert R["age_dist_stages"] == [[] for i in xrange(R["n_snapshots"])]
         # Snapshot population placeholders
         assert R["snapshot_pops"] == [0]*R["n_snapshots"]
         # Empty names for final computation
@@ -185,7 +187,8 @@ class TestRecord:
     def test_update_quick(self, rec, pop):
         """Test that every-stage update function records correctly."""
         rec2 = rec.copy()
-        rec2.update(pop, 100, 1, 1, 0, -1)
+        # record age_dist
+        rec2.update(pop, 100, 1, 1, 0, -1, 0)
         agedist=np.bincount(pop.ages,minlength=pop.max_ls)/float(pop.N)
         assert rec2["resources"][0] == 100
         assert rec2["population_size"][0] == pop.N
@@ -206,14 +209,14 @@ class TestRecord:
         np.random.shuffle(pop2.genmap)
         np.random.shuffle(pop2.ages)
         np.random.shuffle(pop2.genomes)
-        rec2.update(pop2, 200, 2, 2, 0, 0)
-        agedist=np.bincount(pop2.ages,minlength=pop2.max_ls)/float(pop2.N)
+        # do not record age_dist
+        rec2.update(pop2, 200, 2, 2, 0, 0, -1)
         # Per-stage factors
         assert rec2["population_size"][0] == pop2.N
         assert rec2["resources"][0] == 200
         if rec2["surv_pen"]: assert rec2["surv_penf"][0] == 2
         if rec2["repr_pen"]: assert rec2["repr_penf"][0] == 2
-        assert np.array_equal(rec2["age_distribution"][0], agedist)
+        assert np.array_equal(rec2["age_distribution"][0], np.zeros(rec2["max_ls"]))
         assert np.allclose(rec2["generation_dist"][0],
                 fivenum(pop.generations))
         assert np.allclose(rec2["gentime_dist"][0],
@@ -228,6 +231,30 @@ class TestRecord:
         assert np.array_equal(p.genomes, pop2.genomes)
         assert np.array_equal(p.generations, pop2.generations)
         assert np.array_equal(p.gentimes, pop2.gentimes)
+
+    def test_truncate_age_dist(self, rec, pop):
+        """Test only wished age distribution entries are present after
+        truncation."""
+        rec2 = rec.copy()
+        rec2.update(pop, 100, 1, 1, 0, -1, 0)
+        if rec2["age_dist_N"] == "all":
+            exp = copy.deepcopy(rec2["age_distribution"])
+            rec2.truncate_age_dist()
+            assert np.array_equal(rec2["age_distribution"], exp)
+        else:
+            if rec2["auto"]:
+                # update age_dist_stages since this is usually done in Run
+                rec2["age_dist_stages"][0].append(0)
+                ix = np.array([0])
+                print "auto"
+            else:
+                ix = rec2["age_dist_stages"][:1].flatten()
+                print "no auto"
+            print ix
+            exp = copy.deepcopy(rec2["age_distribution"][ix])
+            rec2["n_snap"] = 1
+            rec2.truncate_age_dist()
+            assert np.array_equal(rec2["age_distribution"], exp)
 
     ## FINALISATION ##
 
@@ -637,28 +664,30 @@ class TestRecord:
             assert np.array_equal(rec1[s+"_window_mean"],
                     np.tile(exp_val[s],shape))
 
-    # DONE (maybe do it with rec2, since more genereal)
     def test_finalise(self, rec1, rec1_copy):
         """Test that finalise is equivalent to calling all finalisation
         methods separately."""
         # First check that rec1 is finalised and rec1_copy is not
-        assert not "actual_death_rate" in rec1_copy.keys()
-        assert type(rec1["actual_death_rate"]) is np.ndarray
+        assert "n1_window_var" in rec1.keys()
+        assert not "n1_window_var" in rec1_copy.keys()
+        # Truncate age distribution
+        # for auto; update age_dist_stages since this is usually done in Run
+        if rec1["auto"]:
+            rec1["age_dist_stages"][0].append(0)
+            rec1_copy["age_dist_stages"][0].append(0)
+        rec1["n_snap"] = 1
+        rec1_copy["n_snap"] = 1
+        rec1.truncate_age_dist()
         # Then finalise rec1_copy and compare
         rec1["finalised"] = True
         rec1_copy.finalise()
+        # actual_death_rate not in finalisation, but in Plotter
         assert not "actual_death_rate" in rec1_copy.keys()
-        #assert type(rec1_copy["actual_death_rate"]) is np.ndarray
         for k in rec1_copy.keys():
             print k
             if k in ["snapshot_pops","final_pop","snapshot_age_distribution"]:
                 continue
             o1, o2 = rec1[k], rec1_copy[k]
-#            if k == "actual_death_rate":
-#                assert o1.shape == o2.shape
-#                assert np.sometrue(np.isnan(o1))
-#                assert np.sometrue(np.isnan(o2))
-#                assert np.isclose(np.mean(np.isnan(o1)),np.mean(np.isnan(o2)))
             if isinstance(o1, dict):
                 for l in o1.keys():
                     if l=="prng":

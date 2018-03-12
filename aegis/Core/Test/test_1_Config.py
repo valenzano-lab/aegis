@@ -1,4 +1,5 @@
 from aegis.Core import Config
+from aegis.Core import chance, make_windows
 import pytest,importlib,types,random,copy,string,os,tempfile,math,imp
 import numpy as np, pickle
 
@@ -28,7 +29,8 @@ def gen_trseed(request):
     f.close()
     return
 
-@pytest.fixture(params=["import", "random", "auto"], scope="module")
+@pytest.fixture(params=["import", "random0", "random1", "auto0", "auto1"],\
+        scope="module")
 def conf(request, conf_path, ran_str, gen_trseed):
     """Create a default configuration object."""
     if request.param == "import": gen_trseed
@@ -40,7 +42,7 @@ def conf(request, conf_path, ran_str, gen_trseed):
         c["output_prefix"] = os.path.join(tempfile.gettempdir(), ran_str)
         c["n_runs"] = random.randint(1,3)
         nstage = random.randint(15,80)
-        c["n_stages"] = "auto" if request.param == "auto" else nstage
+        c["n_stages"] = "auto" if request.param[:-1] == "auto" else nstage
         c["n_snapshots"] = random.randint(2,5)
         # c["output_mode"] = random.randrange(3) # TODO: Test with this?
         # c["max_fail"] = random.randrange(10) # TODO: Test with this?
@@ -58,6 +60,14 @@ def conf(request, conf_path, ran_str, gen_trseed):
         c["delta"] = 10**-random.randint(5,15)
         c["scale"] = random.randint(9, 19)/10.0
         c["max_stages"] = random.randint(200,400)
+        ## AGE DISTRIBUTION RECORDING ##
+        if request.param[-1] == "1": age_dist_N_var = "all"
+        else:
+            if c["n_stages"] == "auto":
+                age_dist_N_var = c["max_stages"] / c["n_snapshots"]
+            else:
+                age_dist_N_var = c["n_stages"] / c["n_snapshots"]
+        c["age_dist_N"] = age_dist_N_var
         ## SIMULATION FUNDAMENTALS ##
         # Death and reproduction parameters
         db_low, rb_low = np.random.uniform(size=2)
@@ -119,7 +129,9 @@ class TestConfig:
         c["n_stages"] = "auto"
         c.generate()
         assert c["auto"]
-        c["n_stages"] = random.randrange(1000)
+        c["n_stages"] = random.randrange(100, 1000)
+        c["age_dist_N"] = 40
+        c["n_snapshots"] = 2
         c.generate()
         assert not c["auto"]
 
@@ -136,8 +148,10 @@ class TestConfig:
         if c["auto"]:
             del_keys += ("min_gen", "snapshot_generations",
                     "snapshot_generations_remaining")
+            if c["age_dist_N"] != "all": del_keys += ("age_dist_generations",)
         else:
             del_keys += ("snapshot_stages",)
+            if c["age_dist_N"] != "all": del_keys += ("age_dist_stages",)
         for key in del_keys: del c[key]
         if c["repr_mode"] in ["sexual", "assort_only"]: c["repr_bound"] /= 2
         # Compare remaining keys to directly imported config file
@@ -164,7 +178,7 @@ class TestConfig:
     def test_config_check(self,conf):
         """Test that configurations with incompatible genome parameters are
         correctly rejected."""
-        if conf["setup"] == "random": return
+        if conf["setup"][:-1] == "random": return
         c = conf.copy()
         assert c.check()
         repr_mode_old = c["repr_mode"]
@@ -186,6 +200,24 @@ class TestConfig:
             c.check()
         c["neut_offset"] += 1
         assert c.check()
+        c["age_dist_N"] = -1
+        with pytest.raises(ValueError):
+            c.check()
+        c["age_dist_N"] = 1.1
+        with pytest.raises(ValueError):
+            c.check()
+        c["age_dist_N"] = "notall"
+        with pytest.raises(ValueError):
+            c.check()
+        c["age_dist_N"] = 60
+        c["n_stages"] = 100
+        with pytest.raises(ValueError):
+            c.check()
+        c["age_dist_N"] = 60
+        c["n_stages"] = "auto"
+        c["max_stages"] = 100
+        with pytest.raises(ValueError):
+            c.check()
 
     def test_config_generate(self, conf):
         """Test that gen_conf correctly generates derived simulation params."""
@@ -271,3 +303,11 @@ class TestConfig:
             assert c["snapshot_stages"].dtype is np.dtype(int)
             assert np.array_equal(c["snapshot_stages"],np.around(np.linspace(
                 0, c["n_stages"]-1, c["n_snapshots"])))
+        # Age distribution windows
+        if c["age_dist_N"] != "all":
+            if c["auto"]:
+                assert np.array_equal(c["age_dist_generations"],\
+                        make_windows(c["snapshot_generations"], c["age_dist_N"]))
+            else:
+                assert np.array_equal(c["age_dist_stages"],\
+                        make_windows(c["snapshot_stages"], c["age_dist_N"]))

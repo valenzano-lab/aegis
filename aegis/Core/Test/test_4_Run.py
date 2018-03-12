@@ -37,7 +37,7 @@ class TestRun:
         assert sorted(run1.genmap) == sorted(conf["genmap"])
         assert not np.array_equal(run1.genmap, conf["genmap"])
         #! TODO: Test correct inheritance of conf vs population parameters
-        assert run1.n_snap == run1.n_stage == 0
+        assert run1.record["n_snap"] == run1.n_stage == 0
         assert run1.n_run == conf["n_runs"]-1
         #! TODO: Test initial state of record vs conf?
         assert np.array_equal(run1.record["genmap"], run1.genmap)
@@ -114,12 +114,12 @@ class TestRun:
         # Normal
         run1.execute_stage()
         assert run1.n_stage == run.n_stage + 1
-        assert run1.n_snap == run.n_snap + 1
+        assert run1.record["n_snap"] == run.record["n_snap"] + 1
         assert (run1.dieoff == (run1.population.N == 0))
         assert run1.complete == run1.dieoff
         run1.execute_stage()
         assert run1.n_stage == run.n_stage + 2
-        assert run1.n_snap == run.n_snap + 1
+        assert run1.record["n_snap"] == run.record["n_snap"] + 1
         assert (run1.dieoff == (run1.population.N == 0))
         assert run1.complete == run1.dieoff
         #! TODO: Add tests of age incrementation, record updating, growth, death
@@ -133,18 +133,18 @@ class TestRun:
             run2.execute_stage()
         assert run2.complete
         assert (run2.dieoff == (run2.population.N == 0))
-        print run2.n_stage, run2.n_snap
+        print run2.n_stage, run2.record["n_snap"]
         if not run2.dieoff: # Run completion
-            assert run2.n_snap == run.conf["n_snapshots"]
+            assert run2.record["n_snap"] == run.conf["n_snapshots"]
             assert run2.n_stage == run.conf["n_stages"]
         elif not run2.conf["auto"]: # Set stage count + dieoff
             print run2.conf["snapshot_stages"]
-            assert run2.n_snap == 1+np.max(
+            assert run2.record["n_snap"] == 1+np.max(
                     np.nonzero(run2.conf["snapshot_stages"]<run2.n_stage)[0])
         else: # Auto stage count + dieoff
             print run2.conf["snapshot_generations"]
             print run2.conf["snapshot_generations_remaining"]
-            assert run2.n_snap == run.conf["n_snapshots"] - \
+            assert run2.record["n_snap"] == run.conf["n_snapshots"] - \
                     len(run2.conf["snapshot_generations_remaining"])
         # Dead
         run3 = run.copy()
@@ -154,7 +154,7 @@ class TestRun:
         run3.population.genomes = np.array([[],[]])
         run3.execute_stage()
         assert run3.n_stage == run.n_stage + 1
-        assert run3.n_snap == run.n_snap
+        assert run3.record["n_snap"] == run.record["n_snap"]
         assert run3.dieoff and run3.complete
         #! TODO: Add test for status reporting?
 
@@ -175,7 +175,7 @@ class TestRun:
             run1.dieoff = x
             check_complete(x)
         # 2: No dieoff, non-auto
-        if not run1.conf["setup"] == "auto":
+        if not run1.conf["setup"][:-1] == "auto":
             assert not hasattr(run1, "min_gen")
             assert run1.n_stage < run1.conf["n_stages"]
             for n in [0, 1, 0]:
@@ -226,7 +226,7 @@ class TestRun:
         assert hasattr(run1, "starttime")
         start = run1.starttime
         # Rerun and preserve start time
-        run1.n_stage, run1.n_snap, run1.complete = 0, 0, False
+        run1.n_stage, run1.record["n_snap"], run1.complete = 0, 0, False
         run1.record["snapshot_pops"] = [0]*run1.record["n_snapshots"]
         run1.execute_attempt()
         assert run1.starttime == start
@@ -263,7 +263,7 @@ class TestRun:
             # Define resource function
             res_function = run1.conf["res_function"]
             def induced_death_resources(n,r):
-                """Force dieoff through starvation in first n 
+                """Force dieoff through starvation in first n
                 attempts."""
                 #print run1.record["prev_failed"], M
                 #print run1.record["prev_failed"] < M

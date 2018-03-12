@@ -1,5 +1,5 @@
 from aegis.Core import chance, init_ages, init_genomes, init_generations
-from aegis.Core import quantile, fivenum, init_gentimes
+from aegis.Core import quantile, fivenum, init_gentimes, make_windows
 import numpy as np
 import pytest, random
 
@@ -29,7 +29,18 @@ class TestFunctionsChance:
 class TestFunctionsInit:
     """Tests for functions involved in simulation initialisation."""
 
-    def test_inits(self):
+    def test_make_windows(self):
+        """Test make_windows for one pair of dummy params."""
+        with pytest.raises(ValueError):
+            make_windows([],0)
+        tarr = np.linspace(0,1000,5).astype(int)
+        assert np.array_equal(tarr, make_windows(tarr,1))
+        tws = 100
+        exp = np.vstack((np.arange(100), np.arange(200,300), np.arange(450,550),\
+                np.arange(700,800), np.arange(900,1000)))
+        assert np.array_equal(make_windows(tarr,tws), exp)
+
+    def test_pop_inits(self):
         """Test that init_ages, init_genomes and init_generations
         return arrays of the expected dimensions and content."""
         assert np.array_equal(init_ages(), np.array([-1]))

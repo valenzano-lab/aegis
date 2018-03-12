@@ -26,7 +26,7 @@ class Run:
         self.surv_penf = 1.0
         self.repr_penf = 1.0
         self.n_stage = 0
-        self.n_snap = 0
+        #self.n_snap = 0
         self.n_run = n_run
         self.dieoff = False
         self.complete = False
@@ -57,6 +57,7 @@ class Run:
                 init_generations(), init_gentimes())
         # Init Record
         self.record = Record(self.conf)
+        self.record["n_snap"] = 0
 
     def update_resources(self):
         """If resources are variable, update them based on current
@@ -133,21 +134,33 @@ class Run:
         snapshot = -1
         if not self.conf["auto"]:
             if self.n_stage in self.conf["snapshot_stages"]:
-                snapshot = self.n_snap
+                snapshot = self.record["n_snap"]
         else:
             obs = np.min(self.population.generations)
             exp = self.conf["snapshot_generations_remaining"][0]
             if obs >= exp:
-                snapshot = self.n_snap
+                snapshot = self.record["n_snap"]
                 # Save at which stages are the snapshots taken
                 self.record["snapshot_stages"][snapshot] = self.n_stage
                 # Prevent same min generation triggering multiple snapshots:
                 self.conf["snapshot_generations_remaining"] = \
                         self.conf["snapshot_generations_remaining"][1:]
+        # Decide whether to record age_distribution
+        age_dist_rec = -1
+        if self.conf["age_dist_N"] == "all":
+            age_dist_rec = self.n_stage
+        elif not self.conf["auto"]:
+            if self.n_stage in self.conf["age_dist_stages"]:
+                age_dist_rec = self.n_stage
+        else:
+            if obs in self.conf["age_dist_generations"]:
+                age_dist_rec = self.n_stage
+                # Save at which stages age_dist is recorded
+                self.record["age_dist_stages"][max(0,self.record["n_snap"]-1)].append(self.n_stage)
         # Record information and return verbosity boolean
         self.record.update(self.population, self.resources, self.surv_penf,
-                self.repr_penf, self.n_stage, snapshot)
-        self.n_snap += 1 if snapshot >= 0 else 0
+                self.repr_penf, self.n_stage, snapshot, age_dist_rec)
+        self.record["n_snap"] += 1 if snapshot >= 0 else 0
         full_report = report_stage and self.verbose
         if (snapshot >= 0) and full_report: self.logprint("Snapshot taken.")
         return full_report
