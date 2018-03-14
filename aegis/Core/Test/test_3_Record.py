@@ -244,7 +244,7 @@ class TestRecord:
         else:
             if rec2["auto"]:
                 # update age_dist_stages since this is usually done in Run
-                rec2["age_dist_stages"][0].append(0)
+                rec2["age_dist_stages"][0] = [0]
                 ix = np.array([0])
                 print "auto"
             else:
@@ -252,8 +252,12 @@ class TestRecord:
                 print "no auto"
             print ix
             exp = copy.deepcopy(rec2["age_distribution"][ix])
-            rec2["n_snap"] = 1
+            rec2["n_snapshots"] = 1
             rec2.truncate_age_dist()
+            print "rec2['age_distribution']"
+            print rec2["age_distribution"].shape
+            print "exp"
+            print exp.shape
             assert np.array_equal(rec2["age_distribution"], exp)
 
     ## FINALISATION ##

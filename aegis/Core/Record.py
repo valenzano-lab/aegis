@@ -163,7 +163,8 @@ class Record(dict):
     def compute_genotype_mean_var(self):
         """Compute the mean and variance in genotype sums at each locus
         and snapshot."""
-        ss = self["snapshot_generations" if self["auto"] else "snapshot_stages"]
+        #ss = self["snapshot_generations" if self["auto"] else "snapshot_stages"]
+        ss = self["snapshot_stages"]
         gt = np.arange(self["n_states"])
         mean_gt_dict, var_gt_dict = {}, {}
         for k in ["s","r","n","a"]: # Survival, reproductive, neutral, all
@@ -341,8 +342,14 @@ class Record(dict):
     # TRUNCATION
 
     def truncate_age_dist_stages(self):
+        # Truncate to taken snapshots
+        self["age_dist_stages"] = self["age_dist_stages"][:self["n_snapshots"]]
+        # If auto, make all sublists of same length
         if self["auto"]:
-            if self["age_dist_stages"][0] == []: return
+            # If only one sublist, return numpy array
+            if self["n_snapshots"]==1:
+                self["age_dist_stages"] = np.array(self["age_dist_stages"])
+                return
             # Find min length
             minl = len(self["age_dist_stages"][0])
             for sublist in self["age_dist_stages"][1:]:
@@ -357,8 +364,6 @@ class Record(dict):
                 last = True
             # Truncate
             self["age_dist_stages"] = make_windows(means, minl, last)
-        else:
-            self["age_dist_stages"] = self["age_dist_stages"][:self["n_snap"]]
 
     def truncate_age_dist(self):
         """Truncate age distribution to nonzero entries."""

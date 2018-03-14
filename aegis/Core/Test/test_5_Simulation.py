@@ -168,7 +168,7 @@ class TestSimulationInit:
             c["genmap"] = r.conf["genmap"]
             assert c == r.conf
             assert r.surv_penf == r.repr_penf == 1.0
-            assert r.n_stage == r.record["n_snap"] == 0
+            assert r.n_stage == r.n_snap == 0
             assert r.n_run == n
             assert not r.dieoff
             assert not r.complete
