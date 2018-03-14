@@ -368,13 +368,13 @@ class Population:
 
     # Comparison methods
 
-    def __eq__(self, other):
+    def __eq__(self, other, prng_id=True):
         if not isinstance(other, self.__class__): return NotImplemented
         return np.array_equal(self.genomes, other.genomes) and \
                 np.array_equal(self.ages, other.ages) and \
                 np.array_equal(self.generations, other.generations) and \
                 np.array_equal(self.gentimes, other.gentimes) and \
-                deep_eq(self.params(), other.params())
+                deep_eq(self.params(), other.params(), prng_id=prng_id)
         return NotImplemented
     def __ne__(self, other):
         if isinstance(other, self.__class__): return not self.__eq__(other)

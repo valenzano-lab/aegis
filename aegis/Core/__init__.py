@@ -9,6 +9,11 @@ from aegis.Core.Run import Run
 from aegis.Core.Simulation import Simulation
 from aegis.Core.Plotter import Plotter
 
+try:
+    import cPickle as pickle
+except:
+    import pickle
+
 def run(config_file, report_n, verbose):
     """Execute a complete simulation from a specified config file."""
     s = Simulation(config_file, report_n, verbose)
@@ -20,6 +25,15 @@ def getconfig(outpath):
     dirpath = os.path.dirname(os.path.realpath(__file__))
     inpath = os.path.join(dirpath, "config_default.py")
     shutil.copyfile(inpath, outpath)
+
+def getrseed(inpath, outpath):
+    """Get prng from a record object."""
+    fin = open(inpath, "r")
+    record = pickle.load(fin)
+    fin.close()
+    fout = open(outpath, "w")
+    pickle.dump(record["random_seed"], fout)
+    fout.close()
 
 def plot(record_file):
     a = Plotter(record_file)

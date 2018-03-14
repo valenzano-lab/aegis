@@ -67,6 +67,10 @@ def seed2(request, sim, random_n_runs):
 class TestSimulationInit:
     """Test methods relating to initialising a Simulation object."""
 
+#    def test_copy(self, sim):
+#        sim2 = sim.copy()
+#        assert sim2 == sim
+
     def test_get_conf_match(self, sim, conf):
         """Confirm that config fixture and simulation config attribute
         match, in the case that both were imported from conf_path."""
@@ -105,12 +109,12 @@ class TestSimulationInit:
 
     def test_get_seed_good(self, sim, seed):
         """Test that get_seed correctly imports a Population file."""
-        opop1 = seed
+        opop1 = seed[0]
         s = sim.copy()
         opop2 = s.get_seed(s.conf["output_prefix"]+\
                 "_files/populations/final/run0.pop")
         shutil.rmtree(s.conf["output_prefix"]+"_files")
-        assert opop1.__eq__(opop2)
+        assert opop1.__eq__(opop2, prng_id=False)
 
     def test_get_seed_all_degen(self, sim, ran_str):
         """Confirm that AEGIS raises an error if given an invalid
@@ -136,7 +140,7 @@ class TestSimulationInit:
             "_files/populations/final")
         shutil.rmtree(s.conf["output_prefix"]+"_files")
         for i in xrange(len(opops1)):
-            assert opops1[i].__eq__(opops2[i])
+            assert opops1[i].__eq__(opops2[i], prng_id=False)
 
     def test_get_startpop_degen(self, sim):
         """Test that AEGIS correctly returns [""] when no seed."""
@@ -152,7 +156,7 @@ class TestSimulationInit:
         shutil.rmtree(s.conf["output_prefix"]+"_files")
         opop1 = s.startpop[0]
         opop2 = seed[0]
-        assert opop1.__eq__(opop2)
+        assert opop1.__eq__(opop2, prng_id=False)
 
     def test_init_runs(self, sim):
         """Test that init_runs correctly generates new Run objects with
@@ -174,6 +178,9 @@ class TestSimulationInit:
             assert not r.complete
             assert r.report_n == s.report_n
             assert r.verbose == s.verbose
+            sc_prng1 = copy.copy(s.conf["prng"])
+            sc_prng2 = copy.copy(r.conf["prng"])
+            assert np.array_equal(sc_prng1.rand(100), sc_prng2.rand(100))
 
 class TestSimulationLogSaveAbort:
     """Test methods relating to logging, saving and aborting of a

@@ -382,6 +382,9 @@ class Record(dict):
             pops = pops[np.nonzero(pops)]
             self["snapshot_pops"] = list(pops)
             self["n_snapshots"] = len(self["snapshot_pops"])
+            if self["auto"]:
+                self["snapshot_generations"] = self["snapshot_generations"][\
+                    :self["n_snapshots"]]
             self["snapshot_stages"] = self["snapshot_stages"][:self["n_snapshots"]]
         # Compute basic properties of snapshot pops
         self.compute_snapshot_properties()
@@ -412,9 +415,10 @@ class Record(dict):
     # copy method
 
     def copy(self):
+        sc_prng = self["prng"]
         self_copy = copy.deepcopy(self)
-        self_copy["prng"] = self["prng"]
-        self_copy["params"]["prng"] = self["params"]["prng"]
+        self_copy["prng"] = sc_prng
+        self_copy["params"]["prng"] = sc_prng
         return self_copy
 
     # COMPARISON (same as Config)

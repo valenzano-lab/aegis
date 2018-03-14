@@ -44,12 +44,13 @@ class Run:
             self.conf["n_base"] = self.population.n_base
             self.population.object_max_age += self.conf["object_max_age"]
             self.conf["object_max_age"] = self.population.object_max_age
-            # Keep new max_ls, maturity, sexual, g_dist, offsets
+            # Keep new max_ls, maturity, sexual, g_dist, offsets, prng
             self.population.repr_mode = self.conf["repr_mode"]
             self.population.maturity = self.conf["maturity"]
             self.population.g_dist = self.conf["g_dist"]
             self.population.repr_offset = self.conf["repr_offset"]
             self.population.neut_offset = self.conf["neut_offset"]
+            self.population.prng = self.conf["prng"] # NOTE
             self.conf.set_params()
         else:
             self.population = Population(self.conf["params"],
@@ -67,7 +68,19 @@ class Run:
 
     def starving(self):
         """Determine whether population is starving based on resource level."""
-        return self.conf["stv_function"](self.population.N, self.resources)
+        # starvation function
+        strv = self.conf["stv_function"](self.population.N, self.resources)
+        stg = gen = False
+        # if forced starvation set
+        if self.conf["starve_at"] > 0:
+            if self.conf["auto"]:
+                gen = (np.min(self.population.generations) >= \
+                        self.conf["starve_at"])
+                stg = False
+            elif not self.conf["auto"]:
+                stg, gen = (self.n_stage >= self.conf["starve_at"]), False
+        return strv or stg or gen
+        #return self.conf["stv_function"](self.population.N, self.resources)
 
     def update_starvation_factors(self):
         """Update starvation factors under starvation."""
@@ -213,8 +226,12 @@ class Run:
                 save_state.record["prev_failed"] = nfail
                 save_state.log = self.log + "\n"
                 attrs = vars(save_state)
-                for key in attrs: # Revert everything else
+                # Revert everything else (except for prng)
+                for key in attrs:
                     setattr(self, key, attrs[key])
+                self.conf = save_state.conf
+                self.population = save_state.population
+                self.record = save_state.record
                 return self.execute()
         self.logprint(get_runtime(self.starttime, self.endtime))
 
@@ -234,18 +251,24 @@ class Run:
     # Basic methods
     def copy(self):
         self_copy = copy.deepcopy(self)
-        self_copy.conf["prng"] = self.conf["prng"]
-        self_copy.conf["params"]["prng"] = self.conf["params"]["prng"]
+        self_copy.conf = self.conf.copy()
+        self_copy.population = self.population.clone()
+        self_copy.record = self.record.copy()
         return self_copy
 
     # Comparison methods
 
     def __eq__(self, other):
         if not isinstance(other, self.__class__): return NotImplemented
-        return deepeq(vars(self), vars(other))
-        #for a in ["log", "conf", "surv_penf", "other_penf", "resources",
-        #        "genmap", "population", "n_stage", "n_snap", "n_run"
-        return NotImplemented
+        variables = ["log", "surv_penf", "repr_penf", "n_stage", "n_snap", "n_run",\
+                "dieoff", "complete", "report_n", "verbose", "resources"]
+        for k in variables:
+            if getattr(self, k) != getattr(other, k): return False
+        if not np.array_equal(self.genmap, other.genmap): return False
+        conf_same = (self.conf == other.conf)
+        pop_same = (self.population == other.population)
+        rec_same = (self.record == other.record)
+        return conf_same and pop_same and rec_same
 
     def __ne__(self, other):
         if isinstance(other, self.__class__): return not self.__eq__(other)

@@ -201,6 +201,21 @@ class Simulation:
 
     def copy(self):
         self_copy = copy.deepcopy(self)
-        self_copy.conf["prng"] = self.conf["prng"]
-        self_copy.conf["params"]["prng"] = self.conf["params"]["prng"]
+        self_copy.conf = self.conf.copy()
+        for i in range(self.conf["n_runs"]):
+            self_copy.runs[i] = self.runs[i].copy()
         return self_copy
+
+    def __eq__(self, other):
+        if not isinstance(other, self.__class__): return NotImplemented
+        variables = ["starttime", "log", "report_n", "verbose"]
+        for k in variables:
+            if getattr(self,k) != getattr(other,k): return False
+        if self.startpop != other.startpop: return False
+        for i in range(self.conf["n_runs"]):
+            if self.runs[i] != self.runs[i]: return False
+        return True
+
+    def __ne__(self, other):
+        if isinstance(other, self.__class__): return not self.__eq__(other)
+        return NotImplemented

@@ -115,13 +115,9 @@ def ranstr(m,n=10):
 class TestConfig:
 
     def test_config_copy(self, conf):
-        """Test that the config copy() method is equivalent to
-        copy.deepcopy()."""
+        """Test that the copied config is equal."""
         c1 = conf.copy()
-        c2 = copy.deepcopy(conf)
-        c2["prng"] = c1["prng"]
-        c2["params"]["prng"] = c1["params"]["prng"]
-        assert c1 == c2
+        assert c1 == conf
 
     def test_config_auto(self, conf):
         c = conf.copy()
