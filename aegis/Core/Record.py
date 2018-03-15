@@ -34,6 +34,7 @@ class Record(dict):
         self["dieoff"] = np.array(False)
         self["prev_failed"] = np.array(0)
         self["finalised"] = False
+        self["age_dist_truncated"] = False
         # Arrays for per-stage data entry
         n = self["n_stages"] if not self["auto"] else self["max_stages"]
         ns,ml,mt = self["n_snapshots"], self["max_ls"], self["maturity"]
@@ -127,6 +128,20 @@ class Record(dict):
                     self[key].append(newval)
                 else:
                     self[key][s] = newval
+
+    # called in Plotter, not finalisation
+    def compute_snapshot_age_dist_avrg(self):
+        if not self["age_dist_N"] == "all":
+            """Compute snapshot-averaged age distribution."""
+            self.truncate_age_dist()
+            if self["age_dist_stages"].size > 0:
+                print (self["age_distribution"]).shape
+                print self["n_snapshots"]
+                print self["max_ls"]
+                m = self["age_distribution"].shape[0] / self["n_snapshots"]
+                age_dist = self["age_distribution"].reshape(\
+                        (self["n_snapshots"], m, self["max_ls"]))
+                self["snapshot_age_distribution_avrg"] = age_dist.mean(1)
 
     def compute_locus_density(self):
         """Compute normalised distributions of sum genotypes for each locus in
@@ -312,12 +327,30 @@ class Record(dict):
 
     # ACTUAL DEATH RATES
 
+    # called in Plotter, not finalisation
     def compute_actual_death(self):
         """Compute actual death rate for each age at each stage."""
-        N_age = self["age_distribution"] *\
-                self["population_size"][:,None]
-        dividend = N_age[1:, 1:]
-        divisor = np.copy(N_age[:-1, :-1])
+        if self["age_dist_N"] == "all":
+            N_age = self["age_distribution"] *\
+                    self["population_size"][:,None]
+            dividend = N_age[1:, 1:]
+            divisor = np.copy(N_age[:-1, :-1])
+        else:
+            self.truncate_age_dist()
+            print len(self["age_distribution"])
+            print self["n_snapshots"]
+            print self["max_ls"]
+            m = self["age_distribution"].shape[0] / self["n_snapshots"]
+            age_dist = self["age_distribution"].reshape(\
+                    (self["n_snapshots"], m, self["max_ls"]))
+            ix = self["age_dist_stages"].flatten()
+            print ix
+            pop_size = self["population_size"][ix].reshape(\
+                    (self["n_snapshots"], m, 1))
+
+            N_age = age_dist * pop_size
+            dividend = N_age[:,1:,1:]
+            divisor = np.copy(N_age[:,:-1,:-1])
         divisor[divisor == 0] = np.nan # flag division by zero
         self["actual_death_rate"] = 1 - dividend / divisor
 
@@ -346,6 +379,11 @@ class Record(dict):
         self["age_dist_stages"] = self["age_dist_stages"][:self["n_snapshots"]]
         # If auto, make all sublists of same length
         if self["auto"]:
+            # If empty, do nothing
+            print "age_dist_stages:\n", self["age_dist_stages"]
+            if not self["age_dist_stages"][0]:
+                self["age_dist_stages"] = np.array(self["age_dist_stages"])
+                return
             # If only one sublist, return numpy array
             if self["n_snapshots"]==1:
                 self["age_dist_stages"] = np.array(self["age_dist_stages"])
@@ -367,10 +405,20 @@ class Record(dict):
 
     def truncate_age_dist(self):
         """Truncate age distribution to nonzero entries."""
-        if self["age_dist_N"] == "all": return
+        if self["age_dist_truncated"]: return
+        if self["age_dist_N"] == "all":
+            self["age_dist_truncated"] = True
+            return 1
         self.truncate_age_dist_stages()
-        ix = self["age_dist_stages"].flatten()
-        self["age_distribution"] = self["age_distribution"][ix]
+        if self["age_dist_stages"].size > 0:
+            ix = self["age_dist_stages"].flatten()
+            print ix
+            self["age_distribution"] = self["age_distribution"][ix]
+            # reshape to dim=(snapshot, stage, age)
+            m = self["age_distribution"].size / self["n_snapshots"] / self["max_ls"]
+            self["age_distribution"] = np.reshape(self["age_distribution"],\
+                (self["n_snapshots"], m, self["max_ls"]))
+        self["age_dist_truncated"] = True
 
     # OVERALL
 
@@ -402,7 +450,6 @@ class Record(dict):
         # Other values
         self.compute_bits()
         self.compute_entropies()
-        #self.compute_actual_death() # do this in Plotter instead
         self.compute_windows()
         self.truncate_age_dist()
         # Remove snapshot pops as appropriate

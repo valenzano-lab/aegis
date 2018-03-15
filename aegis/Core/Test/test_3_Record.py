@@ -39,7 +39,7 @@ def pop(request, conf):
 
 @pytest.fixture(scope="module")
 def rec(request, conf):
-    """Create a sample population from the default configuration."""
+    """Create a sample record from the default configuration."""
     return Record(conf)
 
 @pytest.fixture(scope="module")
@@ -54,7 +54,7 @@ def pop1(request, pop):
 
 @pytest.fixture(scope="module")
 def pop2(request, pop):
-    """Population of young adults with genomes filled with ones."""
+    """Population of young adults with general genomes."""
     p = pop.clone()
     p.ages = np.tile(p.maturity, p.N)
     p.generations = np.zeros(p.N, dtype=int)
@@ -86,8 +86,7 @@ class TestRecord:
     ## FUNDAMENTALS ##
 
     def test_record_copy(self, rec):
-        """Test that the config copy() method is equivalent to
-        copy.deepcopy()."""
+        """Test that the config copy() method deepcopies everything but prng."""
         r1 = rec.copy()
         r2 = copy.deepcopy(rec)
         r2["prng"] = r1["prng"]
@@ -107,6 +106,7 @@ class TestRecord:
                 assert deep_key(k, R, conf, True)
         # Check basic run info
         assert np.array_equal(R["dieoff"], np.array(False))
+        assert not R["age_dist_truncated"]
         assert np.array_equal(R["prev_failed"], np.array(0))
         # Per-stage data entry
         n = R["n_stages"] if not R["auto"] else R["max_stages"]
@@ -232,37 +232,11 @@ class TestRecord:
         assert np.array_equal(p.generations, pop2.generations)
         assert np.array_equal(p.gentimes, pop2.gentimes)
 
-    def test_truncate_age_dist(self, rec, pop):
-        """Test only wished age distribution entries are present after
-        truncation."""
-        rec2 = rec.copy()
-        rec2.update(pop, 100, 1, 1, 0, -1, 0)
-        if rec2["age_dist_N"] == "all":
-            exp = copy.deepcopy(rec2["age_distribution"])
-            rec2.truncate_age_dist()
-            assert np.array_equal(rec2["age_distribution"], exp)
-        else:
-            if rec2["auto"]:
-                # update age_dist_stages since this is usually done in Run
-                rec2["age_dist_stages"][0] = [0]
-                ix = np.array([0])
-                print "auto"
-            else:
-                ix = rec2["age_dist_stages"][:1].flatten()
-                print "no auto"
-            print ix
-            exp = copy.deepcopy(rec2["age_distribution"][ix])
-            rec2["n_snapshots"] = 1
-            rec2.truncate_age_dist()
-            print "rec2['age_distribution']"
-            print rec2["age_distribution"].shape
-            print "exp"
-            print exp.shape
-            assert np.array_equal(rec2["age_distribution"], exp)
 
     ## FINALISATION ##
 
-    def test_compute_snapshot_properties(self, pop1, rec1, rec2):
+    # not computed for rec2
+    def test_compute_snapshot_properties(self, rec1):
         """Test that compute_snapshot_properties performs correctly for
         a genome filled with 1's.""" #! TODO: How about in a normal case?
         n = rec1["n_stages"] if not rec1["auto"] else rec1["max_stages"]
@@ -272,7 +246,6 @@ class TestRecord:
         print rec1["n_snapshots"]
         rec1.compute_snapshot_properties()
         print len(rec1["snapshot_generation_distribution"])
-        rec2.compute_snapshot_properties() # do here because of finalisation
         # Compute expected values
         exp_dist = {"age": np.zeros(rec1["max_ls"]),
                 "gentime": np.zeros(rec1["max_ls"]),
@@ -431,7 +404,6 @@ class TestRecord:
             else: check_var = np.var(values[data],0)#*pop2.N
             print check_var[0]/rec2["prob_var"][l][0][0]
             print check_var[1]/rec2["prob_var"][l][0][1]
-            # TODO why is this scaled like this ???
             assert np.array_equal(rec1["prob_mean"][l], np.tile(vmax[l], dims[l]))
             assert np.array_equal(rec1["prob_var"][l], np.zeros(dims[l]))
             assert np.allclose(check_mean, rec2["prob_mean"][l][0])
@@ -609,22 +581,6 @@ class TestRecord:
         assert sorted(rec1["entropy_gt"].keys()) == ["a", "n", "r", "s"]
         for v in rec1["entropy_gt"].values(): assert np.array_equal(v,z)
 
-    # TODO general case
-    def test_compute_actual_death(self, rec1):
-        """Test if compute_actual_death stores expected results for
-        artificial data."""
-        rec1.compute_actual_death()
-        r = copy.deepcopy(rec1)
-        maxls = r["max_ls"]
-        r["age_distribution"] = np.tile(1/float(maxls), (3, maxls))
-        r["population_size"] = np.array([maxls*4,maxls*2,maxls])
-        r.compute_actual_death()
-        n = r["n_stages"] if not r["auto"] else r["max_stages"]
-        print r["age_distribution"].shape, r["population_size"].shape
-        print r["actual_death_rate"].shape, n, r["max_ls"]
-        assert np.array_equal(r["actual_death_rate"],
-                np.tile(0.5, np.array(r["age_distribution"].shape) - 1))
-
     def test_get_window(self, rec1):
         """Test window generation on static data with random window size."""
         # Initialise
@@ -674,19 +630,17 @@ class TestRecord:
         # First check that rec1 is finalised and rec1_copy is not
         assert "n1_window_var" in rec1.keys()
         assert not "n1_window_var" in rec1_copy.keys()
-        # Truncate age distribution
-        # for auto; update age_dist_stages since this is usually done in Run
-        if rec1["auto"]:
-            rec1["age_dist_stages"][0].append(0)
-            rec1_copy["age_dist_stages"][0].append(0)
-        rec1["n_snap"] = 1
-        rec1_copy["n_snap"] = 1
-        rec1.truncate_age_dist()
+        # Account dor methods in finalisation that were not called in the above
+        # tests: truncate age distribution
+        rec1["age_dist_truncated"] = True
+        rec1_copy["age_dist_truncated"] = True
         # Then finalise rec1_copy and compare
         rec1["finalised"] = True
         rec1_copy.finalise()
-        # actual_death_rate not in finalisation, but in Plotter
+        # Check post finalisation methods not in finalisation
         assert not "actual_death_rate" in rec1_copy.keys()
+        assert not "snapshot_age_distribution_avrg" in rec1_copy.keys()
+        # Compare finalised entries
         for k in rec1_copy.keys():
             print k
             if k in ["snapshot_pops","final_pop","snapshot_age_distribution"]:
@@ -707,3 +661,88 @@ class TestRecord:
             elif not callable(o1):
                 assert np.array_equal(np.array(o1), np.array(o2))
         # TODO: Test different snapshot_pops saving options
+
+    ## FINALISATION NEEDING SPECIAL SETUP ##
+
+    def test_truncate_age_dist(self, rec, pop):
+        """Test only wished age distribution entries are present after
+        truncation."""
+        rec2 = rec.copy()
+        rec2.update(pop, 100, 1, 1, 0, -1, 0)
+        if rec2["age_dist_N"] == "all":
+            exp = copy.deepcopy(rec2["age_distribution"])
+            rec2.truncate_age_dist()
+            assert np.array_equal(rec2["age_distribution"], exp)
+        else:
+            if rec2["auto"]:
+                # update age_dist_stages since this is usually done in Run
+                rec2["age_dist_stages"][0] = [0]
+                ix = np.array([0])
+                print "auto"
+            else:
+                ix = rec2["age_dist_stages"][:1].flatten()
+                print "no auto"
+            print ix
+            exp = copy.deepcopy(rec2["age_distribution"][ix])
+            exp = exp.reshape((1,exp.shape[0],exp.shape[1]))
+            rec2["n_snapshots"] = 1
+            rec2.truncate_age_dist()
+            print "rec2['age_distribution']"
+            print rec2["age_distribution"].shape
+            print "exp"
+            print exp.shape
+            assert np.array_equal(rec2["age_distribution"], exp)
+
+    ## POST FINALISATION (PLOTTER) ##
+
+    def test_compute_actual_death(self, rec1):
+        """Test if compute_actual_death stores expected results for
+        artificial data."""
+        r = rec1.copy()
+        maxls = r["max_ls"]
+        if r["age_dist_N"] == "all":
+            r["age_distribution"] = np.tile(1/float(maxls), (3, maxls))
+            r["population_size"] = np.array([maxls*4,maxls*2,maxls])
+        else:
+            r["age_distribution"] = np.tile(1/float(maxls), (20, maxls))
+            r["age_dist_truncated"] = True
+            r["population_size"] = np.tile(maxls*(2**np.arange(9,-1,-1)),10)
+            r["n_snapshots"] = n_snap = 2
+            r["age_dist_stages"] = np.vstack((np.arange(10),np.arange(10)+90))
+        r.compute_actual_death()
+        n = r["n_stages"] if not r["auto"] else r["max_stages"]
+        print r["age_distribution"].shape, r["population_size"].shape
+        print r["actual_death_rate"].shape, n, r["max_ls"]
+        if r["age_dist_N"] == "all":
+            assert np.array_equal(r["actual_death_rate"],
+                np.tile(0.5, np.array(r["age_distribution"].shape) - 1))
+        else:
+            assert np.array_equal(r["actual_death_rate"],
+                np.tile(0.5, np.array([n_snap,r["age_distribution"].shape[0]\
+                        /n_snap-1, r["age_distribution"].shape[1]-1])))
+
+    def test_compute_snapshot_age_dist_avrg(self, rec2):
+        """Test snapshot age distribution averaging for randomly generated
+        and already truncated ge distribution entries."""
+        r = rec2.copy()
+        # If all recorded, calling the method should do nothing
+        if r["age_dist_N"] == "all":
+            r.compute_snapshot_age_dist_avrg()
+            assert not "snapshot_age_distribution_avrg" in r.keys()
+            return
+        # Otherwise setup record and do the check
+        n_snap = r["n_snapshots"]
+        maxls = r["max_ls"]
+        ns = np.random.randint(50)*2/2 # number of stages per snap
+        age_dist = np.random.random((n_snap*ns,maxls))
+        age_dist = age_dist / age_dist.mean(1)[:,None]
+        r["age_distribution"] = np.copy(age_dist)
+        r["age_dist_stages"] = np.arange(1) # just needs to have size > 0
+        r["age_dist_truncated"] = True
+        # Compute expected output
+        exp = age_dist.reshape((n_snap,ns,maxls))
+        exp = exp.mean(1)
+        r.compute_snapshot_age_dist_avrg()
+        print "record:\n", r["snapshot_age_distribution_avrg"]
+        print "expected:\n", exp
+        assert np.array_equal(r["snapshot_age_distribution_avrg"], exp)
