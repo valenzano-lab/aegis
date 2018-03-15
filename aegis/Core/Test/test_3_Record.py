@@ -704,10 +704,10 @@ class TestRecord:
             r["age_distribution"] = np.tile(1/float(maxls), (3, maxls))
             r["population_size"] = np.array([maxls*4,maxls*2,maxls])
         else:
-            r["age_distribution"] = np.tile(1/float(maxls), (20, maxls))
+            r["n_snapshots"] = n_snap = 2
+            r["age_distribution"] = np.tile(1/float(maxls), (n_snap,10,maxls))
             r["age_dist_truncated"] = True
             r["population_size"] = np.tile(maxls*(2**np.arange(9,-1,-1)),10)
-            r["n_snapshots"] = n_snap = 2
             r["age_dist_stages"] = np.vstack((np.arange(10),np.arange(10)+90))
         r.compute_actual_death()
         n = r["n_stages"] if not r["auto"] else r["max_stages"]
@@ -718,8 +718,8 @@ class TestRecord:
                 np.tile(0.5, np.array(r["age_distribution"].shape) - 1))
         else:
             assert np.array_equal(r["actual_death_rate"],
-                np.tile(0.5, np.array([n_snap,r["age_distribution"].shape[0]\
-                        /n_snap-1, r["age_distribution"].shape[1]-1])))
+                np.tile(0.5, np.array([n_snap,r["age_distribution"].shape[1]\
+                        -1, r["age_distribution"].shape[2]-1])))
 
     def test_compute_snapshot_age_dist_avrg(self, rec2):
         """Test snapshot age distribution averaging for randomly generated
@@ -736,12 +736,12 @@ class TestRecord:
         ns = np.random.randint(50)*2/2 # number of stages per snap
         age_dist = np.random.random((n_snap*ns,maxls))
         age_dist = age_dist / age_dist.mean(1)[:,None]
+        age_dist = np.reshape(age_dist,(n_snap,ns,maxls))
         r["age_distribution"] = np.copy(age_dist)
         r["age_dist_stages"] = np.arange(1) # just needs to have size > 0
         r["age_dist_truncated"] = True
         # Compute expected output
-        exp = age_dist.reshape((n_snap,ns,maxls))
-        exp = exp.mean(1)
+        exp = age_dist.mean(1)
         r.compute_snapshot_age_dist_avrg()
         print "record:\n", r["snapshot_age_distribution_avrg"]
         print "expected:\n", exp

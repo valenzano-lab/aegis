@@ -135,13 +135,8 @@ class Record(dict):
             """Compute snapshot-averaged age distribution."""
             self.truncate_age_dist()
             if self["age_dist_stages"].size > 0:
-                print (self["age_distribution"]).shape
-                print self["n_snapshots"]
-                print self["max_ls"]
-                m = self["age_distribution"].shape[0] / self["n_snapshots"]
-                age_dist = self["age_distribution"].reshape(\
-                        (self["n_snapshots"], m, self["max_ls"]))
-                self["snapshot_age_distribution_avrg"] = age_dist.mean(1)
+                self["snapshot_age_distribution_avrg"] = \
+                    self["age_distribution"].mean(1)
 
     def compute_locus_density(self):
         """Compute normalised distributions of sum genotypes for each locus in
@@ -337,18 +332,11 @@ class Record(dict):
             divisor = np.copy(N_age[:-1, :-1])
         else:
             self.truncate_age_dist()
-            print len(self["age_distribution"])
-            print self["n_snapshots"]
-            print self["max_ls"]
-            m = self["age_distribution"].shape[0] / self["n_snapshots"]
-            age_dist = self["age_distribution"].reshape(\
-                    (self["n_snapshots"], m, self["max_ls"]))
+            m = self["age_distribution"].size/self["n_snapshots"]/self["max_ls"]
             ix = self["age_dist_stages"].flatten()
-            print ix
             pop_size = self["population_size"][ix].reshape(\
                     (self["n_snapshots"], m, 1))
-
-            N_age = age_dist * pop_size
+            N_age = self["age_distribution"] * pop_size
             dividend = N_age[:,1:,1:]
             divisor = np.copy(N_age[:,:-1,:-1])
         divisor[divisor == 0] = np.nan # flag division by zero
@@ -380,7 +368,6 @@ class Record(dict):
         # If auto, make all sublists of same length
         if self["auto"]:
             # If empty, do nothing
-            print "age_dist_stages:\n", self["age_dist_stages"]
             if not self["age_dist_stages"][0]:
                 self["age_dist_stages"] = np.array(self["age_dist_stages"])
                 return
@@ -412,7 +399,6 @@ class Record(dict):
         self.truncate_age_dist_stages()
         if self["age_dist_stages"].size > 0:
             ix = self["age_dist_stages"].flatten()
-            print ix
             self["age_distribution"] = self["age_distribution"][ix]
             # reshape to dim=(snapshot, stage, age)
             m = self["age_distribution"].size / self["n_snapshots"] / self["max_ls"]
