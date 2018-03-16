@@ -12,6 +12,7 @@
 # - Write tests
 # - add missing plots
 
+from .functions import make_windows
 import numpy as np, pandas as pd, os, shutil
 import matplotlib
 matplotlib.use("Agg")
@@ -37,7 +38,7 @@ class Plotter:
                                  "plot_fitness_term_overlay",\
                                  "plot_entropy_gt",\
                                  "plot_entropy_bits",\
-                                 "plot_age_distribution",\
+                                 "plot_age_distribution_means",\
                                  #"plot_density_per_locus",\
                                  "plot_density",\
                                  "plot_mean_gt",\
@@ -66,7 +67,7 @@ class Plotter:
                                "per_fitness_term_overlay",\
                                "plot_entropy_gt",\
                                "plot_entropy_bits",\
-                               "age_distribution",\
+                               "age_distribution_means",\
                                #"density_per_locus",\
                                "density",\
                                "mean_gt",\
@@ -355,11 +356,15 @@ class Plotter:
     ####################
     # snapshot_overlay #
     ####################
-    # TODO should we also plot age_distribution averaged over a window around
-    # snapshot stage?
     def plot_age_distribution(self):
         return self.snapshot_overlay(["snapshot_age_distribution"], "age", "",\
                 "Age distribution")
+
+    def plot_age_distribution_means(self):
+        self.record.compute_snapshot_age_dist_avrg()
+        if not "snapshot_age_distribution_avrg" in self.record.keys(): return
+        return self.snapshot_overlay(["snapshot_age_distribution_avrg"], "age", "",\
+                "Age distribution snapshot means")
 
     def plot_fitness_term_overlay(self):
         return self.snapshot_overlay(["fitness_term"], "age", "",\
@@ -426,31 +431,23 @@ class Plotter:
 
     def plot_actual_death_rate(self, window_size=100):
         self.record.compute_actual_death()
-        n_stage = self.record["n_stages"] if not self.record["auto"] \
-                else self.record["max_stages"]
-        # check window size is OK
-        if window_size*(self.record["n_snapshots"]+1) > \
-                n_stage:
-            raise ValueError("Window size is too big; overlap.")
-        windows = [range(window_size)]
-        window_size /= 2
-        for s in self.record["snapshot_stages"][1:-1]:
-            windows += [range(s-window_size,s+window_size)]
-        window_size *= 2
-        windows += [range(n_stage-window_size, n_stage)]
-        data = self.make_dataframe(["actual_death_rate"], ["stage","age"])
-
-        mean_data = pd.DataFrame()
-        for i in range(len(windows)):
-            x = self.dataframe_mean(data,"age","value","stage",windows[i])
-            #x["snapshot_stage"] = self.record["snapshot_stages"][i]
-            x["snapshot_stage"] = i
-            mean_data = mean_data.append(x)
-
-        mean_data["snapshot_stage"] = mean_data["snapshot_stage"].astype(str)
+        if self.record["age_dist_N"] == "all":
+            ss_key = "generations" if self["auto"] else "stages"
+            stages = make_windows(self.record["snapshot_{}".format(ss_key)], window_size)
+            data = self.record["actual_death_rate"][stages]
+        else:
+            data = self.record["actual_death_rate"]
+        # make df
+        source = {"actual_death_rate_means":np.nanmean(data,1)}
+        mean_data = self.make_dataframe(\
+            ["actual_death_rate_means"],\
+            ["snapshot", "age"],\
+            snapshot="all",\
+            source=source)
+        mean_data["snapshot"] = mean_data["snapshot"].astype(str)
+        # plot
         plot = ggplot.ggplot(mean_data, ggplot.aes(x="age",
-            y="value", color = "snapshot_stage"))
-        #plot += ggplot.geom_point()
+            y="value", color = "snapshot"))
         plot += ggplot.geom_line()
         plot += ggplot.labs(title="Actual death rate")
         return plot
