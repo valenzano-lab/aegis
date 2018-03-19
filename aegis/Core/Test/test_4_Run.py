@@ -21,6 +21,45 @@ def run(request, conf):
     """Unseeded run object inheriting from conf fixture."""
     return Run(conf, "", 0, 100, False)
 
+@pytest.fixture(params=["all","noauto-nodieoff","noauto-dieoff", \
+        "auto-dieoff","auto-dieoff"], scope="module")
+def confx(request, conf_path):
+    c = Config(conf_path)
+    c["setup"] = request.param
+    c["res_start"] = c["start_pop"] = 300
+    c["n_snapshots"] = 5
+    c["n_stages"] = 1000
+    c["output_mode"] = 0
+    c["age_dist_N"] = 10
+    c["max_fail"] = 1
+    if request.param == "all":
+        c["age_dist_N"] = "all"
+        c["n_snapshot"] = 2
+        c.generate()
+    elif request.param == "auto-nodieoff":
+        # tinker mutation rate to make it shorter
+        c["m_rate"] = 0.02
+        c["n_stages"] = "auto"
+        c.generate()
+    elif request.param == "auto-dieoff":
+        # tinker mutation rate to make it shorter
+        c["m_rate"] = 0.02
+        c["n_stages"] = "auto"
+        c.generate()
+        c["starve_at"] = np.mean((c["snapshot_generations"][1],\
+                c["snapshot_generations"][2])).astype(int)
+    elif request.param == "noauto-dieoff":
+        c.generate()
+        c["starve_at"] = np.mean((c["snapshot_stages"][1],\
+                c["snapshot_stages"][2])).astype(int)
+    else:
+        c.generate()
+    return c
+
+@pytest.fixture(scope="module")
+def runx(request, confx):
+    return Run(confx, "", 0, 100, False)
+
 ###########
 ## TESTS ##
 ###########
@@ -284,8 +323,43 @@ class TestRun:
             print M, ":", run1.record["prev_failed"], "/", maxfail
             assert run1.record["prev_failed"] == min(M,maxfail)
 
-
-    #! TODO: Add test for Run.execute (that will actually run...)
+    def test_execute(self, runx):
+        """Test that run.execute() runs without error and that data is of
+        expected shape."""
+        # for now skip autos
+        #if runx.conf["setup"][:4] == "auto": return
+        R = runx.copy()
+        R.execute()
+        assert R.complete
+        assert R.record["finalised"]
+        nsnap = R.record["n_snapshots"]
+        nstage = R.n_stage
+        maxls = R.record["max_ls"]
+        adN = R.record["age_dist_N"]
+        if R.conf["setup"] == "all":
+            assert not R.dieoff
+            assert R.record["age_distribution"].shape ==\
+                (nstage,maxls)
+        elif R.record["setup"] == "noauto-nodieoff":
+            assert not R.dieoff
+            assert R.record["age_distribution"].shape ==\
+                (nsnap,adN,maxls)
+        elif R.record["setup"] == "noauto-dieoff":
+            assert R.dieoff
+            assert R.record["age_distribution"].shape ==\
+                (nsnap,adN,maxls)
+        elif R.record["setup"] == "auto-nodieoff":
+            assert not R.dieoff
+            assert R.record["age_distribution"].shape[0] == nsnap
+            assert R.record["age_distribution"].shape[2] == maxls
+            assert R.record["age_distribution"].size % nsnap == 0
+            assert R.record["age_distribution"].size % maxls == 0
+        elif R.record["setup"] == "auto-dieoff":
+            assert R.dieoff
+            assert R.record["age_distribution"].shape[0] == nsnap
+            assert R.record["age_distribution"].shape[2] == maxls
+            assert R.record["age_distribution"].size % nsnap == 0
+            assert R.record["age_distribution"].size % maxls == 0
 
     def test_logprint_run(self, run, ran_str):
         """Test logging (and especially newline) functionality."""

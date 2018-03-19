@@ -389,14 +389,17 @@ class Record(dict):
                 last = True
             # Truncate
             self["age_dist_stages"] = make_windows(means, minl, last)
+        else:
+            self["age_dist_stages"] = np.array(self["age_dist_stages"])
 
-    def truncate_age_dist(self):
+
+    def truncate_age_dist(self, trunc_stages=True):
         """Truncate age distribution to nonzero entries."""
         if self["age_dist_truncated"]: return
         if self["age_dist_N"] == "all":
             self["age_dist_truncated"] = True
-            return 1
-        self.truncate_age_dist_stages()
+            return
+        if trunc_stages: self.truncate_age_dist_stages()
         if self["age_dist_stages"].size > 0:
             ix = self["age_dist_stages"].flatten()
             self["age_distribution"] = self["age_distribution"][ix]

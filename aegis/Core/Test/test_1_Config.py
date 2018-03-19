@@ -14,12 +14,6 @@ def ran_str(request):
         ''.join(random.choice(string.ascii_lowercase) for _ in range(50))
 
 @pytest.fixture(scope="module")
-def conf_path(request):
-    dirpath = os.path.dirname(os.path.realpath(__file__))
-    filepath = os.path.join(dirpath, "tconfig.py")
-    return filepath
-
-@pytest.fixture(scope="module")
 def gen_trseed(request):
     """Generate random seed and save it to  file trseed.
     tconfig contains a path to this file so that conf can import it."""
@@ -29,11 +23,17 @@ def gen_trseed(request):
     f.close()
     return
 
+@pytest.fixture(scope="module")
+def conf_path(request, gen_trseed):
+    gen_trseed
+    dirpath = os.path.dirname(os.path.realpath(__file__))
+    filepath = os.path.join(dirpath, "tconfig.py")
+    return filepath
+
 @pytest.fixture(params=["import", "random0", "random1", "auto0", "auto1"],\
         scope="module")
-def conf(request, conf_path, ran_str, gen_trseed):
+def conf(request, conf_path, ran_str):
     """Create a default configuration object."""
-    if request.param == "import": gen_trseed
     c = Config(conf_path)
     c["setup"] = request.param
     if request.param != "import": # Randomise config parameters

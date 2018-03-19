@@ -27,6 +27,8 @@ class Run:
         self.repr_penf = 1.0
         self.n_stage = 0
         self.n_snap = 0
+        self.n_snap_ad = 0
+        self.n_snap_ad_bool = False
         self.n_run = n_run
         self.dieoff = False
         self.complete = False
@@ -167,8 +169,13 @@ class Run:
         else:
             if obs in self.conf["age_dist_generations"]:
                 age_dist_rec = self.n_stage
+                if self.n_snap_ad_bool:
+                    self.n_snap_ad += 1
+                    self.n_snap_ad_bool = False
                 # Save at which stages age_dist is recorded
-                self.record["age_dist_stages"][max(0,self.n_snap-1)].append(self.n_stage)
+                self.record["age_dist_stages"][self.n_snap_ad].append(self.n_stage)
+            else:
+                self.n_snap_ad_bool = True
         # Record information and return verbosity boolean
         self.record.update(self.population, self.resources, self.surv_penf,
                 self.repr_penf, self.n_stage, snapshot, age_dist_rec)

@@ -1,7 +1,7 @@
 from aegis.Core import Config, Population, Record
 from aegis.Core import chance, init_ages, init_genomes, init_generations
 from aegis.Core import init_gentimes
-from aegis.Core import fivenum
+from aegis.Core import fivenum, make_windows
 from aegis.Core.Config import deep_eq, deep_key
 import pytest,importlib,types,random,copy,string
 import numpy as np
@@ -664,6 +664,46 @@ class TestRecord:
 
     ## FINALISATION NEEDING SPECIAL SETUP ##
 
+    def test_truncate_age_dist_stages(self, rec):
+        if not rec["auto"]: return
+        R = rec.copy()
+        # truncates to snapshots taken
+        R.truncate_age_dist_stages()
+        assert R["age_dist_stages"].shape[0] == R["n_snapshots"]
+        # empty
+        l = [[] for i in xrange(R["n_snapshots"])]
+        R["age_dist_stages"] = copy.copy(l)
+        R.truncate_age_dist_stages()
+        assert np.array_equal(R["age_dist_stages"], np.array(l))
+        # only one sublist
+        R["n_snapshots"] = 1
+        R["age_dist_stages"] = copy.copy(l)
+        R["age_dist_stages"][0] = range(10)
+        R.truncate_age_dist_stages()
+        assert np.array_equal(R["age_dist_stages"], np.array([range(10)]))
+        # general case
+        m_snap = np.random.randint(2,20)
+        ix = np.random.randint(0,np.random.randint(1000,10000),m_snap)
+        ix.sort()
+        ads = [range(ix[2*i],ix[2*i+1]) for i in range(ix.shape[0]/2)]
+        minl = ix[1] - ix[0]
+        for i in range(1,m_snap/2):
+            minl = min(minl,ix[2*i+1] - ix[2*i])
+        R["age_dist_stages"] = copy.deepcopy(ads)
+        R["n_snapshots"] = m_snap/2
+        R.truncate_age_dist_stages()
+        # prints
+        print "auto: ", R["auto"]
+        print "n snap:", m_snap/2
+        print "age_dist_stages before truncation:"
+        print "shape: ", np.array(ads).shape
+        print ads
+        print "age_dist_stage after truncation:"
+        print "shape: ", R["age_dist_stages"].shape
+        print R["age_dist_stages"]
+        if m_snap/2==1: assert R["age_dist_stages"].shape == (m_snap/2, minl)
+        else: assert R["age_dist_stages"].shape == (m_snap/2, minl/2*2)
+
     def test_truncate_age_dist(self, rec, pop):
         """Test only wished age distribution entries are present after
         truncation."""
@@ -692,6 +732,40 @@ class TestRecord:
             print "exp"
             print exp.shape
             assert np.array_equal(rec2["age_distribution"], exp)
+
+    def test_truncate_age_dist2(self,rec):
+        R = rec.copy()
+        # if all, does nothing
+        if R["age_dist_N"] == "all":
+            exp = copy.deepcopy(R["age_distribution"])
+            R.truncate_age_dist()
+            assert R["age_dist_truncated"]
+            assert np.array_equal(R["age_distribution"],exp)
+            return
+        # if already truncated, does nothing
+        R["age_dist_truncated"] = True
+        R["age_dist_stages"] = range(10)
+        R.truncate_age_dist()
+        assert R["age_dist_stages"] == range(10)
+        # general
+        R["age_dist_truncated"] = False
+        maxls = R["max_ls"]
+        nsnap = R["n_snapshots"]
+        nstage = np.random.randint(10000)
+        means = np.linspace(0,nstage,nsnap).astype(int)
+        minl = np.random.randint(1,(means[1]-means[0])/2)
+        R["age_dist_stages"] = make_windows(means,minl)
+        R["age_distribution"] = np.random.random((nstage,maxls))
+
+        ix = np.array(R["age_dist_stages"]).flatten()
+        exp = copy.deepcopy(R["age_distribution"][ix])
+        exp = exp.reshape((nsnap, exp.size/nsnap/maxls, maxls))
+
+        R.truncate_age_dist(False)
+        assert R["age_distribution"].shape[0] == nsnap
+        assert R["age_distribution"].shape[1] == exp.size/nsnap/maxls
+        assert R["age_distribution"].shape[2] == maxls
+        assert np.array_equal(R["age_distribution"],exp)
 
     ## POST FINALISATION (PLOTTER) ##
 
@@ -735,14 +809,16 @@ class TestRecord:
         maxls = r["max_ls"]
         ns = np.random.randint(50)*2/2 # number of stages per snap
         age_dist = np.random.random((n_snap*ns,maxls))
-        age_dist = age_dist / age_dist.mean(1)[:,None]
+        age_dist = age_dist / np.nanmean(age_dist,1)[:,None]
         age_dist = np.reshape(age_dist,(n_snap,ns,maxls))
         r["age_distribution"] = np.copy(age_dist)
         r["age_dist_stages"] = np.arange(1) # just needs to have size > 0
         r["age_dist_truncated"] = True
         # Compute expected output
-        exp = age_dist.mean(1)
+        exp = np.nanmean(age_dist,1)
         r.compute_snapshot_age_dist_avrg()
-        print "record:\n", r["snapshot_age_distribution_avrg"]
-        print "expected:\n", exp
+        print "record:\n", r["snapshot_age_distribution_avrg"].shape
+        print r["snapshot_age_distribution_avrg"]
+        print "expected:\n", exp.shape
+        print exp
         assert np.array_equal(r["snapshot_age_distribution_avrg"], exp)
