@@ -1,8 +1,8 @@
 from aegis.Core import Config, Population, Record, Run
 from aegis.Core import chance, init_ages, init_genomes, init_generations, deep_eq
 from aegis.Core import init_gentimes
-import pytest,importlib,types,random,copy,string
-import numpy as np
+import pytest,importlib,types,random,copy,string,os
+import numpy as np, cPickle as pickle
 
 #########################
 ## AUXILIARY FUNCTIONS ##
@@ -22,28 +22,29 @@ def run(request, conf):
     return Run(conf, "", 0, 100, False)
 
 @pytest.fixture(params=["all","noauto-nodieoff","noauto-dieoff", \
-        "auto-dieoff","auto-dieoff"], scope="module")
+        "auto-nodieoff","auto-dieoff"], scope="module")
 def confx(request, conf_path):
     c = Config(conf_path)
     c["setup"] = request.param
     c["res_start"] = c["start_pop"] = 300
-    c["n_snapshots"] = 5
+    c["n_snapshots"] = 30
     c["n_stages"] = 1000
     c["output_mode"] = 0
     c["age_dist_N"] = 10
     c["max_fail"] = 1
+    c["starve_at"] = 0
     if request.param == "all":
         c["age_dist_N"] = "all"
         c["n_snapshot"] = 2
         c.generate()
     elif request.param == "auto-nodieoff":
         # tinker mutation rate to make it shorter
-        c["m_rate"] = 0.02
+        c["m_rate"] = 0.01
         c["n_stages"] = "auto"
         c.generate()
     elif request.param == "auto-dieoff":
         # tinker mutation rate to make it shorter
-        c["m_rate"] = 0.02
+        c["m_rate"] = 0.01
         c["n_stages"] = "auto"
         c.generate()
         c["starve_at"] = np.mean((c["snapshot_generations"][1],\
@@ -329,7 +330,14 @@ class TestRun:
         # for now skip autos
         #if runx.conf["setup"][:4] == "auto": return
         R = runx.copy()
+        #if R.conf["setup"] == "auto-nodieoff": return
         R.execute()
+        # save record for Plotter test
+        outfile = open(os.path.join(os.path.abspath("."), "aegis/Core/Test",\
+                R.conf["setup"]+".rec"), "w")
+        pickle.dump(R.record, outfile)
+        outfile.close()
+        #
         assert R.complete
         assert R.record["finalised"]
         nsnap = R.record["n_snapshots"]
@@ -340,22 +348,28 @@ class TestRun:
             assert not R.dieoff
             assert R.record["age_distribution"].shape ==\
                 (nstage,maxls)
-        elif R.record["setup"] == "noauto-nodieoff":
+        elif R.conf["setup"] == "noauto-nodieoff":
             assert not R.dieoff
             assert R.record["age_distribution"].shape ==\
                 (nsnap,adN,maxls)
-        elif R.record["setup"] == "noauto-dieoff":
+        elif R.conf["setup"] == "noauto-dieoff":
             assert R.dieoff
             assert R.record["age_distribution"].shape ==\
                 (nsnap,adN,maxls)
-        elif R.record["setup"] == "auto-nodieoff":
+        elif R.conf["setup"] == "auto-nodieoff":
+            print "first stage at which res=0: ", np.where(R.record["resources"]==0)
+            print "starve at: ", R.conf["starve_at"]
+            print "mutation rate: ", R.conf["m_rate"]
             assert not R.dieoff
             assert R.record["age_distribution"].shape[0] == nsnap
             assert R.record["age_distribution"].shape[2] == maxls
             assert R.record["age_distribution"].size % nsnap == 0
             assert R.record["age_distribution"].size % maxls == 0
-        elif R.record["setup"] == "auto-dieoff":
+        elif R.conf["setup"] == "auto-dieoff":
             assert R.dieoff
+            print "nsnap: ", nsnap
+            print "shape: ", R.record["age_distribution"].shape
+            assert nsnap == 2
             assert R.record["age_distribution"].shape[0] == nsnap
             assert R.record["age_distribution"].shape[2] == maxls
             assert R.record["age_distribution"].size % nsnap == 0
