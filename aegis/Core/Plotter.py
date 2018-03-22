@@ -122,9 +122,14 @@ class Plotter:
     def generate_plots(self):
         self.filter_one_snap()
         for m in self.plot_methods:
-            self.plots.append(getattr(self, m)())
+            p = getattr(self,m)()
+            if p: self.plots.append(p)
 
     def save_plots(self):
+        # Remove not generated plot names
+        if self.record["age_dist_N"] == "all":
+            self.plot_methods.remove("plot_age_distribution_means")
+            self.plot_names.remove("age_distribution_means")
         # Make/replace output directory
         pm,pn,p = self.plot_methods, self.plot_names, self.plots
         if not len(pm) == len(pn) == len(p):
@@ -361,10 +366,11 @@ class Plotter:
                 "Age distribution")
 
     def plot_age_distribution_means(self):
-        self.record.compute_snapshot_age_dist_avrg()
-        if not "snapshot_age_distribution_avrg" in self.record.keys(): return
-        return self.snapshot_overlay(["snapshot_age_distribution_avrg"], "age", "",\
-                "Age distribution snapshot means")
+        if not self.record["age_dist_N"] == "all":
+            self.record.compute_snapshot_age_dist_avrg()
+            if not "snapshot_age_distribution_avrg" in self.record.keys(): return
+            return self.snapshot_overlay(["snapshot_age_distribution_avrg"],\
+                    "age", "","Age distribution snapshot means")
 
     def plot_fitness_term_overlay(self):
         return self.snapshot_overlay(["fitness_term"], "age", "",\
@@ -432,7 +438,7 @@ class Plotter:
     def plot_actual_death_rate(self, window_size=100):
         self.record.compute_actual_death()
         if self.record["age_dist_N"] == "all":
-            ss_key = "generations" if self["auto"] else "stages"
+            ss_key = "generations" if self.record["auto"] else "stages"
             stages = make_windows(self.record["snapshot_{}".format(ss_key)], window_size)
             data = self.record["actual_death_rate"][stages]
         else:

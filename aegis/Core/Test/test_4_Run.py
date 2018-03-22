@@ -21,34 +21,34 @@ def run(request, conf):
     """Unseeded run object inheriting from conf fixture."""
     return Run(conf, "", 0, 100, False)
 
-@pytest.fixture(params=["all","noauto-nodieoff","noauto-dieoff", \
+@pytest.fixture(params=["noauto_all","noauto-nodieoff","noauto-dieoff", \
         "auto-nodieoff","auto-dieoff"], scope="module")
 def confx(request, conf_path):
     c = Config(conf_path)
     c["setup"] = request.param
     c["res_start"] = c["start_pop"] = 300
-    c["n_snapshots"] = 30
+    c["n_snapshots"] = 5
     c["n_stages"] = 1000
     c["output_mode"] = 0
     c["age_dist_N"] = 10
     c["max_fail"] = 1
     c["starve_at"] = 0
-    if request.param == "all":
+    c["max_stages"] = 50000
+    if request.param == "noauto_all":
         c["age_dist_N"] = "all"
         c["n_snapshot"] = 2
         c.generate()
     elif request.param == "auto-nodieoff":
-        # tinker mutation rate to make it shorter
-        c["m_rate"] = 0.01
+        c["m_rate"] = 0.05
+        c["m_ratio"] = 0.99
         c["n_stages"] = "auto"
         c.generate()
     elif request.param == "auto-dieoff":
-        # tinker mutation rate to make it shorter
-        c["m_rate"] = 0.01
+        c["m_rate"] = 0.05
+        c["m_ratio"] = 0.99
         c["n_stages"] = "auto"
         c.generate()
-        c["starve_at"] = np.mean((c["snapshot_generations"][1],\
-                c["snapshot_generations"][2])).astype(int)
+        c["starve_at"] = c["snapshot_generations"][1]+1
     elif request.param == "noauto-dieoff":
         c.generate()
         c["starve_at"] = np.mean((c["snapshot_stages"][1],\
@@ -325,55 +325,98 @@ class TestRun:
             assert run1.record["prev_failed"] == min(M,maxfail)
 
     def test_execute(self, runx):
-        """Test that run.execute() runs without error and that data is of
-        expected shape."""
-        # for now skip autos
-        #if runx.conf["setup"][:4] == "auto": return
+        """Test that age distribution is correctly recorded and data truncated
+        in different scenarios."""
         R = runx.copy()
-        #if R.conf["setup"] == "auto-nodieoff": return
-        R.execute()
-        # save record for Plotter test
-        outfile = open(os.path.join(os.path.abspath("."), "aegis/Core/Test",\
-                R.conf["setup"]+".rec"), "w")
-        pickle.dump(R.record, outfile)
-        outfile.close()
-        #
-        assert R.complete
-        assert R.record["finalised"]
-        nsnap = R.record["n_snapshots"]
+        nsnap = copy.copy(R.record["n_snapshots"])
         nstage = R.n_stage
         maxls = R.record["max_ls"]
         adN = R.record["age_dist_N"]
-        if R.conf["setup"] == "all":
+        # setup
+        R.record["population_size"][:] = R.population.N
+        n = R.conf["n_stages"] if not R.conf["auto"] else R.conf["max_stages"]
+        R.record["age_distribution"] = np.random.random((n,maxls))
+        # penalties, generation_dist, gentime_dist unchanged
+        if R.conf["setup"] == "noauto_all":
+            for i in xrange(nsnap):
+                R.record["snapshot_pops"][i] = R.population.clone()
+            R.n_stage = R.conf["n_stages"]-1
+            R.execute()
             assert not R.dieoff
-            assert R.record["age_distribution"].shape ==\
-                (nstage,maxls)
+            assert R.record["age_distribution"].shape == (R.conf["n_stages"],maxls)
         elif R.conf["setup"] == "noauto-nodieoff":
+            for i in xrange(nsnap):
+                R.record["snapshot_pops"][i] = R.population.clone()
+            R.n_stage = R.conf["n_stages"]-1
+            R.execute()
             assert not R.dieoff
-            assert R.record["age_distribution"].shape ==\
-                (nsnap,adN,maxls)
+            assert R.record["age_distribution"].shape == (nsnap,
+                    R.conf["age_dist_N"],maxls)
         elif R.conf["setup"] == "noauto-dieoff":
+            # dieoff between second and third snapshot
+            for i in xrange(2):
+                R.record["snapshot_pops"][i] = R.population.clone()
+            R.n_stage = R.conf["starve_at"]-1
+            R.execute()
             assert R.dieoff
-            assert R.record["age_distribution"].shape ==\
-                (nsnap,adN,maxls)
+            assert R.record["n_snapshots"] == 2
+            assert R.record["age_distribution"].shape == (2,
+                    R.conf["age_dist_N"],maxls)
         elif R.conf["setup"] == "auto-nodieoff":
-            print "first stage at which res=0: ", np.where(R.record["resources"]==0)
-            print "starve at: ", R.conf["starve_at"]
-            print "mutation rate: ", R.conf["m_rate"]
+            # for last snapshot check age_dist_stages updated
+            for i in xrange(nsnap):
+                R.record["snapshot_pops"][i] = R.population.clone()
+            a = np.linspace(0,R.conf["max_stages"]/2,nsnap).astype(int)
+            minl = R.conf["max_stages"]/2
+            for i in xrange(nsnap-1):
+                x1 = x2 = 0
+                while x1==x2:
+                    x1 = np.random.randint(a[i],a[i+1]-1)
+                    x2 = np.random.randint(a[i],a[i+1]-1)
+                R.record["age_dist_stages"][i] = range(np.random.randint(
+                    min(x1,x2),max(x1,x2)))
+                minl = min(minl,len(R.record["age_dist_stages"][i]))
+            print "age_dist_stages[-1]:\n", R.record["age_dist_stages"][-1]
+            R.n_stage = R.record["age_dist_stages"][-2][-1]
+            R.population.generations[:] = R.conf["age_dist_generations"][-1][0]-1
+            R.n_snap_ad = nsnap-2
+            R.n_snap_ad_bool = False
+            R.execute()
+            minl = min(minl, len(R.record["age_dist_stages"][-1]))
             assert not R.dieoff
-            assert R.record["age_distribution"].shape[0] == nsnap
-            assert R.record["age_distribution"].shape[2] == maxls
-            assert R.record["age_distribution"].size % nsnap == 0
-            assert R.record["age_distribution"].size % maxls == 0
+            assert R.record["n_snapshots"] == R.n_snap == nsnap
+            assert R.record["age_distribution"].shape == (nsnap,
+                    minl,maxls)
         elif R.conf["setup"] == "auto-dieoff":
+            # dieoff between second and third snapshot
+            # for last snapshot check age_dist_stages updated
+            for i in xrange(2):
+                R.record["snapshot_pops"][i] = R.population.clone()
+            a = np.linspace(0,R.conf["max_stages"]/2,nsnap).astype(int)
+            x1 = x2 = 0
+            while x1==x2:
+                x1 = np.random.randint(a[i],a[i+1]-1)
+                x2 = np.random.randint(a[i],a[i+1]-1)
+            R.record["age_dist_stages"][0] = range(np.random.randint(
+                min(x1,x2),max(x1,x2)))
+            minl = abs(x1-x2)
+            R.n_stage = R.record["age_dist_stages"][0][-1]
+            R.population.generations[:] = R.conf["age_dist_generations"][1][0]-1
+            R.n_snap_ad = 0
+            R.n_snap_ad_bool = False
+            R.execute()
+            minl = min(minl, len(R.record["age_dist_stages"][-1]))
             assert R.dieoff
-            print "nsnap: ", nsnap
-            print "shape: ", R.record["age_distribution"].shape
-            assert nsnap == 2
-            assert R.record["age_distribution"].shape[0] == nsnap
-            assert R.record["age_distribution"].shape[2] == maxls
-            assert R.record["age_distribution"].size % nsnap == 0
-            assert R.record["age_distribution"].size % maxls == 0
+            assert R.record["n_snapshots"] == R.n_snap == 2
+            assert R.record["age_distribution"].shape == (2,
+                    minl,maxls)
+        assert R.complete
+        assert R.record["finalised"]
+        # save record for Plotter test
+        outfile = open(os.path.join(os.path.abspath("."), "aegis/Core/Test",\
+                R.conf["setup"]+".rec"),"w")
+        pickle.dump(R.record, outfile)
+        outfile.close()
 
     def test_logprint_run(self, run, ran_str):
         """Test logging (and especially newline) functionality."""

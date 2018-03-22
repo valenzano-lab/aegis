@@ -8,7 +8,6 @@ def rec_names(request):
     rec_names = []
     for filename in listing:
         if ".rec" in filename:
-            print filename[-4:]
             rec_names.append(filename)
     print rec_names
     return rec_names
@@ -23,7 +22,7 @@ def test_plot(rec_names):
         rec_path = os.path.join(path,rec)
         a = Plotter(rec_path)
         a.generate_plots()
-        a.record["output_prefix"] = rec[:-4]
+        a.record["output_prefix"] = os.path.join(path,rec[:-4])
         a.save_plots()
-        #os.remove(rec_path)
-        #shutil.rmtree(rec_path+"_plots")
+        os.remove(rec_path)
+        shutil.rmtree(a.record["output_prefix"]+"_plots")
