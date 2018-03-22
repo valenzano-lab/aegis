@@ -36,7 +36,8 @@ class TestFunctionsInit:
             make_windows([],0)
         # ws = 1
         tarr = np.linspace(0,1000,5).astype(int)
-        assert np.array_equal(tarr, make_windows(tarr,1))
+        assert np.array_equal(np.array(tarr).reshape(tarr.size,1),\
+                make_windows(tarr,1))
         # general with last=True
         tws = 100
         exp = np.vstack((np.arange(100), np.arange(200,300), np.arange(450,550),\

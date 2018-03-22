@@ -23,7 +23,7 @@ def make_windows(array, ws, last=True):
         s = "Window size must be greater than zero."
         raise ValueError(s)
     elif ws == 1:
-        return np.array(array)
+        return np.array(array).reshape(len(array),1)
     else:
         ws = ws/2*2
         res = [range(ws)]
