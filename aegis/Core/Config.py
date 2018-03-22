@@ -49,11 +49,9 @@ class Config(dict):
                 self["age_dist_N"] < 0:
             s = "age_dist_N of invalid value. Valid input is only 'all' or a positive integer."
             raise ValueError(s)
-        elif type(self["age_dist_N"])==int:
-            n = self["n_stages"] if not self["n_stages"] == "auto" else self["max_stages"]
-            if self["age_dist_N"]*self["n_snapshots"]>n:
-                s = "Age distribution windows must be disjoint."
-                raise ValueError(s)
+        if self["m_ratio"] == 1:
+            s = "Zero division in Config::autostage when m_ratio=1. Not implemented."""
+            raise ValueError(s)
         return True
 
     def make_params(self):
@@ -116,6 +114,7 @@ class Config(dict):
         # Compute automatic stage numbering (if required)
         self.autostage()
         self.age_dist_windows()
+        self.check2()
 
     def autostage(self):
         """Compute automatic running behaviour ... UNTESTED"""
@@ -144,6 +143,17 @@ class Config(dict):
             ss_key = "generations" if self["auto"] else "stages"
             self["age_dist_{}".format(ss_key)] = \
                     make_windows(self["snapshot_{}".format(ss_key)], self["age_dist_N"])
+
+    def check2(self):
+        """Confirm that paramteres avaialable only after Config generation are
+        also compatible."""
+        if type(self["age_dist_N"])==int:
+            n = self["n_stages"] if not self["n_stages"] == "auto" else self["min_gen"]
+            print n
+            if self["age_dist_N"]*self["n_snapshots"]>n:
+                s = "Age distribution windows must be disjoint."
+                raise ValueError(s)
+        return True
 
     # COMPARISON
 

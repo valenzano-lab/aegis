@@ -21,6 +21,9 @@ def static_fill(rec_obj, pop_obj):
         snapshot = c if x in s else -1
         r.update(pop_obj, 100, 1, 1, x, snapshot)
         c += 1 if x in s else 0
+    # in case not all snapshot_generations reached
+    for i in xrange(r["n_snapshots"]):
+        r["snapshot_pops"][i] = pop_obj.clone()
     return r
 
 ##############
@@ -244,6 +247,7 @@ class TestRecord:
         g = np.ceil(n/mt).astype(int)+1
         print n, mt, g
         print rec1["n_snapshots"]
+        print "snapshot_pops:\n", rec1["snapshot_pops"]
         rec1.compute_snapshot_properties()
         print len(rec1["snapshot_generation_distribution"])
         # Compute expected values

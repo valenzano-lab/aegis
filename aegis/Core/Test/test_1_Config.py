@@ -41,9 +41,9 @@ def conf(request, conf_path, ran_str):
         c["random_seed"] = ""
         c["output_prefix"] = os.path.join(tempfile.gettempdir(), ran_str)
         c["n_runs"] = random.randint(1,3)
-        nstage = random.randint(15,80)
+        nstage = random.randint(16,80)
         c["n_stages"] = "auto" if request.param[:-1] == "auto" else nstage
-        c["n_snapshots"] = random.randint(2,5)
+        c["n_snapshots"] = random.randint(2,4)
         # c["output_mode"] = random.randrange(3) # TODO: Test with this?
         # c["max_fail"] = random.randrange(10) # TODO: Test with this?
         ## STARTING PARAMETERS ##
@@ -62,11 +62,7 @@ def conf(request, conf_path, ran_str):
         c["max_stages"] = random.randint(200,400)
         ## AGE DISTRIBUTION RECORDING ##
         if request.param[-1] == "1": age_dist_N_var = "all"
-        else:
-            if c["n_stages"] == "auto":
-                age_dist_N_var = c["max_stages"] / c["n_snapshots"]
-            else:
-                age_dist_N_var = c["n_stages"] / c["n_snapshots"]
+        else: age_dist_N_var = random.randint(1,3)
         c["age_dist_N"] = age_dist_N_var
         ## SIMULATION FUNDAMENTALS ##
         # Death and reproduction parameters
@@ -76,7 +72,7 @@ def conf(request, conf_path, ran_str):
         c["death_bound"] = np.array([db_low, db_high])
         c["repr_bound"] = np.array([rb_low, rb_high])
         # Mutation and recombination
-        c["r_rate"], c["m_rate"], c["m_ratio"] = [random.random() for x in range(3)]
+        c["r_rate"], c["m_rate"], c["m_ratio"] = [random.random()/10 for x in range(3)]
         # Genome structure
         c["g_dist_s"],c["g_dist_r"],c["g_dist_n"] = [random.random() for x in range(3)]
         c["n_neutral"] = random.randint(1, 100)
@@ -205,15 +201,21 @@ class TestConfig:
         c["age_dist_N"] = "notall"
         with pytest.raises(ValueError):
             c.check()
+
+    def test_config_check2(self,conf):
+        """Test that configurations with incompatible
+        post-Config-generation parameters are correctly rejected."""
+        if conf["setup"][:-1] == "random": return
+        c = conf.copy()
         c["age_dist_N"] = 60
         c["n_stages"] = 100
         with pytest.raises(ValueError):
-            c.check()
+            c.check2()
         c["age_dist_N"] = 60
         c["n_stages"] = "auto"
-        c["max_stages"] = 100
+        c["min_gen"] = 100
         with pytest.raises(ValueError):
-            c.check()
+            c.check2()
 
     def test_config_generate(self, conf):
         """Test that gen_conf correctly generates derived simulation params."""
