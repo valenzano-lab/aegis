@@ -27,6 +27,8 @@ parser.add_argument('-ws', '--window-size', type=int, metavar='<int>', default=0
         help="if called with plot, generates n1 plots with desired window size")
 parser.add_argument('-rseed', '--random-seed', metavar='<str>', default="",
         help="if called with get, gets random seed from record file")
+parser.add_argument('-recinfo', '--record-info', metavar='<str>', default="",
+        help="if called with get, gets information on record file")
 args = parser.parse_args()
 
 if args.script!="plot" and args.window_size:
@@ -48,6 +50,8 @@ if args.script == "run":
 elif args.script == "get":
     if args.random_seed != "":
         module.getrseed(args.random_seed, inpath)
+    elif args.record_info != "":
+        module.getrecinfo(args.record_info, inpath)
     else:
         module.getconfig(inpath)
 
