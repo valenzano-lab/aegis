@@ -735,7 +735,8 @@ class TestRecord:
         print "age_dist_stage after truncation:"
         print "shape: ", R["age_dist_stages"].shape
         print R["age_dist_stages"]
-        if m_snap/2==1: assert R["age_dist_stages"].shape == (m_snap/2, minl)
+        if minl/2==0 or m_snap/2==1:
+            assert R["age_dist_stages"].shape == (m_snap/2, minl)
         else: assert R["age_dist_stages"].shape == (m_snap/2, minl/2*2)
 
     def test_truncate_age_dist(self, rec, pop):
