@@ -4,7 +4,7 @@ import pytest, random, copy
 import numpy as np
 
 # Import fixtures
-from test_1_Config import conf, conf_path, ran_str, gen_trseed
+from test_1_Config import conf, conf_naive, conf_path, ran_str, gen_trseed
 from test_2a_Population_init import pop
 
 attrs_no_loci = ("ages", "genomes", "generations", "gentimes")

@@ -27,7 +27,7 @@ def static_fill(rec_obj, pop_obj):
 ## FIXTURES ##
 ##############
 
-from test_1_Config import conf, conf_path, ran_str, gen_trseed
+from test_1_Config import conf, conf_naive, conf_path, ran_str, gen_trseed
 
 @pytest.fixture(scope="module")
 def pop(request, conf):

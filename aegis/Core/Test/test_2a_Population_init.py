@@ -8,7 +8,7 @@ import numpy as np
 ## FIXTURES ##
 ##############
 
-from test_1_Config import conf, conf_path, ran_str, gen_trseed
+from test_1_Config import conf_naive, conf, conf_path, ran_str, gen_trseed
 # (will run descendent tests for all parameterisations)
 
 @pytest.fixture(scope="module")

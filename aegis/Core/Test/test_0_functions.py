@@ -1,5 +1,5 @@
 from aegis.Core import chance, init_ages, init_genomes, init_generations
-from aegis.Core import quantile, fivenum, init_gentimes
+from aegis.Core import quantile, fivenum, init_gentimes, correct_r_rate
 import numpy as np
 import pytest, random
 
@@ -58,3 +58,32 @@ class TestFunctionsFivenum:
         assert np.allclose(fivenum(a), np.arange(0, 101, 25))
         assert np.allclose(fivenum(b), np.arange(-100, 1, 25))
         assert np.allclose(fivenum(c), np.arange(0, 51, 12.5))
+
+class TestFunctionsRecombination:
+    """Tests for functions involved in correcting recombination rate."""
+
+    def correct_r_rate_error(self):
+        """Test that correct_r_rate correctly raises an error when given
+        an invalid crossover rate (i.e. not a probability)."""
+        a,b = random.random(), random.random()
+        r0, r1 = 0-a, 1+b
+        with pytest.raises(ValueError):
+            s0 = correct_r_rate(r0)
+        with pytest.raises(ValueError):
+            s1 = correct_r_rate(r1)
+
+    def test_correct_r_rate_low(self):
+        """Test that correct_r_rate correctly computes the corrected
+        crossover rate when 0 < r_rate < 0.5."""
+        for n in xrange(3):
+            r = random.uniform(0,0.5)
+            s = correct_r_rate(r)
+            assert s == 1-(1-2*r)**0.5
+ 
+    def test_correct_r_rate_low(self):
+        """Test that correct_r_rate correctly computes the corrected
+        crossover rate when 0.5 < r_rate < 1."""
+        for n in xrange(3):
+            r = random.uniform(0.5,1)
+            s,q = correct_r_rate(r), 1-r
+            assert s == 1-(1-2*q)**0.5           

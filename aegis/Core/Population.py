@@ -326,13 +326,20 @@ class Population:
         """Recombine between the two chromosomes of each individual
         in the population."""
         if (r_rate > 0): # Otherwise do nothing
-            # Randomly generate recombination sites
-            r_sites = chance(r_rate, (self.N, self.chr_len), self.prng).astype(int)
+            # Randomly generate forward and reverse recombination sites
+            r_sites_fwd = chance(r_rate/2, (self.N, self.chr_len),
+                    self.prng).astype(int)
+            r_sites_rev = chance(r_rate/2, (self.N, self.chr_len),
+                    self.prng).astype(int)
             # Convert into [1,-1]
-            r_sites = np.array([1,-1])[r_sites]
+            r_sites_fwd = np.array([1,-1])[r_sites_fwd]
+            r_sites_rev = np.array([1,-1])[r_sites_rev]
             # Determine crossover status of each position
             # (1 = no crossover, -1 = crossover)
-            which_chr = np.cumprod(r_sites, 1)
+            which_chr_fwd = np.cumprod(r_sites_fwd, 1)
+            which_chr_rev = np.fliplr(np.cumprod(r_sites_rev, 1))
+            # Combine forward and reverse crossovers
+            which_chr = which_chr_fwd * which_chr_rev
             # Convert to 0 = no crossover, 1 = crossover
             which_chr = 1 - (which_chr+1)/2
             # Generate new chromosomes and update genomes
