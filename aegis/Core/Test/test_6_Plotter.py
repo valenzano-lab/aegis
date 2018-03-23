@@ -9,7 +9,6 @@ def rec_names(request):
     for filename in listing:
         if ".rec" in filename:
             rec_names.append(filename)
-    print rec_names
     return rec_names
 
 def test_plot(rec_names):

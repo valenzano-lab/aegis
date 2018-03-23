@@ -400,10 +400,9 @@ class Plotter:
         self.record.reorder_bits()
         plot = self.grid_plot("n1_reorder", ["snapshot", "bit"], "snapshot", title="Distribution of 1's per bit (original genome order)")
         # add genmap_ix
-        ix = np.arange(0,self.record["chr_len"],100)
-        #plot += ggplot.scale_x_discrete(breaks=range(self.record["chr_len"]/self.record["n_base"]), labels=list(self.record["genmap_ix"].astype(str)))
-        plot += ggplot.scale_x_discrete(breaks=ix, labels=\
-                self.record["genmap_ix"][ix/self.record["n_base"]])
+        br = list(np.linspace(0,self.record["chr_len"]-1,10).astype(int))
+        lb = list(self.record["genmap_ix"][np.array(br)/self.record["n_base"]].astype(str))
+        plot += ggplot.scale_x_discrete(breaks=br, labels=lb)
         return plot
 
     def plot_n1_mean_sliding_window_grid(self):
