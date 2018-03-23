@@ -303,6 +303,31 @@ class Record(dict):
         self["n1"] = n1
         self["n1_var"] = n1_var
 
+    def reorder_bits(self):
+        """Reorder n1 record entry to original positions in genome."""
+        if not "n1" in self.keys(): return
+        # fix genmap for offset
+        genmap = copy.deepcopy(self["genmap"])
+        rofs = self["repr_offset"]
+        nofs = self["neut_offset"]
+        maxls = self["max_ls"]
+        m = self["maturity"]
+        ixr = np.logical_and(genmap>rofs, genmap<nofs)
+        genmap[ixr] = genmap[ixr]-rofs-m+maxls
+        ixn = genmap>=nofs
+        genmap[ixn] = genmap[ixn]-nofs+2*maxls-m
+        # reshape n1 so that it can be sorted
+        nsnap = self["n_snapshots"]
+        nb = self["n_base"]
+        n1s = copy.deepcopy(self["n1"])
+        n1s = n1s.reshape((nsnap,n1s.shape[1]/nb,nb))
+        # sort n1
+        n1s = n1s[:,genmap]
+        # reshape back
+        n1s = n1s.reshape((nsnap,n1s.shape[1]*nb))
+        self["genmap_ix"] = genmap
+        self["n1_reorder"] = n1s
+
     # ENTROPY IN GENOTYPES AND BITS
 
     def compute_entropies(self):

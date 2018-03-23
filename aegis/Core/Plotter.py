@@ -48,6 +48,7 @@ class Plotter:
                                  "plot_mean_repr",\
                                  "plot_cmv_surv",\
                                  "plot_n1",\
+                                 #"plot_n1_reorder",\
                                  "plot_n1_var",\
                                  "plot_actual_death_rate",\
                                  "plot_density_snap_overlay",\
@@ -56,6 +57,7 @@ class Plotter:
                                  "plot_n1_mean_sliding_window",\
                                  "plot_n1_var_sliding_window",\
                                  "plot_n1_grid",\
+                                 "plot_n1_reorder_grid",\
                                  "plot_n1_mean_sliding_window_grid",\
                                  "plot_n1_var_grid",\
                                  "plot_n1_var_sliding_window_grid"
@@ -77,6 +79,7 @@ class Plotter:
                                "mean_repr",\
                                "cmv_surv",\
                                "n1",\
+                               #"n1_reorder",\
                                "n1_var",\
                                "actual_death_rate",\
                                "density_overlay",\
@@ -85,6 +88,7 @@ class Plotter:
                                "n1_mean_sliding_window",\
                                "n1_var_sliding_window",\
                                "n1_grid",\
+                               "n1_reorder_grid",\
                                "n1_mean_sliding_window_grid",\
                                "n1_var_grid",\
                                "n1_var_sliding_window_grid"
@@ -391,6 +395,16 @@ class Plotter:
     #########################
     def plot_n1_grid(self):
         return self.n1_like_snapshot_grid("n1","","Distribution of 1's per bit")
+
+    def plot_n1_reorder_grid(self):
+        self.record.reorder_bits()
+        plot = self.grid_plot("n1_reorder", ["snapshot", "bit"], "snapshot", title="Distribution of 1's per bit (original genome order)")
+        # add genmap_ix
+        ix = np.arange(0,self.record["chr_len"],100)
+        #plot += ggplot.scale_x_discrete(breaks=range(self.record["chr_len"]/self.record["n_base"]), labels=list(self.record["genmap_ix"].astype(str)))
+        plot += ggplot.scale_x_discrete(breaks=ix, labels=\
+                self.record["genmap_ix"][ix/self.record["n_base"]])
+        return plot
 
     def plot_n1_mean_sliding_window_grid(self):
         return self.n1_like_snapshot_grid("n1_window_mean","",\

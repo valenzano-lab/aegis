@@ -573,6 +573,36 @@ class TestRecord:
         assert np.allclose(check11, check1)
         assert np.allclose(check22, check2)
 
+    def test_reorder_bits(self, rec1):
+        R = rec1.copy()
+        genmap = copy.deepcopy(R["genmap"])
+        rofs = R["repr_offset"]
+        nofs = R["neut_offset"]
+        maxls = R["max_ls"]
+        m = R["maturity"]
+        nsnap = 5
+        nb = R["n_base"]
+        # generate n1
+        R["n_snapshots"] = nsnap
+        R["n1"] = np.random.random((nsnap,R["chr_len"]))
+        # general
+        ixr = np.logical_and(genmap>rofs,genmap<nofs)
+        genmap[ixr] = genmap[ixr]-rofs-m+maxls
+        ixn = genmap>=nofs
+        genmap[ixn] = genmap[ixn]-nofs+2*maxls-m
+        n1s = copy.deepcopy(R["n1"])
+        n1s = n1s.reshape((nsnap,n1s.shape[1]/nb,nb))
+        n1s = n1s[:,genmap]
+        n1s = n1s.reshape((nsnap,n1s.shape[1]*nb))
+        R.reorder_bits()
+        assert np.array_equal(genmap,R["genmap_ix"])
+        assert np.array_equal(R["n1_reorder"],n1s)
+        # check that for ordered genmap it does nothing
+        R["genmap"].sort()
+        exp = copy.deepcopy(R["n1"])
+        R.reorder_bits()
+        assert np.array_equal(R["n1_reorder"],exp)
+
     # TODO general case
     def test_compute_entropies(self, rec1):
         """Test computation of per-bit and per-locus entropy in a
