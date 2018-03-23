@@ -237,6 +237,8 @@ class TestConfig:
         crb1 = c["repr_bound"][1]
         c.generate()
         # Test output:
+        # Prng
+        assert isinstance(c["prng"],np.random.RandomState)
         # Genome structure
         print c["max_ls"], c["maturity"], c["repr_offset"], c["neut_offset"], c["n_neutral"]
         print c["neut_offset"] - c["repr_offset"]
