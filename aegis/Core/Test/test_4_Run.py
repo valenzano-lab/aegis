@@ -288,7 +288,7 @@ class TestRun:
         assert run1.record["finalised"]
         print run1.record["prev_failed"], "/", run1.record["max_fail"]
         if not run1.dieoff:
-            assert run1.record["prev_failed"] == 0
+            assert run1.record["prev_failed"] < run1.record["max_fail"] - 1
         else:
             assert run1.record["prev_failed"] == run1.record["max_fail"] - 1
 
