@@ -245,10 +245,24 @@ class TestPopulationGrowth:
         p.genomes[:,p.chr_len:] = 1
         p.loci = p.sorted_loci()
         # Clone and recombine
-        p = p.clone()
         p.recombination(2.0) # = forward and reverse rates of 1
-        assert np.array_equal(p.chrs(0)[0], np.ones([p.N, p.chr_len]))
-        assert np.array_equal(p.chrs(0)[1], np.zeros([p.N, p.chr_len]))
+        assert np.array_equal(p.chrs(0)[0], 1-p.chrs(0)[1])
+        if p.chr_len % 2 == 1: # None switched if chr_len is odd 
+            assert np.array_equal(p.chrs(0)[0], np.zeros([p.N, p.chr_len]))
+        else: # All switched if chr_len is even
+            assert np.array_equal(p.chrs(0)[0], np.ones([p.N, p.chr_len]))
+
+    def test_recombine_print(self, pop):
+        p = pop.clone()
+        # Set chromosome 1 to 0's and chromosome 2 to 1's
+        p.genomes[:,:p.chr_len] = 0
+        p.genomes[:,p.chr_len:] = 1
+        p.loci = p.sorted_loci()
+        for r in np.linspace(0, 0.01, 21):
+            p0 = p.clone()
+            p0.recombination(r)
+            print p0.chr_len, r, ":", np.mean(p0.genomes[:,:p0.chr_len])
+        assert False
 
     @pytest.mark.xfail(reason="Observed and expected values deviating.")
     def test_recombine_random(self, pop):
@@ -268,7 +282,6 @@ class TestPopulationGrowth:
         assert np.isclose(np.mean(p.genomes[:,p.chr_len:]), 1-M,
                 atol=precision)
 
-    @pytest.mark.xfail(reason="Observed and expected values deviating.")
     def test_recombine_perbit(self, pop):
         """Test that the chromosome-switch frequency of each position
         in the genome during recombination is (a) unbiased spatially
@@ -283,16 +296,17 @@ class TestPopulationGrowth:
         p.genomes[:,p.chr_len:] = 1
         p.loci = p.sorted_loci()
         # Recombine and find per-bit averages
-        p.recombination(rrate) # = forward and reverse rates of 1
+        p.recombination(correct_r_rate(rrate))
         bitmeans = np.mean(p.genomes, 0)
         # Expected per-bit chromosome-switch frequency = (1-(1-2r)^n)/2,
         # where r = rrate and n = chrlen
-        r,n = rrate, p.chr_len
+        r,s,n = rrate, correct_r_rate(rrate), p.chr_len
         exp_bit = (1-(1-2*r)**n)/2
+        exp_bit_s = (1-(1-2*s)**n)/2
         exp_bitmeans = np.append(np.repeat(exp_bit, n),
                 np.repeat(1-exp_bit, n))
         comp = bitmeans/exp_bitmeans
-        print r, n, exp_bit
+        print r, s, n, exp_bit, exp_bit_s
         print bitmeans
         print exp_bitmeans
         print comp, abs(np.max(comp))
