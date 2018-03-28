@@ -1,6 +1,5 @@
 from setuptools import setup, find_packages
 from setuptools.extension import Extension
-import numpy
 
 setup(name='aegis',
         # Version
@@ -16,7 +15,7 @@ setup(name='aegis',
             'scipy>=0.19.1',
             'python-dateutil>=2.6.1',
             'pandas>=0.22.0',
-            'matplotlib>=2.1.2',
+            'matplotlib==2.1.0',
             'ggplot>=0.11.5'
             # pytest?
             ],
