@@ -12,7 +12,7 @@
 # - Write tests
 # - add missing plots
 
-from .functions import make_windows
+from .functions import make_windows, timenow, get_runtime
 import numpy as np, pandas as pd, os, shutil
 import matplotlib
 matplotlib.use("Agg")
@@ -28,9 +28,15 @@ class Plotter:
 
     def __init__(self, record):
         """Import a Record object and initialise plotting methods."""
+        self.starttime = timenow(False)
+        print "\nBeginning plotting {}.".format(timenow())
+        print "Working directory: "+os.getcwd()
+        print "Reading record from ./{}.".format(record)
         rfile = open(record, "rb")
         try:
             self.record = pickle.load(rfile)
+            s = "Import succeeded. Time needed"
+            print get_runtime(self.starttime, timenow(False), s)
             self.plot_methods = ["plot_population_resources",\
                                  "plot_starvation",\
                                  "plot_fitness",\
@@ -143,9 +149,13 @@ class Plotter:
         if os.path.exists(outdir): # Overwrite existing output
                 shutil.rmtree(outdir)
         os.makedirs(outdir)
+        print "\nSaving plot:"
         for n in xrange(len(self.plots)):
             outpath = os.path.join(outdir, self.plot_names[n] + ".png")
+            print self.plot_names[n]
             self.plots[n].save(outpath)
+        s = "\nSuccessfully saved all plots. Total runtime"
+        print get_runtime(self.starttime, timenow(False), s)
 
     def get_flattened_coords(self, dim, arr):
         """Given an array and a dimension, returns the original
