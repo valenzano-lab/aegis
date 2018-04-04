@@ -302,11 +302,11 @@ class TestPopulationInit:
         """Test that genome array is of the correct size and that
         the loci are distributed correctly."""
         precision = 0.05
-        # Set up population
-        pop2 = pop.clone()
-        pop2.N = 1000
         # Define testing function
         def test_mga(genmap):
+            # Set up population
+            pop2 = pop.clone()
+            pop2.N = 1000
             loci = {
                 "s":np.nonzero(genmap<pop2.repr_offset)[0],
                 "r":np.nonzero(np.logical_and(genmap>=pop2.repr_offset,
@@ -326,8 +326,8 @@ class TestPopulationInit:
                 assert tstat < precision
         # First with simple linear genmap, then with shuffled form
         genmap1 = np.concatenate((np.arange(25),
-            np.arange(24) + pop2.repr_offset,
-            np.arange(5) + pop2.neut_offset), 0)
+            np.arange(24) + pop.repr_offset,
+            np.arange(5) + pop.neut_offset), 0)
         genmap2 = np.copy(genmap1)
         random.shuffle(genmap2)
         test_mga(genmap1)

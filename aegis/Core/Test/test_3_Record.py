@@ -717,7 +717,7 @@ class TestRecord:
         assert np.array_equal(R["age_dist_stages"], np.array([range(10)]))
         # general case
         m_snap = np.random.randint(2,20)
-        ix = np.random.randint(0,np.random.randint(1000,10000),m_snap)
+        ix = np.random.choice(np.random.randint(1000,10000),m_snap,replace=False)
         ix.sort()
         ads = [range(ix[2*i],ix[2*i+1]) for i in range(ix.shape[0]/2)]
         minl = ix[1] - ix[0]

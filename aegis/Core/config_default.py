@@ -30,8 +30,9 @@ stv_function = lambda n,r: n > r # Function for identifying starvation
 starve_at = 0   # stage/generation for no_auto/auto repectively at which to force
                 # starvation, 0 if none
 
-## AUTOCOMPUTING STAGE NUMBER ##
-delta = 10**-10 # Maximum difference between final and equilibrium neutral genotypes
+## AUTOCOMPUTING GENERATION NUMBER ##
+zeta = 10**-2   # Upper bound for probability that neutral genome will deviate from
+                # its expected value
 scale = 1.1 # Scaling factor applied to target generation estimated for delta
 max_stages = 500000 # Maximum number of stages to run before terminating
 

@@ -119,12 +119,21 @@ class Config(dict):
     def autostage(self):
         """Compute automatic running behaviour ... UNTESTED"""
         if self["auto"]:
+            # raise error if res not constant since not implemented
+            if self["res_function"](100,100)!=100:
+                s = "Autostage computing with non-constant resources is not\
+                        implemented."
+                raise ValueError(s)
             # Compute analytical parameters
             alpha, beta = self["m_rate"], self["m_rate"]*self["m_ratio"]
+            zeta = self["zeta"]
             y = self["g_dist"]["n"]
             x = 1-y
-            k = math.log10(self["delta"]*(alpha+beta)/abs(alpha*y-beta*x)) / \
-                    math.log10(abs(1-alpha-beta))
+            ssize = self["res_start"] * self["chr_len"] * 2 # sample size
+            epsbar = np.sqrt(1.0/(2*ssize)*np.log(2.0/zeta))
+            delta = epsbar * 0.1
+            k = np.log(delta*(alpha+beta)/abs(alpha*y-beta*x)) / \
+                    np.log(abs(1-alpha-beta))
             # Assign generation threshold
             self["min_gen"] = int(k*self["scale"])
 

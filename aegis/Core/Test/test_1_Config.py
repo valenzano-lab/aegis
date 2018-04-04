@@ -54,7 +54,8 @@ def conf(request, conf_path, ran_str):
         ## RESOURCE PARAMETERS ##
         c["res_limit"] = random.randint(5000,10000)
         a,b,d,e = np.random.uniform(size=4)
-        c["res_function"] = lambda n,r: int((r-n)*a + b) # Random affine
+        # leave resources constant since autostage not implemented for non-constant
+        #c["res_function"] = lambda n,r: int((r-n)*a + b) # Random affine
         c["stv_function"] = lambda n,r: e*n > d*r
         ## AUTOCOMPUTING STAGE NUMBER ##
         c["delta"] = 10**-random.randint(5,15)
@@ -282,14 +283,15 @@ class TestConfig:
         assert c["params"]["g_dist"] == c["g_dist"]
         # Snapshot stages
         if c["auto"]:
-            #m,r = c["m_rate"], c["m_ratio"]
-            #A, P = abs(1 - m - m*r), abs(r/(1+r) - c["g_dist_n"])
-            #k = (math.log10(c["delta"]) - math.log10(P))/math.log10(A)
             alpha, beta = c["m_rate"], c["m_rate"]*c["m_ratio"]
+            zeta = c["zeta"]
             y = c["g_dist"]["n"]
             x = 1-y
-            k = math.log10(c["delta"]*(alpha+beta)/abs(alpha*y-beta*x)) / \
-                    math.log10(abs(1-alpha-beta))
+            ssize = c["res_start"] * c["chr_len"] * 2
+            epsbar = np.sqrt(1.0/(2*ssize)*np.log(2.0/zeta))
+            delta = epsbar * 0.1
+            k = np.log(delta*(alpha+beta)/abs(alpha*y-beta*x)) / \
+                    np.log(abs(1-alpha-beta))
             assert c["min_gen"] == int(k * c["scale"])
             assert len(c["snapshot_generations"]) == c["n_snapshots"]
             assert len(c["snapshot_generations"]) == c["n_snapshots"]

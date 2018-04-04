@@ -124,8 +124,10 @@ class Run:
         self.n_stage += 1
         self.test_complete()
         if self.complete and not self.dieoff:
-            # for "auto" last snapshot not taken otherwise
-            if self.conf["auto"]:
+            # for "auto" last snapshot not taken otherwise, since min_gen marked as
+            # reached before stage recorded
+            if self.conf["auto"] and not \
+                    (self.n_stage >= self.conf["max_stages"]):
                 self.record_stage()
             self.record.finalise()
 

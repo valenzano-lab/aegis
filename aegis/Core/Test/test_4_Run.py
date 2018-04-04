@@ -22,7 +22,7 @@ def run(request, conf):
     return Run(conf, "", 0, 100, False)
 
 @pytest.fixture(params=["noauto_all","noauto-nodieoff","noauto-dieoff", \
-        "auto-nodieoff","auto-dieoff"], scope="module")
+        "auto-nodieoff","auto-dieoff", "auto-max_stages"], scope="module")
 def confx(request, conf_path):
     c = Config(conf_path)
     c["setup"] = request.param
@@ -39,14 +39,23 @@ def confx(request, conf_path):
         c["n_snapshot"] = 2
         c.generate()
     elif request.param == "auto-nodieoff":
-        c["m_rate"] = 0.05
-        c["m_ratio"] = 0.99
+        c["m_rate"] = 0.02
+        c["m_ratio"] = 0.95
         c["n_stages"] = "auto"
+        # now min_gen = 122
+        c.generate()
+    elif request.param == "auto-max_stages":
+        c["m_rate"] = 0.02
+        c["m_ratio"] = 0.95
+        c["n_stages"] = "auto"
+        c["max_stages"] = 200
+        # now min_gen = 122
         c.generate()
     elif request.param == "auto-dieoff":
-        c["m_rate"] = 0.05
-        c["m_ratio"] = 0.99
+        c["m_rate"] = 0.02
+        c["m_ratio"] = 0.95
         c["n_stages"] = "auto"
+        # now min_gen = 122
         c.generate()
         c["starve_at"] = c["snapshot_generations"][1]+1
     elif request.param == "noauto-dieoff":
@@ -269,11 +278,9 @@ class TestRun:
         assert not hasattr(run1, "starttime")
         run1.execute_attempt()
         assert hasattr(run1, "starttime")
-        start = run1.starttime
-        # Rerun and preserve start time
-        run1.n_stage, run1.n_snap, run1.complete = 0, 0, False
-        run1.record["snapshot_pops"] = [0]*run1.record["n_snapshots"]
-        run1.execute_attempt()
+        run2 = run.copy()
+        start = run2.starttime = run1.starttime
+        run2.execute_attempt()
         assert run1.starttime == start
 
     def test_execute_baseline(self, run):
@@ -410,6 +417,10 @@ class TestRun:
             assert R.record["n_snapshots"] == R.n_snap == 2
             assert R.record["age_distribution"].shape == (2,
                     minl,maxls)
+        elif R.conf["setup"] == "auto-max_stages":
+            # n_stage exceeds max_stages
+            R.execute()
+            assert R.n_stage >= R.conf["max_stages"]
         assert R.complete
         assert R.record["finalised"]
         # save record for Plotter test

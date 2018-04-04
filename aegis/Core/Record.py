@@ -439,7 +439,7 @@ class Record(dict):
     def finalise(self):
         """Calculate additional stats from recorded data of a completed run."""
         # If dieoff, truncate data to last snapshot pop
-        if self["dieoff"]:
+        if self["dieoff"] or (self["auto"] and self["population_size"][-1]):
             pops = np.array(self["snapshot_pops"])
             pops = pops[np.nonzero(pops)]
             self["snapshot_pops"] = list(pops)
