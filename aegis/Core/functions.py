@@ -140,3 +140,15 @@ def deep_eq(d1, d2, exact=True, prng_id=True):
     for k in d1.keys():
         if not deep_key(k,d1,d2,exact,prng_id): return False
     return True
+
+###################################
+# Correcting Recombination Rates ##
+###################################
+
+def correct_r_rate(r_rate):
+    """Correct a per-bit crossover rate parameter value to account for
+    forward and reverse crossovers occurring at the same position"""
+    if r_rate < 0 or r_rate > 1:
+        raise ValueError("Invalid crossover rate: must be between 0 and 1.")
+    r = r_rate if r_rate <= 0.5 else (1-r_rate)
+    return 1-(1-2*r)**0.5

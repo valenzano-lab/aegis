@@ -11,7 +11,7 @@
 ## PACKAGE IMPORT ##
 import numpy as np
 import copy, imp, math, pickle
-from .functions import deep_key, deep_eq, make_windows
+from .functions import deep_key, deep_eq, make_windows, correct_r_rate
 
 class Config(dict):
     """Object derived from imported config module."""
@@ -109,6 +109,9 @@ class Config(dict):
         self["auto"] = (self["n_stages"] == "auto")
         self["object_max_age"] = self["n_stages"] if not self["auto"]\
                 else self["max_stages"]
+        # Correct recombination rate to account for double crossovers
+        self["r_rate_input"] = self["r_rate"]
+        self["r_rate"] = correct_r_rate(self["r_rate"])
         # Params dict
         self["params"] = self.make_params()
         # Compute automatic stage numbering (if required)
@@ -179,8 +182,10 @@ class Config(dict):
     # COPYING
 
     def copy(self):
-        sc_prng = self["prng"]
+        if "prng" in self.keys():
+            sc_prng = self["prng"]
         self_copy = copy.deepcopy(self)
-        self_copy["prng"] = sc_prng
-        self_copy["params"]["prng"] = sc_prng
+        if "prng" in self.keys():
+            self_copy["prng"] = sc_prng
+            self_copy["params"]["prng"] = sc_prng
         return self_copy

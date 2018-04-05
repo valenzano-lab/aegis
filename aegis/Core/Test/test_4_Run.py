@@ -12,7 +12,7 @@ import numpy as np, cPickle as pickle
 ## FIXTURES ##
 ##############
 
-from test_1_Config import conf, conf_path, ran_str, gen_trseed
+from test_1_Config import conf, conf_naive, conf_path, ran_str, gen_trseed
 from test_2a_Population_init import pop
 from test_3_Record import rec, pop1, rec1
 

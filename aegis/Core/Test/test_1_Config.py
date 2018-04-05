@@ -1,4 +1,4 @@
-from aegis.Core import Config
+from aegis.Core import Config, correct_r_rate
 from aegis.Core import chance, make_windows
 import pytest,importlib,types,random,copy,string,os,tempfile,math,imp
 import numpy as np, pickle
@@ -32,8 +32,8 @@ def conf_path(request, gen_trseed):
 
 @pytest.fixture(params=["import", "random0", "random1", "auto0", "auto1"],\
         scope="module")
-def conf(request, conf_path, ran_str):
-    """Create a default configuration object."""
+def conf_naive(request, conf_path, ran_str, gen_trseed):
+    """Create a default, non-generated Config object."""
     c = Config(conf_path)
     c["setup"] = request.param
     if request.param != "import": # Randomise config parameters
@@ -95,7 +95,12 @@ def conf(request, conf_path, ran_str):
                 "resources": random.randint(500,1500),
                 "n1": random.randint(5,20)
                 }
-    # Generate derived parameters
+    return c
+
+@pytest.fixture(scope="module")
+def conf(request, conf_naive):
+    """Create a default, generated configuration object."""
+    c = copy.deepcopy(conf_naive)
     c.generate()
     return c
 
@@ -111,10 +116,13 @@ def ranstr(m,n=10):
 
 class TestConfig:
 
-    def test_config_copy(self, conf):
-        """Test that the copied config is equal."""
+    def test_config_copy(self, conf, conf_naive):
+        """Test that the copied config is equal for both non-generated
+        and generated objects."""
         c1 = conf.copy()
+        c2 = conf_naive.copy()
         assert c1 == conf
+        assert c2 == conf_naive
 
     def test_config_auto(self, conf):
         c = conf.copy()
@@ -128,25 +136,11 @@ class TestConfig:
         c.generate()
         assert not c["auto"]
 
-    def test_config_init(self, conf, conf_path):
+    def test_config_init(self, conf_naive, conf_path):
         """Test that Config objects are correctly initialised from an imported
         configuration file."""
-        if conf["setup"] != "import": return
-        c = copy.deepcopy(conf)
-        # Remove stuff that gets introduced/changed during generation
-        del_keys = ("g_dist", "genmap", "chr_len", "s_range", "r_range",
-                "params", "surv_step", "repr_step", "genmap_argsort",
-                "n_states", "surv_bound", "auto", "object_max_age",\
-                "random_seed", "prng")
-        if c["auto"]:
-            del_keys += ("min_gen", "snapshot_generations",
-                    "snapshot_generations_remaining")
-            if c["age_dist_N"] != "all": del_keys += ("age_dist_generations",)
-        else:
-            del_keys += ("snapshot_stages",)
-            if c["age_dist_N"] != "all": del_keys += ("age_dist_stages",)
-        for key in del_keys: del c[key]
-        if c["repr_mode"] in ["sexual", "assort_only"]: c["repr_bound"] /= 2
+        if conf_naive["setup"] != "import": return
+        c = copy.deepcopy(conf_naive)
         # Compare remaining keys to directly imported config file
         c_import = imp.load_source('ConfFile', conf_path)
         for key in c.keys():
@@ -158,7 +152,7 @@ class TestConfig:
                 for n in xrange(3):
                     n,r = np.random.uniform(size=2)
                     assert attr(n,r) == impt(n,r)
-            elif type(attr) in [int, str, float, dict, bool]:
+            elif type(attr) in [int, str, float, dict, bool, list]:
                 assert attr == impt
             elif type(attr) is np.ndarray:
                 assert np.array_equal(attr, impt)
@@ -218,23 +212,12 @@ class TestConfig:
         with pytest.raises(ValueError):
             c.check2()
 
-    def test_config_generate(self, conf):
+    def test_config_generate(self, conf_naive):
         """Test that gen_conf correctly generates derived simulation params."""
-        c = conf.copy()
+        c = copy.deepcopy(conf_naive)
         np.set_printoptions(threshold=np.nan)
-        # Remove stuff that gets introduced/changed during generation
-        del_keys = ("genmap", "chr_len", "s_range", "r_range",
-                "params", "surv_step", "repr_step", "genmap_argsort",
-                "n_states", "surv_bound")
-        if c["auto"]:
-            del_keys += ("min_gen", "snapshot_generations",
-                    "snapshot_generations_remaining")
-        else:
-            del_keys += ("snapshot_stages",)
-        for key in del_keys: del c[key]
-        sexvar = (c["repr_mode"] in ["sexual", "assort_only"])
-        if sexvar: c["repr_bound"] /= 2
         # Save info and run
+        sexvar = (c["repr_mode"] in ["sexual", "assort_only"])
         crb1 = c["repr_bound"][1]
         c.generate()
         # Test output:
@@ -305,6 +288,9 @@ class TestConfig:
             assert c["snapshot_stages"].dtype is np.dtype(int)
             assert np.array_equal(c["snapshot_stages"],np.around(np.linspace(
                 0, c["n_stages"]-1, c["n_snapshots"])))
+        # Crossover rates
+        assert c["r_rate_input"] == conf_naive["r_rate"]
+        assert c["r_rate"] == correct_r_rate(conf_naive["r_rate"])
         # Age distribution windows
         if c["age_dist_N"] != "all":
             if c["auto"]:

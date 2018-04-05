@@ -17,7 +17,7 @@ except:
 ## FIXTURES ##
 ##############
 
-from test_1_Config import conf, conf_path, gen_trseed
+from test_1_Config import conf, conf_naive, conf_path, gen_trseed
 from test_2a_Population_init import pop
 from test_3_Record import rec, pop1, rec1
 from test_4_Run import run, ran_str
