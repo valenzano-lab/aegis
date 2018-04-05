@@ -12,6 +12,7 @@
 # - Write tests
 # - add missing plots
 
+from .functions import make_windows, timenow, get_runtime
 import numpy as np, pandas as pd, os, shutil
 import matplotlib
 matplotlib.use("Agg")
@@ -27,9 +28,15 @@ class Plotter:
 
     def __init__(self, record):
         """Import a Record object and initialise plotting methods."""
+        self.starttime = timenow(False)
+        print "\nBeginning plotting {}.".format(timenow())
+        print "Working directory: "+os.getcwd()
+        print "Reading record from ./{}.".format(record)
         rfile = open(record, "rb")
         try:
             self.record = pickle.load(rfile)
+            s = "Import succeeded. Time needed"
+            print get_runtime(self.starttime, timenow(False), s)
             self.plot_methods = ["plot_population_resources",\
                                  "plot_starvation",\
                                  "plot_fitness",\
@@ -37,7 +44,7 @@ class Plotter:
                                  "plot_fitness_term_overlay",\
                                  "plot_entropy_gt",\
                                  "plot_entropy_bits",\
-                                 "plot_age_distribution",\
+                                 "plot_age_distribution_means",\
                                  #"plot_density_per_locus",\
                                  "plot_density",\
                                  "plot_mean_gt",\
@@ -47,6 +54,7 @@ class Plotter:
                                  "plot_mean_repr",\
                                  "plot_cmv_surv",\
                                  "plot_n1",\
+                                 #"plot_n1_reorder",\
                                  "plot_n1_var",\
                                  "plot_actual_death_rate",\
                                  "plot_density_snap_overlay",\
@@ -55,6 +63,7 @@ class Plotter:
                                  "plot_n1_mean_sliding_window",\
                                  "plot_n1_var_sliding_window",\
                                  "plot_n1_grid",\
+                                 "plot_n1_reorder_grid",\
                                  "plot_n1_mean_sliding_window_grid",\
                                  "plot_n1_var_grid",\
                                  "plot_n1_var_sliding_window_grid"
@@ -66,7 +75,7 @@ class Plotter:
                                "per_fitness_term_overlay",\
                                "plot_entropy_gt",\
                                "plot_entropy_bits",\
-                               "age_distribution",\
+                               "age_distribution_means",\
                                #"density_per_locus",\
                                "density",\
                                "mean_gt",\
@@ -76,6 +85,7 @@ class Plotter:
                                "mean_repr",\
                                "cmv_surv",\
                                "n1",\
+                               #"n1_reorder",\
                                "n1_var",\
                                "actual_death_rate",\
                                "density_overlay",\
@@ -84,6 +94,7 @@ class Plotter:
                                "n1_mean_sliding_window",\
                                "n1_var_sliding_window",\
                                "n1_grid",\
+                               "n1_reorder_grid",\
                                "n1_mean_sliding_window_grid",\
                                "n1_var_grid",\
                                "n1_var_sliding_window_grid"
@@ -121,9 +132,14 @@ class Plotter:
     def generate_plots(self):
         self.filter_one_snap()
         for m in self.plot_methods:
-            self.plots.append(getattr(self, m)())
+            p = getattr(self,m)()
+            if p: self.plots.append(p)
 
     def save_plots(self):
+        # Remove not generated plot names
+        if self.record["age_dist_N"] == "all":
+            self.plot_methods.remove("plot_age_distribution_means")
+            self.plot_names.remove("age_distribution_means")
         # Make/replace output directory
         pm,pn,p = self.plot_methods, self.plot_names, self.plots
         if not len(pm) == len(pn) == len(p):
@@ -133,9 +149,13 @@ class Plotter:
         if os.path.exists(outdir): # Overwrite existing output
                 shutil.rmtree(outdir)
         os.makedirs(outdir)
+        print "\nSaving plot:"
         for n in xrange(len(self.plots)):
             outpath = os.path.join(outdir, self.plot_names[n] + ".png")
+            print self.plot_names[n]
             self.plots[n].save(outpath)
+        s = "\nSuccessfully saved all plots. Total runtime"
+        print get_runtime(self.starttime, timenow(False), s)
 
     def get_flattened_coords(self, dim, arr):
         """Given an array and a dimension, returns the original
@@ -316,7 +336,10 @@ class Plotter:
 
     def plot_starvation(self):
         # TODO: plot y-axis in log-space of base matching starvation increment
-        return self.stage_trace(["surv_penf","repr_penf"], "Survival and reproduction penalty factors upon starvation")
+        keys = []
+        if self.record["surv_pen"]: keys.append("surv_penf")
+        if self.record["repr_pen"]: keys.append("repr_penf")
+        return self.stage_trace(keys, "Survival and reproduction penalty factors upon starvation")
 
     ##################
     # snapshot_trace #
@@ -352,11 +375,16 @@ class Plotter:
     ####################
     # snapshot_overlay #
     ####################
-    # TODO should we also plot age_distribution averaged over a window around
-    # snapshot stage?
     def plot_age_distribution(self):
         return self.snapshot_overlay(["snapshot_age_distribution"], "age", "",\
                 "Age distribution")
+
+    def plot_age_distribution_means(self):
+        if not self.record["age_dist_N"] == "all":
+            self.record.compute_snapshot_age_dist_avrg()
+            if not "snapshot_age_distribution_avrg" in self.record.keys(): return
+            return self.snapshot_overlay(["snapshot_age_distribution_avrg"],\
+                    "age", "","Age distribution snapshot means")
 
     def plot_fitness_term_overlay(self):
         return self.snapshot_overlay(["fitness_term"], "age", "",\
@@ -377,6 +405,15 @@ class Plotter:
     #########################
     def plot_n1_grid(self):
         return self.n1_like_snapshot_grid("n1","","Distribution of 1's per bit")
+
+    def plot_n1_reorder_grid(self):
+        self.record.reorder_bits()
+        plot = self.grid_plot("n1_reorder", ["snapshot", "bit"], "snapshot", title="Distribution of 1's per bit (original genome order)")
+        # add genmap_ix
+        br = list(np.linspace(0,self.record["chr_len"]-1,10).astype(int))
+        lb = list(self.record["genmap_ix"][np.array(br)/self.record["n_base"]].astype(str))
+        plot += ggplot.scale_x_discrete(breaks=br, labels=lb)
+        return plot
 
     def plot_n1_mean_sliding_window_grid(self):
         return self.n1_like_snapshot_grid("n1_window_mean","",\
@@ -422,31 +459,24 @@ class Plotter:
         return plot
 
     def plot_actual_death_rate(self, window_size=100):
-        n_stage = self.record["n_stages"] if not self.record["auto"] \
-                else self.record["max_stages"]
-        # check window size is OK
-        if window_size*(self.record["n_snapshots"]+1) > \
-                n_stage:
-            raise ValueError("Window size is too big; overlap.")
-        windows = [range(window_size)]
-        window_size /= 2
-        for s in self.record["snapshot_stages"][1:-1]:
-            windows += [range(s-window_size,s+window_size)]
-        window_size *= 2
-        windows += [range(n_stage-window_size, n_stage)]
-        data = self.make_dataframe(["actual_death_rate"], ["stage","age"])
-
-        mean_data = pd.DataFrame()
-        for i in range(len(windows)):
-            x = self.dataframe_mean(data,"age","value","stage",windows[i])
-            #x["snapshot_stage"] = self.record["snapshot_stages"][i]
-            x["snapshot_stage"] = i
-            mean_data = mean_data.append(x)
-
-        mean_data["snapshot_stage"] = mean_data["snapshot_stage"].astype(str)
+        self.record.compute_actual_death()
+        if self.record["age_dist_N"] == "all":
+            ss_key = "generations" if self.record["auto"] else "stages"
+            stages = make_windows(self.record["snapshot_{}".format(ss_key)], window_size)
+            data = self.record["actual_death_rate"][stages]
+        else:
+            data = self.record["actual_death_rate"]
+        # make df
+        source = {"actual_death_rate_means":np.nanmean(data,1)}
+        mean_data = self.make_dataframe(\
+            ["actual_death_rate_means"],\
+            ["snapshot", "age"],\
+            snapshot="all",\
+            source=source)
+        mean_data["snapshot"] = mean_data["snapshot"].astype(str)
+        # plot
         plot = ggplot.ggplot(mean_data, ggplot.aes(x="age",
-            y="value", color = "snapshot_stage"))
-        #plot += ggplot.geom_point()
+            y="value", color = "snapshot"))
         plot += ggplot.geom_line()
         plot += ggplot.labs(title="Actual death rate")
         return plot

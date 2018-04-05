@@ -67,9 +67,9 @@ def seed2(request, sim, random_n_runs):
 class TestSimulationInit:
     """Test methods relating to initialising a Simulation object."""
 
-#    def test_copy(self, sim):
-#        sim2 = sim.copy()
-#        assert sim2 == sim
+    def test_copy(self, sim):
+        sim2 = sim.copy()
+        assert sim2 == sim
 
     def test_get_conf_match(self, sim, conf):
         """Confirm that config fixture and simulation config attribute

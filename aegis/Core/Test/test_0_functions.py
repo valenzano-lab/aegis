@@ -1,5 +1,6 @@
 from aegis.Core import chance, init_ages, init_genomes, init_generations
-from aegis.Core import quantile, fivenum, init_gentimes, correct_r_rate
+from aegis.Core import quantile, fivenum, init_gentimes, make_windows,\
+        correct_r_rate
 import numpy as np
 import pytest, random
 
@@ -29,7 +30,27 @@ class TestFunctionsChance:
 class TestFunctionsInit:
     """Tests for functions involved in simulation initialisation."""
 
-    def test_inits(self):
+    def test_make_windows(self):
+        """Test make_windows for one pair of dummy params."""
+        # invalid window size
+        with pytest.raises(ValueError):
+            make_windows([],0)
+        # ws = 1
+        tarr = np.linspace(0,1000,5).astype(int)
+        assert np.array_equal(np.array(tarr).reshape(tarr.size,1),\
+                make_windows(tarr,1))
+        # general with last=True
+        tws = 100
+        exp = np.vstack((np.arange(100), np.arange(200,300), np.arange(450,550),\
+                np.arange(700,800), np.arange(900,1000)))
+        assert np.array_equal(make_windows(tarr,tws), exp)
+        assert np.array_equal(make_windows(tarr,tws+1), exp)
+        # general with last=False
+        exp2 = np.vstack((np.arange(100), np.arange(200,300), np.arange(450,550),\
+                np.arange(700,800), np.arange(950,1050)))
+        assert np.array_equal(make_windows(tarr, tws, False), exp2)
+
+    def test_pop_inits(self):
         """Test that init_ages, init_genomes and init_generations
         return arrays of the expected dimensions and content."""
         assert np.array_equal(init_ages(), np.array([-1]))
@@ -79,11 +100,11 @@ class TestFunctionsRecombination:
             r = random.uniform(0,0.5)
             s = correct_r_rate(r)
             assert s == 1-(1-2*r)**0.5
- 
+
     def test_correct_r_rate_low(self):
         """Test that correct_r_rate correctly computes the corrected
         crossover rate when 0.5 < r_rate < 1."""
         for n in xrange(3):
             r = random.uniform(0.5,1)
             s,q = correct_r_rate(r), 1-r
-            assert s == 1-(1-2*q)**0.5           
+            assert s == 1-(1-2*q)**0.5

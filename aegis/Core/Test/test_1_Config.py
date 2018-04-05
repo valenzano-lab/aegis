@@ -1,4 +1,5 @@
 from aegis.Core import Config, correct_r_rate
+from aegis.Core import chance, make_windows
 import pytest,importlib,types,random,copy,string,os,tempfile,math,imp
 import numpy as np, pickle
 
@@ -13,12 +14,6 @@ def ran_str(request):
         ''.join(random.choice(string.ascii_lowercase) for _ in range(50))
 
 @pytest.fixture(scope="module")
-def conf_path(request):
-    dirpath = os.path.dirname(os.path.realpath(__file__))
-    filepath = os.path.join(dirpath, "tconfig.py")
-    return filepath
-
-@pytest.fixture(scope="module")
 def gen_trseed(request):
     """Generate random seed and save it to  file trseed.
     tconfig contains a path to this file so that conf can import it."""
@@ -28,10 +23,17 @@ def gen_trseed(request):
     f.close()
     return
 
-@pytest.fixture(params=["import", "random", "auto"], scope="module")
+@pytest.fixture(scope="module")
+def conf_path(request, gen_trseed):
+    gen_trseed
+    dirpath = os.path.dirname(os.path.realpath(__file__))
+    filepath = os.path.join(dirpath, "tconfig.py")
+    return filepath
+
+@pytest.fixture(params=["import", "random0", "random1", "auto0", "auto1"],\
+        scope="module")
 def conf_naive(request, conf_path, ran_str, gen_trseed):
     """Create a default, non-generated Config object."""
-    if request.param == "import": gen_trseed
     c = Config(conf_path)
     c["setup"] = request.param
     if request.param != "import": # Randomise config parameters
@@ -39,9 +41,9 @@ def conf_naive(request, conf_path, ran_str, gen_trseed):
         c["random_seed"] = ""
         c["output_prefix"] = os.path.join(tempfile.gettempdir(), ran_str)
         c["n_runs"] = random.randint(1,3)
-        nstage = random.randint(15,80)
-        c["n_stages"] = "auto" if request.param == "auto" else nstage
-        c["n_snapshots"] = random.randint(2,5)
+        nstage = random.randint(16,80)
+        c["n_stages"] = "auto" if request.param[:-1] == "auto" else nstage
+        c["n_snapshots"] = random.randint(2,4)
         # c["output_mode"] = random.randrange(3) # TODO: Test with this?
         # c["max_fail"] = random.randrange(10) # TODO: Test with this?
         ## STARTING PARAMETERS ##
@@ -52,12 +54,17 @@ def conf_naive(request, conf_path, ran_str, gen_trseed):
         ## RESOURCE PARAMETERS ##
         c["res_limit"] = random.randint(5000,10000)
         a,b,d,e = np.random.uniform(size=4)
-        c["res_function"] = lambda n,r: int((r-n)*a + b) # Random affine
+        # leave resources constant since autostage not implemented for non-constant
+        #c["res_function"] = lambda n,r: int((r-n)*a + b) # Random affine
         c["stv_function"] = lambda n,r: e*n > d*r
         ## AUTOCOMPUTING STAGE NUMBER ##
         c["delta"] = 10**-random.randint(5,15)
         c["scale"] = random.randint(9, 19)/10.0
         c["max_stages"] = random.randint(200,400)
+        ## AGE DISTRIBUTION RECORDING ##
+        if request.param[-1] == "1": age_dist_N_var = "all"
+        else: age_dist_N_var = random.randint(1,3)
+        c["age_dist_N"] = age_dist_N_var
         ## SIMULATION FUNDAMENTALS ##
         # Death and reproduction parameters
         db_low, rb_low = np.random.uniform(size=2)
@@ -66,7 +73,7 @@ def conf_naive(request, conf_path, ran_str, gen_trseed):
         c["death_bound"] = np.array([db_low, db_high])
         c["repr_bound"] = np.array([rb_low, rb_high])
         # Mutation and recombination
-        c["r_rate"], c["m_rate"], c["m_ratio"] = [random.random() for x in range(3)]
+        c["r_rate"], c["m_rate"], c["m_ratio"] = [random.random()/10 for x in range(3)]
         # Genome structure
         c["g_dist_s"],c["g_dist_r"],c["g_dist_n"] = [random.random() for x in range(3)]
         c["n_neutral"] = random.randint(1, 100)
@@ -123,7 +130,9 @@ class TestConfig:
         c["n_stages"] = "auto"
         c.generate()
         assert c["auto"]
-        c["n_stages"] = random.randrange(1000)
+        c["n_stages"] = random.randrange(100, 1000)
+        c["age_dist_N"] = 40
+        c["n_snapshots"] = 2
         c.generate()
         assert not c["auto"]
 
@@ -156,7 +165,7 @@ class TestConfig:
     def test_config_check(self,conf):
         """Test that configurations with incompatible genome parameters are
         correctly rejected."""
-        if conf["setup"] == "random": return
+        if conf["setup"][:-1] == "random": return
         c = conf.copy()
         assert c.check()
         repr_mode_old = c["repr_mode"]
@@ -178,6 +187,30 @@ class TestConfig:
             c.check()
         c["neut_offset"] += 1
         assert c.check()
+        c["age_dist_N"] = -1
+        with pytest.raises(ValueError):
+            c.check()
+        c["age_dist_N"] = 1.1
+        with pytest.raises(ValueError):
+            c.check()
+        c["age_dist_N"] = "notall"
+        with pytest.raises(ValueError):
+            c.check()
+
+    def test_config_check2(self,conf):
+        """Test that configurations with incompatible
+        post-Config-generation parameters are correctly rejected."""
+        if conf["setup"][:-1] == "random": return
+        c = conf.copy()
+        c["age_dist_N"] = 60
+        c["n_stages"] = 100
+        with pytest.raises(ValueError):
+            c.check2()
+        c["age_dist_N"] = 60
+        c["n_stages"] = "auto"
+        c["min_gen"] = 100
+        with pytest.raises(ValueError):
+            c.check2()
 
     def test_config_generate(self, conf_naive):
         """Test that gen_conf correctly generates derived simulation params."""
@@ -188,6 +221,8 @@ class TestConfig:
         crb1 = c["repr_bound"][1]
         c.generate()
         # Test output:
+        # Prng
+        assert isinstance(c["prng"],np.random.RandomState)
         # Genome structure
         print c["max_ls"], c["maturity"], c["repr_offset"], c["neut_offset"], c["n_neutral"]
         print c["neut_offset"] - c["repr_offset"]
@@ -231,14 +266,15 @@ class TestConfig:
         assert c["params"]["g_dist"] == c["g_dist"]
         # Snapshot stages
         if c["auto"]:
-            #m,r = c["m_rate"], c["m_ratio"]
-            #A, P = abs(1 - m - m*r), abs(r/(1+r) - c["g_dist_n"])
-            #k = (math.log10(c["delta"]) - math.log10(P))/math.log10(A)
             alpha, beta = c["m_rate"], c["m_rate"]*c["m_ratio"]
+            zeta = c["zeta"]
             y = c["g_dist"]["n"]
             x = 1-y
-            k = math.log10(c["delta"]*(alpha+beta)/abs(alpha*y-beta*x)) / \
-                    math.log10(abs(1-alpha-beta))
+            ssize = c["res_start"] * c["chr_len"] * 2
+            epsbar = np.sqrt(1.0/(2*ssize)*np.log(2.0/zeta))
+            delta = epsbar * 0.1
+            k = np.log(delta*(alpha+beta)/abs(alpha*y-beta*x)) / \
+                    np.log(abs(1-alpha-beta))
             assert c["min_gen"] == int(k * c["scale"])
             assert len(c["snapshot_generations"]) == c["n_snapshots"]
             assert len(c["snapshot_generations"]) == c["n_snapshots"]
@@ -255,3 +291,11 @@ class TestConfig:
         # Crossover rates
         assert c["r_rate_input"] == conf_naive["r_rate"]
         assert c["r_rate"] == correct_r_rate(conf_naive["r_rate"])
+        # Age distribution windows
+        if c["age_dist_N"] != "all":
+            if c["auto"]:
+                assert np.array_equal(c["age_dist_generations"],\
+                        make_windows(c["snapshot_generations"], c["age_dist_N"]))
+            else:
+                assert np.array_equal(c["age_dist_stages"],\
+                        make_windows(c["snapshot_stages"], c["age_dist_N"]))

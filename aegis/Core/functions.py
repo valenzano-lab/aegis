@@ -11,6 +11,28 @@ def chance(p,n=1,prng=0):
     if prng==0: prng = np.random.RandomState()
     return prng.random_sample(n) < p
 
+###########################
+## Config Initialisation ##
+###########################
+
+def make_windows(array, ws, last=True):
+    """For an array of integers, for every integer, return range(ws) around
+    that integer. for the first element of array expand only forward, for the
+    last expand only backward."""
+    if ws<1:
+        s = "Window size must be greater than zero."
+        raise ValueError(s)
+    elif ws == 1:
+        return np.array(array).reshape(len(array),1)
+    else:
+        ws = ws/2*2
+        res = [range(ws)]
+        for i in array[1:-1]:
+            res.append(range(i-ws/2, i+ws/2))
+        if last: res.append(range(array[-1]-ws, array[-1]))
+        else: res.append(range(array[-1]-ws/2, array[-1]+ws/2))
+        return np.array(res)
+
 ###############################
 ## Population Initialisation ##
 ###############################

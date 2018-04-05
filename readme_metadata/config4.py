@@ -4,27 +4,31 @@
 
 ## CORE PARAMETERS ##
 random_seed = "" # If numeric, sets random seed to that value before execution
-output_prefix = "test" # Prefix for output files within simulation directory
-number_of_runs = 2 # Total number of independent runs
-number_of_stages = "auto" # Total number of stages per run [int/"auto"]
-number_of_snapshots = 20 # Points in run at which to record detailed data
+n_runs = 2 # Total number of independent runs
+n_stages = "auto" # Total number of stages per run [int/"auto"]
+n_snapshots = 20 # Points in run at which to record detailed data
 path_to_seed_file = "" # Path to simulation seed file, if no seed then ""
     # see README for which parameters are inherited from seed, which are
     # defined anew in this config file
+max_fail = 10 # Maximum number of failed attempts tolerated for each run
+
+## OUTPUT SPECIFICATIONS ##
+output_prefix = "scen4" # Prefix for output files within simulation directory
 output_mode = 1 # 0 = return records only, 1 = return records + final pop,
                 # 2 = return records + all snapshot populations
-max_fail = 10 # Maximum number of failed attempts tolerated for each run
+age_dist_N = 100 # Window size around snapshots for which to record age_dist
 
 ## STARTING PARAMETERS ##
 repr_mode = 'sexual' # sexual, asexual, assort_only or recombine_only
 res_start = 10000 # Starting resource value
-res_var = False # Resources vary with population and time; else constant
 start_pop = 5000 # Starting population size
 
 ## RESOURCE PARAMETERS ##
-V = 1.6 # Geometric resource regrowth factor, if variable
-R = res_start # Arithmetic resource increment, if variable
 res_limit = res_start*5 # Maximum resource value, if variable; -1 = infinite
+res_function = lambda n,r: r # Function for updating resources; here constant
+stv_function = lambda n,r: n > r # Function for identifying starvation
+starve_at = 0   # stage/generation for no_auto/auto repectively at which to force
+                # starvation, 0 if none
 
 ## AUTOCOMPUTING STAGE NUMBER ##
 delta = 10**-10 # Maximum difference between final and equilibrium neutral genotypes
@@ -37,9 +41,9 @@ repr_bound = [0, 0.2] # min and max reproduction rates
 r_rate = 0.01 # recombination rate, if sexual
 m_rate = 0.001 # mutation rate
 m_ratio = 0.1 # Ratio of positive (0->1) to negative (1->0) mutations
-g_dist_s = 0.5 # Proportion of 1's in survival loci of initial genomes
-g_dist_r = g_dist_s #                       reproductive loci
-g_dist_n = g_dist_s #                       neutral loci
+g_dist = {"s": 0.5, # Proportion of 1's in survival loci of initial genomes
+        "r": 0.5,   #                      reproductive loci
+        "n": 0.5}   #                      neutral loci
 n_neutral = 10 # Number of neutral loci in genome
 n_base = 10 # Number of bits per locus
 repr_offset = 100 # Offset for repr loci in genome map (must be <= max_ls)

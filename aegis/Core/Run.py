@@ -27,6 +27,8 @@ class Run:
         self.repr_penf = 1.0
         self.n_stage = 0
         self.n_snap = 0
+        self.n_snap_ad = 0
+        self.n_snap_ad_bool = False
         self.n_run = n_run
         self.dieoff = False
         self.complete = False
@@ -122,8 +124,10 @@ class Run:
         self.n_stage += 1
         self.test_complete()
         if self.complete and not self.dieoff:
-            # for "auto" last snapshot not taken otherwise
-            if self.conf["auto"]:
+            # for "auto" last snapshot not taken otherwise, since min_gen marked as
+            # reached before stage recorded
+            if self.conf["auto"] and not \
+                    (self.n_stage >= self.conf["max_stages"]):
                 self.record_stage()
             self.record.finalise()
 
@@ -157,9 +161,26 @@ class Run:
                 # Prevent same min generation triggering multiple snapshots:
                 self.conf["snapshot_generations_remaining"] = \
                         self.conf["snapshot_generations_remaining"][1:]
+        # Decide whether to record age_distribution
+        age_dist_rec = -1
+        if self.conf["age_dist_N"] == "all":
+            age_dist_rec = self.n_stage
+        elif not self.conf["auto"]:
+            if self.n_stage in self.conf["age_dist_stages"]:
+                age_dist_rec = self.n_stage
+        else:
+            if obs in self.conf["age_dist_generations"]:
+                age_dist_rec = self.n_stage
+                if self.n_snap_ad_bool:
+                    self.n_snap_ad += 1
+                    self.n_snap_ad_bool = False
+                # Save at which stages age_dist is recorded
+                self.record["age_dist_stages"][self.n_snap_ad].append(self.n_stage)
+            else:
+                self.n_snap_ad_bool = True
         # Record information and return verbosity boolean
         self.record.update(self.population, self.resources, self.surv_penf,
-                self.repr_penf, self.n_stage, snapshot)
+                self.repr_penf, self.n_stage, snapshot, age_dist_rec)
         self.n_snap += 1 if snapshot >= 0 else 0
         full_report = report_stage and self.verbose
         if (snapshot >= 0) and full_report: self.logprint("Snapshot taken.")

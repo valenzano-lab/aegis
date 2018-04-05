@@ -72,7 +72,9 @@ For a quick dive into the usage of aegis reading this README and inspecting the
 ## Usage
 This is the help output of aegis:
 ```
-usage: aegis [-h] [-m <str>] [-v] [-r <int>] [-p <str>] script infile
+usage: aegis [-h] [-m <str>] [-v] [-r <int>] [-p <str>] [-ws <int>]
+             [-rseed <str>] [-recinfo <str>]
+             script infile
 
 Run the genome ageing simulation.
 
@@ -81,7 +83,7 @@ positional arguments:
                             run - run the simulation with the config file specified in
                                   infile
                             plot - plot data from record object specified in infile
-                            getconfig - copies the default config file to infile
+                            get - copies an aegis file in option to infile (config by default)
   infile                path to input config file
 
 optional arguments:
@@ -93,11 +95,17 @@ optional arguments:
   -r <int>              report information every <int> stages (default: 100)
   -p <str>, --profile <str>
                         profile genome simulation with cProfile and save to given path
+  -ws <int>, --window-size <int>
+                        if called with plot, generates n1 plots with desired window size
+  -rseed <str>, --random-seed <str>
+                        if called with get, gets random seed from record file
+  -recinfo <str>, --record-info <str>
+                        if called with get, gets information on record file
 ```
 The *configuration file* is instrumental to running simulations with aegis.
 You would copy a default configuration file to `my_config.py` in your cwd like so:
 ```bash
-aegis getconfig ./my_config.py
+aegis get ./my_config.py
 ```
 This file defines *all* simulation parameters. Edit the parameter values as desired
 with your favorite text editor and then run the simulation:
@@ -139,12 +147,12 @@ descriptions. See that you can derive the *description* from the respecting
 [config1.py](./readme_metadata/config1.py)
 
 **Description:**
-This simulation is asexual and the resources are set to 1000 and constant.
+This simulation is asexual and the resources are set to 1000.
 The starting population size is 500. The simulation consists of 1 run that 
 is 1000 stages long. The run will be recorded at 5 snapshot stages. We 
 haven't provided a seed Population, therefore a new one will be generated for
 us. At simulation completion only the record for the one run will be
-saved in `./test_files/records/run0.rec`.
+saved in `./scen1_files/records/run0.rec`.
 
 #### Scenario 2
 [config2.py](./readme_metadata/config2.py)
@@ -153,10 +161,10 @@ saved in `./test_files/records/run0.rec`.
 Same as Scenario 1, but we have 2 runs, at simulation completion we save records
 and final populations and the number of stages per run is set automatically.
 Saved files are:
-* `./test_files/records/run0.rec`
-* `./test_files/records/run1.rec`
-* `./test_files/populations/run0.pop`
-* `./test_files/populations/run1.pop`
+* `./scen2_files/records/run0.rec`
+* `./scen2_files/records/run1.rec`
+* `./scen2_files/populations/run0.pop`
+* `./scen2_files/populations/run1.pop`
 
 #### Scenario 3
 [config3.py](./readme_metadata/config3.py)
@@ -164,11 +172,10 @@ Saved files are:
 **Description:**
 Say we copied the population from the first run in Scenario 2 to a file in our
 cwd named `scen2_run0.pop`. We want to see how this population will change
-if we put it in an environment with variable resources.
-This simulation has 1 run with `scen2_run0.pop` as seed and resources are set to
-be variable with starting resources 1000, resources increment 1000, resources
-regrowth factor 1.6 and resources upper bound 5000.
-The remaining parameters are same as in Scenario 2.
+if set the resources to 500 instead of previous 1000.
+This simulation has 1 run with `scen2_run0.pop` as seed and resources are set to 
+500. The remaining parameters are same as in Scenario 2.
+We changed the output prefix to be "scen2_run0_continue".
 
 #### Scenario 4
 [config4.py](./readme_metadata/config4.py)
@@ -176,6 +183,30 @@ The remaining parameters are same as in Scenario 2.
 **Description:**
 Same as Scenario 2, but the simulation is sexual, we record the runs at 20
 snapshots, resources are set at 10000 and starting population at 5000.
+Also in order to keep the record file size smaller, we will only record age
+distribution for 100 generations around snapshots.
+
+#### Scenario 5
+[config5.py](./readme_metadata/config5.py)
+
+**Description:**
+Say we do want to have the complete age distribution data for our Scenario 5 run
+after all. We can retrieve the pseude-random number generator (*prng*) used to 
+produce that run and reproduce it. To get the prng:
+```bash
+aegis get -rseed ./scen4_files/records/run0.rec ./scen4_prng_seed
+```
+We now only need to pass the path to aegis in the config file and set age 
+distribution to be recorded at every stage.
+
+#### Scenario 6
+[config6.py](./readme_metadata/config6.py)
+
+**Description:**
+Say that we for some reason, want to have a simulation like the one in Scenario 4
+in which the population dies off after 1000 generations. We would modify the
+*starve_at* parameter in the config file accordingly.
+We will set output prefix to "scen4_dieoff".
 
 ## Related publications
 [An In Silico Model to Simulate the Evolution of Biological Aging](https://www.biorxiv.org/content/early/2016/01/26/037952)

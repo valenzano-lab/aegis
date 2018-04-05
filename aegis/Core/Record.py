@@ -10,7 +10,7 @@
 ## PACKAGE IMPORT ##
 import numpy as np
 import scipy.stats as st
-from .functions import fivenum, deep_eq, deep_key
+from .functions import fivenum, deep_eq, deep_key, make_windows
 from .Config import Config
 from .Population import Population
 import copy
@@ -34,11 +34,15 @@ class Record(dict):
         self["dieoff"] = np.array(False)
         self["prev_failed"] = np.array(0)
         self["finalised"] = False
+        self["age_dist_truncated"] = False
         # Arrays for per-stage data entry
         n = self["n_stages"] if not self["auto"] else self["max_stages"]
         ns,ml,mt = self["n_snapshots"], self["max_ls"], self["maturity"]
-        for k in ["population_size", "resources", "surv_penf", "repr_penf"]:
+        for k in ["population_size", "resources"]:
             self[k] = np.zeros(n)
+        for k in ["surv_pen", "repr_pen"]:
+            if self[k]: self[k+"f"] = np.zeros(n)
+
         self["age_distribution"] = np.zeros([n, ml])
         for k in ["generation_dist", "gentime_dist"]:
             self[k] = np.zeros([n,5]) # Five-number summaries
@@ -47,10 +51,10 @@ class Record(dict):
         # Basic properties of snapshot populations
         for l in ["age", "gentime"]:
             self["snapshot_{}_distribution".format(l)] = np.zeros([ns,ml])
-        self["snapshot_generation_distribution"] = np.zeros(
-                [ns, np.ceil(conf["object_max_age"]/float(mt)).astype(int)+1])
+        self["snapshot_generation_distribution"] = []
         if conf["auto"]:
             self["snapshot_stages"] = np.zeros([ns])
+            self["age_dist_stages"] = [[] for i in xrange(ns)]
 
     # CALCULATING PROBABILITIES
     def p_scale(self, bound):
@@ -82,16 +86,17 @@ class Record(dict):
 
     # PER-STAGE RECORDING
     def update(self, population, resources, surv_penf, repr_penf, n_stage,
-            n_snap=-1):
+            n_snap=-1, age_dist_rec=-1):
         """Record per-stage data (population size, age distribution, resources,
         and survival penalties), plus, if on a snapshot stage, the population
         as a whole."""
         self["population_size"][n_stage] = population.N
         self["resources"][n_stage] = resources
-        self["surv_penf"][n_stage] = surv_penf
-        self["repr_penf"][n_stage] = repr_penf
-        self["age_distribution"][n_stage] = np.bincount(population.ages,
-                minlength = population.max_ls)/float(population.N)
+        if self["surv_pen"]: self["surv_penf"][n_stage] = surv_penf
+        if self["repr_pen"]: self["repr_penf"][n_stage] = repr_penf
+        if age_dist_rec > -1:
+            self["age_distribution"][age_dist_rec] = np.bincount(population.ages,
+                    minlength = population.max_ls)/float(population.N)
         self["generation_dist"][n_stage] = fivenum(population.generations)
         self["gentime_dist"][n_stage] = fivenum(population.gentimes)
         if n_snap >= 0:
@@ -114,7 +119,24 @@ class Record(dict):
                 key = "snapshot_{}_distribution".format(k)
                 newval = np.bincount(getattr(p, "{}s".format(k)),
                         minlength=minlen[k])/float(p.N)
-                self[key][s] = newval
+                if k == "generation":
+                    # save only nonzero values in a 2 column matrix, where
+                    # the first column is the generation and the second it's
+                    # distribution
+                    nonzero = np.nonzero(newval)
+                    newval = np.dstack((nonzero, newval[nonzero]))[0]
+                    self[key].append(newval)
+                else:
+                    self[key][s] = newval
+
+    # called in Plotter, not finalisation
+    def compute_snapshot_age_dist_avrg(self):
+        if not self["age_dist_N"] == "all":
+            """Compute snapshot-averaged age distribution."""
+            self.truncate_age_dist()
+            if self["age_dist_stages"].size > 0:
+                self["snapshot_age_distribution_avrg"] = \
+                    self["age_distribution"].mean(1)
 
     def compute_locus_density(self):
         """Compute normalised distributions of sum genotypes for each locus in
@@ -151,7 +173,8 @@ class Record(dict):
     def compute_genotype_mean_var(self):
         """Compute the mean and variance in genotype sums at each locus
         and snapshot."""
-        ss = self["snapshot_generations" if self["auto"] else "snapshot_stages"]
+        #ss = self["snapshot_generations" if self["auto"] else "snapshot_stages"]
+        ss = self["snapshot_stages"]
         gt = np.arange(self["n_states"])
         mean_gt_dict, var_gt_dict = {}, {}
         for k in ["s","r","n","a"]: # Survival, reproductive, neutral, all
@@ -280,6 +303,31 @@ class Record(dict):
         self["n1"] = n1
         self["n1_var"] = n1_var
 
+    def reorder_bits(self):
+        """Reorder n1 record entry to original positions in genome."""
+        if not "n1" in self.keys(): return
+        # fix genmap for offset
+        genmap = copy.deepcopy(self["genmap"])
+        rofs = self["repr_offset"]
+        nofs = self["neut_offset"]
+        maxls = self["max_ls"]
+        m = self["maturity"]
+        ixr = np.logical_and(genmap>rofs, genmap<nofs)
+        genmap[ixr] = genmap[ixr]-rofs-m+maxls
+        ixn = genmap>=nofs
+        genmap[ixn] = genmap[ixn]-nofs+2*maxls-m
+        # reshape n1 so that it can be sorted
+        nsnap = self["n_snapshots"]
+        nb = self["n_base"]
+        n1s = copy.deepcopy(self["n1"])
+        n1s = n1s.reshape((nsnap,n1s.shape[1]/nb,nb))
+        # sort n1
+        n1s = n1s[:,genmap]
+        # reshape back
+        n1s = n1s.reshape((nsnap,n1s.shape[1]*nb))
+        self["genmap_ix"] = genmap
+        self["n1_reorder"] = n1s
+
     # ENTROPY IN GENOTYPES AND BITS
 
     def compute_entropies(self):
@@ -299,12 +347,23 @@ class Record(dict):
 
     # ACTUAL DEATH RATES
 
+    # called in Plotter, not finalisation
     def compute_actual_death(self):
         """Compute actual death rate for each age at each stage."""
-        N_age = self["age_distribution"] *\
-                self["population_size"][:,None]
-        dividend = N_age[1:, 1:]
-        divisor = np.copy(N_age[:-1, :-1])
+        if self["age_dist_N"] == "all":
+            N_age = self["age_distribution"] *\
+                    self["population_size"][:,None]
+            dividend = N_age[1:, 1:]
+            divisor = np.copy(N_age[:-1, :-1])
+        else:
+            self.truncate_age_dist()
+            m = self["age_distribution"].size/self["n_snapshots"]/self["max_ls"]
+            ix = self["age_dist_stages"].flatten()
+            pop_size = self["population_size"][ix].reshape(\
+                    (self["n_snapshots"], m, 1))
+            N_age = self["age_distribution"] * pop_size
+            dividend = N_age[:,1:,1:]
+            divisor = np.copy(N_age[:,:-1,:-1])
         divisor[divisor == 0] = np.nan # flag division by zero
         self["actual_death_rate"] = 1 - dividend / divisor
 
@@ -317,7 +376,6 @@ class Record(dict):
         w = np.min([wsize, x.shape[d] + 1]) # Maximum window size
         a_shape = x.shape[:d] + (x.shape[d] - w + 1, w)
         a_strd = x.strides + (x.strides[s],)
-        #print a_shape, a_strd
         return np.lib.stride_tricks.as_strided(x, a_shape, a_strd)
 
     def compute_windows(self):
@@ -327,12 +385,61 @@ class Record(dict):
             self[s + "_window_mean"] = np.mean(w, dim[s])
             self[s + "_window_var"] = np.var(w, dim[s])
 
+    # TRUNCATION
+
+    def truncate_age_dist_stages(self):
+        # Truncate to taken snapshots
+        self["age_dist_stages"] = self["age_dist_stages"][:self["n_snapshots"]]
+        # If auto, make all sublists of same length
+        if self["auto"]:
+            # If empty, do nothing
+            if not self["age_dist_stages"][0]:
+                self["age_dist_stages"] = np.array(self["age_dist_stages"])
+                return
+            # If only one sublist, return numpy array
+            if self["n_snapshots"]==1:
+                self["age_dist_stages"] = np.array(self["age_dist_stages"])
+                return
+            # Find min length
+            minl = len(self["age_dist_stages"][0])
+            for sublist in self["age_dist_stages"][1:]:
+                if sublist: minl = min(minl, len(sublist))
+            # Find means
+            means = [self["age_dist_stages"][0][0]]
+            for sublist in self["age_dist_stages"][1:-1]:
+                if sublist: means.append(np.mean(sublist).astype(int))
+            last = False
+            if self["age_dist_stages"][-1]:
+                means.append(self["age_dist_stages"][-1][-1])
+                last = True
+            # Truncate
+            self["age_dist_stages"] = make_windows(means, minl, last)
+        else:
+            self["age_dist_stages"] = np.array(self["age_dist_stages"])
+
+
+    def truncate_age_dist(self, trunc_stages=True):
+        """Truncate age distribution to nonzero entries."""
+        if self["age_dist_truncated"]: return
+        if self["age_dist_N"] == "all":
+            self["age_dist_truncated"] = True
+            return
+        if trunc_stages: self.truncate_age_dist_stages()
+        if self["age_dist_stages"].size > 0:
+            ix = self["age_dist_stages"].flatten()
+            self["age_distribution"] = self["age_distribution"][ix]
+            # reshape to dim=(snapshot, stage, age)
+            m = self["age_distribution"].size / self["n_snapshots"] / self["max_ls"]
+            self["age_distribution"] = np.reshape(self["age_distribution"],\
+                (self["n_snapshots"], m, self["max_ls"]))
+        self["age_dist_truncated"] = True
+
     # OVERALL
 
     def finalise(self):
         """Calculate additional stats from recorded data of a completed run."""
         # If dieoff, truncate data to last snapshot pop
-        if self["dieoff"]:
+        if self["dieoff"] or (self["auto"] and self["population_size"][-1]):
             pops = np.array(self["snapshot_pops"])
             pops = pops[np.nonzero(pops)]
             self["snapshot_pops"] = list(pops)
@@ -357,8 +464,8 @@ class Record(dict):
         # Other values
         self.compute_bits()
         self.compute_entropies()
-        self.compute_actual_death()
         self.compute_windows()
+        self.truncate_age_dist()
         # Remove snapshot pops as appropriate
         if self["output_mode"] > 0:
             self["final_pop"] = self["snapshot_pops"][-1]

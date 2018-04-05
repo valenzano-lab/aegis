@@ -3,25 +3,25 @@
 ################################################
 
 ## CORE PARAMETERS ##
-random_seed = "" # If numeric, sets random seed to that value before execution
-n_runs = 1 # Total number of independent runs
-n_stages = 10 # Total number of stages per run [int/"auto"]
-n_snapshots = 2 # Points in run at which to record detailed data
+random_seed = "scen4_prng_seed" # If numeric, sets random seed to that value before execution
+n_runs = 2 # Total number of independent runs
+n_stages = "auto" # Total number of stages per run [int/"auto"]
+n_snapshots = 20 # Points in run at which to record detailed data
 path_to_seed_file = "" # Path to simulation seed file, if no seed then ""
     # see README for which parameters are inherited from seed, which are
     # defined anew in this config file
 max_fail = 10 # Maximum number of failed attempts tolerated for each run
 
 ## OUTPUT SPECIFICATIONS ##
-output_prefix = "test" # Prefix for output files within simulation directory
+output_prefix = "scen4_redo" # Prefix for output files within simulation directory
 output_mode = 1 # 0 = return records only, 1 = return records + final pop,
                 # 2 = return records + all snapshot populations
 age_dist_N = "all" # Window size around snapshots for which to record age_dist
 
 ## STARTING PARAMETERS ##
 repr_mode = 'sexual' # sexual, asexual, assort_only or recombine_only
-res_start = 1000 # Starting resource value
-start_pop = res_start # Starting population size
+res_start = 10000 # Starting resource value
+start_pop = 5000 # Starting population size
 
 ## RESOURCE PARAMETERS ##
 res_limit = res_start*5 # Maximum resource value, if variable; -1 = infinite
@@ -30,9 +30,8 @@ stv_function = lambda n,r: n > r # Function for identifying starvation
 starve_at = 0   # stage/generation for no_auto/auto repectively at which to force
                 # starvation, 0 if none
 
-## AUTOCOMPUTING GENERATION NUMBER ##
-zeta = 10**-2   # Upper bound for probability that neutral genome will deviate from
-                # its expected value
+## AUTOCOMPUTING STAGE NUMBER ##
+delta = 10**-10 # Maximum difference between final and equilibrium neutral genotypes
 scale = 1.1 # Scaling factor applied to target generation estimated for delta
 max_stages = 500000 # Maximum number of stages to run before terminating
 
