@@ -247,72 +247,159 @@ class TestPopulationGrowth:
         # Clone and recombine
         p.recombination(2.0) # = forward and reverse rates of 1
         assert np.array_equal(p.chrs(0)[0], 1-p.chrs(0)[1])
-        if p.chr_len % 2 == 1: # None switched if chr_len is odd 
+        if p.chr_len % 2 == 1: # None switched if chr_len is odd
             assert np.array_equal(p.chrs(0)[0], np.zeros([p.N, p.chr_len]))
         else: # All switched if chr_len is even
             assert np.array_equal(p.chrs(0)[0], np.ones([p.N, p.chr_len]))
-
-    def test_recombine_print(self, pop):
-        p = pop.clone()
-        # Set chromosome 1 to 0's and chromosome 2 to 1's
-        p.genomes[:,:p.chr_len] = 0
-        p.genomes[:,p.chr_len:] = 1
-        p.loci = p.sorted_loci()
-        for r in np.linspace(0, 0.01, 21):
-            p0 = p.clone()
-            p0.recombination(r)
-            print p0.chr_len, r, ":", np.mean(p0.genomes[:,:p0.chr_len])
-        assert False
-
-    @pytest.mark.xfail(reason="Observed and expected values deviating.")
-    def test_recombine_random(self, pop):
-        """Test that the correct proportion of bits are recombined when
-        0 < rrate < 1."""
-        p, rrate = pop.clone(),10**random.uniform(-2, -3) 
-        # Set chromosome 1 to 0's and chromosome 2 to 1's
-        p.genomes[:,:p.chr_len] = 0
-        p.genomes[:,p.chr_len:] = 1
-        p.loci = p.sorted_loci()
-        p.recombination(correct_r_rate(rrate))
-        # Compute expected mean value of chromosome 1 (somewhat complicated)
-        m, s = float(p.chr_len), 1-2*rrate
-        M = 0.5 - (s*(1-s**m))/(2*m*(1-s))
-        assert np.isclose(np.mean(p.genomes[:,:p.chr_len]), M,
-                atol=precision)
-        assert np.isclose(np.mean(p.genomes[:,p.chr_len:]), 1-M,
-                atol=precision)
 
     def test_recombine_perbit(self, pop):
         """Test that the chromosome-switch frequency of each position
         in the genome during recombination is (a) unbiased spatially
         and (b) close to the expected frequency."""
-        p, rrate = pop.clone(), 10**random.uniform(-5, -4)
-        print p.N,
-        for n in xrange(4):
-            p.add_members(p)
-        print p.N
-        # Set chromosome 1 to 0's and chromosome 2 to 1's
-        p.genomes[:,:p.chr_len] = 0
-        p.genomes[:,p.chr_len:] = 1
-        p.loci = p.sorted_loci()
-        # Recombine and find per-bit averages
-        p.recombination(correct_r_rate(rrate))
-        bitmeans = np.mean(p.genomes, 0)
-        # Expected per-bit chromosome-switch frequency = (1-(1-2r)^n)/2,
-        # where r = rrate and n = chrlen
-        r,s,n = rrate, correct_r_rate(rrate), p.chr_len
-        exp_bit = (1-(1-2*r)**n)/2
-        exp_bit_s = (1-(1-2*s)**n)/2
-        exp_bitmeans = np.append(np.repeat(exp_bit, n),
-                np.repeat(1-exp_bit, n))
-        comp = bitmeans/exp_bitmeans
-        print r, s, n, exp_bit, exp_bit_s
-        print bitmeans
-        print exp_bitmeans
-        print comp, abs(np.max(comp))
-        print comp-1
-        assert np.allclose(bitmeans/exp_bitmeans, np.ones(2*p.chr_len),
-                atol=precision)
+        p,rrate = pop.clone(),10**random.uniform(-5, -3)
+        #p.add_members(p)
+        # error approximation
+        #precision = 0.003
+        precision = 0.008
+        alpha = 0.01 # error probability upper bound
+        min_n = int(1/(2*precision**2)*np.log(2/alpha))
+        res = np.zeros((p.N,p.chr_len))
+        for i in range(min_n/p.N):
+            # Set chromosome 1 to 0's and chromosome 2 to 1's
+            p.genomes[:,:p.chr_len] = 0
+            p.genomes[:,p.chr_len:] = 1
+            p.loci = p.sorted_loci()
+            # Recombine and find per-bit averages
+            p.recombination(correct_r_rate(rrate))
+            res += p.genomes[:,:p.chr_len]
+        # Observed
+        obs = res.mean(0) / (min_n/p.N)
+        # Expected per-bit chromosome-switch frequency = (1-(1-2r)^L)/2,
+        # where r = rrate and L = chrlen
+        exp = 0.5 - 0.5*(1-rrate)**p.chr_len
+        print "pop.N: ", p.N
+        print "min sample size needed: ", min_n
+        print "rrate: ", rrate
+        print "exp: ", exp
+        print obs
+        assert np.allclose(obs,exp,atol=precision)
+
+    def test_recombine_examples(self, pop):
+        p = pop.clone()
+        # Leave only one individual
+        p.subtract_members(np.arange(1,p.N))
+        # Test 1: 3 recombination sites
+        # Generate recombination sites
+        r_sites = np.linspace(0,p.chr_len,5).astype(int)[1:-1]
+        r_sites_fwd = np.zeros((1,p.chr_len)).astype(int)
+        r_sites_rev = np.zeros((1,p.chr_len)).astype(int)
+        r_sites_fwd[0][r_sites[0]] = 1
+        r_sites_fwd[0][r_sites[2]] = 1
+        r_sites_rev[0][r_sites[1]] = 1
+        # Generate expected genome
+        g = copy.deepcopy(p.chrs(False)) # shape = (2,1,chrlen)
+        exp = np.hstack((\
+                # chromosome 1
+                g[1][0][:r_sites[0]], g[0][0][r_sites[0]:r_sites[1]+1],\
+                g[1][0][r_sites[1]+1:r_sites[2]], g[0][0][r_sites[2]:],\
+                # chromosome 2
+                g[0][0][:r_sites[0]], g[1][0][r_sites[0]:r_sites[1]+1],\
+                g[0][0][r_sites[1]+1:r_sites[2]], g[1][0][r_sites[2]:]))
+        p.recombination(1, r_sites_fwd, r_sites_rev)
+        # Prints
+        np.set_printoptions(threshold=np.nan)
+        print "test 1"
+        print "r_sites:\n", r_sites
+        print "difference at sites:\n", np.nonzero(np.invert(p.genomes[0]==exp))
+        assert np.array_equal(p.genomes[0],exp)
+        # Test 2: 5 recombination sites
+        # Generate recombination sites
+        r_sites = np.linspace(0,p.chr_len,7).astype(int)[1:-1]
+        r_sites_fwd = np.zeros((1,p.chr_len)).astype(int)
+        r_sites_rev = np.zeros((1,p.chr_len)).astype(int)
+        r_sites_fwd[0][r_sites[0]] = 1
+        r_sites_fwd[0][r_sites[1]] = 1
+        r_sites_fwd[0][r_sites[4]] = 1
+        r_sites_rev[0][r_sites[2]] = 1
+        r_sites_rev[0][r_sites[3]] = 1
+        # Generate expected genome
+        g = copy.deepcopy(p.chrs(False)) # shape = (2,1,chrlen)
+        exp = np.hstack((\
+                # chromosome 1
+                g[0][0][:r_sites[0]], g[1][0][r_sites[0]:r_sites[1]],\
+                g[0][0][r_sites[1]:r_sites[2]+1], g[1][0][r_sites[2]+1:r_sites[3]+1],\
+                g[0][0][r_sites[3]+1:r_sites[4]], g[1][0][r_sites[4]:],\
+                # chromosome 2
+                g[1][0][:r_sites[0]], g[0][0][r_sites[0]:r_sites[1]],\
+                g[1][0][r_sites[1]:r_sites[2]+1], g[0][0][r_sites[2]+1:r_sites[3]+1],\
+                g[1][0][r_sites[3]+1:r_sites[4]], g[0][0][r_sites[4]:]))
+        p.recombination(1, r_sites_fwd, r_sites_rev)
+        # Prints
+        print "test 2"
+        print "r_sites:\n", r_sites
+        print "difference at sites:\n", np.nonzero(np.invert(p.genomes[0]==exp))
+        assert np.array_equal(p.genomes[0],exp)
+        # Test 3: 5 recombination sites
+        # Generate recombination sites
+        r_sites = np.linspace(0,p.chr_len,7).astype(int)[1:-1]
+        r_sites_fwd = np.zeros((1,p.chr_len)).astype(int)
+        r_sites_rev = np.zeros((1,p.chr_len)).astype(int)
+        r_sites_fwd[0][r_sites[1]] = 1
+        r_sites_fwd[0][r_sites[4]] = 1
+        r_sites_rev[0][r_sites[0]] = 1
+        r_sites_rev[0][r_sites[2]] = 1
+        r_sites_rev[0][r_sites[3]] = 1
+        # Generate expected genome
+        g = copy.deepcopy(p.chrs(False)) # shape = (2,1,chrlen)
+        exp = np.hstack((\
+                # chromosome 1
+                g[1][0][:r_sites[0]+1], g[0][0][r_sites[0]+1:r_sites[1]],\
+                g[1][0][r_sites[1]:r_sites[2]+1], g[0][0][r_sites[2]+1:r_sites[3]+1],\
+                g[1][0][r_sites[3]+1:r_sites[4]], g[0][0][r_sites[4]:],\
+                # chromosome 2
+                g[0][0][:r_sites[0]+1], g[1][0][r_sites[0]+1:r_sites[1]],\
+                g[0][0][r_sites[1]:r_sites[2]+1], g[1][0][r_sites[2]+1:r_sites[3]+1],\
+                g[0][0][r_sites[3]+1:r_sites[4]], g[1][0][r_sites[4]:]))
+        p.recombination(1, r_sites_fwd, r_sites_rev)
+        # Prints
+        print "test 3"
+        print "r_sites:\n", r_sites
+        print "difference at sites:\n", np.nonzero(np.invert(p.genomes[0]==exp))
+        assert np.array_equal(p.genomes[0],exp)
+        # Test 4: 8 recombination sites
+        # Generate recombination sites
+        r_sites = np.linspace(0,p.chr_len,10).astype(int)[1:-1]
+        r_sites_fwd = np.zeros((1,p.chr_len)).astype(int)
+        r_sites_rev = np.zeros((1,p.chr_len)).astype(int)
+        r_sites_fwd[0][r_sites[2]] = 1
+        r_sites_fwd[0][r_sites[7]] = 1
+        r_sites_rev[0][r_sites[0]] = 1
+        r_sites_rev[0][r_sites[1]] = 1
+        r_sites_rev[0][r_sites[3]] = 1
+        r_sites_rev[0][r_sites[4]] = 1
+        r_sites_rev[0][r_sites[5]] = 1
+        r_sites_rev[0][r_sites[6]] = 1
+        # Generate expected genome
+        g = copy.deepcopy(p.chrs(False)) # shape = (2,1,chrlen)
+        exp = np.hstack((\
+                # chromosome 1
+                g[0][0][:r_sites[0]+1], g[1][0][r_sites[0]+1:r_sites[1]+1],\
+                g[0][0][r_sites[1]+1:r_sites[2]], g[1][0][r_sites[2]:r_sites[3]+1],\
+                g[0][0][r_sites[3]+1:r_sites[4]+1], g[1][0][r_sites[4]+1:+r_sites[5]+1],\
+                g[0][0][r_sites[5]+1:r_sites[6]+1], g[1][0][r_sites[6]+1:r_sites[7]],\
+                g[0][0][r_sites[7]:],\
+                # chromosome 2
+                g[1][0][:r_sites[0]+1], g[0][0][r_sites[0]+1:r_sites[1]+1],\
+                g[1][0][r_sites[1]+1:r_sites[2]], g[0][0][r_sites[2]:r_sites[3]+1],\
+                g[1][0][r_sites[3]+1:r_sites[4]+1], g[0][0][r_sites[4]+1:+r_sites[5]+1],\
+                g[1][0][r_sites[5]+1:r_sites[6]+1], g[0][0][r_sites[6]+1:r_sites[7]],\
+                g[1][0][r_sites[7]:]))
+        p.recombination(1, r_sites_fwd, r_sites_rev)
+        # Prints
+        print "test 4"
+        print "r_sites:\n", r_sites
+        print "difference at sites:\n", np.nonzero(np.invert(p.genomes[0]==exp))
+        assert np.array_equal(p.genomes[0],exp)
 
     # 3: Assortment (assort_only, sexual)
 

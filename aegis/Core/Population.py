@@ -322,22 +322,24 @@ class Population:
             self.genomes[is_1] = negative_mut
         self.loci = self.sorted_loci() # Renew loci (inc. recomb./assortment)
 
-    def recombination(self, r_rate): # Per-bit recombination rate
+    def recombination(self, r_rate, r_sites_fwd="", r_sites_rev=""):
         """Recombine between the two chromosomes of each individual
         in the population."""
         if (r_rate > 0): # Otherwise do nothing
-            # Randomly generate forward and reverse recombination sites
-            r_sites_fwd = chance(r_rate/2, (self.N, self.chr_len),
-                    self.prng).astype(int)
-            r_sites_rev = chance(r_rate/2, (self.N, self.chr_len),
-                    self.prng).astype(int)
+            if not isinstance(r_sites_fwd,np.ndarray) or \
+                    not isinstance(r_sites_rev,np.ndarray):
+                # Randomly generate forward and reverse recombination sites
+                r_sites_fwd = chance(r_rate/2, (self.N, self.chr_len),
+                        self.prng).astype(int)
+                r_sites_rev = chance(r_rate/2, (self.N, self.chr_len),
+                        self.prng).astype(int)
             # Convert into [1,-1]
             r_sites_fwd = np.array([1,-1])[r_sites_fwd]
             r_sites_rev = np.array([1,-1])[r_sites_rev]
             # Determine crossover status of each position
             # (1 = no crossover, -1 = crossover)
             which_chr_fwd = np.cumprod(r_sites_fwd, 1)
-            which_chr_rev = np.fliplr(np.cumprod(r_sites_rev, 1))
+            which_chr_rev = np.fliplr(np.cumprod(np.fliplr(r_sites_rev), 1))
             # Combine forward and reverse crossovers
             which_chr = which_chr_fwd * which_chr_rev
             # Convert to 0 = no crossover, 1 = crossover
