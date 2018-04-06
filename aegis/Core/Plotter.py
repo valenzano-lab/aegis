@@ -39,65 +39,65 @@ class Plotter:
             print get_runtime(self.starttime, timenow(False), s)
             self.plot_methods = ["plot_population_resources",\
                                  "plot_starvation",\
-                                 "plot_fitness",\
-                                 "plot_fitness_term",\
-                                 "plot_fitness_term_overlay",\
-                                 "plot_entropy_gt",\
-                                 "plot_entropy_bits",\
-                                 "plot_age_distribution_means",\
-                                 #"plot_density_per_locus",\
-                                 "plot_density",\
-                                 "plot_mean_gt",\
-                                 "plot_var_gt",\
-                                 "plot_entropy_gt",\
-                                 "plot_repr_value",\
-                                 "plot_mean_repr",\
-                                 "plot_cmv_surv",\
-                                 "plot_n1",\
-                                 #"plot_n1_reorder",\
-                                 "plot_n1_var",\
-                                 "plot_actual_death_rate",\
-                                 "plot_density_snap_overlay",\
-                                 "plot_repr_value_snap_overlay",\
-                                 "plot_cmv_surv_snap_overlay",\
-                                 "plot_n1_mean_sliding_window",\
-                                 "plot_n1_var_sliding_window",\
                                  "plot_n1_grid",\
-                                 "plot_n1_reorder_grid",\
                                  "plot_n1_mean_sliding_window_grid",\
                                  "plot_n1_var_grid",\
-                                 "plot_n1_var_sliding_window_grid"
+                                 "plot_n1_var_sliding_window_grid",\
+                                 "plot_n1_reorder_grid",\
+                                 "plot_mean_gt",\
+                                 "plot_var_gt",\
+                                 "plot_density_snap_overlay",\
+                                 "plot_fitness",\
+                                 #"plot_fitness_term_overlay",\
+                                 "plot_fitness_term_grid",\
+                                 "plot_actual_death_rate",\
+                                 "plot_age_distribution_means",\
+                                 "plot_cmv_surv_snap_overlay",\
+                                 "plot_cmv_surv",\
+                                 "plot_mean_repr"\
+                                 #"plot_n1_mean_sliding_window",\
+                                 #"plot_fitness_term",\
+                                 #"plot_entropy_gt",\
+                                 #"plot_entropy_bits",\
+                                 #"plot_density_per_locus",\
+                                 #"plot_density",\
+                                 #"plot_repr_value",\
+                                 #"plot_n1",\
+                                 #"plot_n1_reorder",\
+                                 #"plot_n1_var",\
+                                 #"plot_repr_value_snap_overlay",\
+                                 #"plot_n1_var_sliding_window",\
                                  ]
-            self.plot_names = ["pop-res",\
-                               "starvation",\
-                               "fitness",\
-                               "fitness_term",\
-                               "per_fitness_term_overlay",\
-                               "plot_entropy_gt",\
-                               "plot_entropy_bits",\
-                               "age_distribution_means",\
+            self.plot_names = ["01_pop-res",\
+                               "02_starvation",\
+                               "03_n1_grid",\
+                               "04_n1_mean_sliding_window_grid",\
+                               "05_n1_var_grid",\
+                               "06_n1_var_sliding_window_grid",\
+                               "07_n1_reorder_grid",\
+                               "08_mean_gt",\
+                               "09_var_gt",\
+                               "10_density_overlay",\
+                               "11_fitness",\
+                               #"12_fitness_term_overlay",\
+                               "12_fitness_term_grid",\
+                               "13_actual_death_rate",\
+                               "14_age_distribution_means",\
+                               "15_cmv_surv_overlay",\
+                               "16_cmv_surv",\
+                               "17_mean_repr"\
+                               #"fitness_term",\
+                               #"entropy_gt",\
+                               #"entropy_bits",\
                                #"density_per_locus",\
-                               "density",\
-                               "mean_gt",\
-                               "var_gt",\
-                               "entropy_gt",\
-                               "repr_value",\
-                               "mean_repr",\
-                               "cmv_surv",\
-                               "n1",\
+                               #"density",\
+                               #"repr_value",\
+                               #"n1",\
                                #"n1_reorder",\
-                               "n1_var",\
-                               "actual_death_rate",\
-                               "density_overlay",\
-                               "repr_value_overlay",\
-                               "cmv_surv_overlay",\
-                               "n1_mean_sliding_window",\
-                               "n1_var_sliding_window",\
-                               "n1_grid",\
-                               "n1_reorder_grid",\
-                               "n1_mean_sliding_window_grid",\
-                               "n1_var_grid",\
-                               "n1_var_sliding_window_grid"
+                               #"n1_var",\
+                               #"repr_value_overlay",\
+                               #"n1_mean_sliding_window",\
+                               #"n1_var_sliding_window",\
                                ]
             self.plots = []
         finally:
@@ -386,9 +386,9 @@ class Plotter:
             return self.snapshot_overlay(["snapshot_age_distribution_avrg"],\
                     "age", "","Age distribution snapshot means")
 
-    def plot_fitness_term_overlay(self):
-        return self.snapshot_overlay(["fitness_term"], "age", "",\
-                "Fitness term overlay")
+#    def plot_fitness_term_overlay(self):
+#        return self.snapshot_overlay(["fitness_term"], "age", "",\
+#                "Fitness term overlay")
 
     def plot_density_snap_overlay(self):
         return self.snapshot_overlay(["density"], "genotype", ["a"], "Density")
@@ -426,6 +426,20 @@ class Plotter:
     def plot_n1_var_sliding_window_grid(self):
         return self.n1_like_snapshot_grid("n1_window_var","",\
                 "Variance of distribution of 1's per bit (sliding window: {} bits)".format(self.record["windows"]["n1"]))
+
+    def plot_fitness_term_grid(self):
+        keys = ["fitness_term","junk_fitness_term"]
+        dimlabels = ["snapshot", "age"]
+        facet = "snapshot"
+        subkey = ""
+        title = "Fitness term"
+        data = self.make_dataframe(keys, dimlabels, subkey, "all")
+        xlabel = dimlabels[1] if dimlabels[0] == facet else dimlabels[0]
+        plot = ggplot.ggplot(data, ggplot.aes(x=xlabel, y="value", color="key")) + \
+                ggplot.facet_wrap(facet)
+        plot += ggplot.geom_line()
+        plot += ggplot.labs(title=title)
+        return plot
 
     ############
     # specific #
