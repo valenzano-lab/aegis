@@ -55,10 +55,12 @@ def confx(request, conf_path):
         c["m_rate"] = 0.02
         c["m_ratio"] = 0.95
         c["n_stages"] = "auto"
+        c["max_fail"] = 2
         # now min_gen = 122
         c.generate()
         c["starve_at"] = c["snapshot_generations"][1]+1
     elif request.param == "noauto-dieoff":
+        c["max_fail"] = 3
         c.generate()
         c["starve_at"] = np.mean((c["snapshot_stages"][1],\
                 c["snapshot_stages"][2])).astype(int)
@@ -369,6 +371,11 @@ class TestRun:
             assert R.record["n_snapshots"] == 2
             assert R.record["age_distribution"].shape == (2,
                     R.conf["age_dist_N"],maxls)
+            # check dieoff info recording
+            assert R.record["dieoff_at"].shape == (R.conf["max_fail"],)
+            assert np.all(R.record["dieoff_at"] != 0)
+            assert np.allclose(R.record["dieoff_at"], R.conf["starve_at"],\
+                    atol=10)
         elif R.conf["setup"] == "auto-nodieoff":
             # for last snapshot check age_dist_stages updated
             for i in xrange(nsnap):
@@ -417,6 +424,11 @@ class TestRun:
             assert R.record["n_snapshots"] == R.n_snap == 2
             assert R.record["age_distribution"].shape == (2,
                     minl,maxls)
+            # check dieoff info recording
+            assert R.record["dieoff_at"].shape == (R.conf["max_fail"],2)
+            assert np.all(R.record["dieoff_at"] != 0)
+            assert np.allclose(R.record["dieoff_at"][:,1], R.conf["starve_at"],\
+                    atol=5)
         elif R.conf["setup"] == "auto-max_stages":
             # n_stage exceeds max_stages
             R.execute()

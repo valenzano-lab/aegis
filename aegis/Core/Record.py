@@ -32,6 +32,8 @@ class Record(dict):
                 self[k] = conf[k]
         # Basic run info
         self["dieoff"] = np.array(False)
+        self["dieoff_at"] = np.zeros((conf["max_fail"],2)) if conf["auto"] else\
+                np.zeros(conf["max_fail"])
         self["prev_failed"] = np.array(0)
         self["finalised"] = False
         self["age_dist_truncated"] = False

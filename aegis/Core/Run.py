@@ -31,6 +31,7 @@ class Run:
         self.n_snap_ad_bool = False
         self.n_run = n_run
         self.dieoff = False
+        self.current_gen = 0
         self.complete = False
         self.report_n = report_n
         self.verbose = verbose
@@ -190,7 +191,8 @@ class Run:
         """Test whether a run is complete following a given stage,
         under fixed and automatic stage counting."""
         if not self.dieoff and self.conf["auto"]:
-            gen = (np.min(self.population.generations) >= self.conf["min_gen"])
+            self.current_gen = np.min(self.population.generations)
+            gen = (self.current_gen >= self.conf["min_gen"])
             stg = (self.n_stage >= self.conf["max_stages"])
         elif not self.dieoff and not self.conf["auto"]:
             stg, gen = (self.n_stage >= self.conf["n_stages"]), False
@@ -227,12 +229,18 @@ class Run:
         if self.dieoff:
             nfail =  prev_failed + 1
             self.logprint("Run failed. Total failures = {}.".format(nfail))
+            # Record dieoff info
+            if self.conf["auto"]:
+                self.record["dieoff_at"][nfail-1] = [self.n_stage,self.current_gen]
+            else:
+                self.record["dieoff_at"][nfail-1] = self.n_stage
             if nfail >= self.conf["max_fail"]: # Accept failure and terminate
                 self.logprint("Failure limit reached. Accepting failed run.")
                 self.record.finalise()
                 self.logprint(get_runtime(self.starttime, self.endtime))
-            else: # Reset to saved state (except for log and prev_failed)
+            else: # Reset to saved state (except for log, prev_failed and dieoff at)
                 save_state.record["prev_failed"] = nfail
+                save_state.record["dieoff_at"] = self.record["dieoff_at"]
                 save_state.log = self.log + "\n"
                 attrs = vars(save_state)
                 # Revert everything else (except for prng)
