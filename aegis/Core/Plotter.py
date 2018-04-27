@@ -50,10 +50,10 @@ class Plotter:
                                  #"plot_fitness_term_overlay",\
                                  "plot_fitness_term_grid",\
                                  "plot_actual_death_rate",\
-                                 "plot_age_distribution_means",\
                                  "plot_cmv_surv_snap_overlay",\
                                  "plot_cmv_surv",\
-                                 "plot_mean_repr"\
+                                 "plot_mean_repr",\
+                                 "plot_age_distribution_means"\
                                  #"plot_n1_mean_sliding_window",\
                                  #"plot_fitness_term",\
                                  #"plot_entropy_gt",\
@@ -80,10 +80,10 @@ class Plotter:
                                #"12_fitness_term_overlay",\
                                "11_fitness_term_grid",\
                                "12_actual_death_rate",\
-                               "13_age_distribution_means",\
-                               "14_cmv_surv_overlay",\
-                               "15_cmv_surv",\
-                               "16_mean_repr"\
+                               "13_cmv_surv_overlay",\
+                               "14_cmv_surv",\
+                               "15_mean_repr",\
+                               "16_age_distribution_means"\
                                #"fitness_term",\
                                #"entropy_gt",\
                                #"entropy_bits",\
@@ -137,7 +137,7 @@ class Plotter:
         # Remove not generated plot names
         if self.record["age_dist_N"] == "all":
             self.plot_methods.remove("plot_age_distribution_means")
-            self.plot_names.remove("age_distribution_means")
+            self.plot_names.remove("16_age_distribution_means")
         # Make/replace output directory
         pm,pn,p = self.plot_methods, self.plot_names, self.plots
         if not len(pm) == len(pn) == len(p):
