@@ -27,8 +27,8 @@ start_pop = res_start # Starting population size
 res_limit = res_start*5 # Maximum resource value, if variable; -1 = infinite
 res_function = lambda n,r: r # Function for updating resources; here constant
 stv_function = lambda n,r: n > r # Function for identifying starvation
-starve_at = 0   # stage/generation for no_auto/auto repectively at which to force
-                # starvation, 0 if none
+kill_at = 0 # stage/generation for no_auto/auto repectively at which to force
+            # dieoff, 0 if none
 
 ## PENALISATION ##
 surv_pen = True # Survival penalty under starvation

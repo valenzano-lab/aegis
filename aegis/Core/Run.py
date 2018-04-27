@@ -71,19 +71,18 @@ class Run:
 
     def starving(self):
         """Determine whether population is starving based on resource level."""
-        # starvation function
-        strv = self.conf["stv_function"](self.population.N, self.resources)
+        return self.conf["stv_function"](self.population.N, self.resources)
+
+    def force_dieoff(self):
+        """Determine whether to force populaton dieoff if so set in config."""
         stg = gen = False
-        # if forced starvation set
-        if self.conf["starve_at"] > 0:
+        if self.conf["kill_at"] > 0:
             if self.conf["auto"]:
                 gen = (np.min(self.population.generations) >= \
-                        self.conf["starve_at"])
-                stg = False
+                        self.conf["kill_at"])
             elif not self.conf["auto"]:
-                stg, gen = (self.n_stage >= self.conf["starve_at"]), False
-        return strv or stg or gen
-        #return self.conf["stv_function"](self.population.N, self.resources)
+                stg = (self.n_stage >= self.conf["kill_at"])
+        return stg or gen
 
     def update_starvation_factors(self):
         """Update starvation factors under starvation."""
@@ -116,6 +115,7 @@ class Run:
                     self.conf["m_ratio"],
                     self.conf["r_rate"])
             n1 = self.population.N
+            if self.force_dieoff(): self.s_range[:] = 0
             self.population.death(self.s_range)
             n2 = self.population.N
             if full_report:

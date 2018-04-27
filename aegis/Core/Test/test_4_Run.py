@@ -32,7 +32,7 @@ def confx(request, conf_path):
     c["output_mode"] = 0
     c["age_dist_N"] = 10
     c["max_fail"] = 1
-    c["starve_at"] = 0
+    c["kill_at"] = 0
     c["max_stages"] = 50000
     if request.param == "noauto_all":
         c["age_dist_N"] = "all"
@@ -58,11 +58,11 @@ def confx(request, conf_path):
         c["max_fail"] = 2
         # now min_gen = 122
         c.generate()
-        c["starve_at"] = c["snapshot_generations"][1]+1
+        c["kill_at"] = c["snapshot_generations"][1]+1
     elif request.param == "noauto-dieoff":
         c["max_fail"] = 3
         c.generate()
-        c["starve_at"] = np.mean((c["snapshot_stages"][1],\
+        c["kill_at"] = np.mean((c["snapshot_stages"][1],\
                 c["snapshot_stages"][2])).astype(int)
     else:
         c.generate()
@@ -380,7 +380,7 @@ class TestRun:
             # dieoff between second and third snapshot
             for i in xrange(2):
                 R.record["snapshot_pops"][i] = R.population.clone()
-            R.n_stage = R.conf["starve_at"]-1
+            R.n_stage = R.conf["kill_at"]-1
             R.execute()
             assert R.dieoff
             assert R.record["n_snapshots"] == 2
@@ -389,7 +389,7 @@ class TestRun:
             # check dieoff info recording
             assert R.record["dieoff_at"].shape == (R.conf["max_fail"],)
             assert np.all(R.record["dieoff_at"] != 0)
-            assert np.allclose(R.record["dieoff_at"], R.conf["starve_at"],\
+            assert np.allclose(R.record["dieoff_at"], R.conf["kill_at"],\
                     atol=10)
         elif R.conf["setup"] == "auto-nodieoff":
             # for last snapshot check age_dist_stages updated
@@ -442,7 +442,7 @@ class TestRun:
             # check dieoff info recording
             assert R.record["dieoff_at"].shape == (R.conf["max_fail"],2)
             assert np.all(R.record["dieoff_at"] != 0)
-            assert np.allclose(R.record["dieoff_at"][:,1], R.conf["starve_at"],\
+            assert np.allclose(R.record["dieoff_at"][:,1], R.conf["kill_at"],\
                     atol=5)
         elif R.conf["setup"] == "auto-max_stages":
             # n_stage exceeds max_stages
