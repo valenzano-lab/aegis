@@ -136,11 +136,13 @@ class TestRun:
 
     @pytest.mark.parametrize("spen", [True, False])
     @pytest.mark.parametrize("rpen", [True, False])
-    def test_update_starvation_factors(self, run, spen, rpen):
+    @pytest.mark.parametrize("pen_cuml", [True, False])
+    def test_update_starvation_factors(self, run, spen, rpen, pen_cuml):
         """Test that starvation factors update correctly under various
         conditions for standard starvation function."""
         run1 = run.copy()
         run1.conf["surv_pen"], run1.conf["repr_pen"] = spen, rpen
+        run1.conf["pen_cuml"] = pen_cuml
         run1.conf["stv_function"] = lambda n,r: n > r
         # Expected changes
         ec_s = run1.conf["surv_pen_func"](run1.conf["s_range"], run1.population.N,\
@@ -161,10 +163,14 @@ class TestRun:
         run1.update_starvation_factors()
         assert np.array_equal(run1.s_range,ec_s)
         assert np.array_equal(run1.r_range,ec_r)
-        # 3: Successive starvation compounds function
+        # 3: Successive starvation compounds function if pen_cuml
         run1.update_starvation_factors()
-        assert np.array_equal(run1.s_range,ec_s2)
-        assert np.array_equal(run1.r_range,ec_r2)
+        if pen_cuml:
+            assert np.array_equal(run1.s_range,ec_s2)
+            assert np.array_equal(run1.r_range,ec_r2)
+        else:
+            assert np.array_equal(run1.s_range,ec_s)
+            assert np.array_equal(run1.r_range,ec_r)
         # 4: After starvation ends factors reset to default
         run1.resources = run1.population.N + 1
         run1.update_starvation_factors()

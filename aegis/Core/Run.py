@@ -87,6 +87,9 @@ class Run:
 
     def update_starvation_factors(self):
         """Update starvation factors under starvation."""
+        if not self.starving() or not self.conf["pen_cuml"]:
+            self.s_range = self.conf["s_range"]
+            self.r_range = self.conf["r_range"]
         if self.starving():
             if self.conf["surv_pen"]:
                 self.s_range = self.conf["surv_pen_func"](self.s_range,\
@@ -94,9 +97,6 @@ class Run:
             if self.conf["repr_pen"]:
                 self.r_range = self.conf["repr_pen_func"](self.r_range,\
                         self.population.N, self.resources)
-        else:
-            self.s_range = self.conf["s_range"]
-            self.r_range = self.conf["r_range"]
 
     def execute_stage(self):
         """Perform one stage of a simulation run and test for completion."""

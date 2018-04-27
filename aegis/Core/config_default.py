@@ -33,6 +33,8 @@ starve_at = 0   # stage/generation for no_auto/auto repectively at which to forc
 ## PENALISATION ##
 surv_pen = True # Survival penalty under starvation
 repr_pen = False # Reproduction penalty under starvation
+pen_cuml = True # Is the penalty cumulative? If True the function compunds,
+                # otherwise it is always applied on the default value
 surv_pen_func = lambda s_range,n,r:
 repr_pen_func = lambda r_range,n,r:
 
