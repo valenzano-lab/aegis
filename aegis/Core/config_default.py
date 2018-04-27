@@ -30,6 +30,12 @@ stv_function = lambda n,r: n > r # Function for identifying starvation
 starve_at = 0   # stage/generation for no_auto/auto repectively at which to force
                 # starvation, 0 if none
 
+## PENALISATION ##
+surv_pen = True # Survival penalty under starvation
+repr_pen = False # Reproduction penalty under starvation
+surv_pen_func = lambda s_range,n,r:
+repr_pen_func = lambda r_range,n,r:
+
 ## AUTOCOMPUTING GENERATION NUMBER ##
 zeta = 10**-2   # Upper bound for probability that neutral genome will deviate from
                 # its expected value
@@ -51,9 +57,6 @@ repr_offset = 100 # Offset for repr loci in genome map (must be <= max_ls)
 neut_offset = 200 # Offset for neut loci (<= repr_offset + max_ls - maturity)
 max_ls = 98 # Maximum lifespan (must be > repr_offset) (-1 = infinite)
 maturity = 21 # Age from which an individual can reproduce (must be <= max_ls)
-surv_pen = True # Survival penalty under starvation
-repr_pen = False # Reproduction penalty under starvation
-death_inc = 3 # Per-stage death rate increase under starvation
-repr_dec = death_inc # Per-stage reproduction rate decrease under starvation
+
 # Size of sliding windows for recording averaged statistics:
 windows = {"population_size": 1000, "resources":1000, "n1":10}

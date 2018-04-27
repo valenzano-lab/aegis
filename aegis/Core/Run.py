@@ -23,8 +23,8 @@ class Run:
         # Init Run parameters
         self.log = ""
         self.conf = config.copy()
-        self.surv_penf = 1.0
-        self.repr_penf = 1.0
+        self.s_range = self.conf["s_range"]
+        self.r_range = self.conf["r_range"]
         self.n_stage = 0
         self.n_snap = 0
         self.n_snap_ad = 0
@@ -88,11 +88,15 @@ class Run:
     def update_starvation_factors(self):
         """Update starvation factors under starvation."""
         if self.starving():
-            if self.conf["surv_pen"]: self.surv_penf *= self.conf["death_inc"]
-            if self.conf["repr_pen"]: self.repr_penf *= self.conf["repr_dec"]
+            if self.conf["surv_pen"]:
+                self.s_range = self.conf["surv_pen_func"](self.s_range,\
+                        self.population.N, self.resources)
+            if self.conf["repr_pen"]:
+                self.r_range = self.conf["repr_pen_func"](self.r_range,\
+                        self.population.N, self.resources)
         else:
-            self.surv_penf = 1.0
-            self.repr_penf = 1.0
+            self.s_range = self.conf["s_range"]
+            self.r_range = self.conf["r_range"]
 
     def execute_stage(self):
         """Perform one stage of a simulation run and test for completion."""
@@ -104,18 +108,15 @@ class Run:
             if full_report:
                 self.logprint("Resources = {}".format(self.resources))
             self.update_starvation_factors()
-            if full_report: self.logprint(
-                    "Starvation factors = {0} (survival), {1} (reproduction)."\
-                            .format(self.surv_penf,self.repr_penf))
             # Reproduction and death
             if full_report:
                 self.logprint("Calculating reproduction and death...")
             n0 = self.population.N
-            self.population.growth(self.conf["r_range"], self.repr_penf,
-                    self.conf["m_rate"], self.conf["m_ratio"],
+            self.population.growth(self.r_range, self.conf["m_rate"],
+                    self.conf["m_ratio"],
                     self.conf["r_rate"])
             n1 = self.population.N
-            self.population.death(self.conf["s_range"], self.surv_penf)
+            self.population.death(self.s_range)
             n2 = self.population.N
             if full_report:
                 self.logprint("Done. {0} individuals born, {1} died."\
@@ -180,8 +181,8 @@ class Run:
             else:
                 self.n_snap_ad_bool = True
         # Record information and return verbosity boolean
-        self.record.update(self.population, self.resources, self.surv_penf,
-                self.repr_penf, self.n_stage, snapshot, age_dist_rec)
+        self.record.update(self.population, self.resources, self.r_range,
+                self.r_range, self.n_stage, snapshot, age_dist_rec)
         self.n_snap += 1 if snapshot >= 0 else 0
         full_report = report_stage and self.verbose
         if (snapshot >= 0) and full_report: self.logprint("Snapshot taken.")
@@ -277,11 +278,13 @@ class Run:
 
     def __eq__(self, other):
         if not isinstance(other, self.__class__): return NotImplemented
-        variables = ["log", "surv_penf", "repr_penf", "n_stage", "n_snap", "n_run",\
+        variables = ["log", "n_stage", "n_snap", "n_run",\
                 "dieoff", "complete", "report_n", "verbose", "resources"]
         for k in variables:
             if getattr(self, k) != getattr(other, k): return False
         if not np.array_equal(self.genmap, other.genmap): return False
+        if not np.array_equal(self.s_range, other.s_range): return False
+        if not np.array_equal(self.r_range, other.r_range): return False
         conf_same = (self.conf == other.conf)
         pop_same = (self.population == other.population)
         rec_same = (self.record == other.record)

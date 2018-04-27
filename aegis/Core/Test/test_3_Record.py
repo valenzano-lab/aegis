@@ -103,7 +103,7 @@ class TestRecord:
         # Conf param entries should be inherited in Record
         for k in conf.keys():
             #print k, R[k], np.array(conf[k])
-            if k in ["res_function", "stv_function"]: # Can't save function objects
+            if k in ["res_function", "stv_function", "surv_pen_func", "repr_pen_func"]: # Can't save function objects
                 assert R[k] == 0
             else:
                 assert deep_key(k, R, conf, True)
@@ -116,11 +116,13 @@ class TestRecord:
         a0, a1 = np.zeros(n), np.zeros([n, R["max_ls"]])
         assert np.array_equal(R["population_size"], a0)
         assert np.array_equal(R["resources"], a0)
-        if R["surv_pen"]: assert np.array_equal(R["surv_penf"], a0)
-        if R["repr_pen"]: assert np.array_equal(R["repr_penf"], a0)
         assert np.array_equal(R["age_distribution"], a1)
         assert np.array_equal(R["generation_dist"], np.zeros([n,5]))
         assert np.array_equal(R["gentime_dist"], np.zeros([n,5]))
+        if R["surv_pen"]:
+            assert np.array_equal(R["s_range_pen"], np.zeros((n,R["n_states"])))
+        if R["repr_pen"]:
+            assert np.array_equal(R["r_range_pen"], np.zeros((n,R["n_states"])))
         if R["auto"]:
             assert R["age_dist_stages"] == [[] for i in xrange(R["n_snapshots"])]
         # Snapshot population placeholders
@@ -191,12 +193,14 @@ class TestRecord:
         """Test that every-stage update function records correctly."""
         rec2 = rec.copy()
         # record age_dist
-        rec2.update(pop, 100, 1, 1, 0, -1, 0)
+        rec2.update(pop, 100, rec2["s_range"], rec2["r_range"], 0, -1, 0)
         agedist=np.bincount(pop.ages,minlength=pop.max_ls)/float(pop.N)
         assert rec2["resources"][0] == 100
         assert rec2["population_size"][0] == pop.N
-        if rec2["surv_pen"]: assert rec2["surv_penf"][0] == 1
-        if rec2["repr_pen"]: assert rec2["repr_penf"][0] == 1
+        if rec2["surv_pen"]: assert np.array_equal(rec2["s_range_pen"][0],\
+                rec2["s_range"])
+        if rec2["repr_pen"]: assert np.array_equal(rec2["r_range_pen"][0],\
+                rec2["r_range"])
         assert np.array_equal(rec2["age_distribution"][0], agedist)
         assert np.allclose(rec2["generation_dist"][0],
                 fivenum(pop.generations))
@@ -213,12 +217,13 @@ class TestRecord:
         np.random.shuffle(pop2.ages)
         np.random.shuffle(pop2.genomes)
         # do not record age_dist
-        rec2.update(pop2, 200, 2, 2, 0, 0, -1)
+        x_range = np.random.random(rec2["n_states"])
+        rec2.update(pop2, 200, x_range, x_range, 0, 0, -1)
         # Per-stage factors
         assert rec2["population_size"][0] == pop2.N
         assert rec2["resources"][0] == 200
-        if rec2["surv_pen"]: assert rec2["surv_penf"][0] == 2
-        if rec2["repr_pen"]: assert rec2["repr_penf"][0] == 2
+        if rec2["surv_pen"]: assert np.array_equal(rec2["s_range_pen"][0], x_range)
+        if rec2["repr_pen"]: assert np.array_equal(rec2["r_range_pen"][0], x_range)
         assert np.array_equal(rec2["age_distribution"][0], np.zeros(rec2["max_ls"]))
         assert np.allclose(rec2["generation_dist"][0],
                 fivenum(pop.generations))
@@ -529,6 +534,8 @@ class TestRecord:
         assert np.allclose(rec2["repr_value"], f2/rec2["cmv_surv"])
         assert np.allclose(rec2["junk_repr_value"], jf2/rec2["junk_cmv_surv"])
 
+    # TODO add test for compute_pen_rates
+
     # DONE
     def test_compute_bits(self, rec1, pop2, rec2):
         """Test computation of mean and variance in bit value along
@@ -677,7 +684,7 @@ class TestRecord:
         # Compare finalised entries
         for k in rec1_copy.keys():
             print k
-            if k in ["snapshot_pops","final_pop","snapshot_age_distribution"]:
+            if k in ["snapshot_pops","final_pop","snapshot_age_distribution", "s_range_pen", "r_range_pen"]:
                 continue
             o1, o2 = rec1[k], rec1_copy[k]
             if isinstance(o1, dict):

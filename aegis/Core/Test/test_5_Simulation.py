@@ -171,7 +171,8 @@ class TestSimulationInit:
             assert r.log == ""
             c["genmap"] = r.conf["genmap"]
             assert c == r.conf
-            assert r.surv_penf == r.repr_penf == 1.0
+            assert np.array_equal(r.s_range, r.conf["s_range"])
+            assert np.array_equal(r.r_range, r.conf["r_range"])
             assert r.n_stage == r.n_snap == 0
             assert r.n_run == n
             assert not r.dieoff

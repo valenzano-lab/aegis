@@ -83,7 +83,8 @@ class TestRun:
     def test_init_run(self, conf, report_n, verbose):
         run1 = Run(conf, "", conf["n_runs"]-1, report_n, verbose)
         assert run1.log == ""
-        assert run1.surv_penf == run1.repr_penf == 1.0
+        assert np.array_equal(run1.s_range,conf["s_range"])
+        assert np.array_equal(run1.r_range,conf["r_range"])
         assert run1.resources == conf["res_start"]
         assert sorted(run1.genmap) == sorted(conf["genmap"])
         assert not np.array_equal(run1.genmap, conf["genmap"])
@@ -142,26 +143,34 @@ class TestRun:
         run1.conf["surv_pen"], run1.conf["repr_pen"] = spen, rpen
         run1.conf["stv_function"] = lambda n,r: n > r
         # Expected changes
-        ec_s = run1.conf["death_inc"] if spen else 1.0
-        ec_r = run1.conf["repr_dec"]  if rpen else 1.0
-        # 1: Under non-starvation, factors stay at 1.0
+        ec_s = run1.conf["surv_pen_func"](run1.conf["s_range"], run1.population.N,\
+                run1.resources) if spen else run1.conf["s_range"]
+        ec_s2 = run1.conf["surv_pen_func"](ec_s, run1.population.N,\
+                run1.resources) if spen else run1.conf["s_range"]
+        ec_r = run1.conf["repr_pen_func"](run1.conf["r_range"], run1.population.N,\
+                run1.resources) if rpen else run1.conf["r_range"]
+        ec_r2 = run1.conf["repr_pen_func"](ec_r, run1.population.N,\
+                run1.resources) if rpen else run1.conf["r_range"]
+        # 1: Under non-starvation, factors stay default
         run1.resources = run1.population.N + 1
         run1.update_starvation_factors()
-        assert run1.surv_penf == run1.repr_penf == 1.0
+        assert np.array_equal(run1.s_range,run1.conf["s_range"])
+        assert np.array_equal(run1.r_range,run1.conf["r_range"])
         # 2: Under starvation, factors increase
         run1.resources = run1.population.N - 1
         run1.update_starvation_factors()
-        assert run1.surv_penf == ec_s
-        assert run1.repr_penf == ec_r
-        # 3: Successive starvation compounds factors exponentially
+        assert np.array_equal(run1.s_range,ec_s)
+        assert np.array_equal(run1.r_range,ec_r)
+        # 3: Successive starvation compounds function
         run1.update_starvation_factors()
-        assert run1.surv_penf == ec_s**2
-        assert run1.repr_penf == ec_r**2
-        # 4: After starvation ends factors reset to 1.0
+        assert np.array_equal(run1.s_range,ec_s2)
+        assert np.array_equal(run1.r_range,ec_r2)
+        # 4: After starvation ends factors reset to default
         run1.resources = run1.population.N + 1
         run1.update_starvation_factors()
-        assert run1.surv_penf == 1.0
-        assert run1.repr_penf == 1.0
+        print "starving ",run1.starving()
+        assert np.array_equal(run1.s_range,run1.conf["s_range"])
+        assert np.array_equal(run1.r_range,run1.conf["r_range"])
 
     def test_execute_stage_functionality(self, run):
         """Test basic functional operation of test_execute_stage, ignoring
