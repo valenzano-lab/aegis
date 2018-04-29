@@ -1,66 +1,132 @@
 #!/usr/bin/env python
 
-# Import libraries and define arguments
+#################################################
+## AEGIS: Ageing of Evolving Genomes In Silico ##
+## Command-line activation script              ##
+#################################################
+
+#-----------------------------------------------------------------------------
+# 1. Import libraries
+#-----------------------------------------------------------------------------
+
 import argparse,os,sys,warnings
-# ignore pandas warnings, but also all FutureWarning
 warnings.simplefilter(action='ignore', category=FutureWarning)
 import aegis
 
-parser = argparse.ArgumentParser(description='Run the genome ageing simulation.',\
+#-----------------------------------------------------------------------------
+# 2. Format parent parser
+#-----------------------------------------------------------------------------
+
+mode_help="AEGIS run mode to execute:"
+
+parser = argparse.ArgumentParser(
+        description = "AEGIS: Ageing of Evolving Genomes In Silico",
         formatter_class=argparse.RawTextHelpFormatter)
-parser.add_argument('script', help="AEGIS script to run:\n\
-    run - run the simulation with the config file specified in\n\
-          infile\n\
-    plot - plot data from record object specified in infile\n\
-    get - copies an aegis file in option to infile (config by default)")
-parser.add_argument('infile', help="path to input config file")
-parser.add_argument('-m', '--module', metavar='<str>', default="Core",
-        help="AEGIS module to use for simulation run (default: 'Core')")
-parser.add_argument('-v', '--verbose', action="store_true",
-        help="display full information at each report stage\n\
-    (default: only starting population)")
-parser.add_argument('-r', type=int, metavar="<int>", default=100,
-        help="report information every <int> stages (default: 100)")
-parser.add_argument('-p', '--profile', metavar='<str>', default="",
-        help="profile genome simulation with cProfile and save to given path")
-parser.add_argument('-ws', '--window-size', type=int, metavar='<int>', default=0,
-        help="if called with plot, generates n1 plots with desired window size")
-parser.add_argument('-rseed', '--random-seed', metavar='<str>', default="",
-        help="if called with get, gets random seed from record file")
-parser.add_argument('-recinfo', '--record-info', metavar='<str>', default="",
-        help="if called with get, gets information on record file")
+
+#parser.add_argument('mode', help=mode_help,
+#        choices = ["run", "get", "plot", "read"])
+
+subparsers = parser.add_subparsers(help=mode_help) # TODO: Add help string here?
+
+#-----------------------------------------------------------------------------
+# 2. Format `run` parser
+#-----------------------------------------------------------------------------
+run_help = "Execute an AEGIS simulation from a Config file."
+
+parser_run = subparsers.add_parser("run", help=run_help, description=run_help)
+parser_run.add_argument('input', help="path to input Config file")
+parser_run.add_argument('-m', '--module', metavar='<str>', default="Core",
+        help="AEGIS module to use for simulation (default: 'Core')")
+parser_run.add_argument('-r', type=int, metavar="<int>", default=100,
+        help="report information every <int> stages (default:100)")
+parser_run.add_argument('-p', '--profile', metavar='<str>', default="",
+        help="profile simulation with cProfile and save results to this path")
+parser_run.add_argument('-v', '--verbose', action="store_true",
+        help="report verbosely at every report stage")
+
+#-----------------------------------------------------------------------------
+# 3. Format `get` parser
+#-----------------------------------------------------------------------------
+get_help = "Copy a default Config file to a specified path for editing."
+
+parser_get = subparsers.add_parser("get", help=get_help, description=get_help)
+parser_get.add_argument('path', help="path to save new Config file")
+parser_get.add_argument('-m', '--module', metavar='<str>', default="Core",
+        help="AEGIS module to use for Config file (default: 'Core')")
+
+#-----------------------------------------------------------------------------
+# 4. Format `plot` parser
+#-----------------------------------------------------------------------------
+plot_help = "Generate plots from an AEGIS Record file."
+
+parser_plot = subparsers.add_parser("plot", help=plot_help, 
+        description=plot_help)
+parser_plot.add_argument('input', help="path to input Record file")
+parser_plot.add_argument('-m', '--module', metavar='<str>', default="Core",
+        help="AEGIS module used to produce Record file (default: 'Core')")
+parser_plot.add_argument('-p', '--profile', metavar='<str>', default="",
+        help="profile plotting with cProfile and save results to this path")
+parser_plot.add_argument('-v', '--verbose', action="store_true",
+        help="report verbosely during plotting")
+parser_plot.add_argument('-w', '--window', type=int, metavar='<int>', 
+        default=0, help="specify window size for sliding-window plots")
+
+#-----------------------------------------------------------------------------
+# 5. Format `read` parser
+#-----------------------------------------------------------------------------
+read_help = "Extract information from an AEGIS Record file to a new path."
+
+parser_read = subparsers.add_parser("read", help=read_help, 
+        description = read_help)
+parser_read.add_argument('input', help="path to input Record file")
+parser_read.add_argument('output', help="path to use for output")
+parser_read.add_argument('-m', '--module', metavar='<str>', default="Core",
+        help="AEGIS module used to produce Record file (default: 'Core')")
+
+# Specify information to extract
+read_mode = parser_read.add_mutually_exclusive_group(required=True)
+read_mode.add_argument('-s', '--seed', action="store_true",
+        help="extract random seed from Record file")
+read_mode.add_argument('-i', '--info', action="store_true",
+        help="print general information on contents of Record file") # TODO: Improve this
+
+#-----------------------------------------------------------------------------
+# 6. Parse args and execute AEGIS
+#-----------------------------------------------------------------------------
+
 args = parser.parse_args()
 
-if args.script!="plot" and args.window_size:
-    parser.error("--window-size can only be set when script=plot")
-if args.script!="get" and args.random_seed:
-    parser.error("--random-seed can only be set when script=get")
-
-if args.profile != "":
+if args.profile != "": # Start profiling
     import cProfile, pstats, StringIO
     pr = cProfile.Profile()
-    pr.enable() # start profiling
+    pr.enable()
 
 module = getattr(aegis, args.module)
 inpath = os.path.expanduser(args.infile)
 
-if args.script == "run":
-    module.run(inpath, args.r, args.verbose)
+if args.mode == "run":
+    path = os.path.expanduser(args.input)
+    module.run(path, args.r, args.verbose)
 
-elif args.script == "get":
-    if args.random_seed != "":
-        module.getrseed(args.random_seed, inpath)
-    elif args.record_info != "":
-        module.getrecinfo(args.record_info, inpath)
+elif args.mode == "get":
+    path = os.path.expanduser(args.path)
+    module.getconfig(path)
+
+elif args.mode == "plot": # TODO: Add verbosity to plotting
+    path = os.path.expanduser(args.input)
+    if args.window == 0:
+        module.plot(path)
     else:
-        module.getconfig(inpath)
+        module.plot_n1_sliding_window(path, args.window) # TODO: Get rid of this if
 
-elif args.script == "plot" and args.window_size == 0:
-    module.plot(inpath)
+elif args.mode == "read":
+    inpath = os.path.expanduser(args.input)
+    outpath = os.path.expanduser(args.output)
+    if args.seed:
+        module.getrseed(outpath, inpath)
+    elif args.info:
+        module.getrecinfo(outpath, inpath)
 
-elif args.script == "plot" and args.window_size > 0:
-    module.plot_n1_sliding_window(inpath, args.window_size)
-
-if args.profile != "":
+if args.profile != "": # Finish profiling
     pr.create_stats()
     pr.dump_stats(args.profile)
