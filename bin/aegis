@@ -26,7 +26,7 @@ parser = argparse.ArgumentParser(
 #parser.add_argument('mode', help=mode_help,
 #        choices = ["run", "get", "plot", "read"])
 
-subparsers = parser.add_subparsers(help=mode_help) # TODO: Add help string here?
+subparsers = parser.add_subparsers(dest='subparser_name',help=mode_help) # TODO: Add help string here?
 
 #-----------------------------------------------------------------------------
 # 2. Format `run` parser
@@ -53,6 +53,8 @@ parser_get = subparsers.add_parser("get", help=get_help, description=get_help)
 parser_get.add_argument('path', help="path to save new Config file")
 parser_get.add_argument('-m', '--module', metavar='<str>', default="Core",
         help="AEGIS module to use for Config file (default: 'Core')")
+parser_get.add_argument('-p', '--profile', metavar='<str>', default="",
+        help="profile plotting with cProfile and save results to this path")
 
 #-----------------------------------------------------------------------------
 # 4. Format `plot` parser
@@ -96,30 +98,31 @@ read_mode.add_argument('-i', '--info', action="store_true",
 
 args = parser.parse_args()
 
+# TODO args.profile is undefined for read
 if args.profile != "": # Start profiling
     import cProfile, pstats, StringIO
     pr = cProfile.Profile()
     pr.enable()
 
 module = getattr(aegis, args.module)
-inpath = os.path.expanduser(args.infile)
+#inpath = os.path.expanduser(args.infile)
 
-if args.mode == "run":
+if args.subparser_name == "run":
     path = os.path.expanduser(args.input)
     module.run(path, args.r, args.verbose)
 
-elif args.mode == "get":
+elif args.subparser_name == "get":
     path = os.path.expanduser(args.path)
     module.getconfig(path)
 
-elif args.mode == "plot": # TODO: Add verbosity to plotting
+elif args.subparser_name == "plot": # TODO: Add verbosity to plotting
     path = os.path.expanduser(args.input)
     if args.window == 0:
         module.plot(path)
     else:
         module.plot_n1_sliding_window(path, args.window) # TODO: Get rid of this if
 
-elif args.mode == "read":
+elif args.subparser_name == "read":
     inpath = os.path.expanduser(args.input)
     outpath = os.path.expanduser(args.output)
     if args.seed:
