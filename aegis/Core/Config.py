@@ -10,7 +10,7 @@
 
 ## PACKAGE IMPORT ##
 import numpy as np
-import copy, imp, math, pickle
+import copy, imp, math, pickle, itertools
 from .functions import deep_key, deep_eq, make_windows, correct_r_rate
 
 class Config(dict):
@@ -91,6 +91,12 @@ class Config(dict):
         self["genmap_argsort"] = np.argsort(self["genmap"])
         self["chr_len"] = len(self["genmap"]) * self["n_base"]
         self["n_states"] = 2*self["n_base"]+1
+        # Mapping
+        self["mapping"] = np.zeros(2**(2*self["n_base"])).astype(int)
+        genotypes = np.array(map(list, itertools.product([0,1], repeat=2*self["n_base"]))).sum(1)
+        for i in range(self["n_states"]):
+            ix = np.where(genotypes==i)
+            self["mapping"][ix] = i
         # Survival and reproduction
         self["death_bound"] = np.array(self["death_bound"])
         self["repr_bound"] = np.array(self["repr_bound"])

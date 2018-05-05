@@ -19,10 +19,11 @@ class Population:
 
     ## INITIALISATION ##
 
-    def __init__(self, params, genmap, ages, genomes, generations, gentimes, targets=0):
+    def __init__(self, params, genmap, mapping, ages, genomes, generations, gentimes, targets=0):
         """Create a new population, either with newly-generated age and genome
         vectors or inheriting these from a seed."""
         self.set_genmap(genmap) # Define genome map
+        self.mapping = np.copy(mapping) # Set mapping
         self.set_attributes(params) # Define population parameters
         self.set_initial_size(params, ages, genomes, generations, gentimes) # Define size
         self.fill(ages, genomes, generations, gentimes, targets) # Generate individuals
@@ -161,7 +162,7 @@ class Population:
 
     def clone(self):
         """Generate a new, identical population object."""
-        return Population(self.params(), self.genmap,
+        return Population(self.params(), self.genmap, self.mapping,
                 self.ages, self.genomes, self.generations, self.gentimes)
 
     def attrib_rep(self, function, pop2="",
@@ -198,9 +199,11 @@ class Population:
 
     def subset_clone(self, targets):
         """Create a clone population and subset its members."""
-        pop = self.clone()
-        pop.subset_members(targets)
-        return pop
+        #pop = self.clone()
+        #pop.subset_members(targets)
+        #return pop
+        return Population(self.params(), self.genmap, self.mapping, self.ages,
+                self.genomes, self.generations, self.gentimes, targets)
 
     ## INCREMENT VALUES ##
 
@@ -213,6 +216,14 @@ class Population:
         self.generations += 1L
 
     ## CHROMOSOMES AND LOCI ##
+
+    def sorted_loci(self):
+        """Return sorted decimal coding for genotypes of individuals in population.
+        Returned array is of shape (self.N, len(self.genmap))."""
+        g = self.genomes.reshape((self.N, 2, len(self.genmap), self.n_base))
+        g = g.transpose(0,2,1,3).reshape((self.N,len(self.genmap),2*self.n_base))
+        g = g.dot(1<<np.arange(2*self.n_base)[::-1])
+        return self.mapping[g][:, self.genmap_argsort]
 
     def chrs(self, reshape):
         """Return an array containing the first and second chromosomes
@@ -227,15 +238,15 @@ class Population:
             return self.genomes.reshape((self.N,2,len(self.genmap),self.n_base)
                     ).transpose(1,0,2,3)
 
-    def sorted_loci(self):
-        """Return the sorted locus genotypes of the individuals in the
-        population, summed within each locus and across chromosomes."""
-        # Get chromosomes of population, arranged by locus
-        chrx = self.chrs(True)
-        # Collapse bits into locus sums and add chromosome values together
-        # to get total genotype value for each locus (dim1=indiv, dim2=locus)
-        locs = np.einsum("ijkl->jk", chrx)
-        return locs[:,self.genmap_argsort]
+#    def sorted_loci(self):
+#        """Return the sorted locus genotypes of the individuals in the
+#        population, summed within each locus and across chromosomes."""
+#        # Get chromosomes of population, arranged by locus
+#        chrx = self.chrs(True)
+#        # Collapse bits into locus sums and add chromosome values together
+#        # to get total genotype value for each locus (dim1=indiv, dim2=locus)
+#        locs = np.einsum("ijkl->jk", chrx)
+#        return locs[:,self.genmap_argsort]
 
     def surv_loci(self):
         """Return the sorted survival locus genotypes of each individual in
