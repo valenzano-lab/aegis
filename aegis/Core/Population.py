@@ -19,13 +19,13 @@ class Population:
 
     ## INITIALISATION ##
 
-    def __init__(self, params, genmap, ages, genomes, generations, gentimes):
+    def __init__(self, params, genmap, ages, genomes, generations, gentimes, targets=0):
         """Create a new population, either with newly-generated age and genome
         vectors or inheriting these from a seed."""
         self.set_genmap(genmap) # Define genome map
         self.set_attributes(params) # Define population parameters
         self.set_initial_size(params, ages, genomes, generations, gentimes) # Define size
-        self.fill(ages, genomes, generations, gentimes) # Generate individuals
+        self.fill(ages, genomes, generations, gentimes, targets) # Generate individuals
 
     def set_genmap(self, genmap):
         """Set Population genome map from an input array."""
@@ -85,7 +85,7 @@ class Population:
         else:
             self.N = params["start_pop"]
 
-    def fill(self, ages, genomes, generations, gentimes):
+    def fill(self, ages, genomes, generations, gentimes, targets=0):
         """Fill a new Population object with individuals based on input
         age, genome and generation arrays."""
         # Test for new vs seeded values
@@ -93,19 +93,29 @@ class Population:
         new_genomes = np.array_equal(genomes, init_genomes())
         new_generations = np.array_equal(generations, init_generations())
         new_gentimes = np.array_equal(gentimes, init_gentimes())
+        if not isinstance(targets, np.ndarray): targets = np.arange(self.N)
+        else: self.N = targets.sum()
         # Specify individual value arrays
         if new_ages:
             ages = self.prng.randint(0,self.max_ls-1,self.N)
+            targets_ages = np.arange(self.N)
+        else: targets_ages = targets
         if new_genomes:
             genomes = self.make_genome_array()
+            targets_genomes = np.arange(self.N)
+        else: targets_genomes = targets
         if new_generations:
             generations = np.repeat(0L, self.N)
+            targets_generations = np.arange(self.N)
+        else: targets_generations = targets
         if new_gentimes:
             gentimes = np.repeat(0L, self.N)
-        self.ages = np.copy(ages)
-        self.genomes = np.copy(genomes)
-        self.generations = np.copy(generations)
-        self.gentimes = np.copy(gentimes)
+            targets_gentimes = np.arange(self.N)
+        else: targets_gentimes = targets
+        self.ages = np.copy(ages[targets_ages])
+        self.genomes = np.copy(genomes[targets_genomes])
+        self.generations = np.copy(generations[targets_generations])
+        self.gentimes = np.copy(gentimes[targets_gentimes])
         self.loci = self.sorted_loci()
 
     def make_genome_array(self):
