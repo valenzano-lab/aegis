@@ -153,10 +153,10 @@ class TestPopulationDeath:
         p.genomes[:, surv_pos] =\
                 chance(x, (p.N, len(surv_pos))).astype(int)
         p.loci = p.sorted_loci() # Update loci for new genomes
-        # Call and test death function, with and without starvation
+        # Call and test death function, with and without penalty
         p2 = p.clone()
-        p.death(surv_r, 1)
-        p2.death(surv_r, starvation)
+        p.death(surv_r)
+        p2.death(1-(1-surv_r)*starvation)
         # Define observation and expectation in terms of possible range
         s1 = pmin + (pmax-pmin)*x
         s2 = 1-(1-s1)*starvation
@@ -172,9 +172,9 @@ class TestPopulationDeath:
         p1 = pop.clone()
         p2 = pop.clone()
         s_range = np.linspace(0, 0.99, 2*pop.n_base+1)
-        p0.death(s_range, 1e10)
-        p1.death(s_range, -1e10)
-        p2.death(s_range, 1e-10)
+        p0.death(1-(1-s_range)*1e10)
+        p1.death(1-(1-s_range)*-1e10)
+        p2.death(1-(1-s_range)*1e-10)
         assert p0.N == 0
         assert p1.N == pop.N
         assert p2.N == pop.N
@@ -490,7 +490,7 @@ class TestPopulationGrowth:
         for mode in ["sexual", "asexual", "recombine_only", "assort_only"]:
             p.repr_mode = mode
             p.set_attributes(p.params())
-            c = p.make_children(rr, 1, 0, 1, 0)
+            c = p.make_children(rr, 0, 1, 0)
             assert np.array_equal(c.ages, np.zeros(c.N))
             assert np.array_equal(c.generations, np.ones(c.N))
 
@@ -505,7 +505,7 @@ class TestPopulationGrowth:
             print mode
             p.repr_mode = mode
             p.set_attributes(p.params())
-            c = p.make_children(rr, 1, 0, 1, 0)
+            c = p.make_children(rr, 0, 1, 0)
             assert np.array_equal(np.sort(p.ages[p.ages >= p.maturity]),
                     np.sort(c.gentimes))
         # See assortment tests for test of correct computation in sexual case
@@ -532,13 +532,13 @@ class TestPopulationGrowth:
         p.genomes[:, repr_pos] =\
                 chance(x, (p.N, len(repr_pos))).astype(int)
         p.loci = p.sorted_loci()
-        # Call and test death function, with and without starvation
+        # Call and test death function, with and without penalty
         for mode in ["sexual", "asexual", "recombine_only", "assort_only"]:
             p.repr_mode = mode
             p.set_attributes(p.params())
             p2 = p.clone()
-            c = p.make_children(repr_r, 1, 0, 1, 0)
-            c2 = p2.make_children(repr_r, starvation, 0, 1, 0)
+            c = p.make_children(repr_r, 0, 1, 0)
+            c2 = p2.make_children(repr_r/starvation, 0, 1, 0)
             exp1 = s1 / (2.0 if mode in ["sexual", "assort_only"] else 1.0)
             exp2 = s2 / (2.0 if mode in ["sexual", "assort_only"] else 1.0)
             assert np.array_equal(c.ages, np.zeros(c.N))
@@ -564,7 +564,7 @@ class TestPopulationGrowth:
             p.repr_mode = modes[n]
             p.set_attributes(p.params())
             assert p.repr_mode == modes[n]
-            c = p.make_children(r_range, 1, 0, 1, 0)
+            c = p.make_children(r_range, 0, 1, 0)
             assert c.N == exp[n]
 
     def test_make_children_zero(self, pop):
@@ -579,7 +579,7 @@ class TestPopulationGrowth:
             p.repr_mode = modes[n]
             p.set_attributes(p.params())
             assert p.repr_mode == modes[n]
-            c = p.make_children(r_range, 1, 0, 1, 0)
+            c = p.make_children(r_range, 0, 1, 0)
             assert c.N == 0
 
     def test_make_children_extreme_starvation(self, pop):
@@ -591,9 +591,9 @@ class TestPopulationGrowth:
         for mode in ["sexual", "asexual", "recombine_only", "assort_only"]:
             p.repr_mode = mode
             p.set_attributes(p.params())
-            c0 = p.make_children(r_range, 1e10, 0, 1, 0)
-            c1 = p.make_children(r_range, -1e10, 0, 1, 0)
-            c2 = p.make_children(r_range, 1e-10, 0, 1, 0)
+            c0 = p.make_children(r_range/1e10, 0, 1, 0)
+            c1 = p.make_children(r_range/-1e10, 0, 1, 0)
+            c2 = p.make_children(r_range/1e-10, 0, 1, 0)
             assert c0.N == 0
             assert c1.N == 0
             assert c2.N-n/(2 if mode in ["sexual", "assort_only"] else 1) <= 1
@@ -605,7 +605,7 @@ class TestPopulationGrowth:
         p.genomes[:,:] = 1
         p.loci = p.sorted_loci()
         r_range = np.linspace(0,1,2*p.n_base+1)
-        c = p.make_children(r_range, 1, 0, 1, 0)
-        p.growth(r_range, 1, 0, 1, 0)
+        c = p.make_children(r_range, 0, 1, 0)
+        p.growth(r_range, 0, 1, 0)
         assert p.N == pop.N + c.N
         # TODO: Do this with non-degenerate reproduction probability?:

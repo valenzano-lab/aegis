@@ -26,7 +26,7 @@ class Record(dict):
         further data input."""
         # Inherit run parameters from Config object
         for k in conf.keys():
-            if k in ["res_function", "stv_function"]: # Can't save function objects
+            if k in ["res_function", "stv_function", "surv_pen_func", "repr_pen_func"]: # Can't save function objects
                 self[k] = 0
             else:
                 self[k] = conf[k]
@@ -42,9 +42,8 @@ class Record(dict):
         ns,ml,mt = self["n_snapshots"], self["max_ls"], self["maturity"]
         for k in ["population_size", "resources"]:
             self[k] = np.zeros(n)
-        for k in ["surv_pen", "repr_pen"]:
-            if self[k]: self[k+"f"] = np.zeros(n)
-
+        if self["surv_pen"]: self["s_range_pen"] = np.zeros((n,self["n_states"]))
+        if self["repr_pen"]: self["r_range_pen"] = np.zeros((n,self["n_states"]))
         self["age_distribution"] = np.zeros([n, ml])
         for k in ["generation_dist", "gentime_dist"]:
             self[k] = np.zeros([n,5]) # Five-number summaries
@@ -87,15 +86,15 @@ class Record(dict):
         return self.p_calc(gt, self["repr_bound"])
 
     # PER-STAGE RECORDING
-    def update(self, population, resources, surv_penf, repr_penf, n_stage,
+    def update(self, population, resources, s_range_pen, r_range_pen, n_stage,
             n_snap=-1, age_dist_rec=-1):
         """Record per-stage data (population size, age distribution, resources,
         and survival penalties), plus, if on a snapshot stage, the population
         as a whole."""
         self["population_size"][n_stage] = population.N
         self["resources"][n_stage] = resources
-        if self["surv_pen"]: self["surv_penf"][n_stage] = surv_penf
-        if self["repr_pen"]: self["repr_penf"][n_stage] = repr_penf
+        if self["surv_pen"]: self["s_range_pen"][n_stage] = s_range_pen
+        if self["repr_pen"]: self["r_range_pen"][n_stage] = r_range_pen
         if age_dist_rec > -1:
             self["age_distribution"][age_dist_rec] = np.bincount(population.ages,
                     minlength = population.max_ls)/float(population.N)
@@ -280,6 +279,13 @@ class Record(dict):
                 self["junk_cmv_surv"]
         self["repr_value"] = repr_value
         self["junk_repr_value"] = junk_repr_value
+
+    def compute_pen_rates(self):
+        """Compute the average penalised survival and reproduction rates."""
+        if "s_range_pen" in self.keys():
+            self["s_range_pen"] = self["s_range_pen"].mean(0)
+        if "r_range_pen" in self.keys():
+            self["r_range_pen"] = self["r_range_pen"].mean(0)
 
     # MEAN AND VARIANCE IN BIT VALUE
 
@@ -468,6 +474,7 @@ class Record(dict):
         self.compute_entropies()
         self.compute_windows()
         self.truncate_age_dist()
+        self.compute_pen_rates()
         # Remove snapshot pops as appropriate
         if self["output_mode"] > 0:
             self["final_pop"] = self["snapshot_pops"][-1]

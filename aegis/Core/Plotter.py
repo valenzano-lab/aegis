@@ -38,7 +38,6 @@ class Plotter:
             s = "Import succeeded. Time needed"
             print get_runtime(self.starttime, timenow(False), s)
             self.plot_methods = ["plot_population_resources",\
-                                 "plot_starvation",\
                                  "plot_n1_grid",\
                                  "plot_n1_mean_sliding_window_grid",\
                                  "plot_n1_var_grid",\
@@ -51,10 +50,10 @@ class Plotter:
                                  #"plot_fitness_term_overlay",\
                                  "plot_fitness_term_grid",\
                                  "plot_actual_death_rate",\
-                                 "plot_age_distribution_means",\
                                  "plot_cmv_surv_snap_overlay",\
                                  "plot_cmv_surv",\
-                                 "plot_mean_repr"\
+                                 "plot_mean_repr",\
+                                 "plot_age_distribution_means"\
                                  #"plot_n1_mean_sliding_window",\
                                  #"plot_fitness_term",\
                                  #"plot_entropy_gt",\
@@ -69,23 +68,22 @@ class Plotter:
                                  #"plot_n1_var_sliding_window",\
                                  ]
             self.plot_names = ["01_pop-res",\
-                               "02_starvation",\
-                               "03_n1_grid",\
-                               "04_n1_mean_sliding_window_grid",\
-                               "05_n1_var_grid",\
-                               "06_n1_var_sliding_window_grid",\
-                               "07_n1_reorder_grid",\
-                               "08_mean_gt",\
-                               "09_var_gt",\
-                               "10_density_overlay",\
-                               "11_fitness",\
+                               "02_n1_grid",\
+                               "03_n1_mean_sliding_window_grid",\
+                               "04_n1_var_grid",\
+                               "05_n1_var_sliding_window_grid",\
+                               "06_n1_reorder_grid",\
+                               "07_mean_gt",\
+                               "08_var_gt",\
+                               "09_density_overlay",\
+                               "10_fitness",\
                                #"12_fitness_term_overlay",\
-                               "12_fitness_term_grid",\
-                               "13_actual_death_rate",\
-                               "14_age_distribution_means",\
-                               "15_cmv_surv_overlay",\
-                               "16_cmv_surv",\
-                               "17_mean_repr"\
+                               "11_fitness_term_grid",\
+                               "12_actual_death_rate",\
+                               "13_cmv_surv_overlay",\
+                               "14_cmv_surv",\
+                               "15_mean_repr",\
+                               "16_age_distribution_means"\
                                #"fitness_term",\
                                #"entropy_gt",\
                                #"entropy_bits",\
@@ -139,7 +137,7 @@ class Plotter:
         # Remove not generated plot names
         if self.record["age_dist_N"] == "all":
             self.plot_methods.remove("plot_age_distribution_means")
-            self.plot_names.remove("age_distribution_means")
+            self.plot_names.remove("16_age_distribution_means")
         # Make/replace output directory
         pm,pn,p = self.plot_methods, self.plot_names, self.plots
         if not len(pm) == len(pn) == len(p):

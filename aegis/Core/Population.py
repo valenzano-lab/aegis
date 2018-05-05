@@ -263,13 +263,11 @@ class Population:
         return subpop * inc
 
     def death(self,
-            s_range, # Survival probabilities
-            penf): # Starvation penalty factor
+            s_range): # Survival probabilities
         """Select survivors and kill rest of population."""
         if self.N == 0: return # If no individuals in population, do nothing
+        s_range = np.clip(s_range, 0, 1) # Limit to real probabilities
         # Get inclusion probabilities
-        d_range = np.clip((1-s_range)*penf, 0, 1) # Death probs (0 to 1 only)
-        s_range = 1-d_range # Convert back to survival again
         age_bounds = np.array([0,self.max_ls])
         # Identify survivors and remove others
         survivors = self.get_subpop(age_bounds, self.surv_loci(), s_range)
@@ -277,14 +275,13 @@ class Population:
 
     def make_children(self,
             r_range, # Reprodn probabilities
-            penf, # Starvation penalty factor
             m_rate, # Per-bit mutation rate
             m_ratio, # Positive/negative mutation ratio
             r_rate): # Recombination rate (if recombining)
         """Generate new mutated children from selected parents."""
         if self.N == 0:# If no individuals in population, do nothing
             return self.subset_clone(np.zeros(self.N).astype(bool))
-        r_range = np.clip(r_range / penf, 0, 1) # Limit to real probabilities
+        r_range = np.clip(r_range, 0, 1) # Limit to real probabilities
         age_bounds = np.array([self.maturity,self.max_ls])
         parents = self.get_subpop(age_bounds, self.repr_loci(), r_range)
         # Get children from parents
@@ -302,12 +299,11 @@ class Population:
 
     def growth(self,
             r_range, # Reprodn probabilities
-            penf, # Starvation penalty factor
             m_rate, # Per-bit mutation rate
             m_ratio, # Positive/negative mutation ratio
             r_rate): # Recombination rate (if recombining)
         """Generate new mutated children from selected parents."""
-        children = self.make_children(r_range, penf, m_rate, m_ratio, r_rate)
+        children = self.make_children(r_range, m_rate, m_ratio, r_rate)
         self.add_members(children)
 
     def mutate(self, m_rate, # Per-bit mutation rate

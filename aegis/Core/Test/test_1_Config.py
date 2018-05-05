@@ -86,8 +86,6 @@ def conf_naive(request, conf_path, ran_str, gen_trseed):
         # Resources and starvation
         c["surv_pen"] = random.choice([True, False])
         c["repr_pen"] = random.choice([True, False])
-        c["death_inc"] = random.randint(1, 10)
-        c["repr_dec"] = random.randint(1, 10)
         gm_len = c["max_ls"] + (c["max_ls"] - c["maturity"]) + c["n_neutral"]
         # Sliding windows
         c["windows"] = {
@@ -150,8 +148,12 @@ class TestConfig:
             impt = getattr(c_import,key)
             if callable(attr):
                 for n in xrange(3):
+                    x = np.random.random(10)
                     n,r = np.random.uniform(size=2)
-                    assert attr(n,r) == impt(n,r)
+                    if attr.func_code.co_argcount == 2:
+                        assert attr(n,r) == impt(n,r)
+                    elif attr.func_code.co_argcount == 3:
+                        assert np.array_equal(attr(x,n,r),impt(x,n,r))
             elif type(attr) in [int, str, float, dict, bool, list]:
                 assert attr == impt
             elif type(attr) is np.ndarray:
