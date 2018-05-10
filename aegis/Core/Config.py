@@ -11,7 +11,7 @@
 ## PACKAGE IMPORT ##
 import numpy as np
 import copy, imp, math, pickle, itertools
-from .functions import deep_key, deep_eq, make_windows, correct_r_rate
+from .functions import deep_key, deep_eq, make_windows, correct_r_rate, make_mapping
 
 class Config(dict):
     """Object derived from imported config module."""
@@ -92,11 +92,7 @@ class Config(dict):
         self["chr_len"] = len(self["genmap"]) * self["n_base"]
         self["n_states"] = 2*self["n_base"]+1
         # Mapping
-        self["mapping"] = np.zeros(2**(2*self["n_base"])).astype(int)
-        genotypes = np.array(map(list, itertools.product([0,1], repeat=2*self["n_base"]))).sum(1)
-        for i in range(self["n_states"]):
-            ix = np.where(genotypes==i)
-            self["mapping"][ix] = i
+        self["mapping"] = make_mapping(2*self["n_base"], self["n_states"])
         # Survival and reproduction
         self["death_bound"] = np.array(self["death_bound"])
         self["repr_bound"] = np.array(self["repr_bound"])
