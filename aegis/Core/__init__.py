@@ -1,7 +1,7 @@
 import os, shutil, numpy as np
-from aegis.Core.functions import chance, quantile, fivenum, init_gentimes
-from aegis.Core.functions import init_ages, init_genomes, init_generations
-from aegis.Core.functions import deep_key, deep_eq, make_windows, correct_r_rate
+from aegis.Core.functions import chance, quantile, fivenum, init_gentimes,\
+        init_ages, init_genomes, init_generations, deep_key, deep_eq, make_windows,\
+        correct_r_rate, make_mapping
 from aegis.Core.Population import Population
 from aegis.Core.Config import Config
 from aegis.Core.Record import Record

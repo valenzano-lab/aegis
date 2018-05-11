@@ -56,7 +56,7 @@ g_dist = {"s": 0.5, # Proportion of 1's in survival loci of initial genomes
         "r": 0.5,   #                      reproductive loci
         "n": 0.5}   #                      neutral loci
 n_neutral = 10 # Number of neutral loci in genome
-n_base = 10 # Number of bits per locus
+n_base = 5 # Number of bits per locus
 repr_offset = 100 # Offset for repr loci in genome map (must be <= max_ls)
 neut_offset = 200 # Offset for neut loci (<= repr_offset + max_ls - maturity)
 max_ls = 98 # Maximum lifespan (must be > repr_offset) (-1 = infinite)

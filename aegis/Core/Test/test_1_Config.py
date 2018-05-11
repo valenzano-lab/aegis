@@ -77,7 +77,7 @@ def conf_naive(request, conf_path, ran_str, gen_trseed):
         # Genome structure
         c["g_dist_s"],c["g_dist_r"],c["g_dist_n"] = [random.random() for x in range(3)]
         c["n_neutral"] = random.randint(1, 100)
-        c["n_base"] = random.randint(5, 25)
+        c["n_base"] = random.randint(5, 10)
         c["repr_offset"] = random.randint(80,180)
         c["neut_offset"] = random.randint(c["repr_offset"]*3,c["repr_offset"]*5)
         # Life histories
