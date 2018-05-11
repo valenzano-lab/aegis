@@ -136,7 +136,7 @@ class Config(dict):
             x = 1-y
             ssize = self["res_start"] * self["chr_len"] * 2 # sample size
             epsbar = np.sqrt(1.0/(2*ssize)*np.log(2.0/zeta))
-            delta = epsbar * 0.1
+            delta = epsbar
             k = np.log(delta*(alpha+beta)/abs(alpha*y-beta*x)) / \
                     np.log(abs(1-alpha-beta))
             # Assign generation threshold
