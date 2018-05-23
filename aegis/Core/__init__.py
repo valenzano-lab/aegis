@@ -100,8 +100,8 @@ def getrecinfo(inpath, outpath):
 
 def plot(record_file):
     a = Plotter(record_file)
-    a.generate_plots()
-    a.save_plots()
+    a.generate_figures()
+    a.save_figures()
 
 def plot_n1_sliding_window(record_file, wsize):
     a = Plotter(record_file)
