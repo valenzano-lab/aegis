@@ -30,12 +30,10 @@ kill_at = 0 # stage/generation for no_auto/auto repectively at which to force
             # dieoff, 0 if none
 
 ## PENALISATION ##
-surv_pen = True # Survival penalty under starvation
-repr_pen = False # Reproduction penalty under starvation
 pen_cuml = True # Is the penalty cumulative? If True the function compunds,
                 # otherwise it is always applied on the default value
 surv_pen_func = lambda s_range, n, r: 1-(1-s_range)*3
-repr_pen_func = lambda r_range, n, r: r_range/3.0
+repr_pen_func = lambda r_range, n, r: r_range
 
 ## AUTOCOMPUTING GENERATION NUMBER ##
 zeta = 10**-2   # Upper bound for probability that neutral genome will deviate from

@@ -133,25 +133,26 @@ class TestRun:
             run1.population.N, run1.resources = n,r
             assert run1.starving() == run1.conf["stv_function"](n,r)
 
-    @pytest.mark.parametrize("spen", [True, False])
-    @pytest.mark.parametrize("rpen", [True, False])
     @pytest.mark.parametrize("pen_cuml", [True, False])
-    def test_update_starvation_factors(self, run, spen, rpen, pen_cuml):
+    @pytest.mark.parametrize("surv_pen", [lambda sr,n,r:sr, lambda sr,n,r:sr*0.9])
+    @pytest.mark.parametrize("repr_pen", [lambda rr,n,r:rr, lambda rr,n,r:rr*0.9])
+    def test_update_starvation_factors(self, run, pen_cuml, surv_pen, repr_pen):
         """Test that starvation factors update correctly under various
         conditions for standard starvation function."""
         run1 = run.copy()
-        run1.conf["surv_pen"], run1.conf["repr_pen"] = spen, rpen
         run1.conf["pen_cuml"] = pen_cuml
         run1.conf["stv_function"] = lambda n,r: n > r
+        run1.conf["surv_pen_func"] = surv_pen
+        run1.conf["repr_pen_func"] = repr_pen
         # Expected changes
         ec_s = run1.conf["surv_pen_func"](run1.conf["s_range"], run1.population.N,\
-                run1.resources) if spen else run1.conf["s_range"]
+                run1.resources)
         ec_s2 = run1.conf["surv_pen_func"](ec_s, run1.population.N,\
-                run1.resources) if spen else run1.conf["s_range"]
+                run1.resources)
         ec_r = run1.conf["repr_pen_func"](run1.conf["r_range"], run1.population.N,\
-                run1.resources) if rpen else run1.conf["r_range"]
+                run1.resources)
         ec_r2 = run1.conf["repr_pen_func"](ec_r, run1.population.N,\
-                run1.resources) if rpen else run1.conf["r_range"]
+                run1.resources)
         # 1: Under non-starvation, factors stay default
         run1.resources = run1.population.N + 1
         run1.update_starvation_factors()

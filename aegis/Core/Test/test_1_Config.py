@@ -84,8 +84,6 @@ def conf_naive(request, conf_path, ran_str, gen_trseed):
         c["max_ls"] = random.randint(20, c["repr_offset"]-1)
         c["maturity"] = random.randint(5, c["max_ls"]-2)
         # Resources and starvation
-        c["surv_pen"] = random.choice([True, False])
-        c["repr_pen"] = random.choice([True, False])
         gm_len = c["max_ls"] + (c["max_ls"] - c["maturity"]) + c["n_neutral"]
         # Sliding windows
         c["windows"] = {

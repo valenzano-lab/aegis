@@ -42,6 +42,14 @@ class Record(dict):
         ns,ml,mt = self["n_snapshots"], self["max_ls"], self["maturity"]
         for k in ["population_size", "resources"]:
             self[k] = np.zeros(n)
+        # determine what penalties to save
+        # do not save if constant
+        sp1 = conf["surv_pen_func"](conf["s_range"],100,100)
+        sp2 = conf["surv_pen_func"](sp1,100,100)
+        rp1 = conf["surv_pen_func"](conf["r_range"],100,100)
+        rp2 = conf["surv_pen_func"](rp1,100,100)
+        self["surv_pen"] = (sp1==sp2).all()
+        self["repr_pen"] = (rp1==rp2).all()
         if self["surv_pen"]: self["s_range_pen"] = np.zeros((n,self["n_states"]))
         if self["repr_pen"]: self["r_range_pen"] = np.zeros((n,self["n_states"]))
         self["age_distribution"] = np.zeros([n, ml])
