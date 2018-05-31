@@ -243,26 +243,43 @@ class Plotter:
     def plot_phenotype_mean(self):
         """Plot the mean for phenotype value for last snapshot taken."""
         mean = self.record["mean_gt"]["a"]
-        var = self.record["mean_gt"]["a"]
         nsnap = mean.shape[0]
         nloci = mean.shape[1]
 
         df = pd.DataFrame()
         df["mean"] = mean.reshape(nsnap*nloci)
-        df["var"] = var.reshape(nsnap*nloci)
         df["snap"] = np.repeat(np.arange(nsnap),nloci)
         df["locus"] = np.tile(np.arange(nloci),nsnap)
+        # subset to last snapshot
+        df = df[df["snap"]==nsnap-1]
+        # set index to run in range(nloci)
+        df["ix"] = range(nloci); df.set_index("ix", inplace=True)
+        df["trendline_surv"] = np.zeros(nloci)
+        df.loc[:,"trendline_surv"] = np.nan
+        df["trendline_repr"] = np.zeros(nloci)
+        df.loc[:,"trendline_repr"] = np.nan
+
+        # line fittings
+        maxls = self.record["max_ls"]
+        maturity = self.record["maturity"]
+        zs = np.polyfit(x=range(maxls), y=df.loc[:maxls-1,"mean"], deg=1)
+        ps = np.poly1d(zs)
+        df.loc[:maxls-1, "trendline_surv"] = ps(range(maxls))
+        zs = np.polyfit(x=range(maxls-maturity), y=df.loc[maxls:(2*maxls-maturity-1),"mean"], deg=1)
+        ps = np.poly1d(zs)
+        df.loc[maxls:(2*maxls-maturity-1), "trendline_repr"] = ps(range(maxls-maturity))
 
         fig, axes = plt.subplots(figsize=self.fsize)
-        df[df["snap"]==nsnap-1].plot.scatter(x="locus", y="mean", ax=axes)
-        #df[df["snap"]==nsnap-1].plot.scatter(x="locus", y="mean", s=df["var"]*100, ax=axes)
+        df.plot.scatter(x="locus", y="mean", ax=axes)
+        df.trendline_surv.plot(ax=axes,c="orange")
+        df.trendline_repr.plot(ax=axes,c="orange")
         self.add_vlines(axes, color="black", expand=False)
         fig.suptitle("Phenotype mean value")
         return fig
 
     # phenotype variance
     def plot_phenotype_var(self):
-        """Plot the variance for phenotype value for last snapshot taken."""
+        """Plot the mean for phenotype value for last snapshot taken."""
         var = self.record["var_gt"]["a"]
         nsnap = var.shape[0]
         nloci = var.shape[1]
@@ -271,9 +288,29 @@ class Plotter:
         df["var"] = var.reshape(nsnap*nloci)
         df["snap"] = np.repeat(np.arange(nsnap),nloci)
         df["locus"] = np.tile(np.arange(nloci),nsnap)
+        # subset to last snapshot
+        df = df[df["snap"]==nsnap-1]
+        # set index to run in range(nloci)
+        df["ix"] = range(nloci); df.set_index("ix", inplace=True)
+        df["trendline_surv"] = np.zeros(nloci)
+        df.loc[:,"trendline_surv"] = np.nan
+        df["trendline_repr"] = np.zeros(nloci)
+        df.loc[:,"trendline_repr"] = np.nan
+
+        # line fittings
+        maxls = self.record["max_ls"]
+        maturity = self.record["maturity"]
+        zs = np.polyfit(x=range(maxls), y=df.loc[:maxls-1,"var"], deg=1)
+        ps = np.poly1d(zs)
+        df.loc[:maxls-1, "trendline_surv"] = ps(range(maxls))
+        zs = np.polyfit(x=range(maxls-maturity), y=df.loc[maxls:(2*maxls-maturity-1),"var"], deg=1)
+        ps = np.poly1d(zs)
+        df.loc[maxls:(2*maxls-maturity-1), "trendline_repr"] = ps(range(maxls-maturity))
 
         fig, axes = plt.subplots(figsize=self.fsize)
-        df[df["snap"]==nsnap-1].plot.scatter(x="locus", y="var", ax=axes)
+        df.plot.scatter(x="locus", y="var", ax=axes)
+        df.trendline_surv.plot(ax=axes,c="orange")
+        df.trendline_repr.plot(ax=axes,c="orange")
         self.add_vlines(axes, color="black", expand=False)
         fig.suptitle("Phenotype value variance")
         return fig
