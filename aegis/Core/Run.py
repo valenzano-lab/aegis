@@ -56,8 +56,8 @@ class Run:
             self.population.prng = self.conf["prng"] # NOTE
             self.conf.set_params()
         else:
-            self.population = Population(self.conf["params"],
-                self.conf["genmap"], init_ages(), init_genomes(),
+            self.population = Population(self.conf["params"],self.conf["genmap"],
+                self.conf["mapping"], init_ages(), init_genomes(),
                 init_generations(), init_gentimes())
         # Init Record
         self.record = Record(self.conf)

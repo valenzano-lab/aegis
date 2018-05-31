@@ -28,7 +28,7 @@ res_limit = res_start*5 # Maximum resource value, if variable; -1 = infinite
 res_function = lambda n,r: r # Function for updating resources; here constant
 stv_function = lambda n,r: n > r # Function for identifying starvation
 kill_at = 0 # stage/generation for no_auto/auto repectively at which to force
-            # starvation, 0 if none
+            # dieoff, 0 if none
 
 ## PENALISATION ##
 surv_pen = True # Survival penalty under starvation
@@ -55,8 +55,8 @@ m_ratio = 0.1 # Ratio of positive (0->1) to negative (1->0) mutations
 g_dist = {"s": 0.5, # Proportion of 1's in survival loci of initial genomes
         "r": 0.5,   #                      reproductive loci
         "n": 0.5}   #                      neutral loci
-n_neutral = 10 # Number of neutral loci in genome
-n_base = 10 # Number of bits per locus
+n_neutral = 5 # Number of neutral loci in genome
+n_base = 5 # Number of bits per locus
 repr_offset = 100 # Offset for repr loci in genome map (must be <= max_ls)
 neut_offset = 200 # Offset for neut loci (<= repr_offset + max_ls - maturity)
 max_ls = 98 # Maximum lifespan (must be > repr_offset) (-1 = infinite)

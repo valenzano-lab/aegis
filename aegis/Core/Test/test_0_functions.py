@@ -1,8 +1,8 @@
 from aegis.Core import chance, init_ages, init_genomes, init_generations
 from aegis.Core import quantile, fivenum, init_gentimes, make_windows,\
-        correct_r_rate
+        correct_r_rate, make_mapping
 import numpy as np
-import pytest, random
+import pytest, random, itertools
 
 magnitude = 3
 precision = 0.01
@@ -49,6 +49,15 @@ class TestFunctionsInit:
         exp2 = np.vstack((np.arange(100), np.arange(200,300), np.arange(450,550),\
                 np.arange(700,800), np.arange(950,1050)))
         assert np.array_equal(make_windows(tarr, tws, False), exp2)
+
+    def test_make_mapping(self):
+        """Test make mapping maps genotypes to their sums."""
+        n = np.random.randint(4,10)
+        mapping = make_mapping(n,n+1)
+        genotypes = np.array(map(list, itertools.product([0,1],repeat=n)))
+        ixs = np.random.randint(0, genotypes.shape[0], 10)
+        for ix in ixs:
+            assert mapping[ix] == genotypes[ix].sum()
 
     def test_pop_inits(self):
         """Test that init_ages, init_genomes and init_generations

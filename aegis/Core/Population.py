@@ -19,13 +19,14 @@ class Population:
 
     ## INITIALISATION ##
 
-    def __init__(self, params, genmap, ages, genomes, generations, gentimes):
+    def __init__(self, params, genmap, mapping, ages, genomes, generations, gentimes, targets=0):
         """Create a new population, either with newly-generated age and genome
         vectors or inheriting these from a seed."""
         self.set_genmap(genmap) # Define genome map
+        self.mapping = np.copy(mapping) # Set mapping
         self.set_attributes(params) # Define population parameters
         self.set_initial_size(params, ages, genomes, generations, gentimes) # Define size
-        self.fill(ages, genomes, generations, gentimes) # Generate individuals
+        self.fill(ages, genomes, generations, gentimes, targets) # Generate individuals
 
     def set_genmap(self, genmap):
         """Set Population genome map from an input array."""
@@ -85,7 +86,7 @@ class Population:
         else:
             self.N = params["start_pop"]
 
-    def fill(self, ages, genomes, generations, gentimes):
+    def fill(self, ages, genomes, generations, gentimes, targets=0):
         """Fill a new Population object with individuals based on input
         age, genome and generation arrays."""
         # Test for new vs seeded values
@@ -93,19 +94,29 @@ class Population:
         new_genomes = np.array_equal(genomes, init_genomes())
         new_generations = np.array_equal(generations, init_generations())
         new_gentimes = np.array_equal(gentimes, init_gentimes())
+        if not isinstance(targets, np.ndarray): targets = np.arange(self.N)
+        else: self.N = targets.sum()
         # Specify individual value arrays
         if new_ages:
             ages = self.prng.randint(0,self.max_ls-1,self.N)
+            targets_ages = np.arange(self.N)
+        else: targets_ages = targets
         if new_genomes:
             genomes = self.make_genome_array()
+            targets_genomes = np.arange(self.N)
+        else: targets_genomes = targets
         if new_generations:
             generations = np.repeat(0L, self.N)
+            targets_generations = np.arange(self.N)
+        else: targets_generations = targets
         if new_gentimes:
             gentimes = np.repeat(0L, self.N)
-        self.ages = np.copy(ages)
-        self.genomes = np.copy(genomes)
-        self.generations = np.copy(generations)
-        self.gentimes = np.copy(gentimes)
+            targets_gentimes = np.arange(self.N)
+        else: targets_gentimes = targets
+        self.ages = np.copy(ages[targets_ages])
+        self.genomes = np.copy(genomes[targets_genomes])
+        self.generations = np.copy(generations[targets_generations])
+        self.gentimes = np.copy(gentimes[targets_gentimes])
         self.loci = self.sorted_loci()
 
     def make_genome_array(self):
@@ -151,7 +162,7 @@ class Population:
 
     def clone(self):
         """Generate a new, identical population object."""
-        return Population(self.params(), self.genmap,
+        return Population(self.params(), self.genmap, self.mapping,
                 self.ages, self.genomes, self.generations, self.gentimes)
 
     def attrib_rep(self, function, pop2="",
@@ -188,9 +199,11 @@ class Population:
 
     def subset_clone(self, targets):
         """Create a clone population and subset its members."""
-        pop = self.clone()
-        pop.subset_members(targets)
-        return pop
+        #pop = self.clone()
+        #pop.subset_members(targets)
+        #return pop
+        return Population(self.params(), self.genmap, self.mapping, self.ages,
+                self.genomes, self.generations, self.gentimes, targets)
 
     ## INCREMENT VALUES ##
 
@@ -203,6 +216,14 @@ class Population:
         self.generations += 1L
 
     ## CHROMOSOMES AND LOCI ##
+
+    def sorted_loci(self):
+        """Return sorted decimal coding for genotypes of individuals in population.
+        Returned array is of shape (self.N, len(self.genmap))."""
+        g = self.genomes.reshape((self.N, 2, len(self.genmap), self.n_base))
+        g = g.transpose(0,2,1,3).reshape((self.N,len(self.genmap),2*self.n_base))
+        g = g.dot(1<<np.arange(2*self.n_base)[::-1])
+        return self.mapping[g][:, self.genmap_argsort]
 
     def chrs(self, reshape):
         """Return an array containing the first and second chromosomes
@@ -217,15 +238,15 @@ class Population:
             return self.genomes.reshape((self.N,2,len(self.genmap),self.n_base)
                     ).transpose(1,0,2,3)
 
-    def sorted_loci(self):
-        """Return the sorted locus genotypes of the individuals in the
-        population, summed within each locus and across chromosomes."""
-        # Get chromosomes of population, arranged by locus
-        chrx = self.chrs(True)
-        # Collapse bits into locus sums and add chromosome values together
-        # to get total genotype value for each locus (dim1=indiv, dim2=locus)
-        locs = np.einsum("ijkl->jk", chrx)
-        return locs[:,self.genmap_argsort]
+#    def sorted_loci(self):
+#        """Return the sorted locus genotypes of the individuals in the
+#        population, summed within each locus and across chromosomes."""
+#        # Get chromosomes of population, arranged by locus
+#        chrx = self.chrs(True)
+#        # Collapse bits into locus sums and add chromosome values together
+#        # to get total genotype value for each locus (dim1=indiv, dim2=locus)
+#        locs = np.einsum("ijkl->jk", chrx)
+#        return locs[:,self.genmap_argsort]
 
     def surv_loci(self):
         """Return the sorted survival locus genotypes of each individual in

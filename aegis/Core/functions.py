@@ -1,4 +1,4 @@
-import datetime, warnings, numpy as np, scipy.stats as st, copy
+import datetime, warnings, numpy as np, scipy.stats as st, copy, itertools
 from dateutil.relativedelta import relativedelta as delta
 
 ###################
@@ -32,6 +32,19 @@ def make_windows(array, ws, last=True):
         if last: res.append(range(array[-1]-ws, array[-1]))
         else: res.append(range(array[-1]-ws/2, array[-1]+ws/2))
         return np.array(res)
+
+def make_mapping(bitstring_length, n_states):
+    """Creates a mapping from all possible bit strings of length bitstring_lenght
+    to the set range(n_states) such that all bit strings are mapped to their sum.
+    Return a numpy array such that the index represents the integer the bit string
+    codes for in binary and the value represents the sum of that bit string."""
+    mapping = np.zeros(2**bitstring_length).astype(int)
+    genotypes = np.array(map(list, itertools.product([0,1],\
+            repeat=bitstring_length))).sum(1)
+    for i in xrange(n_states):
+        ix = np.where(genotypes==i)
+        mapping[ix] = i
+    return mapping
 
 ###############################
 ## Population Initialisation ##

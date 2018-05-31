@@ -14,7 +14,7 @@ from test_1_Config import conf_naive, conf, conf_path, ran_str, gen_trseed
 @pytest.fixture(scope="module")
 def pop(request, conf):
     """Create a sample population from the default configuration."""
-    return Population(conf["params"], conf["genmap"], init_ages(),
+    return Population(conf["params"], conf["genmap"], conf["mapping"], init_ages(),
             init_genomes(), init_generations(), init_gentimes())
 
 class TestPopulationInit:
@@ -194,41 +194,45 @@ class TestPopulationInit:
         x = random.random()
         c["params"]["g_dist"] = {"s":x,"r":x,"n":x}
         # Initialise populations
-        def pop(ages, genomes, generations, gentimes):
-            return Population(c["params"], c["genmap"], ages, genomes,
-                    generations, gentimes)
-        pops = [pop(ages_r, genomes_r, generations_r, init_gentimes()),
-                pop(ages_r, genomes_r, init_generations(), init_gentimes()),
-                pop(ages_r, init_genomes(), generations_r, init_gentimes()),
-                pop(ages_r, init_genomes(), init_generations(), init_gentimes()),
-                pop(init_ages(), genomes_r, generations_r, init_gentimes()),
-                pop(init_ages(), genomes_r, init_generations(), init_gentimes()),
-                pop(init_ages(), init_genomes(), generations_r, init_gentimes()),
-                pop(init_ages(), init_genomes(), init_generations(), init_gentimes())]
+        def pop(ages, genomes, generations, gentimes, targets):
+            return Population(c["params"], c["genmap"], c["mapping"], ages, genomes,
+                    generations, gentimes, targets)
+        tgts = np.zeros(c["params"]["start_pop"]).astype(int)
+        tgts[:200] = 1
+        tgts = tgts.astype(bool)
+        pops = [pop(ages_r, genomes_r, generations_r, init_gentimes(),tgts),
+                pop(ages_r, genomes_r, init_generations(), init_gentimes(),tgts),
+                pop(ages_r, init_genomes(), generations_r, init_gentimes(),tgts),
+                pop(ages_r, init_genomes(), init_generations(), init_gentimes(),tgts),
+                pop(init_ages(), genomes_r, generations_r, init_gentimes(),tgts),
+                pop(init_ages(), genomes_r, init_generations(), init_gentimes(),tgts),
+                pop(init_ages(), init_genomes(), generations_r, init_gentimes(),tgts),
+                pop(init_ages(), init_genomes(), init_generations(), init_gentimes(),tgts)]
+        tgts = np.arange(tgts.sum())
         # Check ages
         for n in [0,1,2,3]:
-            assert np.array_equal(ages_r, pops[n].ages)
+            assert np.array_equal(ages_r[tgts], pops[n].ages)
         for n in [4,5,6,7]:
-            assert not np.array_equal(ages_r, pops[n].ages)
+            assert not np.array_equal(ages_r[tgts], pops[n].ages)
             m = np.mean(pops[n].ages)/np.mean(np.arange(pops[n].max_ls))
             assert np.isclose(m, 1, atol=0.1)
         # Check genomes
         for n in [0,1,4,5]:
             assert (pops[n].N, pops[n].chr_len*2) == pops[n].genomes.shape
-            assert np.array_equal(genomes_r, pops[n].genomes)
+            assert np.array_equal(genomes_r[tgts], pops[n].genomes)
         for n in [2,3,6,7]:
             assert (pops[n].N, pops[n].chr_len*2) == pops[n].genomes.shape
-            assert not np.array_equal(genomes_r, pops[n].genomes)
+            assert not np.array_equal(genomes_r[tgts], pops[n].genomes)
             assert np.isclose(np.mean(pops[n].genomes), x, atol=0.02)
         # Check generations
         for n in [0,2,4,6]:
-            assert np.array_equal(generations_r, pops[n].generations)
+            assert np.array_equal(generations_r[tgts], pops[n].generations)
         for n in [1,3,5,7]:
-            assert not np.array_equal(generations_r, pops[n].generations)
+            assert not np.array_equal(generations_r[tgts], pops[n].generations)
             assert np.all(pops[n].generations == 0)
         # Check loci
         for p in pops:
-            assert np.array_equal(p.loci, p.sorted_loci())
+            assert np.array_equal(p.loci[tgts], p.sorted_loci())
         # Check gentimes
         for n in xrange(8):
             assert np.all(pops[n].gentimes == 0L)
@@ -265,11 +269,11 @@ class TestPopulationInit:
         the cloned population does not affect original (important for
         reproduction)."""
         P1 = pop.clone()
-        P2 = Population(P1.params(), P1.genmap, P1.ages, P1.genomes,
+        P2 = Population(P1.params(), P1.genmap, P1.mapping, P1.ages, P1.genomes,
                 P1.generations, P1.gentimes)
-        P3 = Population(P1.params(), P1.genmap, P1.ages[:100],
+        P3 = Population(P1.params(), P1.genmap, P1.mapping, P1.ages[:100],
                 P1.genomes[:100], P1.generations[:100], P1.gentimes[:100])
-        P4 = Population(P3.params(), P3.genmap, P3.ages, P3.genomes,
+        P4 = Population(P3.params(), P3.genmap, P3.mapping, P3.ages, P3.genomes,
                 P3.generations, P3.gentimes)
         P2.mutate(0.5, 1)
         P4.mutate(0.5, 1)

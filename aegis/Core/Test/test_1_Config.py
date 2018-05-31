@@ -77,7 +77,7 @@ def conf_naive(request, conf_path, ran_str, gen_trseed):
         # Genome structure
         c["g_dist_s"],c["g_dist_r"],c["g_dist_n"] = [random.random() for x in range(3)]
         c["n_neutral"] = random.randint(1, 100)
-        c["n_base"] = random.randint(5, 25)
+        c["n_base"] = random.randint(5, 10)
         c["repr_offset"] = random.randint(80,180)
         c["neut_offset"] = random.randint(c["repr_offset"]*3,c["repr_offset"]*5)
         # Life histories
@@ -274,7 +274,7 @@ class TestConfig:
             x = 1-y
             ssize = c["res_start"] * c["chr_len"] * 2
             epsbar = np.sqrt(1.0/(2*ssize)*np.log(2.0/zeta))
-            delta = epsbar * 0.1
+            delta = epsbar
             k = np.log(delta*(alpha+beta)/abs(alpha*y-beta*x)) / \
                     np.log(abs(1-alpha-beta))
             assert c["min_gen"] == int(k * c["scale"])

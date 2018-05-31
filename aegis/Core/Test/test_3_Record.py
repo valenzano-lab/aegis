@@ -37,8 +37,8 @@ def pop(request, conf):
     """Create a sample population from the default configuration."""
     gm = conf["genmap"]
     np.random.shuffle(gm)
-    return Population(conf["params"], gm, init_ages(), init_genomes(),
-            init_generations(), init_gentimes())
+    return Population(conf["params"], gm, conf["mapping"], init_ages(),\
+            init_genomes(), init_generations(), init_gentimes())
 
 @pytest.fixture(scope="module")
 def rec(request, conf):

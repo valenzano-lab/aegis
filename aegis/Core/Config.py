@@ -10,8 +10,8 @@
 
 ## PACKAGE IMPORT ##
 import numpy as np
-import copy, imp, math, pickle
-from .functions import deep_key, deep_eq, make_windows, correct_r_rate
+import copy, imp, math, pickle, itertools
+from .functions import deep_key, deep_eq, make_windows, correct_r_rate, make_mapping
 
 class Config(dict):
     """Object derived from imported config module."""
@@ -91,6 +91,8 @@ class Config(dict):
         self["genmap_argsort"] = np.argsort(self["genmap"])
         self["chr_len"] = len(self["genmap"]) * self["n_base"]
         self["n_states"] = 2*self["n_base"]+1
+        # Mapping
+        self["mapping"] = make_mapping(2*self["n_base"], self["n_states"])
         # Survival and reproduction
         self["death_bound"] = np.array(self["death_bound"])
         self["repr_bound"] = np.array(self["repr_bound"])
@@ -134,7 +136,7 @@ class Config(dict):
             x = 1-y
             ssize = self["res_start"] * self["chr_len"] * 2 # sample size
             epsbar = np.sqrt(1.0/(2*ssize)*np.log(2.0/zeta))
-            delta = epsbar * 0.1
+            delta = epsbar
             k = np.log(delta*(alpha+beta)/abs(alpha*y-beta*x)) / \
                     np.log(abs(1-alpha-beta))
             # Assign generation threshold
