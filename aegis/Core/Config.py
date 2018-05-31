@@ -162,7 +162,6 @@ class Config(dict):
         also compatible."""
         if type(self["age_dist_N"])==int:
             n = self["n_stages"] if not self["n_stages"] == "auto" else self["min_gen"]
-            print n
             if self["age_dist_N"]*self["n_snapshots"]>n:
                 s = "Age distribution windows must be disjoint."
                 raise ValueError(s)
