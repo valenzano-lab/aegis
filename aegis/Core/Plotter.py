@@ -9,6 +9,7 @@
 from .functions import make_windows, timenow, get_runtime
 import numpy as np, pandas as pd, os, shutil
 import matplotlib
+matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
 try:
@@ -32,7 +33,7 @@ class Plotter:
             print get_runtime(self.starttime, timenow(False), s)
             self.plot_methods = ["plot_population_resources",\
                                  "plot_phenotype_distribution",\
-                                 "plot_phenotype_distribution_grouped",\
+                                 #"plot_phenotype_distribution_grouped",\
                                  #"plot_genetic_variance",\
                                  "plot_density",\
                                  "plot_phenotype_mean",\
@@ -44,13 +45,13 @@ class Plotter:
                                  ]
             self.plot_names = ["01_pop-res",\
                                "02_phtyp-dist",\
-                               "03_phtyp-dist-group",\
+                               #"03_phtyp-dist-group",\
                                #"04_gen-var",\
                                "04_density",\
                                "05_phtyp-mean",\
                                "06_phtyp-var",\
                                "07_bits",\
-                               "08_bits_window",\
+                               "08_bits-window",\
                                "09_death-rate",\
                                "10_age-dist"\
                                ]
@@ -70,6 +71,13 @@ class Plotter:
         if self.record["age_dist_N"] == "all":
             self.plot_methods.remove("plot_age_distribution")
             self.plot_names.remove("10_age-dist")
+        if self.record["n_snapshots"] < 2:
+            self.plot_methods.remove("plot_phenotype_distribution")
+            self.plot_names.remove("02_phtyp-dist")
+            self.plot_methods.remove("plot_bits_mean")
+            self.plot_names.remove("07_bits")
+            self.plot_methods.remove("plot_bits_sliding_mean")
+            self.plot_names.remove("08_bits-window")
         # Make/replace output directory
         pm,pn,p = self.plot_methods, self.plot_names, self.figures
         if not len(pm) == len(pn) == len(p):
@@ -118,6 +126,8 @@ class Plotter:
 
     # phenotype distribution
     def plot_phenotype_distribution(self):
+        if self.record["n_snapshots"] < 2: return
+
         data = self.record["density_per_locus"]["a"]
 
         shape = data.shape
@@ -156,6 +166,8 @@ class Plotter:
     # phenotype distribution grouped
     def plot_phenotype_distribution_grouped(self):
         """(least fit, middle, 3 top)"""
+        if self.record["n_snapshots"] < 2: return
+
         data = self.record["density_per_locus"]["a"]
 
         shape = data.shape
@@ -269,6 +281,8 @@ class Plotter:
     # bits
     def plot_bits(self, key, title):
         """Plot bit value distribution for last snapshot taken."""
+        if self.record["n_snapshots"] < 2: return
+
         bits = self.record[key]
         nsnap = bits.shape[0]
         nbits = bits.shape[1]
@@ -289,7 +303,6 @@ class Plotter:
             group.plot(kind="scatter", x="bit", y="value", s=5, legend=False,\
                     ax=axes[c])
             axes[c].set_title(name,loc="right")
-            #axes[c].set_xlim(0,1)
             axes[c].set_ylim(0,1)
             self.add_vlines(axes[c], color="black", expand=True)
             c += 1

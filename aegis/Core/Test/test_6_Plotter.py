@@ -20,8 +20,8 @@ def test_plot(rec_names):
     for rec in rec_names:
         rec_path = os.path.join(path,rec)
         a = Plotter(rec_path)
-        a.generate_plots()
+        a.generate_figures()
         a.record["output_prefix"] = os.path.join(path,rec[:-4])
-        a.save_plots()
+        a.save_figures()
         os.remove(rec_path)
         shutil.rmtree(a.record["output_prefix"]+"_plots")
