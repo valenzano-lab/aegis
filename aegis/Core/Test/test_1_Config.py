@@ -67,10 +67,10 @@ def conf_naive(request, conf_path, ran_str, gen_trseed):
         c["age_dist_N"] = age_dist_N_var
         ## SIMULATION FUNDAMENTALS ##
         # Death and reproduction parameters
-        db_low, rb_low = np.random.uniform(size=2)
-        db_high = db_low + random.uniform(0, 1-db_low)
+        sb_low, rb_low = np.random.uniform(size=2)
+        sb_high = sb_low + random.uniform(0, 1-sb_low)
         rb_high = rb_low + random.uniform(0, 1-rb_low)
-        c["death_bound"] = np.array([db_low, db_high])
+        c["surv_bound"] = np.array([sb_low, sb_high])
         c["repr_bound"] = np.array([rb_low, rb_high])
         # Mutation and recombination
         c["r_rate"], c["m_rate"], c["m_ratio"] = [random.random()/10 for x in range(3)]
@@ -242,7 +242,6 @@ class TestConfig:
         assert c["n_states"] ==  2*c["n_base"]+1
         # Survival and reproduction
         assert c["repr_bound"][1]/crb1 == 2 if sexvar else 1
-        assert np.array_equal(c["surv_bound"],1-c["death_bound"][::-1])
         assert np.array_equal(c["s_range"],
                 np.linspace(c["surv_bound"][0],c["surv_bound"][1],
                     c["n_states"]))

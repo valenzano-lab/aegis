@@ -35,8 +35,8 @@ surv_pen = True # Survival penalty under starvation
 repr_pen = False # Reproduction penalty under starvation
 pen_cuml = True # Is the penalty cumulative? If True the function compunds,
                 # otherwise it is always applied on the default value
-surv_pen_func = lambda s_range,n,r:
-repr_pen_func = lambda r_range,n,r:
+surv_pen_func = lambda s_range,n,r: s_range*0.9
+repr_pen_func = lambda r_range,n,r: r_range
 
 ## AUTOCOMPUTING GENERATION NUMBER ##
 zeta = 10**-2   # Upper bound for probability that neutral genome will deviate from
@@ -45,16 +45,16 @@ scale = 1.1 # Scaling factor applied to target generation estimated for delta
 max_stages = 500000 # Maximum number of stages to run before terminating
 
 ## SIMULATION FUNDAMENTALS: CHANGE WITH CARE ##
-death_bound = [0.001, 0.02] # min and max death rates
-repr_bound = [0, 0.2] # min and max reproduction rates
+surv_bound = [0.94, 0.96] # min and max death rates
+repr_bound = [0, 0.5] # min and max reproduction rates
 r_rate = 0.01 # recombination rate, if sexual
 m_rate = 0.001 # mutation rate
 m_ratio = 0.1 # Ratio of positive (0->1) to negative (1->0) mutations
 g_dist = {"s": 0.5, # Proportion of 1's in survival loci of initial genomes
         "r": 0.5,   #                      reproductive loci
         "n": 0.5}   #                      neutral loci
-n_neutral = 10 # Number of neutral loci in genome
-n_base = 10 # Number of bits per locus
+n_neutral = 5 # Number of neutral loci in genome
+n_base = 5 # Number of bits per locus
 repr_offset = 100 # Offset for repr loci in genome map (must be <= max_ls)
 neut_offset = 200 # Offset for neut loci (<= repr_offset + max_ls - maturity)
 max_ls = 98 # Maximum lifespan (must be > repr_offset) (-1 = infinite)

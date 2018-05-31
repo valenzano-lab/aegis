@@ -8,8 +8,7 @@ n_runs = 1 # Total number of independent runs
 n_stages = 10 # Total number of stages per run [int/"auto"]
 n_snapshots = 2 # Points in run at which to record detailed data
 path_to_seed_file = "" # Path to simulation seed file, if no seed then ""
-    # see README for which parameters are inherited from seed, which are
-    # defined anew in this config file
+    # see README for which parameters are inherited from seed, which are # defined anew in this config file
 max_fail = 10 # Maximum number of failed attempts tolerated for each run
 
 ## OUTPUT SPECIFICATIONS ##
@@ -38,8 +37,6 @@ pen_cuml = True # Is the penalty cumulative? If True the function compunds,
 surv_pen_func = lambda s_range, n, r: 1-(1-s_range)*3
 repr_pen_func = lambda r_range, n, r: r_range/3.0
 
-print repr_pen_func(3,2,1)
-
 ## AUTOCOMPUTING GENERATION NUMBER ##
 zeta = 10**-2   # Upper bound for probability that neutral genome will deviate from
                 # its expected value
@@ -47,7 +44,7 @@ scale = 1.1 # Scaling factor applied to target generation estimated for delta
 max_stages = 500000 # Maximum number of stages to run before terminating
 
 ## SIMULATION FUNDAMENTALS: CHANGE WITH CARE ##
-death_bound = [0.001, 0.02] # min and max death rates
+surv_bound = [0.98, 0.999] # min and max death rates
 repr_bound = [0, 0.2] # min and max reproduction rates
 r_rate = 0.01 # recombination rate, if sexual
 m_rate = 0.001 # mutation rate
