@@ -274,7 +274,7 @@ class TestConfig:
             x = 1-y
             ssize = c["res_start"] * c["chr_len"] * 2
             epsbar = np.sqrt(1.0/(2*ssize)*np.log(2.0/zeta))
-            delta = epsbar * 0.1
+            delta = epsbar
             k = np.log(delta*(alpha+beta)/abs(alpha*y-beta*x)) / \
                     np.log(abs(1-alpha-beta))
             assert c["min_gen"] == int(k * c["scale"])

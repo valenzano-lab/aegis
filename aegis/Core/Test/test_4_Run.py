@@ -40,23 +40,22 @@ def confx(request, conf_path):
         c.generate()
     elif request.param == "auto-nodieoff":
         c["m_rate"] = 0.02
-        c["m_ratio"] = 0.95
+        c["m_ratio"] = 0.90
         c["n_stages"] = "auto"
-        # now min_gen = 122
         c.generate()
     elif request.param == "auto-max_stages":
         c["m_rate"] = 0.02
-        c["m_ratio"] = 0.95
+        c["m_ratio"] = 0.90
         c["n_stages"] = "auto"
         c["max_stages"] = 200
-        # now min_gen = 122
+        print "age_dist_N: ", c["age_dist_N"]
+        print "n snaps: ", c["n_snapshots"]
         c.generate()
     elif request.param == "auto-dieoff":
         c["m_rate"] = 0.02
-        c["m_ratio"] = 0.95
+        c["m_ratio"] = 0.90
         c["n_stages"] = "auto"
         c["max_fail"] = 2
-        # now min_gen = 122
         c.generate()
         c["kill_at"] = c["snapshot_generations"][1]+1
     elif request.param == "noauto-dieoff":
@@ -422,13 +421,14 @@ class TestRun:
             for i in xrange(2):
                 R.record["snapshot_pops"][i] = R.population.clone()
             a = np.linspace(0,R.conf["max_stages"]/2,nsnap).astype(int)
+            minl = R.conf["max_stages"]/2
             x1 = x2 = 0
             while x1==x2:
-                x1 = np.random.randint(a[i],a[i+1]-1)
-                x2 = np.random.randint(a[i],a[i+1]-1)
+                x1 = np.random.randint(a[0],a[1]-1)
+                x2 = np.random.randint(a[0],a[1]-1)
             R.record["age_dist_stages"][0] = range(np.random.randint(
                 min(x1,x2),max(x1,x2)))
-            minl = abs(x1-x2)
+            minl = min(minl,len(R.record["age_dist_stages"][0]))
             R.n_stage = R.record["age_dist_stages"][0][-1]
             R.population.generations[:] = R.conf["age_dist_generations"][1][0]-1
             R.n_snap_ad = 0
