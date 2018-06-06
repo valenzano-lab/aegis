@@ -33,6 +33,7 @@ class Plotter:
             print get_runtime(self.starttime, timenow(False), s)
             self.plot_methods = ["plot_population_resources",\
                                  "plot_phenotype_distribution",\
+                                 #"plot_phenotype_distribution_last",\
                                  #"plot_phenotype_distribution_grouped",\
                                  #"plot_genetic_variance",\
                                  "plot_density",\
@@ -45,6 +46,7 @@ class Plotter:
                                  ]
             self.plot_names = ["01_pop-res",\
                                "02_phtyp-dist",\
+                               #"022_phtyp-dist",\
                                #"03_phtyp-dist-group",\
                                #"04_gen-var",\
                                "04_density",\
@@ -106,9 +108,9 @@ class Plotter:
         l2 = self.record["max_ls"]*exp
         l3 = (2*l2-l1)
 
-        axes.axvline(l1,c=color,ls="--",lw=0.5)
-        axes.axvline(l2,c=color,ls="--",lw=0.5)
-        axes.axvline(l3,c=color,ls="--",lw=0.5)
+        axes.axvline(l1,c=color,ls="--",lw=1.0)
+        axes.axvline(l2,c=color,ls="--",lw=1.0)
+        axes.axvline(l3,c=color,ls="--",lw=1.0)
 
     # population and resources
     def plot_population_resources(self):
@@ -119,8 +121,11 @@ class Plotter:
         pop = pop[ix]
         res = res[ix]
         df = pd.DataFrame({"pop":pop, "res":res})
-        plot = df.plot(figsize=self.fsize)
-        fig = plot.get_figure()
+
+        fig,axes = plt.subplots(figsize=self.fsize)
+        plot = df.plot(ax=axes)
+        axes.set_xlabel("stage")
+        axes.set_ylabel("N",rotation="horizontal")
         fig.suptitle("Population size")
         return fig
 
@@ -139,10 +144,6 @@ class Plotter:
         df["snap"] = np.repeat(np.arange(nsnap),nloci)
         df["locus"] = np.tile(np.arange(nloci),nsnap)
 
-        #d1 = np.sqrt(nsnap).round()
-        #d2 = (nsnap/d1).round()
-        #dims = [int(d1),int(d2)]
-        #ix = [[i,j] for i in range(dims[0]) for j in range(dims[1])]
         cmap = matplotlib.cm.get_cmap("Spectral")
         colors = [cmap(i) for i in np.linspace(0,1,npts)]
 
@@ -152,16 +153,52 @@ class Plotter:
         for name,group in df.groupby("snap"):
             group[range(npts)].plot(kind="area", color=colors, legend=False,\
                     x=group["locus"],ax=axes[c])
-            axes[c].set_title(name,loc="right")
-            self.add_vlines(axes[c], color="white", expand=False)
+            axes[c].text(0.975,0.1,str(int(name)+1),transform=axes[c].transAxes)
+            plt.setp(axes[c].get_yticklabels(),fontsize=8)
+            self.add_vlines(axes[c], color="black", expand=False)
             c+=1
 
+        axes[0].text(0.96,1.1,"snap",transform=axes[0].transAxes)
         labels = ["least fit"]+["..."]*(npts-2)+["most fit"]
         #labels = np.arange(npts).astype(str)
         lines = axes[0].get_lines()
         fig.legend(lines,labels,loc="center right")
         fig.suptitle("Phenotype distribution")
         return fig
+
+    # phenotype distribution
+#    def plot_phenotype_distribution_last(self):
+#        data = self.record["density_per_locus"]["a"]
+#
+#        shape = data.shape
+#        nsnap = shape[0]
+#        nloci = shape[1]
+#        npts = shape[2]
+#
+#        df = pd.DataFrame(data.reshape(nsnap*nloci,npts))
+#        df["snap"] = np.repeat(np.arange(nsnap),nloci)
+#        df["locus"] = np.tile(np.arange(nloci),nsnap)
+#
+#        # subset to last snapshot
+#        df = df[df["snap"] == nsnap-1]
+#        df.drop(columns=["snap"],inplace=True)
+#        df.set_index("locus",inplace=True)
+#
+#        cmap = matplotlib.cm.get_cmap("Spectral")
+#        colors = [cmap(i) for i in np.linspace(0,1,npts)]
+#
+#        fig, axes = plt.subplots(figsize=self.fsize)
+#        df.plot(kind="area", color=colors, legend=False,\
+#                    ax=axes)
+#
+#        labels = ["least fit"]+["..."]*(npts-2)+["most fit"]
+#        lines = axes.get_lines()
+#        fig.legend(lines,labels,loc="center right")
+#        #fig.suptitle("Phenotype distribution")
+#        axes.set_xlabel("locus")
+#        axes.set_ylabel("phenotype")
+#        self.add_vlines(axes, color="white", expand=False)
+#        return fig
 
     # phenotype distribution grouped
     def plot_phenotype_distribution_grouped(self):
@@ -274,6 +311,8 @@ class Plotter:
         df.trendline_surv.plot(ax=axes,c="orange")
         df.trendline_repr.plot(ax=axes,c="orange")
         self.add_vlines(axes, color="black", expand=False)
+        axes.set_xlabel("locus")
+        axes.set_ylabel("phenotype")
         fig.suptitle("Phenotype mean value")
         return fig
 
@@ -320,6 +359,12 @@ class Plotter:
         """Plot bit value distribution for last snapshot taken."""
         if self.record["n_snapshots"] < 2: return
 
+        maxls = self.record["max_ls"]
+        maturity = self.record["maturity"]
+        n_neutral = self.record["n_neutral"]
+        n_base = self.record["n_base"]
+        ix = (2*maxls-maturity)*n_base
+
         bits = self.record[key]
         nsnap = bits.shape[0]
         nbits = bits.shape[1]
@@ -329,18 +374,30 @@ class Plotter:
         df["snap"] = np.repeat(np.arange(nsnap),nbits)
         df["bit"] = np.tile(np.arange(nbits),nsnap)
 
+        #print df[df["snap"]==0].loc[ix:,"value"]
+        #print df[df["snap"]==0].loc[ix:,"value"].mean()
+        #print df[df["snap"]==0].loc[ix:,"value"].std()
+
         def find_dim(n):
             return int(np.ceil(np.sqrt(n)))
 
-        fig, axes = plt.subplots(find_dim(nsnap),find_dim(nsnap),figsize=self.fsize,sharex=True,sharey=True)
+        #fig, axes = plt.subplots(find_dim(nsnap),find_dim(nsnap),figsize=self.fsize,sharex=True,sharey=True)
+        fig, axes = plt.subplots(4,3,figsize=self.fsize,sharex=True,sharey=True)
         axes = axes.flatten()
 
         c = 0
         for name,group in df.groupby("snap"):
             group.plot(kind="scatter", x="bit", y="value", s=5, legend=False,\
                     ax=axes[c])
-            axes[c].set_title(name,loc="right")
+            y_neutral = np.repeat(group.loc[ix:,"value"].mean(),nbits)
+            y_std = group.loc[ix:,"value"].std()
+            axes[c].plot(group["bit"], y_neutral, color="orange", lw=0.8)
+            axes[c].fill_between(group["bit"],y_neutral-2*y_std,y_neutral+2*y_std,\
+                    color="b",alpha=0.2)
+
+            axes[c].text(0.95,1.02,str(int(name)+1),transform=axes[c].transAxes)
             axes[c].set_ylim(0,1)
+            axes[c].set_ylabel("")
             self.add_vlines(axes[c], color="black", expand=True)
             c += 1
 
