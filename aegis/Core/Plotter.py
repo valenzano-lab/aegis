@@ -154,7 +154,7 @@ class Plotter:
             group[range(npts)].plot(kind="area", color=colors, legend=False,\
                     x=group["locus"],ax=axes[c])
             axes[c].text(0.975,0.1,str(int(name)+1),transform=axes[c].transAxes)
-            plt.setp(axes[c].get_yticklabels(),fontsize=8)
+            plt.setp(axes[c].get_yticklabels(),fontsize=10)
             self.add_vlines(axes[c], color="black", expand=False)
             c+=1
 
@@ -389,8 +389,8 @@ class Plotter:
         for name,group in df.groupby("snap"):
             group.plot(kind="scatter", x="bit", y="value", s=5, legend=False,\
                     ax=axes[c])
-            y_neutral = np.repeat(group.loc[ix:,"value"].mean(),nbits)
-            y_std = group.loc[ix:,"value"].std()
+            y_neutral = np.repeat(group.set_index("bit").loc[ix:,"value"].mean(),nbits)
+            y_std = group.set_index("bit").loc[ix:,"value"].std()
             axes[c].plot(group["bit"], y_neutral, color="orange", lw=0.8)
             axes[c].fill_between(group["bit"],y_neutral-2*y_std,y_neutral+2*y_std,\
                     color="b",alpha=0.2)
