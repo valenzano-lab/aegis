@@ -297,12 +297,13 @@ class Plotter:
         df.loc[:,"trendline_repr"] = np.nan
 
         # line fittings
+        fitdeg = 3 # degree of the polynomial fitting
         maxls = self.record["max_ls"]
         maturity = self.record["maturity"]
-        zs = np.polyfit(x=range(maxls), y=df.loc[:maxls-1,"mean"], deg=1)
+        zs = np.polyfit(x=range(maxls), y=df.loc[:maxls-1,"mean"], deg=fitdeg)
         ps = np.poly1d(zs)
         df.loc[:maxls-1, "trendline_surv"] = ps(range(maxls))
-        zs = np.polyfit(x=range(maxls-maturity), y=df.loc[maxls:(2*maxls-maturity-1),"mean"], deg=1)
+        zs = np.polyfit(x=range(maxls-maturity), y=df.loc[maxls:(2*maxls-maturity-1),"mean"], deg=fitdeg)
         ps = np.poly1d(zs)
         df.loc[maxls:(2*maxls-maturity-1), "trendline_repr"] = ps(range(maxls-maturity))
 
@@ -313,7 +314,7 @@ class Plotter:
         self.add_vlines(axes, color="black", expand=False)
         axes.set_xlabel("locus")
         axes.set_ylabel("phenotype")
-        fig.suptitle("Phenotype mean value")
+        fig.suptitle("Phenotype mean value\n(polyfit deg = "+str(fitdeg)+")")
         return fig
 
     # phenotype variance
@@ -337,12 +338,13 @@ class Plotter:
         df.loc[:,"trendline_repr"] = np.nan
 
         # line fittings
+        fitdeg = 3 # degree of the polynomial fitting
         maxls = self.record["max_ls"]
         maturity = self.record["maturity"]
-        zs = np.polyfit(x=range(maxls), y=df.loc[:maxls-1,"var"], deg=1)
+        zs = np.polyfit(x=range(maxls), y=df.loc[:maxls-1,"var"], deg=fitdeg)
         ps = np.poly1d(zs)
         df.loc[:maxls-1, "trendline_surv"] = ps(range(maxls))
-        zs = np.polyfit(x=range(maxls-maturity), y=df.loc[maxls:(2*maxls-maturity-1),"var"], deg=1)
+        zs = np.polyfit(x=range(maxls-maturity), y=df.loc[maxls:(2*maxls-maturity-1),"var"], deg=fitdeg)
         ps = np.poly1d(zs)
         df.loc[maxls:(2*maxls-maturity-1), "trendline_repr"] = ps(range(maxls-maturity))
 
@@ -351,7 +353,7 @@ class Plotter:
         df.trendline_surv.plot(ax=axes,c="orange")
         df.trendline_repr.plot(ax=axes,c="orange")
         self.add_vlines(axes, color="black", expand=False)
-        fig.suptitle("Phenotype value variance")
+        fig.suptitle("Phenotype value variance\n(polyfit deg = "+str(fitdeg)+")")
         return fig
 
     # bits
