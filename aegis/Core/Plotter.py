@@ -42,7 +42,8 @@ class Plotter:
                                  "plot_bits_mean",\
                                  "plot_bits_sliding_mean",\
                                  "plot_death_rate",\
-                                 "plot_age_distribution"\
+                                 "plot_age_distribution",\
+                                 "plot_age_distribution_pie"\
                                  ]
             self.plot_names = ["01_pop-res",\
                                "02_phtyp-dist",\
@@ -55,7 +56,8 @@ class Plotter:
                                "07_bits",\
                                "08_bits-window",\
                                "09_death-rate",\
-                               "10_age-dist"\
+                               "10_age-dist",\
+                               "11_age-dist-pie"\
                                ]
             self.figures = []
         finally:
@@ -72,6 +74,7 @@ class Plotter:
         # Remove not generated plot names
         if self.record["age_dist_N"] == "all":
             self.plot_methods.remove("plot_age_distribution")
+            self.plot_methods.remove("plot_age_distribution_pie")
             self.plot_names.remove("10_age-dist")
         if self.record["n_snapshots"] < 2:
             self.plot_methods.remove("plot_phenotype_distribution")
@@ -436,10 +439,39 @@ class Plotter:
     # TODO what when age_dist_N="all"
     def plot_age_distribution(self):
         if self.record["age_dist_N"] == "all": return
-        self.record.compute_snapshot_age_dist_avrg()
+        if "snapshot_age_distribution_avrg" not in self.record.keys():
+            self.record.compute_snapshot_age_dist_avrg()
         data = self.record["snapshot_age_distribution_avrg"]
         df = pd.DataFrame(data.T)
         plot = df.plot(figsize=self.fsize)
         fig = plot.get_figure()
+        fig.suptitle("Age distribution")
+        return fig
+
+    def plot_age_distribution_pie(self):
+        """Plot pie chart of age distribution for the last snapshot."""
+        if self.record["age_dist_N"] == "all": return
+        if self.record["max_ls"]>100:
+            print "Warning: age_dist_pie doesn't support records with max_ls>100."
+            return
+        if "snapshot_age_distribution_avrg" not in self.record.keys():
+            self.record.compute_snapshot_age_dist_avrg()
+        data = self.record["snapshot_age_distribution_avrg"][-1]
+        print data.sum()
+        maturity = self.record["maturity"]
+        maxls = self.record["max_ls"]
+        bins1 = np.array([data[:maturity].sum(), data[maturity:].sum()])
+        labels1 = ["<maturity", ">=maturity"]
+        series1 = pd.Series(bins1, index=labels1, name="")
+
+        data = np.append(data,np.zeros(100-maxls))
+        data = data.reshape(data.size/5,5)
+        bins2 = data.sum(1)
+        labels2 = [str(x)+"<=age<"+str(x+5) for x in range(0,100,5)]
+        series2 = pd.Series(bins2, index=labels2, name="")
+
+        fig,axes = plt.subplots(1,2,figsize=(12,6))
+        series1.plot.pie(ax=axes[0])
+        series2.plot.pie(ax=axes[1])
         fig.suptitle("Age distribution")
         return fig
