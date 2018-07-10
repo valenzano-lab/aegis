@@ -76,6 +76,7 @@ class Plotter:
             self.plot_methods.remove("plot_age_distribution")
             self.plot_methods.remove("plot_age_distribution_pie")
             self.plot_names.remove("10_age-dist")
+            self.plot_names.remove("11_age-dist-pie")
         if self.record["n_snapshots"] < 2:
             self.plot_methods.remove("plot_phenotype_distribution")
             self.plot_names.remove("02_phtyp-dist")
