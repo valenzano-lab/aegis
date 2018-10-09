@@ -40,12 +40,12 @@ def confx(request, conf_path):
         c.generate()
     elif request.param == "auto-nodieoff":
         c["m_rate"] = 0.02
-        c["m_ratio"] = 0.90
+        c["m_ratio"] = 0.80
         c["n_stages"] = "auto"
         c.generate()
     elif request.param == "auto-max_stages":
         c["m_rate"] = 0.02
-        c["m_ratio"] = 0.90
+        c["m_ratio"] = 0.80
         c["n_stages"] = "auto"
         c["max_stages"] = 200
         print "age_dist_N: ", c["age_dist_N"]
@@ -53,7 +53,7 @@ def confx(request, conf_path):
         c.generate()
     elif request.param == "auto-dieoff":
         c["m_rate"] = 0.02
-        c["m_ratio"] = 0.90
+        c["m_ratio"] = 0.80
         c["n_stages"] = "auto"
         c["max_fail"] = 2
         c.generate()

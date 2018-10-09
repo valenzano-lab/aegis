@@ -36,9 +36,9 @@ surv_pen_func = lambda s_range, n, r: 1-(1-s_range)*3
 repr_pen_func = lambda r_range, n, r: r_range
 
 ## AUTOCOMPUTING GENERATION NUMBER ##
-zeta = 10**-2   # Upper bound for probability that neutral genome will deviate from
-                # its expected value
-scale = 1.1 # Scaling factor applied to target generation estimated for delta
+deltabar = 0.01 # Relative error allowed for the deviation from the statioinary
+                # distribution
+scale = 1.01 # Scaling factor applied to target generation estimated for deltabar
 max_stages = 500000 # Maximum number of stages to run before terminating
 
 ## SIMULATION FUNDAMENTALS: CHANGE WITH CARE ##

@@ -54,11 +54,10 @@ def conf_naive(request, conf_path, ran_str, gen_trseed):
         ## RESOURCE PARAMETERS ##
         c["res_limit"] = random.randint(5000,10000)
         a,b,d,e = np.random.uniform(size=4)
-        # leave resources constant since autostage not implemented for non-constant
         #c["res_function"] = lambda n,r: int((r-n)*a + b) # Random affine
         c["stv_function"] = lambda n,r: e*n > d*r
         ## AUTOCOMPUTING STAGE NUMBER ##
-        c["delta"] = 10**-random.randint(5,15)
+        c["deltabar"] = random.random()*0.1
         c["scale"] = random.randint(9, 19)/10.0
         c["max_stages"] = random.randint(200,400)
         ## AGE DISTRIBUTION RECORDING ##
@@ -266,12 +265,9 @@ class TestConfig:
         # Snapshot stages
         if c["auto"]:
             alpha, beta = c["m_rate"], c["m_rate"]*c["m_ratio"]
-            zeta = c["zeta"]
+            delta = c["deltabar"]*beta/(alpha+beta)
             y = c["g_dist"]["n"]
             x = 1-y
-            ssize = c["res_start"] * c["chr_len"] * 2
-            epsbar = np.sqrt(1.0/(2*ssize)*np.log(2.0/zeta))
-            delta = epsbar
             k = np.log(delta*(alpha+beta)/abs(alpha*y-beta*x)) / \
                     np.log(abs(1-alpha-beta))
             assert c["min_gen"] == int(k * c["scale"])
