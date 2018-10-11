@@ -1,7 +1,7 @@
 from aegis.Core import Config, Population # Classes
 from aegis.Core import chance, init_ages, init_genomes, init_generations
 from aegis.Core import init_gentimes
-import pytest, random, copy
+import pytest, random, copy, scipy.stats
 import numpy as np
 
 from test_1_Config import conf_path, gen_trseed
@@ -17,14 +17,14 @@ def conf(request, conf_path):
     # optimise parameters for testing
     delta = 0.01*c["mu"] # choose delta
     epsbar = delta  # choose epsbar
-    c["zeta"] = 0.03     # choose zeta
+    c["zeta"] = 0.01     # choose zeta
     c["eps"] = epsbar + delta
     gsize = (2*c["max_ls"]-c["maturity"]+c["n_neutral"])*c["n_base"]*2
-    print gsize
-    samplesize = 1.0/(2*epsbar**2)*np.log(2.0/c["zeta"]) # compute sample size
-    print samplesize
-    c["start_pop"] = (int(samplesize/gsize)+2)/2*2
+    #samplesize = 1.0/(2*epsbar**2)*np.log(2.0/c["zeta"]) # compute sample size
+    samplesize = (1.0/(2*epsbar)*scipy.stats.norm.ppf(1-c["zeta"]/2.0))**2
+    c["start_pop"] = (int(samplesize/gsize)+1)/2*2
     print c["start_pop"]
+    #assert False
     c.generate()
     return c
 
@@ -34,7 +34,7 @@ def pop(request, conf):
     return Population(conf["params"], conf["genmap"], conf["mapping"], init_ages(),
             init_genomes(), init_generations(), init_gentimes())
 
-@pytest.mark.skip
+#@pytest.mark.skip
 def test_autostage_asex(conf, pop):
     """
     Test that without selection, genomes of an only mutating population
@@ -58,7 +58,7 @@ def test_autostage_asex(conf, pop):
     print "zeta: ", c["zeta"]
     assert np.isclose(c["mu"], obs[-1], atol=c["eps"])
 
-@pytest.mark.skip
+#@pytest.mark.skip
 def test_autostage_sex(conf, pop):
     """
     Test that without selection, genomes of a mutating, recombining and
