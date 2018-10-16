@@ -101,9 +101,9 @@ class Plotter:
         s = "\nSuccessfully saved all figures. Total runtime"
         print get_runtime(self.starttime, timenow(False), s)
 
-    ###########
-    ## plots ##
-    ###########
+    #######################
+    # auxiliary functions #
+    #######################
 
     # vertical lines for maturity, reproduction, neutral
     def add_vlines(self, axes, color="black", expand=False):
@@ -115,6 +115,21 @@ class Plotter:
         axes.axvline(l1,c=color,ls="--",lw=1.0)
         axes.axvline(l2,c=color,ls="--",lw=1.0)
         axes.axvline(l3,c=color,ls="--",lw=1.0)
+
+    def add_generation_info(self, fig, x=0.75, y=0.95):
+        tf = "min_gen" in self.record.keys()
+        if tf: mingen = self.record["min_gen"]
+        gendist = self.record["generation_dist"]
+        ix = np.where(gendist.sum(1)!=0)[-1][-1]
+        curgen = int(gendist[ix][0])
+
+        s = "generation = "
+        s += str(mingen)+"/"+str(curgen) if tf else str(curgen)
+        fig.text(x,y,s)
+
+    ###########
+    ## plots ##
+    ###########
 
     # population and resources
     def plot_population_resources(self):
@@ -131,6 +146,7 @@ class Plotter:
         axes.set_xlabel("stage")
         axes.set_ylabel("N",rotation="horizontal")
         fig.suptitle("Population size")
+        self.add_generation_info(fig)
         return fig
 
     # phenotype distribution
@@ -319,6 +335,7 @@ class Plotter:
         axes.set_xlabel("locus")
         axes.set_ylabel("phenotype")
         fig.suptitle("Phenotype mean value\n(polyfit deg = "+str(fitdeg)+")")
+        self.add_generation_info(fig)
         return fig
 
     # phenotype variance
