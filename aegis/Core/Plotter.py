@@ -38,7 +38,8 @@ class Plotter:
                                  #"plot_genetic_variance",\
                                  "plot_density",\
                                  "plot_phenotype_mean",\
-                                 "plot_phenotype_var",\
+                                 "plot_fitness_term",\
+                                 #"plot_phenotype_var",\
                                  "plot_bits_mean",\
                                  "plot_bits_sliding_mean",\
                                  "plot_death_rate",\
@@ -52,7 +53,8 @@ class Plotter:
                                #"04_gen-var",\
                                "04_density",\
                                "05_phtyp-mean",\
-                               "06_phtyp-var",\
+                               "06_fitness-term",\
+                               #"06_phtyp-var",\
                                "07_bits",\
                                "08_bits-window",\
                                "09_death-rate",\
@@ -106,15 +108,18 @@ class Plotter:
     #######################
 
     # vertical lines for maturity, reproduction, neutral
-    def add_vlines(self, axes, color="black", expand=False):
+    def add_vlines(self, axes, which="all",color="black", expand=False):
         exp = self.record["n_base"] if expand else 1
         l1 = self.record["maturity"]*exp
         l2 = self.record["max_ls"]*exp
         l3 = (2*l2-l1)
 
-        axes.axvline(l1,c=color,ls="--",lw=1.0)
-        axes.axvline(l2,c=color,ls="--",lw=1.0)
-        axes.axvline(l3,c=color,ls="--",lw=1.0)
+        if which=="maturity" or which=="all":
+            axes.axvline(l1,c=color,ls="--",lw=1.0)
+        if which=="reproduction" or which=="all":
+            axes.axvline(l2,c=color,ls="--",lw=1.0)
+        if which=="all":
+            axes.axvline(l3,c=color,ls="--",lw=1.0)
 
     def add_generation_info(self, fig, x=0.75, y=0.95):
         tf = "min_gen" in self.record.keys()
@@ -335,6 +340,30 @@ class Plotter:
         axes.set_xlabel("locus")
         axes.set_ylabel("phenotype")
         fig.suptitle("Phenotype mean value\n(polyfit deg = "+str(fitdeg)+")")
+        self.add_generation_info(fig)
+        return fig
+
+    def plot_fitness_term(self):
+        "Plot fitness term for the last snapshot taken."
+        f = self.record["fitness_term"]
+        nsnap = f.shape[0]
+        nage = f.shape[1]
+
+        df = pd.DataFrame()
+        df["fitness"] = f.reshape(nsnap*nage)
+        df["snap"] = np.repeat(np.arange(nsnap), nage)
+        df["age"] = np.tile(np.arange(nage), nsnap)
+        # subset to last snapshot
+        df = df[df["snap"]==nsnap-1]
+        # set index to run in range(nage)
+        df["ix"] = range(nage); df.set_index("ix", inplace=True)
+
+        fig, axes = plt.subplots(figsize=self.fsize)
+        df.plot.scatter(x="age", y="fitness", ax=axes)
+        self.add_vlines(axes, which="maturity", color="black", expand=False)
+        axes.set_xlabel("age")
+        axes.set_ylabel("fitness")
+        fig.suptitle("Fitness")
         self.add_generation_info(fig)
         return fig
 
