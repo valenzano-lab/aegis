@@ -129,7 +129,7 @@ class Plotter:
         curgen = int(gendist[ix][0])
 
         s = "generation = "
-        s += str(mingen)+"/"+str(curgen) if tf else str(curgen)
+        s += str(curgen)+"/"+str(mingen) if tf else str(curgen)
         fig.text(x,y,s)
 
     ###########
