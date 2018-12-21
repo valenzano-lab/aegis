@@ -348,6 +348,7 @@ class Plotter:
         f = self.record["fitness_term"]
         nsnap = f.shape[0]
         nage = f.shape[1]
+        mat = self.record["maturity"]
 
         df = pd.DataFrame()
         df["fitness"] = f.reshape(nsnap*nage)
@@ -355,8 +356,9 @@ class Plotter:
         df["age"] = np.tile(np.arange(nage), nsnap)
         # subset to last snapshot
         df = df[df["snap"]==nsnap-1]
+        df = df[df["age"]>=mat]
         # set index to run in range(nage)
-        df["ix"] = range(nage); df.set_index("ix", inplace=True)
+        df["ix"] = range(nage-mat); df.set_index("ix", inplace=True)
 
         fig, axes = plt.subplots(figsize=self.fsize)
         df.plot.scatter(x="age", y="fitness", ax=axes)
