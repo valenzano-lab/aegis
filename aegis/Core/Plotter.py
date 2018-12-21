@@ -125,6 +125,8 @@ class Plotter:
         tf = "min_gen" in self.record.keys()
         if tf: mingen = self.record["min_gen"]
         gendist = self.record["generation_dist"]
+        print "gendist.sum(1):\n", gendist.sum(1)
+        if np.all(gendist.sum(1)==0): return
         ix = np.where(gendist.sum(1)!=0)[-1][-1]
         curgen = int(gendist[ix][0])
 
