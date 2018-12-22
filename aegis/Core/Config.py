@@ -64,7 +64,6 @@ class Config(dict):
         return dict([(k, self[k]) for k in key_list])
 
     # Generate derived attributes
-
     def generate(self):
         """Generate derived configuration attributes from simple ones and
         add to configuration object."""
@@ -124,22 +123,17 @@ class Config(dict):
         self.check2()
 
     def autostage(self):
-        """Compute automatic running behaviour ... UNTESTED"""
-        #if self["auto"]:
-        # do it anyways to have min_gen as a gen threshold to compare against
+        """Compute the minimal generation at which the distribution of neutral bits is
+        close enough to its stationary value."""
         # Compute analytical parameters
         alpha, beta = self["m_rate"], self["m_rate"]*self["m_ratio"]
         delta = self["deltabar"]*beta/(alpha+beta)
         y = self["g_dist"]["n"]
         x = 1-y
-        #ssize = self["res_start"] * self["chr_len"] * 2 # sample size
-        #epsbar = np.sqrt(1.0/(2*ssize)*np.log(2.0/zeta))
-        #delta = epsbar
         k = np.log(delta*(alpha+beta)/abs(alpha*y-beta*x)) / \
                 np.log(abs(1-alpha-beta))
         # Assign generation threshold
         self["min_gen"] = int(k*self["scale"])
-
         # Compute snapshot generations/stages
         ss_key = "generations" if self["auto"] else "stages"
         ss_max = self["min_gen"] if self["auto"] else self["n_stages"] - 1

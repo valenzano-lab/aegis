@@ -87,10 +87,10 @@ class TestRun:
         assert run1.resources == conf["res_start"]
         assert sorted(run1.genmap) == sorted(conf["genmap"])
         assert not np.array_equal(run1.genmap, conf["genmap"])
-        #! TODO: Test correct inheritance of conf vs population parameters
+        # TODO: Test correct inheritance of conf vs population parameters
         assert run1.n_snap == run1.n_stage == 0
         assert run1.n_run == conf["n_runs"]-1
-        #! TODO: Test initial state of record vs conf?
+        # TODO: Test initial state of record vs conf?
         assert np.array_equal(run1.record["genmap"], run1.genmap)
         assert run1.dieoff == run1.complete == False
         assert run1.report_n == report_n
@@ -190,7 +190,7 @@ class TestRun:
         assert run1.n_snap == run.n_snap + 1
         assert (run1.dieoff == (run1.population.N == 0))
         assert run1.complete == run1.dieoff
-        #! TODO: Add tests of age incrementation, record updating, growth, death
+        # TODO: Add tests of age incrementation, record updating, growth, death
         # Last stage
         run2 = run.copy()
         if run2.conf["auto"]: run2.conf["min_gen"] = 5
@@ -225,7 +225,7 @@ class TestRun:
         assert run3.n_stage == run.n_stage + 1
         assert run3.n_snap == run.n_snap
         assert run3.dieoff and run3.complete
-        #! TODO: Add test for status reporting?
+        # TODO: Add test for status reporting?
 
     def test_test_complete(self, run):
         """Test that completion is correctly identified in auto,
@@ -332,8 +332,6 @@ class TestRun:
             def induced_death_resources(n,r):
                 """Force dieoff through starvation in first n
                 attempts."""
-                #print run1.record["prev_failed"], M
-                #print run1.record["prev_failed"] < M
                 if run1.record["prev_failed"] < M:
                     return 0
                 else:

@@ -20,7 +20,6 @@ def conf(request, conf_path):
     c["zeta"] = 0.01     # choose zeta
     c["eps"] = epsbar + delta
     gsize = (2*c["max_ls"]-c["maturity"]+c["n_neutral"])*c["n_base"]*2
-    #samplesize = 1.0/(2*epsbar**2)*np.log(2.0/c["zeta"]) # compute sample size
     samplesize = (1.0/(2*epsbar)*scipy.stats.norm.ppf(1-c["zeta"]/2.0))**2
     c["start_pop"] = (int(samplesize/gsize)+1)/2*2
     print c["start_pop"]
@@ -34,7 +33,7 @@ def pop(request, conf):
     return Population(conf["params"], conf["genmap"], conf["mapping"], init_ages(),
             init_genomes(), init_generations(), init_gentimes())
 
-#@pytest.mark.skip
+@pytest.mark.skip
 def test_autostage_asex(conf, pop):
     """
     Test that without selection, genomes of an only mutating population
@@ -58,7 +57,7 @@ def test_autostage_asex(conf, pop):
     print "zeta: ", c["zeta"]
     assert np.isclose(c["mu"], obs[-1], atol=c["eps"])
 
-#@pytest.mark.skip
+@pytest.mark.skip
 def test_autostage_sex(conf, pop):
     """
     Test that without selection, genomes of a mutating, recombining and
@@ -75,10 +74,6 @@ def test_autostage_sex(conf, pop):
         # double the population since assortment halfs it
         p2 = p.clone()
         for population in (p,p2):
-            # recombination
-            #population.recombination(c["r_rate"])
-            # assortment
-            #population.shuffle()
             parent_0 = np.arange(population.N/2)*2      # Parent 0
             parent_1 = parent_0 + 1                     # Parent 1
             # Chromosome from parent 0

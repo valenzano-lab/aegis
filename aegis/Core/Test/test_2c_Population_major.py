@@ -257,9 +257,6 @@ class TestPopulationGrowth:
         in the genome during recombination is (a) unbiased spatially
         and (b) close to the expected frequency."""
         p,rrate = pop.clone(),10**random.uniform(-5, -3)
-        #p.add_members(p)
-        # error approximation
-        #precision = 0.003
         precision = 0.008
         alpha = 0.01 # error probability upper bound
         min_n = int(1/(2*precision**2)*np.log(2/alpha))

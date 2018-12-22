@@ -9,7 +9,7 @@ import numpy as np
 ##############
 
 from test_1_Config import conf_naive, conf, conf_path, ran_str, gen_trseed
-# (will run descendent tests for all parameterisations)
+# will run descendent tests for all parameterisations
 
 @pytest.fixture(scope="module")
 def pop(request, conf):
@@ -183,7 +183,6 @@ class TestPopulationInit:
         """Test that Population.fill correctly reads in member data
         when provided and generates them otherwise."""
         # Set up random test inputs
-        #if conf["setup"] == "random": return
         c = copy.deepcopy(conf)
         c["start_pop"] *= 10
         x = random.random()
@@ -264,7 +263,6 @@ class TestPopulationInit:
                 assert getattr(pop, a) == getattr(pop2, a)
 
     def test_popgen_independence(self, pop, conf):
-        #if conf["setup"] == "random": return
         """Test that generating a population from another and then manipulating
         the cloned population does not affect original (important for
         reproduction)."""
@@ -300,7 +298,7 @@ class TestPopulationInit:
         assert np.array_equal(pop.gentimes[:100], P3.gentimes)
         assert np.array_equal(pop.gentimes[:100], P4.gentimes)
 
-    #! TODO: Tests for individual parts of initialisation
+    # TODO: Tests for individual parts of initialisation
 
     def test_make_genome_array(self, pop):
         """Test that genome array is of the correct size and that

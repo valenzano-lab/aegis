@@ -26,7 +26,6 @@ from test_4_Run import run, ran_str
 def sim(request, conf_path):
     """Generate an unseeded Simulation object from the default config
     test file."""
-    #return Simulation(conf_path, "", 0, 100, False)
     return Simulation(conf_path, 100, False)
 
 @pytest.fixture(scope="function")

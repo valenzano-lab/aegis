@@ -158,8 +158,6 @@ class TestConfig:
                 errstr = "Unexpected config element type: "
                 raise TypeError(errstr + str(type(attr)))
 
-    # TODO: Add test for read_config_file
-
     def test_config_check(self,conf):
         """Test that configurations with incompatible genome parameters are
         correctly rejected."""
@@ -223,7 +221,6 @@ class TestConfig:
         sexvar = (c["repr_mode"] in ["sexual", "assort_only"])
         crb1 = c["repr_bound"][1]
         c.generate()
-        # Test output:
         # Prng
         assert isinstance(c["prng"],np.random.RandomState)
         # Genome structure

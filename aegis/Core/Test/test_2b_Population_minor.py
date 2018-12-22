@@ -18,7 +18,6 @@ class TestPopulationReComb:
     def test_params(self, pop, conf):
         """Test that params returns (at least) the
         required information."""
-        #if conf["setup"] == "random": return
         p = pop.params()
         K = p.keys()
         for s in ["repr_mode", "chr_len", "n_base", "max_ls", "maturity",
@@ -31,7 +30,6 @@ class TestPopulationReComb:
     def test_clone(self, pop, conf):
         """Test if cloned population is identical to parent population,
         by comparing params, ages, genomes."""
-        #if conf["setup"] == "random": return
         pop2 = pop.clone()
         pop2.generations[0] = 1
         pop3 = pop2.clone()
@@ -70,7 +68,6 @@ class TestPopulationReComb:
     def test_shuffle(self, pop, conf):
         """Test if all ages, therefore individuals, present before the
         shuffle are also present after it."""
-        #if conf["setup"] == "random": return
         pop2 = pop.clone()
         pop2.generations[0] = 1
         pop2.gentimes[0] = 1
@@ -196,14 +193,12 @@ class TestPopulationIncrement:
 
     def test_increment_ages(self, pop, conf):
         """Test if all ages are incremented by one."""
-        #if conf["setup"] == "random": return
         P2 = pop.clone()
         P2.increment_ages()
         assert np.array_equal(pop.ages+1, P2.ages)
 
     def test_increment_generations(self, pop, conf):
         """Test if all generations are incremented by one."""
-        #if conf["setup"] == "random": return
         P2 = pop.clone()
         P2.increment_generations()
         assert np.array_equal(pop.generations+1, P2.generations)

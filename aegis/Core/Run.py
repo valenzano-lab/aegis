@@ -69,7 +69,6 @@ class Run:
                 self.population.N, self.resources)
         self.resources = new_res
 
-
     def starving(self):
         """Determine whether population is starving based on resource level."""
         return self.conf["stv_function"](self.population.N, self.resources)
@@ -218,7 +217,6 @@ class Run:
                 .format(b, timenow(True), self.population.N))
         if f>0 and not self.dieoff:
             self.logprint("Total attempts required: {0}.".format(f))
-        # return self.record ?
 
     def execute(self):
         """Execute the run, repeating until either an attempt is

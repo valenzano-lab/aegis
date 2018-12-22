@@ -89,7 +89,7 @@ class Population:
     def fill(self, ages, genomes, generations, gentimes, targets=0):
         """Fill a new Population object with individuals based on input
         age, genome and generation arrays."""
-        # Test for new vs seeded values
+        # Check for new vs seeded values
         new_ages = np.array_equal(ages, init_ages())
         new_genomes = np.array_equal(genomes, init_genomes())
         new_generations = np.array_equal(generations, init_generations())
@@ -199,9 +199,6 @@ class Population:
 
     def subset_clone(self, targets):
         """Create a clone population and subset its members."""
-        #pop = self.clone()
-        #pop.subset_members(targets)
-        #return pop
         return Population(self.params(), self.genmap, self.mapping, self.ages,
                 self.genomes, self.generations, self.gentimes, targets)
 
@@ -237,16 +234,6 @@ class Population:
             # [chromosome, individual, locus, bit]
             return self.genomes.reshape((self.N,2,len(self.genmap),self.n_base)
                     ).transpose(1,0,2,3)
-
-#    def sorted_loci(self):
-#        """Return the sorted locus genotypes of the individuals in the
-#        population, summed within each locus and across chromosomes."""
-#        # Get chromosomes of population, arranged by locus
-#        chrx = self.chrs(True)
-#        # Collapse bits into locus sums and add chromosome values together
-#        # to get total genotype value for each locus (dim1=indiv, dim2=locus)
-#        locs = np.einsum("ijkl->jk", chrx)
-#        return locs[:,self.genmap_argsort]
 
     def surv_loci(self):
         """Return the sorted survival locus genotypes of each individual in
