@@ -24,7 +24,6 @@ res_start = 1000 # Starting resource value
 start_pop = res_start # Starting population size
 
 ## RESOURCE PARAMETERS ##
-res_limit = res_start*5 # Maximum resource value, if variable; -1 = infinite
 res_function = lambda n,r: r # Function for updating resources; here constant
 stv_function = lambda n,r: n > r # Function for identifying starvation
 kill_at = 0 # stage/generation for no_auto/auto repectively at which to force

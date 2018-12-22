@@ -52,6 +52,9 @@ class Config(dict):
         if self["m_ratio"] == 1:
             s = "Zero division in Config::autostage when m_ratio=1. Not implemented."""
             raise ValueError(s)
+        if self["res_start"] < 0:
+            s = "Negative values for resources are not supported. Starting resources must be non-negative."""
+            raise ValueError(s)
         return True
 
     def make_params(self):

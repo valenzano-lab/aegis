@@ -67,7 +67,8 @@ class Run:
         population."""
         new_res = self.conf["res_function"](
                 self.population.N, self.resources)
-        self.resources = np.clip(new_res, 0, self.conf["res_limit"])
+        self.resources = new_res
+
 
     def starving(self):
         """Determine whether population is starving based on resource level."""

@@ -52,7 +52,6 @@ def conf_naive(request, conf_path, ran_str, gen_trseed):
         c["res_start"] = random.randint(500,1000)
         c["start_pop"] = random.randint(200,500)
         ## RESOURCE PARAMETERS ##
-        c["res_limit"] = random.randint(5000,10000)
         a,b,d,e = np.random.uniform(size=4)
         #c["res_function"] = lambda n,r: int((r-n)*a + b) # Random affine
         c["stv_function"] = lambda n,r: e*n > d*r
@@ -173,6 +172,11 @@ class TestConfig:
         with pytest.raises(ValueError):
             c.check()
         c["repr_mode"] = repr_mode_old
+        res_start_old = c["res_start"]
+        c["res_start"] = random.randint(-10000,-1)
+        with pytest.raises(ValueError):
+            c.check()
+        c["res_start"] = res_start_old
         c["maturity"] = c["max_ls"] - 1
         with pytest.raises(ValueError):
             c.check()

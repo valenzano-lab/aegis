@@ -107,16 +107,13 @@ class TestRun:
         """Test resource updating between bounds and confirm resources
         cannot go outside them."""
         run1 = run.copy()
-        rl,rf = run1.conf["res_limit"], run1.conf["res_function"]
-        def rtest():
-            old_r = run1.resources
+        rfs = [lambda n,r: r, lambda n,r: 2*r, lambda n,r: 0.9*r, lambda n,r:r+1]
+        oldr = run1.resources
+        exps = [oldr, 2*oldr, 0.9*2*oldr, 0.9*2*oldr+1]
+        for rf,exp in zip(rfs,exps):
+            run1.conf["res_function"] = rf
             run1.update_resources()
-            assert run1.resources == min(rl,max(0,rf(run1.population.N,old_r)))
-        ## Test conditions (initial, overgrowth, undergrowth, midpoint)
-        cond = [run1.resources, rl * 2, -rl, rl / 2]
-        for c in cond:
-            run1.resources = c
-            rtest()
+            assert run1.resources == exp
 
     def test_starving(self, run):
         """Test run enters starvation state under correct conditions."""
@@ -129,7 +126,7 @@ class TestRun:
                 assert run1.starving() == test[c]
         # 2: Random test
         for n in xrange(3):
-            r,n = np.random.uniform(0, run1.conf["res_limit"], size=2)
+            r,n = np.random.uniform(0, run1.resources, size=2)
             run1.population.N, run1.resources = n,r
             assert run1.starving() == run1.conf["stv_function"](n,r)
 
@@ -196,6 +193,7 @@ class TestRun:
         #! TODO: Add tests of age incrementation, record updating, growth, death
         # Last stage
         run2 = run.copy()
+        if run2.conf["auto"]: run2.conf["min_gen"] = 5
         n = 0
         while not run2.complete:
             print run2.n_stage, run2.population.N, len(run2.population.generations),
