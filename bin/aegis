@@ -53,8 +53,6 @@ parser_get = subparsers.add_parser("get", help=get_help, description=get_help)
 parser_get.add_argument('path', help="path to save new Config file")
 parser_get.add_argument('-m', '--module', metavar='<str>', default="Core",
         help="AEGIS module to use for Config file (default: 'Core')")
-parser_get.add_argument('-p', '--profile', metavar='<str>', default="",
-        help="profile plotting with cProfile and save results to this path")
 
 #-----------------------------------------------------------------------------
 # 4. Format `plot` parser
@@ -66,8 +64,6 @@ parser_plot = subparsers.add_parser("plot", help=plot_help,
 parser_plot.add_argument('input', help="path to input Record file")
 parser_plot.add_argument('-m', '--module', metavar='<str>', default="Core",
         help="AEGIS module used to produce Record file (default: 'Core')")
-parser_plot.add_argument('-p', '--profile', metavar='<str>', default="",
-        help="profile plotting with cProfile and save results to this path")
 parser_plot.add_argument('-v', '--verbose', action="store_true",
         help="report verbosely during plotting")
 parser_plot.add_argument('-w', '--window', type=int, metavar='<int>', 
@@ -98,16 +94,14 @@ read_mode.add_argument('-i', '--info', action="store_true",
 
 args = parser.parse_args()
 
-# TODO args.profile is undefined for read
-if args.profile != "": # Start profiling
-    import cProfile, pstats, StringIO
-    pr = cProfile.Profile()
-    pr.enable()
-
 module = getattr(aegis, args.module)
 #inpath = os.path.expanduser(args.infile)
 
 if args.subparser_name == "run":
+    if args.profile != "": # Start profiling
+        import cProfile, pstats, StringIO
+        pr = cProfile.Profile()
+        pr.enable()
     path = os.path.expanduser(args.input)
     module.run(path, args.r, args.verbose)
 
@@ -115,7 +109,7 @@ elif args.subparser_name == "get":
     path = os.path.expanduser(args.path)
     module.getconfig(path)
 
-elif args.subparser_name == "plot": # TODO: Add verbosity to plotting
+elif args.subparser_name == "plot":
     path = os.path.expanduser(args.input)
     if args.window == 0:
         module.plot(path)
@@ -126,10 +120,10 @@ elif args.subparser_name == "read":
     inpath = os.path.expanduser(args.input)
     outpath = os.path.expanduser(args.output)
     if args.seed:
-        module.getrseed(outpath, inpath)
+        module.getrseed(inpath, outpath)
     elif args.info:
-        module.getrecinfo(outpath, inpath)
+        module.getrecinfo(inpath, outpath)
 
-if args.profile != "": # Finish profiling
+if args.subparser_name == "run" and args.profile != "": # Finish profiling
     pr.create_stats()
     pr.dump_stats(args.profile)
