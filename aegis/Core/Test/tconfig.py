@@ -60,4 +60,4 @@ max_ls = 98 # Maximum lifespan (must be > repr_offset) (-1 = infinite)
 maturity = 21 # Age from which an individual can reproduce (must be <= max_ls)
 
 # Size of sliding windows for recording averaged statistics:
-windows = {"population_size": 1000, "resources":1000, "n1":10}
+windows = {"population_size": 1000, "resources":1000, "n1":n_base}

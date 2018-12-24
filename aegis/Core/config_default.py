@@ -16,10 +16,12 @@ max_fail = 10 # Maximum number of failed attempts tolerated for each run
 output_prefix = "test" # Prefix for output files within simulation directory
 output_mode = 1 # 0 = return records only, 1 = return records + final pop,
                 # 2 = return records + all snapshot populations
-age_dist_N = "all" # Window size around snapshots for which to record age_dist
+age_dist_N = "all" # Window size around snapshots stage/generation for no_auto/auto
+                   # for which to record age distribution [int/"all"]
+                   # "all" saves age distribution at all stages
 
 ## STARTING PARAMETERS ##
-repr_mode = 'sexual' # sexual, asexual, assort_only or recombine_only
+repr_mode = "sexual" # sexual, asexual, assort_only or recombine_only
 res_start = 1000 # Starting resource value
 start_pop = res_start # Starting population size
 
@@ -30,7 +32,7 @@ kill_at = 0 # stage/generation for no_auto/auto repectively at which to force
             # dieoff, 0 if none
 
 ## PENALISATION ##
-pen_cuml = True # Is the penalty cumulative? If True the function compunds,
+pen_cuml = True # Is the penalty cumulative? If True the function compounds,
                 # otherwise it is always applied on the default value
 surv_pen_func = lambda s_range,n,r: s_range*0.9
 repr_pen_func = lambda r_range,n,r: r_range
@@ -46,7 +48,7 @@ surv_bound = [0.94, 0.96] # min and max death rates
 repr_bound = [0, 0.5] # min and max reproduction rates
 r_rate = 0.01 # recombination rate, if sexual
 m_rate = 0.001 # mutation rate
-m_ratio = 0.1 # Ratio of positive (0->1) to negative (1->0) mutations
+m_ratio = 0.1 # Ratio of benevolent (0->1) to detrimental (1->0) mutations
 g_dist = {"s": 0.5, # Proportion of 1's in survival loci of initial genomes
         "r": 0.5,   #                      reproductive loci
         "n": 0.5}   #                      neutral loci
@@ -58,4 +60,4 @@ max_ls = 98 # Maximum lifespan (must be > repr_offset) (-1 = infinite)
 maturity = 21 # Age from which an individual can reproduce (must be <= max_ls)
 
 # Size of sliding windows for recording averaged statistics:
-windows = {"population_size": 1000, "resources":1000, "n1":10}
+windows = {"population_size": 1000, "resources":1000, "n1":n_base}
