@@ -83,6 +83,8 @@ parser_read.add_argument('-m', '--module', metavar='<str>', default="Core",
 
 # Specify information to extract
 read_mode = parser_read.add_mutually_exclusive_group(required=True)
+read_mode.add_argument('--csv', action="store_true",
+        help="write data from Record file to csv")
 read_mode.add_argument('-s', '--seed', action="store_true",
         help="extract random seed from Record file")
 read_mode.add_argument('-i', '--info', action="store_true",
@@ -119,7 +121,9 @@ elif args.subparser_name == "plot":
 elif args.subparser_name == "read":
     inpath = os.path.expanduser(args.input)
     outpath = os.path.expanduser(args.output)
-    if args.seed:
+    if args.csv:
+        module.get_csv(inpath,outpath,last_K=500)
+    elif args.seed:
         module.getrseed(inpath, outpath)
     elif args.info:
         module.getrecinfo(inpath, outpath)
