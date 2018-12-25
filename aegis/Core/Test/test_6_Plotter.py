@@ -1,5 +1,6 @@
 from aegis.Core import Plotter
 import pytest, os, shutil, warnings
+from subprocess import call
 
 @pytest.fixture(scope="module")
 def rec_names(request):
@@ -19,9 +20,11 @@ def test_plot(rec_names):
     path = os.path.join(os.path.abspath("."), "aegis/Core/Test")
     for rec in rec_names:
         rec_path = os.path.join(path,rec)
-        a = Plotter(rec_path)
+        call(["aegis","read","--csv",rec_path,path])
+        a = Plotter(path)
         a.generate_figures()
-        a.record["output_prefix"] = os.path.join(path,rec[:-4])
+        a.outdir = os.path.join(path,rec[:-4]+"_plots")
         a.save_figures()
-        os.remove(rec_path)
-        shutil.rmtree(a.record["output_prefix"]+"_plots")
+        #os.remove(rec_path)
+        shutil.rmtree(a.outdir)
+        shutil.rmtree(os.path.join(path,"csv_files"))

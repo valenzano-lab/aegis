@@ -2,15 +2,21 @@
 # AEGIS - Ageing of Evolving Genomes in Silico                         #
 # Module: Plot                                                         #
 # Classes: Plotter                                                     #
-# Description: Wrapper object that takes and stores a passed Record    #
-#   object and implements plotting methods on it.                      #
+# Description: Wrapper object that takes and stores pandas dataframes  #
+#   build from csv files that were derived from the Record object      #
+#   and implements plotting methods on it.                             #
 ########################################################################
+
+# NOTE only plots age_distribution if it was recorded for all stages
+# NOTE only plots survival curve if age distribution was recorded for all stages
+#      and last_K is lesser than number of stages (last_K is defined in ./__init__.py)
 
 from .functions import make_windows, timenow, get_runtime
 import numpy as np, pandas as pd, os, shutil
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
+import seaborn as sns
 
 try:
        import cPickle as pickle
@@ -18,511 +24,204 @@ except:
        import pickle
 
 class Plotter:
-    """Wrapper class for storing a Record and its associated plots."""
+    """Wrapper class for storing a dataframes and its associated plots."""
 
-    def __init__(self, record):
+    def __init__(self, inpath, verbose=False):
         """Import a Record object and initialise plotting methods."""
-        self.starttime = timenow(False)
-        print "\nBeginning plotting {}.".format(timenow())
-        print "Working directory: "+os.getcwd()
-        print "Reading record from ./{}.".format(record)
-        rfile = open(record, "rb")
+        self.verbose = verbose
+        if self.verbose:
+            self.starttime = timenow(False)
+            print "\nBeginning plotting {}.".format(timenow())
+            print "Working directory: "+os.getcwd()
+            print "Reading csv files from {}.".format(os.path.join(\
+                    os.path.abspath(inpath),"csv_files"))
+        self.abort = False
         try:
-            self.record = pickle.load(rfile)
-            s = "Import succeeded. Time needed"
-            print get_runtime(self.starttime, timenow(False), s)
-            self.plot_methods = ["plot_population_resources",\
-                                 "plot_phenotype_distribution",\
-                                 #"plot_phenotype_distribution_last",\
-                                 #"plot_phenotype_distribution_grouped",\
-                                 #"plot_genetic_variance",\
-                                 "plot_density",\
-                                 "plot_phenotype_mean",\
-                                 "plot_fitness_term",\
-                                 #"plot_phenotype_var",\
-                                 "plot_bits_mean",\
-                                 "plot_bits_sliding_mean",\
-                                 "plot_death_rate",\
-                                 "plot_age_distribution",\
-                                 "plot_age_distribution_pie"\
-                                 ]
-            self.plot_names = ["01_pop-res",\
-                               "02_phtyp-dist",\
-                               #"022_phtyp-dist",\
-                               #"03_phtyp-dist-group",\
-                               #"04_gen-var",\
-                               "04_density",\
-                               "05_phtyp-mean",\
-                               "06_fitness-term",\
-                               #"06_phtyp-var",\
-                               "07_bits",\
-                               "08_bits-window",\
-                               "09_death-rate",\
-                               "10_age-dist",\
-                               "11_age-dist-pie"\
-                               ]
-            self.figures = []
-        finally:
-            rfile.close()
-        # define universal aestethics
-        self.fsize = (12,8) # figure size
+            inp = os.path.join(inpath,"csv_files")
+            self.single_df = pd.read_csv(os.path.join(inp,"single.csv"))\
+                    .set_index("name")
+            self.nstagex1_df = pd.read_csv(os.path.join(inp,"nstage-x-1.csv"))
+            self.has_agedist =  self.single_df.loc["age_dist_N","value"]=="all"
+            if self.has_agedist:
+                self.nstagexmaxls_df = pd.read_csv(os.path.join(inp,"nstage-x-maxls.csv"))
+            self.has_surv_curve = os.path.exists(os.path.join(inp,"maxls-x-1.csv"))
+            if self.has_surv_curve:
+                self.maxlsx1_df = pd.read_csv(os.path.join(inp,"maxls-x-1.csv"))
+            self.nsnapxmaxls_df = pd.read_csv(os.path.join(inp,"nsnap-x-maxls.csv"))
+            self.nsnapxnbit_df = pd.read_csv(os.path.join(inp,"nsnap-x-nbit.csv"))
+            self.sliding_window_df = pd.read_csv(os.path.join(inp,"sliding_window.csv"))
+            self.nsnapxnloci_df = pd.read_csv(os.path.join(inp,"nsnap-x-nloci.csv"))
+            self.nsnapx1_df = pd.read_csv(os.path.join(inp,"nsnap-x-1.csv"))
+        except:
+            print "Error occured while reading csv files. Makes sure the provided path contains a directory 'csv_files' that was generated by running aegis read --csv. Aborting..."
+            self.abort = True
+        self.plot_methods = ["plot_pop_res",\
+                             "plot_genotype_mean_snaps",\
+                             "plot_genotype_mean",\
+                             "plot_fitness_term_snaps",\
+                             "plot_fitness_term",\
+                             "plot_n1_sliding_window_snaps",\
+                             "plot_n1_var_sliding_window_snaps",\
+                             "plot_generation",\
+                             "plot_surv_curve",\
+                             "plot_age_dist"\
+                             ]
+        self.plot_names = ["01_pop-res",\
+                           "02_genotype-mean-snaps",\
+                           "02_genotype-mean",\
+                           "03_fitness-term-snaps",\
+                           "03_fitness-term",\
+                           "04_bits-snaps",\
+                           "05_bits-var-snaps",\
+                           "06_generation",\
+                           "07_surv-curve",\
+                           "08_age-dist"\
+                           ]
+        self.figures = []
+        self.outdir = self.single_df.loc["output_prefix","value"] + "_plots"
+        # set style for seaborn plots
+        sns.set(style="darkgrid")
 
     def generate_figures(self):
+        if self.abort: return
+        if self.verbose: print "\nGenerating figures:"
         for m in self.plot_methods:
+            if self.verbose: print m,
             p = getattr(self,m)()
-            if p: self.figures.append(p)
+            if p:
+                self.figures.append(p)
+                if self.verbose: print ": OK"
+            elif self.verbose: print ": not generated"
 
     def save_figures(self):
+        if self.abort: return
         # Remove not generated plot names
-        if self.record["age_dist_N"] == "all":
-            self.plot_methods.remove("plot_age_distribution")
-            self.plot_methods.remove("plot_age_distribution_pie")
-            self.plot_names.remove("10_age-dist")
-            self.plot_names.remove("11_age-dist-pie")
-        if self.record["n_snapshots"] < 2:
-            self.plot_methods.remove("plot_phenotype_distribution")
-            self.plot_names.remove("02_phtyp-dist")
-            self.plot_methods.remove("plot_bits_mean")
-            self.plot_names.remove("07_bits")
-            self.plot_methods.remove("plot_bits_sliding_mean")
-            self.plot_names.remove("08_bits-window")
+        if not self.has_surv_curve:
+            self.plot_methods.remove("plot_surv_curve")
+            self.plot_names.remove("07_surv-curve")
+        if not self.has_agedist:
+            self.plot_methods.remove("plot_age_dist")
+            self.plot_names.remove("08_age-dist")
+        if not int(self.single_df.loc["n_snapshots","value"])>1:
+            self.plot_methods.remove("plot_genotype_mean_snaps")
+            self.plot_names.remove("02_genotype-mean-snaps")
+            self.plot_methods.remove("plot_fitness_term_snaps")
+            self.plot_names.remove("03_fitness-term-snaps")
+            self.plot_methods.remove("plot_n1_sliding_window_snaps")
+            self.plot_names.remove("04_bits-snaps")
+            self.plot_methods.remove("plot_n1_var_sliding_window_snaps")
+            self.plot_names.remove("05_bits-var-snaps")
         # Make/replace output directory
         pm,pn,p = self.plot_methods, self.plot_names, self.figures
         if not len(pm) == len(pn) == len(p):
             errstr = "Plot names, methods and images are of different lengths."
             raise ValueError(errstr)
-        outdir = self.record["output_prefix"] + "_plots"
-        if os.path.exists(outdir): # Overwrite existing output
-                shutil.rmtree(outdir)
-        os.makedirs(outdir)
-        print "\nSaving plot:"
+        if os.path.exists(self.outdir): # Overwrite existing output
+                shutil.rmtree(self.outdir)
+        os.makedirs(self.outdir)
+        if self.verbose:
+            print "\nSaving figures in "+os.path.join(os.getcwd(),self.outdir)+":"
         for n in xrange(len(self.figures)):
-            outpath = os.path.join(outdir, self.plot_names[n] + ".png")
-            print self.plot_names[n]
+            outpath = os.path.join(self.outdir, self.plot_names[n] + ".png")
+            if self.verbose: print self.plot_names[n]
             self.figures[n].savefig(outpath)
         s = "\nSuccessfully saved all figures. Total runtime"
-        print get_runtime(self.starttime, timenow(False), s)
+        if self.verbose: print get_runtime(self.starttime, timenow(False), s)
 
-    #######################
-    # auxiliary functions #
-    #######################
+    def plot_pop_res(self):
+        f,ax = plt.subplots()
+        df = self.nstagex1_df.loc[:,["stage","popsize","resources"]].set_index("stage")
+        sns.lineplot(data=df, ax=ax)
+        ax.set_ylim(bottom=0)
+        f.suptitle("population size")
+        return f
 
-    # vertical lines for maturity, reproduction, neutral
-    def add_vlines(self, axes, which="all",color="black", expand=False):
-        exp = self.record["n_base"] if expand else 1
-        l1 = self.record["maturity"]*exp
-        l2 = self.record["max_ls"]*exp
-        l3 = (2*l2-l1)
+    def plot_genotype_mean_snaps(self):
+        if not int(self.single_df.loc["n_snapshots","value"])>1: return
+        df = self.nsnapxnloci_df
+        g = sns.relplot(data=df, x="locus", y="mean_gt", hue="type", col="snap", col_wrap=4)
+        #ax.set_ylim(bottom=0,top=2*int(self.single_df.loc["n_base","value"]))
+        plt.subplots_adjust(top=0.92)
+        g.fig.suptitle("mean genotype sum")
+        return g.fig
 
-        if which=="maturity" or which=="all":
-            axes.axvline(l1,c=color,ls="--",lw=1.0)
-        if which=="reproduction" or which=="all":
-            axes.axvline(l2,c=color,ls="--",lw=1.0)
-        if which=="all":
-            axes.axvline(l3,c=color,ls="--",lw=1.0)
+    def plot_genotype_mean(self):
+        f,ax = plt.subplots()
+        df = self.nsnapxnloci_df[self.nsnapxnloci_df.snap==self.nsnapxnloci_df.snap.max()]
+        df = df.drop(columns=["snap"])
+        sns.scatterplot(data=df, x="locus", y="mean_gt", hue="type", ax=ax)
+        ax.set_ylim(bottom=0,top=2*int(self.single_df.loc["n_base","value"]))
+        f.suptitle("mean genotype sum (last snap)")
+        return f
 
-    def add_generation_info(self, fig, x=0.75, y=0.95):
-        tf = "min_gen" in self.record.keys()
-        if tf: mingen = self.record["min_gen"]
-        gendist = self.record["generation_dist"]
-        print "gendist.sum(1):\n", gendist.sum(1)
-        if np.all(gendist.sum(1)==0): return
-        ix = np.where(gendist.sum(1)!=0)[-1][-1]
-        curgen = int(gendist[ix][0])
-
-        s = "generation = "
-        s += str(curgen)+"/"+str(mingen) if tf else str(curgen)
-        fig.text(x,y,s)
-
-    ###########
-    ## plots ##
-    ###########
-
-    # population and resources
-    def plot_population_resources(self):
-        pop = self.record["population_size"]
-        res = self.record["resources"]
-        # subset to filled entries
-        ix = pop > 0
-        pop = pop[ix]
-        res = res[ix]
-        df = pd.DataFrame({"pop":pop, "res":res})
-
-        fig,axes = plt.subplots(figsize=self.fsize)
-        plot = df.plot(ax=axes)
-        axes.set_xlabel("stage")
-        axes.set_ylabel("N",rotation="horizontal")
-        fig.suptitle("Population size")
-        self.add_generation_info(fig)
-        return fig
-
-    # phenotype distribution
-    def plot_phenotype_distribution(self):
-        if self.record["n_snapshots"] < 2: return
-
-        data = self.record["density_per_locus"]["a"]
-
-        shape = data.shape
-        nsnap = shape[0]
-        nloci = shape[1]
-        npts = shape[2]
-
-        df = pd.DataFrame(data.reshape(nsnap*nloci,npts))
-        df["snap"] = np.repeat(np.arange(nsnap),nloci)
-        df["locus"] = np.tile(np.arange(nloci),nsnap)
-
-        cmap = matplotlib.cm.get_cmap("Spectral")
-        colors = [cmap(i) for i in np.linspace(0,1,npts)]
-
-        c = 0
-        fig,axes = plt.subplots(nsnap,1,sharex=True,sharey=True,\
-                figsize=self.fsize)
-        for name,group in df.groupby("snap"):
-            group[range(npts)].plot(kind="area", color=colors, legend=False,\
-                    x=group["locus"],ax=axes[c])
-            axes[c].text(0.975,0.1,str(int(name)+1),transform=axes[c].transAxes)
-            plt.setp(axes[c].get_yticklabels(),fontsize=10)
-            self.add_vlines(axes[c], color="black", expand=False)
-            c+=1
-
-        axes[0].text(0.96,1.1,"snap",transform=axes[0].transAxes)
-        labels = ["least fit"]+["..."]*(npts-2)+["most fit"]
-        #labels = np.arange(npts).astype(str)
-        lines = axes[0].get_lines()
-        fig.legend(lines,labels,loc="center right")
-        fig.suptitle("Phenotype distribution")
-        return fig
-
-    # phenotype distribution
-#    def plot_phenotype_distribution_last(self):
-#        data = self.record["density_per_locus"]["a"]
-#
-#        shape = data.shape
-#        nsnap = shape[0]
-#        nloci = shape[1]
-#        npts = shape[2]
-#
-#        df = pd.DataFrame(data.reshape(nsnap*nloci,npts))
-#        df["snap"] = np.repeat(np.arange(nsnap),nloci)
-#        df["locus"] = np.tile(np.arange(nloci),nsnap)
-#
-#        # subset to last snapshot
-#        df = df[df["snap"] == nsnap-1]
-#        df.drop(columns=["snap"],inplace=True)
-#        df.set_index("locus",inplace=True)
-#
-#        cmap = matplotlib.cm.get_cmap("Spectral")
-#        colors = [cmap(i) for i in np.linspace(0,1,npts)]
-#
-#        fig, axes = plt.subplots(figsize=self.fsize)
-#        df.plot(kind="area", color=colors, legend=False,\
-#                    ax=axes)
-#
-#        labels = ["least fit"]+["..."]*(npts-2)+["most fit"]
-#        lines = axes.get_lines()
-#        fig.legend(lines,labels,loc="center right")
-#        #fig.suptitle("Phenotype distribution")
-#        axes.set_xlabel("locus")
-#        axes.set_ylabel("phenotype")
-#        self.add_vlines(axes, color="white", expand=False)
-#        return fig
-
-    # phenotype distribution grouped
-    def plot_phenotype_distribution_grouped(self):
-        """(least fit, middle, 3 top)"""
-        if self.record["n_snapshots"] < 2: return
-
-        data = self.record["density_per_locus"]["a"]
-
-        shape = data.shape
-        nsnap = shape[0]
-        nloci = shape[1]
-        npts = shape[2]
-
-        df = pd.DataFrame(data.reshape(nsnap*nloci,npts))
-        df["snap"] = np.repeat(np.arange(nsnap),nloci)
-        df["locus"] = np.tile(np.arange(nloci),nsnap)
-
-        #d1 = np.sqrt(nsnap).round()
-        #d2 = (nsnap/d1).round()
-        #dims = [int(d1),int(d2)]
-        #ix = [[i,j] for i in range(dims[0]) for j in range(dims[1])]
-        cmap = matplotlib.cm.get_cmap("Spectral")
-        rg = np.linspace(0,1,3)
-        rg = np.hstack((rg[0],np.repeat(rg[1],npts-4),np.repeat(rg[2],3)))
-        colors = [cmap(i) for i in rg]
-
-        c = 0
-        fig,axes = plt.subplots(nsnap,1,sharex=True,sharey=True,\
-                figsize=self.fsize)
-        for name,group in df.groupby("snap"):
-            group[range(npts)].plot(kind="area", color=colors, legend=False,\
-                    x=group["locus"],ax=axes[c])
-            axes[c].set_title(name,loc="right")
-            self.add_vlines(axes[c], color="white", expand=False)
-            c+=1
-
-        labels = ["least fit"]+["..."]*(npts-2)+["most fit"]
-        #labels = np.arange(npts).astype(str)
-        lines = axes[0].get_lines()
-        fig.legend(lines,labels,loc="center right")
-        fig.suptitle("Phenotype distribution grouped")
-        return fig
-
-    # genetic variance
-#    def plot_genetic_variance(self):
-#        data = self.record["genetic_variance"]
-#        nsnap = data.shape[0]
-#        df = pd.DataFrame(data.T)
-#
-#        fig,axes = plt.subplots(figsize=self.fsize)
-#        # leave out first since it messes up scale
-#        plot = df[range(1,nsnap)].plot(figsize=self.fsize)
-#        plot.set_title("Genetic variance")
-#        fig = plot.get_figure()
-#        return fig
-#
-#    def plot_genetic_variance_subplots(self):
-#        data = self.record["genetic_variance"]
-#        nsnap = data.shape[0]
-#        df = pd.DataFrame(data.T)
-#
-#        fig,axes = plt.subplots(figsize=self.fsize)
-#        # leave out first since it messes up scale
-#        plot = df[range(1,nsnap)].plot(subplots=True,figsize=self.fsize) # now an np.array
-#        plot.set_title("Genetic variance")
-#        fig = plot.get_figure()
-#        return fig
-
-    # density
-    def plot_density(self):
-        data = self.record["density"]["a"]
-        df = pd.DataFrame(data.T)
-        plot = df.plot(figsize=self.fsize)
-        fig = plot.get_figure()
-        fig.suptitle("Density")
-        return fig
-
-    # phenotype mean
-    def plot_phenotype_mean(self):
-        """Plot the mean for phenotype value for last snapshot taken."""
-        mean = self.record["mean_gt"]["a"]
-        nsnap = mean.shape[0]
-        nloci = mean.shape[1]
-
-        df = pd.DataFrame()
-        df["mean"] = mean.reshape(nsnap*nloci)
-        df["snap"] = np.repeat(np.arange(nsnap),nloci)
-        df["locus"] = np.tile(np.arange(nloci),nsnap)
-        # subset to last snapshot
-        df = df[df["snap"]==nsnap-1]
-        # set index to run in range(nloci)
-        df["ix"] = range(nloci); df.set_index("ix", inplace=True)
-        df["trendline_surv"] = np.zeros(nloci)
-        df.loc[:,"trendline_surv"] = np.nan
-        df["trendline_repr"] = np.zeros(nloci)
-        df.loc[:,"trendline_repr"] = np.nan
-
-        # line fittings
-        fitdeg = 3 # degree of the polynomial fitting
-        maxls = self.record["max_ls"]
-        maturity = self.record["maturity"]
-        zs = np.polyfit(x=range(maxls), y=df.loc[:maxls-1,"mean"], deg=fitdeg)
-        ps = np.poly1d(zs)
-        df.loc[:maxls-1, "trendline_surv"] = ps(range(maxls))
-        zs = np.polyfit(x=range(maxls-maturity), y=df.loc[maxls:(2*maxls-maturity-1),"mean"], deg=fitdeg)
-        ps = np.poly1d(zs)
-        df.loc[maxls:(2*maxls-maturity-1), "trendline_repr"] = ps(range(maxls-maturity))
-
-        fig, axes = plt.subplots(figsize=self.fsize)
-        df.plot.scatter(x="locus", y="mean", ax=axes)
-        df.trendline_surv.plot(ax=axes,c="orange")
-        df.trendline_repr.plot(ax=axes,c="orange")
-        self.add_vlines(axes, color="black", expand=False)
-        axes.set_xlabel("locus")
-        axes.set_ylabel("phenotype")
-        fig.suptitle("Phenotype mean value\n(polyfit deg = "+str(fitdeg)+")")
-        self.add_generation_info(fig)
-        return fig
+    def plot_fitness_term_snaps(self):
+        if not int(self.single_df.loc["n_snapshots","value"])>1: return
+        #f,ax = plt.subplots()
+        df = self.nsnapxmaxls_df.loc[:,["snap","age","fitness_term"]]
+        df = df[df.age >= int(self.single_df.loc["maturity","value"])]
+        g = sns.relplot(data=df, x="age", y="fitness_term", col="snap", col_wrap=4,\
+                kind="line", marker="o")
+        #ax.set_ylim(bottom=0)
+        plt.subplots_adjust(top=0.92)
+        g.fig.suptitle("fitness term")
+        return g.fig
 
     def plot_fitness_term(self):
-        "Plot fitness term for the last snapshot taken."
-        f = self.record["fitness_term"]
-        nsnap = f.shape[0]
-        nage = f.shape[1]
-        mat = self.record["maturity"]
+        f,ax = plt.subplots()
+        df = self.nsnapxmaxls_df.loc[:,["snap","age","fitness_term"]]
+        df = df[df.snap==df.snap.max()]
+        df = df.drop(columns=["snap"])
+        df = df[df.age >= int(self.single_df.loc["maturity","value"])]
+        sns.lineplot(data=df, x="age", y="fitness_term", ax=ax, marker="o")
+        ax.set_ylim(bottom=0)
+        f.suptitle("fitness term (last snap)")
+        return f
 
-        df = pd.DataFrame()
-        df["fitness"] = f.reshape(nsnap*nage)
-        df["snap"] = np.repeat(np.arange(nsnap), nage)
-        df["age"] = np.tile(np.arange(nage), nsnap)
-        # subset to last snapshot
-        df = df[df["snap"]==nsnap-1]
-        df = df[df["age"]>=mat]
-        # set index to run in range(nage)
-        df["ix"] = range(nage-mat); df.set_index("ix", inplace=True)
+    def plot_n1_sliding_window_snaps(self):
+        if not int(self.single_df.loc["n_snapshots","value"])>1: return
+        #f,ax = plt.subplots()
+        df = self.sliding_window_df
+        g = sns.relplot(data=df, x="bit", y="n1_window_mean", col="snap", col_wrap=4,\
+                linewidths=0)
+        #ax.set_ylim(bottom=0)
+        plt.subplots_adjust(top=0.92)
+        g.fig.suptitle("bit distribution - sliding window\nsize: %s" %\
+                self.single_df.loc["n1_window_size","value"])
+        return g.fig
 
-        fig, axes = plt.subplots(figsize=self.fsize)
-        df.plot.scatter(x="age", y="fitness", ax=axes)
-        self.add_vlines(axes, which="maturity", color="black", expand=False)
-        axes.set_xlabel("age")
-        axes.set_ylabel("fitness")
-        fig.suptitle("Fitness")
-        self.add_generation_info(fig)
-        return fig
+    def plot_n1_var_sliding_window_snaps(self):
+        if not int(self.single_df.loc["n_snapshots","value"])>1: return
+        #f,ax = plt.subplots()
+        df = self.sliding_window_df
+        g = sns.relplot(data=df, x="bit", y="n1_window_var", col="snap", col_wrap=4,\
+                linewidths=0)
+        #ax.set_ylim(bottom=0)
+        plt.subplots_adjust(top=0.92)
+        g.fig.suptitle("bit distribution variance - sliding window\nsize: %s" %\
+                self.single_df.loc["n1_window_size","value"])
+        return g.fig
 
-    # phenotype variance
-    def plot_phenotype_var(self):
-        """Plot the mean for phenotype value for last snapshot taken."""
-        var = self.record["var_gt"]["a"]
-        nsnap = var.shape[0]
-        nloci = var.shape[1]
+    def plot_surv_curve(self):
+        if not self.has_surv_curve: return
+        f,ax = plt.subplots()
+        df = self.maxlsx1_df
+        sns.lineplot(data=df, x="age", y="surv_mean", ax=ax)
+        ax.set_ylim(bottom=0)
+        f.suptitle("survival curve")
+        return f
 
-        df = pd.DataFrame()
-        df["var"] = var.reshape(nsnap*nloci)
-        df["snap"] = np.repeat(np.arange(nsnap),nloci)
-        df["locus"] = np.tile(np.arange(nloci),nsnap)
-        # subset to last snapshot
-        df = df[df["snap"]==nsnap-1]
-        # set index to run in range(nloci)
-        df["ix"] = range(nloci); df.set_index("ix", inplace=True)
-        df["trendline_surv"] = np.zeros(nloci)
-        df.loc[:,"trendline_surv"] = np.nan
-        df["trendline_repr"] = np.zeros(nloci)
-        df.loc[:,"trendline_repr"] = np.nan
+    def plot_generation(self):
+        f,ax = plt.subplots()
+        df = self.nstagex1_df.loc[:,["stage", "generation_min", "generation_max"]]\
+                .set_index("stage")
+        sns.lineplot(data=df, ax=ax)
+        f.suptitle("generation")
+        return f
 
-        # line fittings
-        fitdeg = 3 # degree of the polynomial fitting
-        maxls = self.record["max_ls"]
-        maturity = self.record["maturity"]
-        zs = np.polyfit(x=range(maxls), y=df.loc[:maxls-1,"var"], deg=fitdeg)
-        ps = np.poly1d(zs)
-        df.loc[:maxls-1, "trendline_surv"] = ps(range(maxls))
-        zs = np.polyfit(x=range(maxls-maturity), y=df.loc[maxls:(2*maxls-maturity-1),"var"], deg=fitdeg)
-        ps = np.poly1d(zs)
-        df.loc[maxls:(2*maxls-maturity-1), "trendline_repr"] = ps(range(maxls-maturity))
-
-        fig, axes = plt.subplots(figsize=self.fsize)
-        df.plot.scatter(x="locus", y="var", ax=axes)
-        df.trendline_surv.plot(ax=axes,c="orange")
-        df.trendline_repr.plot(ax=axes,c="orange")
-        self.add_vlines(axes, color="black", expand=False)
-        fig.suptitle("Phenotype value variance\n(polyfit deg = "+str(fitdeg)+")")
-        return fig
-
-    # bits
-    def plot_bits(self, key, title):
-        """Plot bit value distribution for last snapshot taken."""
-        if self.record["n_snapshots"] < 2: return
-
-        maxls = self.record["max_ls"]
-        maturity = self.record["maturity"]
-        n_neutral = self.record["n_neutral"]
-        n_base = self.record["n_base"]
-        ix = (2*maxls-maturity)*n_base
-
-        bits = self.record[key]
-        nsnap = bits.shape[0]
-        nbits = bits.shape[1]
-
-        df = pd.DataFrame()
-        df["value"] = bits.reshape(nsnap*nbits)
-        df["snap"] = np.repeat(np.arange(nsnap),nbits)
-        df["bit"] = np.tile(np.arange(nbits),nsnap)
-
-        #print df[df["snap"]==0].loc[ix:,"value"]
-        #print df[df["snap"]==0].loc[ix:,"value"].mean()
-        #print df[df["snap"]==0].loc[ix:,"value"].std()
-
-        def find_dim(n):
-            return int(np.ceil(np.sqrt(n)))
-
-        #fig, axes = plt.subplots(find_dim(nsnap),find_dim(nsnap),figsize=self.fsize,sharex=True,sharey=True)
-        fig, axes = plt.subplots(4,3,figsize=self.fsize,sharex=True,sharey=True)
-        axes = axes.flatten()
-
-        c = 0
-        for name,group in df.groupby("snap"):
-            group.plot(kind="scatter", x="bit", y="value", s=5, legend=False,\
-                    ax=axes[c])
-            y_neutral = np.repeat(group.set_index("bit").loc[ix:,"value"].mean(),nbits)
-            y_std = group.set_index("bit").loc[ix:,"value"].std()
-            axes[c].plot(group["bit"], y_neutral, color="orange", lw=0.8)
-            axes[c].fill_between(group["bit"],y_neutral-2*y_std,y_neutral+2*y_std,\
-                    color="b",alpha=0.2)
-
-            axes[c].text(0.95,1.02,str(int(name)+1),transform=axes[c].transAxes)
-            axes[c].set_ylim(0,1)
-            axes[c].set_ylabel("")
-            self.add_vlines(axes[c], color="black", expand=True)
-            c += 1
-
-        fig.suptitle(title)
-        return fig
-
-    def plot_bits_mean(self):
-        return self.plot_bits("n1", "Bit value distribution")
-
-    def plot_bits_sliding_mean(self):
-        return self.plot_bits("n1_window_mean", "Bit value distribution - sliding window")
-
-    # death rate
-    # TODO what when age_dist_N="all"
-    def plot_death_rate(self):
-        self.record.compute_actual_death()
-        data = self.record["actual_death_rate"].mean(1)
-        df = pd.DataFrame(data.T)
-        plot = df.plot(figsize=self.fsize)
-        fig = plot.get_figure()
-        fig.suptitle("Death rate")
-        return fig
-
-    def plot_death_rate_subplots(self):
-        self.record.compute_actual_death()
-        data = self.record["actual_death_rate"].mean(1)
-        df = pd.DataFrame(data.T)
-        plot = df.plot(subplots=True,figsize=self.fsize) # now an np.array
-        fig = plot.get_figure()
-        fig.suptitle("Death rate")
-        return fig
-
-    # age distribution
-    # TODO what when age_dist_N="all"
-    def plot_age_distribution(self):
-        if self.record["age_dist_N"] == "all": return
-        if "snapshot_age_distribution_avrg" not in self.record.keys():
-            self.record.compute_snapshot_age_dist_avrg()
-        data = self.record["snapshot_age_distribution_avrg"]
-        df = pd.DataFrame(data.T)
-        plot = df.plot(figsize=self.fsize)
-        fig = plot.get_figure()
-        fig.suptitle("Age distribution")
-        return fig
-
-    def plot_age_distribution_pie(self):
-        """Plot pie chart of age distribution for the last snapshot."""
-        if self.record["age_dist_N"] == "all": return
-        if self.record["max_ls"]>100:
-            print "Warning: age_dist_pie doesn't support records with max_ls>100."
-            return
-        if "snapshot_age_distribution_avrg" not in self.record.keys():
-            self.record.compute_snapshot_age_dist_avrg()
-        data = self.record["snapshot_age_distribution_avrg"][-1]
-        print data.sum()
-        maturity = self.record["maturity"]
-        maxls = self.record["max_ls"]
-        bins1 = np.array([data[:maturity].sum(), data[maturity:].sum()])
-        labels1 = ["<maturity", ">=maturity"]
-        series1 = pd.Series(bins1, index=labels1, name="")
-
-        data = np.append(data,np.zeros(100-maxls))
-        data = data.reshape(data.size/5,5)
-        bins2 = data.sum(1)
-        labels2 = [str(x)+"<=age<"+str(x+5) for x in range(0,100,5)]
-        series2 = pd.Series(bins2, index=labels2, name="")
-
-        fig,axes = plt.subplots(1,2,figsize=(12,6))
-        series1.plot.pie(ax=axes[0])
-        series2.plot.pie(ax=axes[1])
-        fig.suptitle("Age distribution")
-        return fig
+    def plot_age_dist(self):
+        if not self.has_agedist: return
+        f,ax = plt.subplots()
+        df = self.nstagexmaxls_df
+        sns.lineplot(data=df, x="age", y="age_distribution", ci=None, ax=ax)
+        f.suptitle("age distribution")
+        return f

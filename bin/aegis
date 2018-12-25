@@ -66,8 +66,6 @@ parser_plot.add_argument('-m', '--module', metavar='<str>', default="Core",
         help="AEGIS module used to produce Record file (default: 'Core')")
 parser_plot.add_argument('-v', '--verbose', action="store_true",
         help="report verbosely during plotting")
-parser_plot.add_argument('-w', '--window', type=int, metavar='<int>', 
-        default=0, help="specify window size for sliding-window plots")
 
 #-----------------------------------------------------------------------------
 # 5. Format `read` parser
@@ -80,6 +78,8 @@ parser_read.add_argument('input', help="path to input Record file")
 parser_read.add_argument('output', help="path to use for output")
 parser_read.add_argument('-m', '--module', metavar='<str>', default="Core",
         help="AEGIS module used to produce Record file (default: 'Core')")
+parser_read.add_argument('-v', '--verbose', action="store_true",
+        help="print runtime")
 
 # Specify information to extract
 read_mode = parser_read.add_mutually_exclusive_group(required=True)
@@ -88,7 +88,7 @@ read_mode.add_argument('--csv', action="store_true",
 read_mode.add_argument('-s', '--seed', action="store_true",
         help="extract random seed from Record file")
 read_mode.add_argument('-i', '--info', action="store_true",
-        help="print general information on contents of Record file") # TODO: Improve this
+        help="print general information on contents of Record file")
 
 #-----------------------------------------------------------------------------
 # 6. Parse args and execute AEGIS
@@ -113,20 +113,17 @@ elif args.subparser_name == "get":
 
 elif args.subparser_name == "plot":
     path = os.path.expanduser(args.input)
-    if args.window == 0:
-        module.plot(path)
-    else:
-        module.plot_n1_sliding_window(path, args.window) # TODO: Get rid of this if
+    module.plot(path, args.verbose)
 
 elif args.subparser_name == "read":
     inpath = os.path.expanduser(args.input)
     outpath = os.path.expanduser(args.output)
     if args.csv:
-        module.get_csv(inpath,outpath,last_K=500)
+        module.get_csv(inpath,outpath,last_K=500,verbose=args.verbose)
     elif args.seed:
-        module.getrseed(inpath, outpath)
+        module.getrseed(inpath, outpath,verbose=args.verbose)
     elif args.info:
-        module.getrecinfo(inpath, outpath)
+        module.getrecinfo(inpath, outpath,verbose=args.verbose)
 
 if args.subparser_name == "run" and args.profile != "": # Finish profiling
     pr.create_stats()

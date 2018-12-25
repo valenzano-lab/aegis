@@ -1,7 +1,7 @@
 import os, shutil, numpy as np, pandas as pd
 from aegis.Core.functions import chance, quantile, fivenum, init_gentimes,\
         init_ages, init_genomes, init_generations, deep_key, deep_eq, make_windows,\
-        correct_r_rate, make_mapping
+        correct_r_rate, make_mapping, timenow, get_runtime
 from aegis.Core.Population import Population
 from aegis.Core.Config import Config
 from aegis.Core.Record import Record
@@ -38,17 +38,20 @@ def getconfig(outpath):
 ### read ###
 ############
 
-def getrseed(inpath, outpath):
+def getrseed(inpath, outpath, verbose=False):
     """Get prng from a record object."""
+    if verbose: starttime = timenow(False)
     fin = open(inpath, "r")
     record = pickle.load(fin)
     fin.close()
     fout = open(outpath, "w")
     pickle.dump(record["random_seed"], fout)
     fout.close()
+    if verbose: print get_runtime(starttime, timenow(False), "Runtime")
 
-def getrecinfo(inpath, outpath):
+def getrecinfo(inpath, outpath, verbose=False):
     """Get information on record object."""
+    if verbose: starttime = timenow(False)
     rec_name = inpath.split('/')[-1] # get record name
     # load record
     infile = open(inpath)
@@ -109,12 +112,14 @@ def getrecinfo(inpath, outpath):
     outfile = open(outpath, 'w')
     outfile.write(out)
     outfile.close()
+    if verbose: print get_runtime(starttime, timenow(False), "Runtime")
 
-def get_csv(inpath, outpath, last_K=500):
+def get_csv(inpath, outpath, last_K=500, verbose=False):
     """Only specific data is output from the Record file to a csv files.
     The pandas dataframes are organized with respect to dimensions of the belonging
     numpy arrays in Record."""
 
+    if verbose: starttime = timenow(False)
     # get rec
     infile = open(inpath)
     rec = pickle.load(infile)
@@ -176,8 +181,6 @@ def get_csv(inpath, outpath, last_K=500):
                         "junk_repr_value",\
                         "mean_repr",\
                         "repr_value",\
-                        "snapshot_age_distribution",\
-                        "snapshot_gentime_distribution",\
                         # need special treatment since dict with surv and repr
                         "prob_mean",\
                         "prob_var"]
@@ -196,19 +199,24 @@ def get_csv(inpath, outpath, last_K=500):
     # construct pandas objects
 
     # single values
-    def single_series(rec, keys):
-        ds = pd.Series()
-        for key in keys[:-4]:
-            ds[key] = rec[key]
+    def single_df(rec, keys):
+        df = pd.DataFrame()
+        names = keys[:-4]
+        values = [rec[key] for key in names]
         for ss in ["s","r","n"]:
-            ds["g_dist_"+ss] = rec["g_dist"][ss]
-        ds["n1_window_size"] = rec["windows"]["n1"]
-        return ds
+            names.append("g_dist_"+ss)
+            values.append(rec["g_dist"][ss])
+        names.append("n1_window_size")
+        values.append(rec["windows"]["n1"])
+        df["name"] = names
+        df["value"] = values
+        return df
 
     # shape = (nstage,)
     def nstagex1_df(rec):
         df = pd.DataFrame()
-        df["population_size"] = rec["population_size"].astype(int)
+        df["stage"] = np.arange(rec["population_size"].size)
+        df["popsize"] = rec["population_size"].astype(int)
         df["resources"] = rec["resources"].astype(int)
         # generation distribution
         df["generation_min"] = rec["generation_dist"][:,0]
@@ -302,7 +310,7 @@ def get_csv(inpath, outpath, last_K=500):
         df = pd.DataFrame()
         sh = rec["mean_gt"]["a"].shape
         df["snap"] = np.repeat(np.arange(sh[0]),sh[1])
-        df["bit"] =  np.tile(np.arange(sh[1]),sh[0])
+        df["locus"] =  np.tile(np.arange(sh[1]),sh[0])
         df["type"] = np.tile(np.concatenate((\
                         np.repeat("surv",rec["max_ls"]),\
                         np.repeat("repr",(rec["max_ls"]-rec["maturity"])),\
@@ -325,12 +333,15 @@ def get_csv(inpath, outpath, last_K=500):
     if not os.path.exists(outpath): os.makedirs(outpath)
 
     # output to csv
-    single_series(rec, single_keys).to_csv(os.path.join(outpath,"single.csv"),index=False)
+    single_df(rec, single_keys).to_csv(os.path.join(outpath,"single.csv"),index=False)
     nstagex1_df(rec).to_csv(os.path.join(outpath,"nstage-x-1.csv"),index=False)
-    nstagexmaxls_df(rec,nstagexmaxls_keys).to_csv(os.path.join(outpath,\
+    # output age dist only if it was recorded for all stages
+    if rec["age_dist_N"]=="all":
+        nstagexmaxls_df(rec,nstagexmaxls_keys).to_csv(os.path.join(outpath,\
             "nstage-x-maxls.csv"),index=False)
-    if last_K <= rec["population_size"].size:
-        maxlsx1_df(rec).to_csv(os.path.join(outpath,"maxls-x-1.csv"),index=False)
+        # output survival curve only if last_K is lesser than number of stages
+        if last_K <= rec["population_size"].size:
+            maxlsx1_df(rec).to_csv(os.path.join(outpath,"maxls-x-1.csv"),index=False)
     nsnapxmaxls_df(rec,nsnapxmaxls_keys).to_csv(os.path.join(outpath,\
             "nsnap-x-maxls.csv"),index=False)
     nsnapxnbit_df(rec,nsnapxnbit_keys).to_csv(os.path.join(outpath,\
@@ -340,19 +351,13 @@ def get_csv(inpath, outpath, last_K=500):
     nsnapxnloci_df(rec).to_csv(os.path.join(outpath,"nsnap-x-nloci.csv"),index=False)
     nsnapx1_df(rec,nsnapx1_keys).to_csv(os.path.join(outpath,"nsnap-x-1.csv"),index=False)
 
+    if verbose: print get_runtime(starttime, timenow(False), "Runtime")
+
 ############
 ### plot ###
 ############
 
-def plot(record_file):
-    a = Plotter(record_file)
+def plot(record_file, verbose):
+    a = Plotter(record_file, verbose)
     a.generate_figures()
     a.save_figures()
-
-def plot_n1_sliding_window(record_file, wsize):
-    a = Plotter(record_file)
-    a.compute_n1_windows(wsize)
-    a.gen_save_single("n1_mean_sliding_window")
-    a.gen_save_single("n1_var_sliding_window")
-    a.gen_save_single("n1_mean_sliding_window_grid")
-    a.gen_save_single("n1_var_sliding_window_grid")
