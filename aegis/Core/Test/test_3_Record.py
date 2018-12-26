@@ -671,14 +671,14 @@ class TestRecord:
         # First check that rec1 is finalised and rec1_copy is not
         assert "n1_window_var" in rec1.keys()
         assert not "n1_window_var" in rec1_copy.keys()
-        # Account dor methods in finalisation that were not called in the above
+        # Account for methods in finalisation that were not called in the above
         # tests: truncate age distribution
         rec1["age_dist_truncated"] = True
         rec1_copy["age_dist_truncated"] = True
         # Then finalise rec1_copy and compare
         rec1["finalised"] = True
-        rec1_copy.finalise()
-        # Check post finalisation methods not in finalisation
+        rec1_copy.finalise(post_trunc=False)
+        # Check post truncation methods not in finalisation
         assert not "actual_death_rate" in rec1_copy.keys()
         assert not "snapshot_age_distribution_avrg" in rec1_copy.keys()
         # Compare finalised entries

@@ -138,7 +138,6 @@ class Record(dict):
                 else:
                     self[key][s] = newval
 
-    # called in Plotter, not finalisation
     def compute_snapshot_age_dist_avrg(self):
         if not self["age_dist_N"] == "all":
             """Compute snapshot-averaged age distribution."""
@@ -363,7 +362,6 @@ class Record(dict):
 
     # ACTUAL DEATH RATES
 
-    # called in Plotter, not finalisation
     def compute_actual_death(self):
         """Compute actual death rate for each age at each stage."""
         if self["age_dist_N"] == "all":
@@ -452,7 +450,7 @@ class Record(dict):
 
     # OVERALL
 
-    def finalise(self):
+    def finalise(self, post_trunc=True):
         """Calculate additional stats from recorded data of a completed run."""
         # If dieoff, truncate data to last snapshot pop
         if self["dieoff"] or (self["auto"] and self["population_size"][-1]):
@@ -483,6 +481,9 @@ class Record(dict):
         self.compute_windows()
         self.truncate_age_dist()
         self.compute_pen_rates()
+        if post_trunc:
+            self.compute_snapshot_age_dist_avrg()
+            self.compute_actual_death()
         # Remove snapshot pops as appropriate
         if self["output_mode"] > 0:
             self["final_pop"] = self["snapshot_pops"][-1]
