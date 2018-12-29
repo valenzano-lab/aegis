@@ -471,8 +471,6 @@ class TestRecord:
         rec2.compute_mean_repr()
 
         # Define parameters
-        sex = rec1["repr_mode"] in ["sexual", "assort_only"]
-        div = 2.0 if sex else 1.0
         n_snap,ns1 = rec1["n_snapshots"], rec1["n_states"]
         l1,mt1 = rec1["max_ls"], rec1["maturity"]
         mr = np.tile(rec1.p_repr(ns1-1), [n_snap,l1])
@@ -490,10 +488,10 @@ class TestRecord:
         check2_junk[mt2:] = np.tile(np.mean(values[loci["n"]]), l2-mt2)[:]
 
         # Test vs expectation
-        assert np.allclose(rec1["mean_repr"], mr/div)
-        assert np.allclose(rec1["junk_repr"], mr/div)
-        assert np.allclose(rec2["mean_repr"], check2/div)
-        assert np.allclose(rec2["junk_repr"][0], check2_junk/div)
+        assert np.allclose(rec1["mean_repr"], mr)
+        assert np.allclose(rec1["junk_repr"], mr)
+        assert np.allclose(rec2["mean_repr"], check2)
+        assert np.allclose(rec2["junk_repr"][0], check2_junk)
 
     # DONE
     def test_compute_fitness(self, rec1, rec2):

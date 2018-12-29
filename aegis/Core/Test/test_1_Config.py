@@ -218,7 +218,6 @@ class TestConfig:
         c = copy.deepcopy(conf_naive)
         np.set_printoptions(threshold=np.nan)
         # Save info and run
-        sexvar = (c["repr_mode"] in ["sexual", "assort_only"])
         crb1 = c["repr_bound"][1]
         c.generate()
         # Prng
@@ -239,7 +238,6 @@ class TestConfig:
         assert c["chr_len"] == len(c["genmap"]) * c["n_base"]
         assert c["n_states"] ==  2*c["n_base"]+1
         # Survival and reproduction
-        assert c["repr_bound"][1]/crb1 == 2 if sexvar else 1
         assert np.array_equal(c["s_range"],
                 np.linspace(c["surv_bound"][0],c["surv_bound"][1],
                     c["n_states"]))

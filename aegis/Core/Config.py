@@ -97,10 +97,6 @@ class Config(dict):
         self["mapping"] = make_mapping(2*self["n_base"], self["n_states"])
         # Survival and reproduction
         self["repr_bound"] = np.array(self["repr_bound"])
-        if self["repr_mode"] in ["sexual", "assort_only"]:
-        # Double fertility in sexual case to control for relative
-        # contribution to offspring
-            self["repr_bound"] *= 2
         self["surv_bound"] = np.array(self["surv_bound"])
         self["surv_step"] = np.diff(self["surv_bound"])/(self["n_states"]-1)
         self["repr_step"] = np.diff(self["repr_bound"])/(self["n_states"]-1)

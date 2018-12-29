@@ -249,17 +249,14 @@ class Record(dict):
         """Fit mean reproduction probabilities to shape of survival
         probabilities, for downstream computation of fitness and
         reproductive value."""
-        sex = self["repr_mode"] in ["sexual", "assort_only"]
         # True values
         mean_repr = np.zeros(self["prob_mean"]["surv"].shape)
         mean_repr[:,self["maturity"]:] = self["prob_mean"]["repr"]
-        mean_repr /= 2.0 if sex else 1.0
         self["mean_repr"] = mean_repr
         # Junk values
         q = np.mean(self["junk_mean"]["repr"], 1)
         junk_repr = np.tile(q[:,np.newaxis], [1,self["max_ls"]])
         junk_repr[:,:self["maturity"]] = 0
-        junk_repr /= 2.0 if sex else 1.0
         self["junk_repr"] = junk_repr
 
     def compute_fitness(self):
