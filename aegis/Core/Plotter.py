@@ -61,7 +61,6 @@ class Plotter:
                              "plot_fitness_term_snaps",\
                              "plot_fitness_term",\
                              "plot_n1_sliding_window_snaps",\
-                             "plot_n1_var_sliding_window_snaps",\
                              "plot_generation",\
                              "plot_surv_curve",\
                              "plot_age_dist"\
@@ -72,10 +71,9 @@ class Plotter:
                            "03_fitness-term-snaps",\
                            "03_fitness-term",\
                            "04_bits-snaps",\
-                           "05_bits-var-snaps",\
-                           "06_generation",\
-                           "07_surv-curve",\
-                           "08_age-dist"\
+                           "05_generation",\
+                           "06_surv-curve",\
+                           "07_age-dist"\
                            ]
         self.figures = []
         self.outdir = self.single_df.loc["output_prefix","value"] + "_plots"
@@ -98,10 +96,10 @@ class Plotter:
         # Remove not generated plot names
         if not self.has_surv_curve:
             self.plot_methods.remove("plot_surv_curve")
-            self.plot_names.remove("07_surv-curve")
+            self.plot_names.remove("06_surv-curve")
         if not self.has_agedist:
             self.plot_methods.remove("plot_age_dist")
-            self.plot_names.remove("08_age-dist")
+            self.plot_names.remove("07_age-dist")
         if not int(self.single_df.loc["n_snapshots","value"])>1:
             self.plot_methods.remove("plot_genotype_mean_snaps")
             self.plot_names.remove("02_genotype-mean-snaps")
@@ -109,8 +107,6 @@ class Plotter:
             self.plot_names.remove("03_fitness-term-snaps")
             self.plot_methods.remove("plot_n1_sliding_window_snaps")
             self.plot_names.remove("04_bits-snaps")
-            self.plot_methods.remove("plot_n1_var_sliding_window_snaps")
-            self.plot_names.remove("05_bits-var-snaps")
         # Make/replace output directory
         pm,pn,p = self.plot_methods, self.plot_names, self.figures
         if not len(pm) == len(pn) == len(p):
@@ -186,18 +182,6 @@ class Plotter:
         #ax.set_ylim(bottom=0)
         plt.subplots_adjust(top=0.92)
         g.fig.suptitle("bit distribution - sliding window\nsize: %s" %\
-                self.single_df.loc["n1_window_size","value"])
-        return g.fig
-
-    def plot_n1_var_sliding_window_snaps(self):
-        if not int(self.single_df.loc["n_snapshots","value"])>1: return
-        #f,ax = plt.subplots()
-        df = self.sliding_window_df
-        g = sns.relplot(data=df, x="bit", y="n1_window_var", col="snap", col_wrap=4,\
-                linewidths=0)
-        #ax.set_ylim(bottom=0)
-        plt.subplots_adjust(top=0.92)
-        g.fig.suptitle("bit distribution variance - sliding window\nsize: %s" %\
                 self.single_df.loc["n1_window_size","value"])
         return g.fig
 
