@@ -3,7 +3,7 @@
 # Module: Plot                                                         #
 # Classes: Plotter                                                     #
 # Description: Wrapper object that takes and stores pandas dataframes  #
-#   build from csv files that were derived from the Record object      #
+#   built from csv files that were derived from the Record object      #
 #   and implements plotting methods on it.                             #
 ########################################################################
 
@@ -27,7 +27,7 @@ class Plotter:
     """Wrapper class for storing a dataframes and its associated plots."""
 
     def __init__(self, inpath, verbose=False):
-        """Import a Record object and initialise plotting methods."""
+        """Import csv files as pandas dataframes and initialise plotting methods."""
         self.verbose = verbose
         if self.verbose:
             self.starttime = timenow(False)
@@ -37,7 +37,7 @@ class Plotter:
                     os.path.abspath(inpath),"csv_files"))
         self.abort = False
         try:
-            inp = os.path.join(inpath,"csv_files")
+            inp = os.path.join(inpath)
             self.single_df = pd.read_csv(os.path.join(inp,"single.csv"))\
                     .set_index("name")
             self.nstagex1_df = pd.read_csv(os.path.join(inp,"nstage-x-1.csv"))
