@@ -253,6 +253,7 @@ def get_csv(inpath, outpath, last_K=500, verbose=False):
                 np.repeat(np.arange(sh[0]-sh[1]),sh[1]).reshape((sh[0]-sh[1],sh[1]))
         ix2 = np.tile(np.arange(sh[1]),sh[0]-sh[1]).reshape(ix1.shape)
         surv_curve = agehist[ix1,ix2]
+        surv_curve = surv_curve[surv_curve[:,0]>0] # exclude empty groups
         surv_curve /= np.tile(surv_curve[:,0].reshape((surv_curve.shape[0],1)),\
                 surv_curve.shape[1]).astype("float")
         return (surv_curve.mean(0), surv_curve.std(0))
@@ -329,7 +330,7 @@ def get_csv(inpath, outpath, last_K=500, verbose=False):
         return df
 
     # create dir in outpath and update outpath
-    outpath = os.path.join(outpath,"csv_files")
+    outpath = os.path.join(outpath,rec["output_prefix"]+"_csv_files")
     if not os.path.exists(outpath): os.makedirs(outpath)
 
     # output to csv
