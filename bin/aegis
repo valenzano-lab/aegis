@@ -55,20 +55,7 @@ parser_get.add_argument('-m', '--module', metavar='<str>', default="Core",
         help="AEGIS module to use for Config file (default: 'Core')")
 
 #-----------------------------------------------------------------------------
-# 4. Format `plot` parser
-#-----------------------------------------------------------------------------
-plot_help = "Generate plots from an AEGIS Record file."
-
-parser_plot = subparsers.add_parser("plot", help=plot_help, 
-        description=plot_help)
-parser_plot.add_argument('input', help="path to input Record file")
-parser_plot.add_argument('-m', '--module', metavar='<str>', default="Core",
-        help="AEGIS module used to produce Record file (default: 'Core')")
-parser_plot.add_argument('-v', '--verbose', action="store_true",
-        help="report verbosely during plotting")
-
-#-----------------------------------------------------------------------------
-# 5. Format `read` parser
+# 4. Format `read` parser
 #-----------------------------------------------------------------------------
 read_help = "Extract information from an AEGIS Record file to a new path."
 
@@ -84,11 +71,24 @@ parser_read.add_argument('-v', '--verbose', action="store_true",
 # Specify information to extract
 read_mode = parser_read.add_mutually_exclusive_group(required=True)
 read_mode.add_argument('--csv', action="store_true",
-        help="write data from Record file to csv")
+        help="write data from Record file to csv (creates a dir)")
 read_mode.add_argument('-s', '--seed', action="store_true",
         help="extract random seed from Record file")
 read_mode.add_argument('-i', '--info', action="store_true",
         help="print general information on contents of Record file")
+
+#-----------------------------------------------------------------------------
+# 5. Format `plot` parser
+#-----------------------------------------------------------------------------
+plot_help = "Generate plots from AEGIS csv files."
+
+parser_plot = subparsers.add_parser("plot", help=plot_help, 
+        description=plot_help)
+parser_plot.add_argument('input', help="path to input dir containing csv files")
+parser_plot.add_argument('-m', '--module', metavar='<str>', default="Core",
+        help="AEGIS module used to produce Record file (default: 'Core')")
+parser_plot.add_argument('-v', '--verbose', action="store_true",
+        help="report verbosely during plotting")
 
 #-----------------------------------------------------------------------------
 # 6. Parse args and execute AEGIS
