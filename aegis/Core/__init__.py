@@ -50,68 +50,45 @@ def getrseed(inpath, outpath, verbose=False):
     if verbose: print get_runtime(starttime, timenow(False), "Runtime")
 
 def getrecinfo(inpath, outpath, verbose=False):
-    """Get information on record object."""
+    """Get information on record object and output a csv."""
     if verbose: starttime = timenow(False)
     rec_name = inpath.split('/')[-1] # get record name
     # load record
     infile = open(inpath)
     rec = pickle.load(infile)
     infile.close()
-    # formatting
-    n_tabs = 3
-    ml_type = 4
-    ml_name = 4
-    ml_shape = 5
-    ml_subkeys = 7
-    for key in rec.keys():
-        ml_type = max(ml_type, len(str(type(rec[key]))))
-        ml_name = max(ml_name, len(key))
-        if isinstance(rec[key], np.ndarray): ml_shape = max(ml_shape,\
-                len(str(rec[key].shape)))
-        elif isinstance(rec[key], list): ml_shape = max(ml_shape,\
-                len(str(len(rec[key]))))
-        elif isinstance(rec[key], tuple): ml_shape = max(ml_shape,\
-                len(str(len(rec[key]))))
-        elif isinstance(rec[key], dict): ml_subkeys = max(ml_subkeys,\
-                len(str(rec[key].keys())))
-    ll = []
-    ll_title = ['type'+(ml_type-4)*' '+'|'+n_tabs*'\t'+\
-            'name'+(ml_name-4)*' '+'|'+n_tabs*'\t'+\
-            'shape']
-    ll_sep = ['-'*ml_type+'|'+'-'*(ml_name+4*n_tabs)+'|'+'-'*(ml_shape-1+4*n_tabs)]
-    ll_dicts = []
-    ll_dicts_sep = ['-'*ml_type+'|'+'-'*(ml_name+4*n_tabs)+'|'+\
-            '-'*(ml_name+4*n_tabs)]
-    ll_dicts_title = ['type'+(ml_type-4)*' '+'|'+n_tabs*'\t'+\
-            'name'+(ml_name-4)*' '+'|'+n_tabs*'\t'+\
-            'subkeys']
-    for key in rec.keys():
-        s = str(type(rec[key]))
-        s += ' '*(ml_type-len(s))
-        s += '|'+(n_tabs * '\t')
-        s += key
-        s += ' '*(ml_name-len(key))
-        s += '|'+(n_tabs * '\t')
-        if isinstance(rec[key], dict):
-            s += str(rec[key].keys())
-            ll_dicts.append(s)
-        else:
-            if isinstance(rec[key],np.ndarray): ss = str(rec[key].shape)
-            elif isinstance(rec[key],list): ss = str(len(rec[key]))
-            elif isinstance(rec[key],tuple): ss = str(len(rec[key]))
-            else: ss= '/'
-            s += ss+' '*(ml_shape-len(ss))
-            ll.append(s)
-    # finalise
-    ll.sort()
-    ll = ll_title + ll_sep + ll
-    ll_dicts.sort()
-    ll_dicts = ll_dicts_title + ll_dicts_sep + ll_dicts
-    out = '\n'.join([rec_name+' record entries\n']+ll+['\ndictionaries\n']+ll_dicts)
+
+    def make_df(rec, suffix=""):
+        # create dataframe to output
+        odf = pd.DataFrame()
+        # iterate through record keys and values
+        for key,value in rec.items():
+            # set initial values for tracked properties: name, type, shape
+            name = suffix + "[" + key + "]" if suffix != "" else key
+            vtype = [type(value)]
+            vshape = [None]
+            # if record then recurse call
+            if isinstance(value,dict):
+                odf = odf.append(make_df(value, suffix=key))
+            # if list or tuple set shape to len
+            elif isinstance(value,list) or isinstance(value,tuple):
+                vshape = [str(len(value))]
+            # if numpy array set shape to shape
+            elif isinstance(value,np.ndarray):
+                vshape = [str(value.shape)]
+
+            df = pd.DataFrame({ "name":name,\
+                    "type":vtype,\
+                    "shape":vshape})
+            odf = odf.append(df)
+        # create index and return result
+        odf["index"] = np.arange(len(odf))
+        odf.set_index("index", inplace=True)
+        return odf
+
     # write to file
-    outfile = open(outpath, 'w')
-    outfile.write(out)
-    outfile.close()
+    outdf = make_df(rec)
+    outdf.to_csv(outpath, index=False)
     if verbose: print get_runtime(starttime, timenow(False), "Runtime")
 
 def get_csv(inpath, outpath, last_K=500, verbose=False):

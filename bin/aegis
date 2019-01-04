@@ -75,7 +75,7 @@ read_mode.add_argument('--csv', action="store_true",
 read_mode.add_argument('-s', '--seed', action="store_true",
         help="extract random seed from Record file")
 read_mode.add_argument('-i', '--info', action="store_true",
-        help="print general information on contents of Record file")
+        help="write general information on contents of Record file to a csv file")
 
 #-----------------------------------------------------------------------------
 # 5. Format `plot` parser
