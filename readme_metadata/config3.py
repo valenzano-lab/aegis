@@ -4,8 +4,8 @@
 
 ## CORE PARAMETERS ##
 random_seed = "" # If numeric, sets random seed to that value before execution
-n_runs = 1 # Total number of independent runs
-n_stages = 50000 # Total number of stages per run [int/"auto"]
+n_runs = 2 # Total number of independent runs
+n_stages = "auto" # Total number of stages per run [int/"auto"]
 n_snapshots = 5 # Points in run at which to record detailed data
 path_to_seed_file = "scen2_run0.pop" # Path to simulation seed file, if no seed then ""
     # see README for which parameters are inherited from seed, which are
@@ -16,43 +16,48 @@ max_fail = 10 # Maximum number of failed attempts tolerated for each run
 output_prefix = "scen2_run0_continue" # Prefix for output files within simulation directory
 output_mode = 1 # 0 = return records only, 1 = return records + final pop,
                 # 2 = return records + all snapshot populations
-age_dist_N = "all" # Window size around snapshots for which to record age_dist
+age_dist_N = "all" # Window size around snapshots stage/generation for no_auto/auto
+                   # for which to record age distribution [int/"all"]
+                   # "all" saves age distribution at all stages
 
 ## STARTING PARAMETERS ##
-repr_mode = 'asexual' # sexual, asexual, assort_only or recombine_only
+repr_mode = "asexual" # sexual, asexual, assort_only or recombine_only
 res_start = 500 # Starting resource value
 start_pop = 500 # Starting population size
 
 ## RESOURCE PARAMETERS ##
-res_limit = res_start*5 # Maximum resource value, if variable; -1 = infinite
 res_function = lambda n,r: r # Function for updating resources; here constant
 stv_function = lambda n,r: n > r # Function for identifying starvation
-starve_at = 0   # stage/generation for no_auto/auto repectively at which to force
-                # starvation, 0 if none
+kill_at = 0 # stage/generation for no_auto/auto repectively at which to force
+            # dieoff, 0 if none
 
-## AUTOCOMPUTING STAGE NUMBER ##
-delta = 10**-10 # Maximum difference between final and equilibrium neutral genotypes
-scale = 1.1 # Scaling factor applied to target generation estimated for delta
+## PENALISATION ##
+pen_cuml = True # Is the penalty cumulative? If True the function compounds,
+                # otherwise it is always applied on the default value
+surv_pen_func = lambda s_range,n,r: s_range*0.9
+repr_pen_func = lambda r_range,n,r: r_range
+
+## AUTOCOMPUTING GENERATION NUMBER ##
+deltabar = 0.01 # Relative error allowed for the deviation from the stationary
+                # distribution
+scale = 1.01 # Scaling factor applied to target generation estimated for deltabar
 max_stages = 500000 # Maximum number of stages to run before terminating
 
 ## SIMULATION FUNDAMENTALS: CHANGE WITH CARE ##
-death_bound = [0.001, 0.02] # min and max death rates
-repr_bound = [0, 0.2] # min and max reproduction rates
+surv_bound = [0.98, 0.99] # min and max death rates
+repr_bound = [0, 0.5] # min and max reproduction rates
 r_rate = 0.01 # recombination rate, if sexual
 m_rate = 0.001 # mutation rate
-m_ratio = 0.1 # Ratio of positive (0->1) to negative (1->0) mutations
+m_ratio = 0.1 # Ratio of benevolent (0->1) to detrimental (1->0) mutations
 g_dist = {"s": 0.5, # Proportion of 1's in survival loci of initial genomes
         "r": 0.5,   #                      reproductive loci
         "n": 0.5}   #                      neutral loci
-n_neutral = 10 # Number of neutral loci in genome
-n_base = 10 # Number of bits per locus
+n_neutral = 5 # Number of neutral loci in genome
+n_base = 5 # Number of bits per locus
 repr_offset = 100 # Offset for repr loci in genome map (must be <= max_ls)
 neut_offset = 200 # Offset for neut loci (<= repr_offset + max_ls - maturity)
 max_ls = 98 # Maximum lifespan (must be > repr_offset) (-1 = infinite)
 maturity = 21 # Age from which an individual can reproduce (must be <= max_ls)
-surv_pen = True # Survival penalty under starvation
-repr_pen = False # Reproduction penalty under starvation
-death_inc = 3 # Per-stage death rate increase under starvation
-repr_dec = death_inc # Per-stage reproduction rate decrease under starvation
+
 # Size of sliding windows for recording averaged statistics:
-windows = {"population_size": 1000, "resources":1000, "n1":10}
+windows = {"population_size": 1000, "resources":1000, "n1":n_base}
