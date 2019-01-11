@@ -26,7 +26,7 @@ except:
 class Plotter:
     """Wrapper class for storing a dataframes and its associated plots."""
 
-    def __init__(self, inpath, verbose=False):
+    def __init__(self, inpath, verbose=False, outpath=""):
         """Import csv files as pandas dataframes and initialise plotting methods."""
         self.verbose = verbose
         if self.verbose:
@@ -76,7 +76,9 @@ class Plotter:
                            "07_age-dist"\
                            ]
         self.figures = []
-        self.outdir = self.single_df.loc["output_prefix","value"] + "_plots"
+        self.outpath = os.getcwd() if outpath=="" else outpath
+        self.outdir = os.path.join(self.outpath,\
+                self.single_df.loc["output_prefix","value"] + "_plots")
         # set style for seaborn plots
         sns.set(style="darkgrid")
 

@@ -6,7 +6,7 @@
 #################################################
 
 #-----------------------------------------------------------------------------
-# 1. Import libraries
+# Import libraries
 #-----------------------------------------------------------------------------
 
 import argparse,os,sys,warnings
@@ -14,7 +14,7 @@ warnings.simplefilter(action='ignore', category=FutureWarning)
 import aegis
 
 #-----------------------------------------------------------------------------
-# 2. Format parent parser
+# Format parent parser
 #-----------------------------------------------------------------------------
 
 mode_help="AEGIS run mode to execute:"
@@ -23,13 +23,10 @@ parser = argparse.ArgumentParser(
         description = "AEGIS: Ageing of Evolving Genomes In Silico",
         formatter_class=argparse.RawTextHelpFormatter)
 
-#parser.add_argument('mode', help=mode_help,
-#        choices = ["run", "get", "plot", "read"])
-
-subparsers = parser.add_subparsers(dest='subparser_name',help=mode_help) # TODO: Add help string here?
+subparsers = parser.add_subparsers(dest='subparser_name',help=mode_help)
 
 #-----------------------------------------------------------------------------
-# 2. Format `run` parser
+# Format `run` parser
 #-----------------------------------------------------------------------------
 run_help = "Execute an AEGIS simulation from a Config file."
 
@@ -43,30 +40,33 @@ parser_run.add_argument('-p', '--profile', metavar='<str>', default="",
         help="profile simulation with cProfile and save results to this path")
 parser_run.add_argument('-v', '--verbose', action="store_true",
         help="report verbosely at every report stage")
+parser_run.add_argument('-o', '--output', metavar='<str>', default="",
+        help="path to output dir (default: '.')")
 
 #-----------------------------------------------------------------------------
-# 3. Format `get` parser
+# Format `get` parser
 #-----------------------------------------------------------------------------
 get_help = "Copy a default Config file to a specified path for editing."
 
 parser_get = subparsers.add_parser("get", help=get_help, description=get_help)
-parser_get.add_argument('path', help="path to save new Config file")
+parser_get.add_argument('output', help="path to save new Config file")
 parser_get.add_argument('-m', '--module', metavar='<str>', default="Core",
         help="AEGIS module to use for Config file (default: 'Core')")
 
 #-----------------------------------------------------------------------------
-# 4. Format `read` parser
+# Format `read` parser
 #-----------------------------------------------------------------------------
 read_help = "Extract information from an AEGIS Record file to a new path."
 
 parser_read = subparsers.add_parser("read", help=read_help, 
         description = read_help)
 parser_read.add_argument('input', help="path to input Record file")
-parser_read.add_argument('output', help="path to use for output")
 parser_read.add_argument('-m', '--module', metavar='<str>', default="Core",
         help="AEGIS module used to produce Record file (default: 'Core')")
 parser_read.add_argument('-v', '--verbose', action="store_true",
         help="print runtime")
+parser_read.add_argument('-o', '--output', metavar='<str>', default="",
+        help="path to output dir (default: '.')")
 
 # Specify information to extract
 read_mode = parser_read.add_mutually_exclusive_group(required=True)
@@ -78,7 +78,7 @@ read_mode.add_argument('-i', '--info', action="store_true",
         help="write general information on contents of Record file to a csv file")
 
 #-----------------------------------------------------------------------------
-# 5. Format `plot` parser
+# Format `plot` parser
 #-----------------------------------------------------------------------------
 plot_help = "Generate plots from AEGIS csv files."
 
@@ -89,31 +89,29 @@ parser_plot.add_argument('-m', '--module', metavar='<str>', default="Core",
         help="AEGIS module used to produce Record file (default: 'Core')")
 parser_plot.add_argument('-v', '--verbose', action="store_true",
         help="report verbosely during plotting")
+parser_plot.add_argument('-o', '--output', metavar='<str>', default="",
+        help="path to output dir (default: '.')")
 
 #-----------------------------------------------------------------------------
-# 6. Parse args and execute AEGIS
+# Parse args and execute AEGIS
 #-----------------------------------------------------------------------------
 
 args = parser.parse_args()
 
 module = getattr(aegis, args.module)
-#inpath = os.path.expanduser(args.infile)
 
 if args.subparser_name == "run":
     if args.profile != "": # Start profiling
         import cProfile, pstats, StringIO
         pr = cProfile.Profile()
         pr.enable()
-    path = os.path.expanduser(args.input)
-    module.run(path, args.r, args.verbose)
+    inpath = os.path.expanduser(args.input)
+    outpath = os.path.expanduser(args.output)
+    module.run(inpath, args.r, args.verbose, outpath)
 
 elif args.subparser_name == "get":
-    path = os.path.expanduser(args.path)
+    path = os.path.expanduser(args.output)
     module.getconfig(path)
-
-elif args.subparser_name == "plot":
-    path = os.path.expanduser(args.input)
-    module.plot(path, args.verbose)
 
 elif args.subparser_name == "read":
     inpath = os.path.expanduser(args.input)
@@ -124,6 +122,11 @@ elif args.subparser_name == "read":
         module.getrseed(inpath, outpath,verbose=args.verbose)
     elif args.info:
         module.getrecinfo(inpath, outpath,verbose=args.verbose)
+
+elif args.subparser_name == "plot":
+    inpath = os.path.expanduser(args.input)
+    outpath = os.path.expanduser(args.output)
+    module.plot(inpath, args.verbose, outpath)
 
 if args.subparser_name == "run" and args.profile != "": # Finish profiling
     pr.create_stats()

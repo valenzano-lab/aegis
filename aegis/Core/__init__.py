@@ -18,9 +18,9 @@ except:
 ### run ###
 ###########
 
-def run(config_file, report_n, verbose):
+def run(config_file, report_n, verbose, outpath=""):
     """Execute a complete simulation from a specified config file."""
-    s = Simulation(config_file, report_n, verbose)
+    s = Simulation(config_file, report_n, verbose, outpath)
     s.execute()
     s.finalise()
 
@@ -38,25 +38,28 @@ def getconfig(outpath):
 ### read ###
 ############
 
-def getrseed(inpath, outpath, verbose=False):
+def getrseed(inpath, outpath="", verbose=False):
     """Get prng from a record object."""
     if verbose: starttime = timenow(False)
+    if outpath=="": outpath = os.getcwd()
     fin = open(inpath, "r")
     record = pickle.load(fin)
     fin.close()
+    outpath = os.path.join(outpath, record["output_prefix"]+".rseed")
     fout = open(outpath, "w")
     pickle.dump(record["random_seed"], fout)
     fout.close()
     if verbose: print get_runtime(starttime, timenow(False), "Runtime")
 
-def getrecinfo(inpath, outpath, verbose=False):
+def getrecinfo(inpath, outpath="", verbose=False):
     """Get information on record object and output a csv."""
     if verbose: starttime = timenow(False)
-    rec_name = inpath.split('/')[-1] # get record name
+    if outpath=="": outpath = os.getcwd()
     # load record
     infile = open(inpath)
     rec = pickle.load(infile)
     infile.close()
+    outpath = os.path.join(outpath, rec["output_prefix"]+".recinfo")
 
     def make_df(rec, suffix=""):
         # create dataframe to output
@@ -91,7 +94,7 @@ def getrecinfo(inpath, outpath, verbose=False):
     outdf.to_csv(outpath, index=False)
     if verbose: print get_runtime(starttime, timenow(False), "Runtime")
 
-def get_csv(inpath, outpath, last_K=500, verbose=False):
+def get_csv(inpath, outpath="", last_K=500, verbose=False):
     """Only specific data is output from the Record file to a csv files.
     The pandas dataframes are organized with respect to dimensions of the belonging
     numpy arrays in Record."""
@@ -335,7 +338,7 @@ def get_csv(inpath, outpath, last_K=500, verbose=False):
 ### plot ###
 ############
 
-def plot(record_file, verbose):
+def plot(record_file, verbose, outpath=""):
     a = Plotter(record_file, verbose)
     a.generate_figures()
     a.save_figures()

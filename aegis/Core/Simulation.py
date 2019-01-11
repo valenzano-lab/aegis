@@ -27,7 +27,7 @@ class Simulation:
 
     # INITIALISATION
 
-    def __init__(self, config_file, report_n, verbose):
+    def __init__(self, config_file, report_n, verbose, outpath=""):
         """Initialise the simulation and report starting information."""
         self.starttime, self.log = timenow(False), ""
         self.logprint("\nBeginning simulation {}.".format(timenow()))
@@ -35,6 +35,7 @@ class Simulation:
         self.get_conf(config_file)
         self.conf.generate()
         self.report_n, self.verbose = report_n, verbose
+        self.outpath = os.getcwd() if outpath=="" else outpath
         self.get_startpop(self.conf["path_to_seed_file"])
         self.init_runs()
 
@@ -141,7 +142,8 @@ class Simulation:
         # Auxiliary functions
         def intro(otype, suffix):
             self.logprint("Saving {}...".format(otype))
-            dirname = self.conf["output_prefix"] + "_files/{}".format(suffix)
+            dirname = os.path.join(self.outpath,\
+                    self.conf["output_prefix"] + "_files/{}".format(suffix))
             if os.path.exists(dirname): # Overwrite existing output
                     shutil.rmtree(dirname)
             os.makedirs(dirname)

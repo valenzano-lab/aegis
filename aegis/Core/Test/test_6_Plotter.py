@@ -1,6 +1,7 @@
 from aegis.Core import Plotter
 import pytest, os, shutil, warnings
 from subprocess import call
+import random, string
 
 @pytest.fixture(scope="module")
 def rec_names(request):
@@ -17,14 +18,13 @@ def test_plot(rec_names):
     if not rec_names:
         s = "No records found. This tests depends on previous execution of test_4_Run::TestRun::test_execute that generates the record files needed for this test. Plotter test not run."
         warnings.warn(UserWarning(s))
-    path = os.path.join(os.path.abspath("."), "aegis/Core/Test")
+    dirname = ''.join([random.choice(string.ascii_letters + string.digits) for i in xrange(10)])
+    outpath = os.path.join(os.path.abspath("."), "aegis/Core/Test", dirname)
+    os.makedirs(outpath)
     for rec in rec_names:
-        rec_path = os.path.join(path,rec)
-        call(["aegis","read","--csv",rec_path,path])
-        a = Plotter(path)
+        rec_path = os.path.join(os.path.abspath("."), "aegis/Core/Test", rec)
+        call(["aegis","read","--csv",rec_path,"-o",outpath])
+        a = Plotter(os.path.join(outpath,"test_csv_files"), outpath=outpath)
         a.generate_figures()
-        a.outdir = os.path.join(path,rec[:-4]+"_plots")
         a.save_figures()
-        #os.remove(rec_path)
-        shutil.rmtree(a.outdir)
-        shutil.rmtree(os.path.join(path,"csv_files"))
+    shutil.rmtree(outpath)
