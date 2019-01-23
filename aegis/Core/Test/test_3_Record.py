@@ -240,8 +240,27 @@ class TestRecord:
         assert np.array_equal(p.generations, pop2.generations)
         assert np.array_equal(p.gentimes, pop2.gentimes)
 
-
     ## FINALISATION ##
+
+    def test_truncate_per_stage_entries(self, rec1):
+        """Test that per stage entries are truncated to recorded entries when autostage
+        and not truncated otherwise."""
+        N_auto = np.sum(rec1["population_size"]>0)
+        N_else = rec1["n_stages"]
+        rec1.truncate_per_stage_entries()
+        per_stage_entries = ["population_size",\
+                             "resources",\
+                             "age_distribution",\
+                             "generation_dist",\
+                             "gentime_dist"]
+        if rec1["surv_pen"]: per_stage_entries.append("s_range_pen")
+        if rec1["repr_pen"]: per_stage_entries.append("r_range_pen")
+
+        tocheck = np.zeros(len(per_stage_entries))
+        for i in range(tocheck.size):
+            tocheck[i] = rec1[per_stage_entries[i]].shape[0]
+        if rec1["auto"]: assert np.all(tocheck == N_auto)
+        else: assert np.unique(tocheck).size == 1
 
     # not computed for rec2
     def test_compute_snapshot_properties(self, rec1):
@@ -809,8 +828,8 @@ class TestRecord:
 
     ## POST FINALISATION (PLOTTER) ##
 
-    def test_compute_actual_death(self, rec1):
-        """Test if compute_actual_death stores expected results for
+    def test_compute_kaplan_meier(self, rec1):
+        """Test if compute_kaplan_meier stores expected results for
         artificial data."""
         r = rec1.copy()
         maxls = r["max_ls"]
@@ -823,17 +842,17 @@ class TestRecord:
             r["age_dist_truncated"] = True
             r["population_size"] = np.tile(maxls*(2**np.arange(9,-1,-1)),10)
             r["age_dist_stages"] = np.vstack((np.arange(10),np.arange(10)+90))
-        r.compute_actual_death()
+        r.compute_kaplan_meier()
         n = r["n_stages"] if not r["auto"] else r["max_stages"]
         print r["age_distribution"].shape, r["population_size"].shape
-        print r["actual_death_rate"].shape, n, r["max_ls"]
+        print r["kaplan-meier"].shape, n, r["max_ls"]
         if r["age_dist_N"] == "all":
-            assert np.array_equal(r["actual_death_rate"],
-                np.tile(0.5, np.array(r["age_distribution"].shape) - 1))
+            assert np.array_equal(r["kaplan-meier"],
+                np.cumprod(np.tile(0.5, np.array(r["age_distribution"].shape[1]) - 1)))
         else:
-            assert np.array_equal(r["actual_death_rate"],
-                np.tile(0.5, np.array([n_snap,r["age_distribution"].shape[1]\
-                        -1, r["age_distribution"].shape[2]-1])))
+            assert np.array_equal(r["kaplan-meier"],
+                np.cumprod(np.tile(0.5, np.array([n_snap,r["age_distribution"].shape[2]\
+                        -1])),1))
 
     def test_compute_snapshot_age_dist_avrg(self, rec2):
         """Test snapshot age distribution averaging for randomly generated

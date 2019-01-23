@@ -44,6 +44,7 @@ class Record(dict):
             self[k] = np.zeros(n)
         # determine what penalties to save
         # do not save if constant
+        # NOTE this is hardcoded: dangerous. Maybe just take it out.
         sp1 = conf["surv_pen_func"](conf["s_range"],100,100)
         sp2 = conf["surv_pen_func"](sp1,100,100)
         rp1 = conf["surv_pen_func"](conf["r_range"],100,100)
@@ -291,6 +292,38 @@ class Record(dict):
         if "r_range_pen" in self.keys():
             self["r_range_pen"] = self["r_range_pen"].mean(0)
 
+    # OBSERVED SURVIVAL, REPRODUCTION, FITNESS
+
+    def compute_kaplan_meier(self):
+        """Compute Kaplan-Meier survival curves."""
+        if self["age_dist_N"] == "all":
+            agedist = self["age_distribution"]
+            popn = self["population_size"]
+            agehist = np.repeat(popn, agedist.shape[1]).reshape(agedist.shape)*agedist
+            dividend = agehist[1:,1:]
+            divisor = np.copy(agehist[:-1,:-1])
+            # flag division by zero
+            divisor[divisor==0] = np.nan
+            res = dividend / divisor
+            # substitute flags for ones
+            res[np.isnan(res)] = 1
+            self["kaplan-meier"] = np.mean(np.cumprod(res,1),0)
+        else:
+            self.truncate_age_dist()
+            m = self["age_distribution"].size/self["n_snapshots"]/self["max_ls"]
+            ix = self["age_dist_stages"].flatten()
+            popn = self["population_size"][ix].reshape(\
+                    (self["n_snapshots"], m, 1))
+            agehist = self["age_distribution"] * popn
+            dividend = agehist[:,1:,1:]
+            divisor = np.copy(agehist[:,:-1,:-1])
+            # flag division by zero
+            divisor[divisor==0] = np.nan
+            res = dividend / divisor
+            # substitute flags for ones
+            res[np.isnan(res)] = 1
+            self["kaplan-meier"] = np.mean(np.cumprod(res,2),1)
+
     # MEAN AND VARIANCE IN BIT VALUE
 
     def compute_bits(self):
@@ -357,27 +390,6 @@ class Record(dict):
         entropy_bits = np.apply_along_axis(st.entropy, 0, bit_distr)
         self["entropy_bits"] = entropy_bits
 
-    # ACTUAL DEATH RATES
-
-    def compute_actual_death(self):
-        """Compute actual death rate for each age at each stage."""
-        if self["age_dist_N"] == "all":
-            N_age = self["age_distribution"] *\
-                    self["population_size"][:,None]
-            dividend = N_age[1:, 1:]
-            divisor = np.copy(N_age[:-1, :-1])
-        else:
-            self.truncate_age_dist()
-            m = self["age_distribution"].size/self["n_snapshots"]/self["max_ls"]
-            ix = self["age_dist_stages"].flatten()
-            pop_size = self["population_size"][ix].reshape(\
-                    (self["n_snapshots"], m, 1))
-            N_age = self["age_distribution"] * pop_size
-            dividend = N_age[:,1:,1:]
-            divisor = np.copy(N_age[:,:-1,:-1])
-        divisor[divisor == 0] = np.nan # flag division by zero
-        self["actual_death_rate"] = 1 - dividend / divisor
-
     # SLIDING WINDOWS
 
     def get_window(self, key, wsize):
@@ -428,7 +440,6 @@ class Record(dict):
         else:
             self["age_dist_stages"] = np.array(self["age_dist_stages"])
 
-
     def truncate_age_dist(self, trunc_stages=True):
         """Truncate age distribution to nonzero entries."""
         if self["age_dist_truncated"]: return
@@ -445,6 +456,22 @@ class Record(dict):
                 (self["n_snapshots"], m, self["max_ls"]))
         self["age_dist_truncated"] = True
 
+    def truncate_per_stage_entries(self):
+        """If autostage truncate per-stage entries to those where population size is
+        recorded."""
+        if self["auto"]:
+            per_stage_entries = ["population_size",\
+                                 "resources",\
+                                 "age_distribution",\
+                                 "generation_dist",\
+                                 "gentime_dist"]
+            if self["surv_pen"]: per_stage_entries.append("s_range_pen")
+            if self["repr_pen"]: per_stage_entries.append("r_range_pen")
+
+            which = self["population_size"]>0
+            for key in per_stage_entries:
+                self[key] = self[key][which]
+
     # OVERALL
 
     def finalise(self, post_trunc=True):
@@ -459,6 +486,8 @@ class Record(dict):
                 self["snapshot_generations"] = self["snapshot_generations"][\
                     :self["n_snapshots"]]
             self["snapshot_stages"] = self["snapshot_stages"][:self["n_snapshots"]]
+        # Truncate per-stage entries to recorded entries if autostage
+        self.truncate_per_stage_entries()
         # Compute basic properties of snapshot pops
         self.compute_snapshot_properties()
         # Genotype distributions and statistics
@@ -476,11 +505,10 @@ class Record(dict):
         self.compute_bits()
         self.compute_entropies()
         self.compute_windows()
-        self.truncate_age_dist()
         self.compute_pen_rates()
         if post_trunc:
             self.compute_snapshot_age_dist_avrg()
-            self.compute_actual_death()
+            self.compute_kaplan_meier()
         # Remove snapshot pops as appropriate
         if self["output_mode"] > 0:
             self["final_pop"] = self["snapshot_pops"][-1]
