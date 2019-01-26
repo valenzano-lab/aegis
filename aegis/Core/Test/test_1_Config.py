@@ -43,7 +43,7 @@ def conf_naive(request, conf_path, ran_str, gen_trseed):
         c["n_runs"] = random.randint(1,3)
         nstage = random.randint(16,80)
         c["n_stages"] = "auto" if request.param[:-1] == "auto" else nstage
-        c["n_snapshots"] = random.randint(2,4)
+        c["n_snapshots"] = 2
         # c["output_mode"] = random.randrange(3) # TODO: Test with this?
         # c["max_fail"] = random.randrange(10) # TODO: Test with this?
         ## STARTING PARAMETERS ##
@@ -54,11 +54,11 @@ def conf_naive(request, conf_path, ran_str, gen_trseed):
         ## RESOURCE PARAMETERS ##
         a,b,d,e = np.random.uniform(size=4)
         #c["res_function"] = lambda n,r: int((r-n)*a + b) # Random affine
-        c["stv_function"] = lambda n,r: e*n > d*r
+        c["stv_function"] = lambda n,r: n>r
         ## AUTOCOMPUTING STAGE NUMBER ##
         c["deltabar"] = random.random()*0.1
         c["scale"] = random.randint(9, 19)/10.0
-        c["max_stages"] = random.randint(200,400)
+        c["max_stages"] = random.randint(600,900)
         ## AGE DISTRIBUTION RECORDING ##
         if request.param[-1] == "1": age_dist_N_var = "all"
         else: age_dist_N_var = random.randint(1,3)
@@ -67,7 +67,7 @@ def conf_naive(request, conf_path, ran_str, gen_trseed):
         # Death and reproduction parameters
         sb_low, rb_low = np.random.uniform(size=2)
         sb_high = sb_low + random.uniform(0, 1-sb_low)
-        rb_high = rb_low + random.uniform(0, 1-rb_low)
+        rb_high = rb_low + random.uniform(rb_low, 1)
         c["surv_bound"] = np.array([sb_low, sb_high])
         c["repr_bound"] = np.array([rb_low, rb_high])
         # Mutation and recombination

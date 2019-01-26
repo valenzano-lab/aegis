@@ -193,8 +193,10 @@ class TestRun:
         # TODO: Add tests of age incrementation, record updating, growth, death
         # Last stage
         run2 = run.copy()
-        if run2.conf["auto"]: run2.conf["min_gen"] = 5
-        n = 0
+        if run2.conf["auto"]:
+            run2.conf["min_gen"] = 4
+            run2.conf["snapshot_generations_remaining"] = np.around(np.linspace(0,4,\
+                    run2.conf["n_snapshots"])).astype(int)
         while not run2.complete:
             print run2.n_stage, run2.population.N, len(run2.population.generations),
             print np.min(run2.population.generations),
@@ -203,13 +205,13 @@ class TestRun:
         assert run2.complete
         assert (run2.dieoff == (run2.population.N == 0))
         print run2.n_stage, run2.n_snap
-        if not run2.dieoff: # Run completion
+        if not run2.dieoff and not run2.conf["auto"]: # Run completion
             assert run2.n_snap == run.conf["n_snapshots"]
             assert run2.n_stage == run.conf["n_stages"]
         elif not run2.conf["auto"]: # Set stage count + dieoff
             print run2.conf["snapshot_stages"]
             assert run2.n_snap == 1+np.max(
-                    np.nonzero(run2.conf["snapshot_stages"]<run2.n_stage)[0])
+                    np.nonzero(run2.conf["snapshot_stages"]<run2.n_stage-1)[0])
         else: # Auto stage count + dieoff
             print run2.conf["snapshot_generations"]
             print run2.conf["snapshot_generations_remaining"]
@@ -217,12 +219,11 @@ class TestRun:
                     len(run2.conf["snapshot_generations_remaining"])
         # Dead
         run3 = run.copy()
-        run3.population = run3.population
-        run3.population.N = 0
-        run3.population.ages = np.array([])
-        run3.population.genomes = np.array([[],[]])
+        mask = np.zeros(run3.population.N, dtype=bool)
+        run3.population = run3.population.subset_clone(mask)
         run3.execute_stage()
         assert run3.n_stage == run.n_stage + 1
+        assert run3.population.N == 0
         assert run3.n_snap == run.n_snap
         assert run3.dieoff and run3.complete
         # TODO: Add test for status reporting?
@@ -310,7 +311,7 @@ class TestRun:
         assert run1.record["finalised"]
         print run1.record["prev_failed"], "/", run1.record["max_fail"]
         if not run1.dieoff:
-            assert run1.record["prev_failed"] < run1.record["max_fail"] - 1
+            assert run1.record["prev_failed"] < run1.record["max_fail"]
         else:
             assert run1.record["prev_failed"] == run1.record["max_fail"] - 1
 

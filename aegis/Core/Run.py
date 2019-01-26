@@ -27,6 +27,7 @@ class Run:
         self.r_range = self.conf["r_range"]
         self.n_stage = 0
         self.n_snap = 0
+        # special snapshot counter for age distribution
         self.n_snap_ad = 0
         self.n_snap_ad_bool = False
         self.n_run = n_run
@@ -97,7 +98,7 @@ class Run:
 
     def execute_stage(self):
         """Perform one stage of a simulation run and test for completion."""
-        full_report =  self.record_stage()
+        full_report =  self.is_full_report()
         if not self.dieoff:
             # Update ages, resources and starvation
             self.population.increment_ages()
@@ -119,19 +120,16 @@ class Run:
             if full_report:
                 self.logprint("Done. {0} individuals born, {1} died."\
                         .format(n1-n0,n1-n2))
+        # Record
+        self.record_stage(full_report)
         # Update run status
         self.dieoff = self.record["dieoff"] = (self.population.N == 0)
         self.n_stage += 1
         self.test_complete()
         if self.complete and not self.dieoff:
-            # for "auto" last snapshot not taken otherwise, since min_gen marked as
-            # reached before stage recorded
-            if self.conf["auto"] and not \
-                    (self.n_stage >= self.conf["max_stages"]):
-                self.record_stage()
             self.record.finalise()
 
-    def record_stage(self):
+    def record_stage(self, full_report=False):
         """Record and report population information, as appropriate for
         the stage number and run settings."""
         # Set up reporting parameters
@@ -182,9 +180,11 @@ class Run:
         self.record.update(self.population, self.resources, self.r_range,
                 self.r_range, self.n_stage, snapshot, age_dist_rec)
         self.n_snap += 1 if snapshot >= 0 else 0
-        full_report = report_stage and self.verbose
         if (snapshot >= 0) and full_report: self.logprint("Snapshot taken.")
-        return full_report
+
+    def is_full_report(self):
+        report_stage = (self.n_stage % self.report_n == 0)
+        return report_stage and self.verbose
 
     def test_complete(self):
         """Test whether a run is complete following a given stage,
