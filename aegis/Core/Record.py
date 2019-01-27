@@ -55,6 +55,7 @@ class Record(dict):
         if self["repr_pen"]: self["r_range_pen"] = np.zeros((n,self["n_states"]))
         self["age_distribution"] = np.zeros([n, ml])
         self["observed_repr_rate"] = np.zeros([n, ml])
+        self["bit_variance"] = np.zeros([n,2])
         for k in ["generation_dist", "gentime_dist"]:
             self[k] = np.zeros([n,5]) # Five-number summaries
         # Space for saving population state for each snapshot
@@ -114,6 +115,9 @@ class Record(dict):
                     minlength = population.max_ls)/agehist.astype(float)
         self["generation_dist"][n_stage] = fivenum(population.generations)
         self["gentime_dist"][n_stage] = fivenum(population.gentimes)
+        self["bit_variance"][n_stage] = np.array([\
+                np.mean(self.compute_bits(population)[1][self["maturity"]:]),\
+                np.mean(self.compute_bits(population)[1][:self["maturity"]])])
         if n_snap >= 0:
             self["snapshot_pops"][n_snap] = population.clone()
 
@@ -345,7 +349,7 @@ class Record(dict):
 
     # MEAN AND VARIANCE IN BIT VALUE
 
-    def compute_bits(self):
+    def compute_bits(self, pop):
         """Compute the mean and variance bit value at each position along the
         chromosome, sorted according to genmap_argsort."""
         """During finalisation, compute the distribution of 1s and 0s at each
@@ -354,18 +358,20 @@ class Record(dict):
         l,m,b = self["max_ls"], self["maturity"], self["n_base"]
         # Reshape genomes to stack chromosomes
         # [snapshot, individual, bit]
-        stacked_chrs = [p.genomes.reshape(p.N*2,p.chr_len) \
-                for p in self["snapshot_pops"]]
+        sc = pop.genomes.reshape(pop.N*2,pop.chr_len)
         # Compute order of bits in genome map
         order = np.ndarray.flatten(
-            np.array([p.genmap_argsort*b + c for c in xrange(b)]),
-            order="F") # Using last population; genmaps should all be same
+            np.array([pop.genmap_argsort*b + c for c in xrange(b)]), order="F")
         # Average across individuals and sort [snapshot, bit]
-        n1 = np.array([np.mean(sc, axis=0)[order] for sc in stacked_chrs])
-        n1_var = np.array([np.var(sc, axis=0)[order] for sc in stacked_chrs])
-        # Set record entries
-        self["n1"] = n1
-        self["n1_var"] = n1_var
+        n1 = np.mean(sc, axis=0)[order]
+        n1_var = np.var(sc, axis=0)[order]
+        return n1, n1_var
+
+    def compute_bits_snaps(self):
+        """Wrapper of compute_bits for snapshot pops."""
+        res = np.array([self.compute_bits(p) for p in self["snapshot_pops"]])
+        self["n1"] = res[:,0]
+        self["n1_var"] = res[:,1]
 
     def reorder_bits(self):
         """Reorder n1 record entry to original positions in genome."""
@@ -523,7 +529,7 @@ class Record(dict):
         self.compute_fitness()
         self.compute_reproductive_value()
         # Other values
-        self.compute_bits()
+        self.compute_bits_snaps()
         self.compute_entropies()
         self.compute_windows()
         self.compute_pen_rates()

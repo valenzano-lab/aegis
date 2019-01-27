@@ -117,6 +117,8 @@ class TestRecord:
         assert np.array_equal(R["population_size"], a0)
         assert np.array_equal(R["resources"], a0)
         assert np.array_equal(R["age_distribution"], a1)
+        assert np.array_equal(R["observed_repr_rate"], a1)
+        assert np.array_equal(R["bit_variance"], np.zeros([n,2]))
         assert np.array_equal(R["generation_dist"], np.zeros([n,5]))
         assert np.array_equal(R["gentime_dist"], np.zeros([n,5]))
         if R["surv_pen"]:
@@ -192,8 +194,10 @@ class TestRecord:
     def test_update_quick(self, rec, pop):
         """Test that every-stage update function records correctly."""
         rec2 = rec.copy()
+        pop2 = pop.clone()
+        pop2.genomes[:] = 0
         # record age_dist
-        rec2.update(pop, 100, rec2["s_range"], rec2["r_range"], 0, -1, 0)
+        rec2.update(pop2, 100, rec2["s_range"], rec2["r_range"], 0, -1, 0)
         agedist=np.bincount(pop.ages,minlength=pop.max_ls)/float(pop.N)
         assert rec2["resources"][0] == 100
         assert rec2["population_size"][0] == pop.N
@@ -206,6 +210,7 @@ class TestRecord:
                 fivenum(pop.generations))
         assert np.allclose(rec2["gentime_dist"][0],
                 fivenum(pop.gentimes))
+        assert np.allclose(rec2["bit_variance"],np.zeros(2))
         for n in xrange(len(rec2["snapshot_pops"])):
             assert rec2["snapshot_pops"][n] == 0
 
@@ -229,6 +234,10 @@ class TestRecord:
                 fivenum(pop.generations))
         assert np.allclose(rec2["gentime_dist"][0],
                 fivenum(pop.gentimes))
+        exp_bit_var = np.array([\
+                np.mean(rec2.compute_bits(pop2)[1][rec2["maturity"]:]),\
+                np.mean(rec2.compute_bits(pop2)[1][:rec2["maturity"]])])
+        assert np.allclose(rec2["bit_variance"][0],exp_bit_var)
         for n in xrange(1,len(rec2["snapshot_pops"])):
             assert rec2["snapshot_pops"][n] == 0
         # Snapshot population
@@ -555,11 +564,11 @@ class TestRecord:
     # TODO add test for compute_pen_rates
 
     # DONE
-    def test_compute_bits(self, rec1, pop2, rec2):
+    def test_compute_bits_snaps(self, rec1, pop2, rec2):
         """Test computation of mean and variance in bit value along
         chromosome for a genome filled with 1's and one randomly generated."""
-        rec1.compute_bits()
-        rec2.compute_bits()
+        rec1.compute_bits_snaps()
+        rec2.compute_bits_snaps()
 
         # 1's genome
         n_snap,chr_len1 = rec1["n_snapshots"],rec1["chr_len"]
