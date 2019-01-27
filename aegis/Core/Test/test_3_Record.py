@@ -251,6 +251,7 @@ class TestRecord:
         per_stage_entries = ["population_size",\
                              "resources",\
                              "age_distribution",\
+                             "observed_repr_rate",\
                              "generation_dist",\
                              "gentime_dist"]
         if rec1["surv_pen"]: per_stage_entries.append("s_range_pen")
@@ -815,6 +816,7 @@ class TestRecord:
         minl = np.random.randint(1,(means[1]-means[0])/2)
         R["age_dist_stages"] = make_windows(means,minl)
         R["age_distribution"] = np.random.random((nstage,maxls))
+        R["observed_repr_rate"] = np.random.random((nstage,maxls))
 
         ix = np.array(R["age_dist_stages"]).flatten()
         exp = copy.deepcopy(R["age_distribution"][ix])
@@ -825,8 +827,6 @@ class TestRecord:
         assert R["age_distribution"].shape[1] == exp.size/nsnap/maxls
         assert R["age_distribution"].shape[2] == maxls
         assert np.array_equal(R["age_distribution"],exp)
-
-    ## POST FINALISATION (PLOTTER) ##
 
     def test_compute_kaplan_meier(self, rec1):
         """Test if compute_kaplan_meier stores expected results for
@@ -848,11 +848,13 @@ class TestRecord:
         print r["kaplan-meier"].shape, n, r["max_ls"]
         if r["age_dist_N"] == "all":
             assert np.array_equal(r["kaplan-meier"],
-                np.cumprod(np.tile(0.5, np.array(r["age_distribution"].shape[1]) - 1)))
+                np.concatenate((np.ones(1), np.cumprod(\
+                        np.tile(0.5, np.array(r["age_distribution"].shape[1]) - 1)))))
         else:
-            assert np.array_equal(r["kaplan-meier"],
-                np.cumprod(np.tile(0.5, np.array([n_snap,r["age_distribution"].shape[2]\
-                        -1])),1))
+            assert np.array_equal(r["kaplan-meier"], np.concatenate((
+                    np.ones((r["age_distribution"].shape[0],1)), \
+                    np.cumprod(np.tile(0.5, np.array([n_snap,\
+                    r["age_distribution"].shape[2]-1])),1)),axis=1))
 
     def test_compute_snapshot_age_dist_avrg(self, rec2):
         """Test snapshot age distribution averaging for randomly generated

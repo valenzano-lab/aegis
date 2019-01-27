@@ -54,6 +54,7 @@ class Record(dict):
         if self["surv_pen"]: self["s_range_pen"] = np.zeros((n,self["n_states"]))
         if self["repr_pen"]: self["r_range_pen"] = np.zeros((n,self["n_states"]))
         self["age_distribution"] = np.zeros([n, ml])
+        self["observed_repr_rate"] = np.zeros([n, ml])
         for k in ["generation_dist", "gentime_dist"]:
             self[k] = np.zeros([n,5]) # Five-number summaries
         # Space for saving population state for each snapshot
@@ -96,7 +97,7 @@ class Record(dict):
 
     # PER-STAGE RECORDING
     def update(self, population, resources, s_range_pen, r_range_pen, n_stage,
-            n_snap=-1, age_dist_rec=-1):
+            n_snap=-1, around_snap=-1):
         """Record per-stage data (population size, age distribution, resources,
         and survival penalties), plus, if on a snapshot stage, the population
         as a whole."""
@@ -104,9 +105,13 @@ class Record(dict):
         self["resources"][n_stage] = resources
         if self["surv_pen"]: self["s_range_pen"][n_stage] = s_range_pen
         if self["repr_pen"]: self["r_range_pen"][n_stage] = r_range_pen
-        if age_dist_rec > -1:
-            self["age_distribution"][age_dist_rec] = np.bincount(population.ages,
-                    minlength = population.max_ls)/float(population.N)
+        if around_snap > -1:
+            agehist =  np.bincount(population.ages,minlength = population.max_ls)
+            self["age_distribution"][around_snap] = agehist / float(population.N)
+            parent_ages = population.gentimes[population.ages==0]
+            agehist[agehist==0] = 1 # avoid division by zero
+            self["observed_repr_rate"][around_snap] = np.bincount(parent_ages,\
+                    minlength = population.max_ls)/agehist.astype(float)
         self["generation_dist"][n_stage] = fivenum(population.generations)
         self["gentime_dist"][n_stage] = fivenum(population.gentimes)
         if n_snap >= 0:
@@ -307,7 +312,7 @@ class Record(dict):
             res = dividend / divisor
             # substitute flags for ones
             res[np.isnan(res)] = 1
-            self["kaplan-meier"] = np.mean(np.cumprod(res,1),0)
+            self["kaplan-meier"] = np.concatenate((np.ones(1),np.mean(np.cumprod(res,1),0)))
         else:
             self.truncate_age_dist()
             m = self["age_distribution"].size/self["n_snapshots"]/self["max_ls"]
@@ -322,7 +327,21 @@ class Record(dict):
             res = dividend / divisor
             # substitute flags for ones
             res[np.isnan(res)] = 1
-            self["kaplan-meier"] = np.mean(np.cumprod(res,2),1)
+            self["kaplan-meier"] = np.concatenate((np.ones((res.shape[0],1)),\
+                    np.mean(np.cumprod(res,2),1)), axis = 1)
+
+    def compute_obs_repr(self):
+        """Compute observed reproduction rate per age."""
+        if self["age_dist_N"] == "all":
+            self["observed_repr_rate"] = self["observed_repr_rate"].mean(0)
+        else:
+            self.truncate_age_dist()
+            if self["age_dist_stages"].size > 0:
+                self["observed_repr_rate"] = self["observed_repr_rate"].mean(1)
+
+    def compute_obs_fitness(self):
+        """Compute fitness using Kaplan-Meier survival and observed reproduction rates."""
+        self["observed_fitness"] = self["kaplan-meier"]*self["observed_repr_rate"]
 
     # MEAN AND VARIANCE IN BIT VALUE
 
@@ -448,12 +467,13 @@ class Record(dict):
             return
         if trunc_stages: self.truncate_age_dist_stages()
         if self["age_dist_stages"].size > 0:
-            ix = self["age_dist_stages"].flatten()
-            self["age_distribution"] = self["age_distribution"][ix]
-            # reshape to dim=(snapshot, stage, age)
-            m = self["age_distribution"].size / self["n_snapshots"] / self["max_ls"]
-            self["age_distribution"] = np.reshape(self["age_distribution"],\
-                (self["n_snapshots"], m, self["max_ls"]))
+            for key in ["age_distribution","observed_repr_rate"]:
+                ix = self["age_dist_stages"].flatten()
+                self[key] = self[key][ix]
+                # reshape to dim=(snapshot, stage, age)
+                m = self[key].size / self["n_snapshots"] / self["max_ls"]
+                self[key] = np.reshape(self[key],\
+                    (self["n_snapshots"], m, self["max_ls"]))
         self["age_dist_truncated"] = True
 
     def truncate_per_stage_entries(self):
@@ -463,6 +483,7 @@ class Record(dict):
             per_stage_entries = ["population_size",\
                                  "resources",\
                                  "age_distribution",\
+                                 "observed_repr_rate",\
                                  "generation_dist",\
                                  "gentime_dist"]
             if self["surv_pen"]: per_stage_entries.append("s_range_pen")
@@ -509,6 +530,8 @@ class Record(dict):
         if post_trunc:
             self.compute_snapshot_age_dist_avrg()
             self.compute_kaplan_meier()
+            self.compute_obs_repr()
+            self.compute_obs_fitness()
         # Remove snapshot pops as appropriate
         if self["output_mode"] > 0:
             self["final_pop"] = self["snapshot_pops"][-1]
