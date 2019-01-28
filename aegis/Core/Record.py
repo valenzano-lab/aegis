@@ -345,7 +345,11 @@ class Record(dict):
 
     def compute_obs_fitness(self):
         """Compute fitness using Kaplan-Meier survival and observed reproduction rates."""
-        self["observed_fitness"] = self["kaplan-meier"]*self["observed_repr_rate"]
+        self["observed_fitness_term"] = self["kaplan-meier"]*self["observed_repr_rate"]
+        if self["age_dist_N"] == "all":
+            self["observed_fitness"] =np.sum(self["observed_fitness_term"])
+        else:
+            self["observed_fitness"] =np.sum(self["observed_fitness_term"],1)
 
     # MEAN AND VARIANCE IN BIT VALUE
 
@@ -488,6 +492,7 @@ class Record(dict):
         if self["auto"]:
             per_stage_entries = ["population_size",\
                                  "resources",\
+                                 "bit_variance",\
                                  "age_distribution",\
                                  "observed_repr_rate",\
                                  "generation_dist",\

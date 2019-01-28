@@ -259,6 +259,7 @@ class TestRecord:
         rec1.truncate_per_stage_entries()
         per_stage_entries = ["population_size",\
                              "resources",\
+                             "bit_variance",\
                              "age_distribution",\
                              "observed_repr_rate",\
                              "generation_dist",\
