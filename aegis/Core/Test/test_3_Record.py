@@ -198,7 +198,11 @@ class TestRecord:
         pop2.genomes[:] = 0
         # record age_dist
         rec2.update(pop2, 100, rec2["s_range"], rec2["r_range"], 0, -1, 0)
-        agedist=np.bincount(pop.ages,minlength=pop.max_ls)/float(pop.N)
+        agehist=np.bincount(pop.ages,minlength=pop.max_ls)
+        agedist=agehist/float(pop.N)
+        pages=pop.gentimes[pop.ages==0]
+        agehist[agehist==0]=1
+        obs_repr_rate=np.bincount(pages,minlength=pop.max_ls)/agehist.astype(float)
         assert rec2["resources"][0] == 100
         assert rec2["population_size"][0] == pop.N
         if rec2["surv_pen"]: assert np.array_equal(rec2["s_range_pen"][0],\
@@ -206,6 +210,7 @@ class TestRecord:
         if rec2["repr_pen"]: assert np.array_equal(rec2["r_range_pen"][0],\
                 rec2["r_range"])
         assert np.array_equal(rec2["age_distribution"][0], agedist)
+        assert np.array_equal(rec2["observed_repr_rate"][0], obs_repr_rate)
         assert np.allclose(rec2["generation_dist"][0],
                 fivenum(pop.generations))
         assert np.allclose(rec2["gentime_dist"][0],
@@ -221,7 +226,7 @@ class TestRecord:
         np.random.shuffle(pop2.genmap)
         np.random.shuffle(pop2.ages)
         np.random.shuffle(pop2.genomes)
-        # do not record age_dist
+        # do not record age_dist and observed_repr_rate
         x_range = np.random.random(rec2["n_states"])
         rec2.update(pop2, 200, x_range, x_range, 0, 0, -1)
         # Per-stage factors
@@ -776,7 +781,7 @@ class TestRecord:
 
     def test_truncate_age_dist(self, rec, pop):
         """Test only wished age distribution entries are present after
-        truncation."""
+        truncation. Test only for one key, the other follows."""
         rec2 = rec.copy()
         rec2.update(pop, 100, 1, 1, 0, -1, 0)
         if rec2["age_dist_N"] == "all":
@@ -804,6 +809,7 @@ class TestRecord:
             assert np.array_equal(rec2["age_distribution"], exp)
 
     def test_truncate_age_dist2(self,rec):
+        """Test only for one key, the other follows."""
         R = rec.copy()
         # if all, does nothing
         if R["age_dist_N"] == "all":
@@ -865,6 +871,46 @@ class TestRecord:
                     np.ones((r["age_distribution"].shape[0],1)), \
                     np.cumprod(np.tile(0.5, np.array([n_snap,\
                     r["age_distribution"].shape[2]-1])),1)),axis=1))
+
+    def test_compute_obs_repr(self, rec1):
+        r = rec1.copy()
+        maxls = r["max_ls"]
+        nstage = 1000
+        nsnap = 2
+        ws = 100
+        if r["age_dist_N"] == "all":
+            r["observed_repr_rate"] = 0.00001*np.random.randn(nstage,maxls)
+            r.compute_obs_repr()
+            assert np.allclose(r["observed_repr_rate"],np.zeros(maxls),atol=1e-05)
+        else:
+            r["age_dist_stages"] = np.arange(200).reshape((2,100))
+            r["observed_repr_rate"] = 0.00001*np.random.randn(nsnap,ws,maxls)
+            r.compute_obs_repr()
+            assert np.allclose(r["observed_repr_rate"],np.zeros((nsnap,maxls)),atol=1e-05)
+
+    def test_compute_obs_fitness(self, rec1):
+        r = rec1.copy()
+        maxls = r["max_ls"]
+        nstage = 1000
+        nsnap = 2
+        ws = 100
+        if r["age_dist_N"] == "all":
+            r["kaplan-meier"] = np.random.randn(maxls)
+            r["observed_repr_rate"] = np.random.randn(nstage,maxls)
+            r.compute_obs_repr()
+            r.compute_obs_fitness()
+            res = r["kaplan-meier"]*r["observed_repr_rate"]
+            assert np.allclose(r["observed_fitness_term"],res)
+            assert np.allclose(r["observed_fitness"],np.sum(res))
+        else:
+            r["age_dist_stages"] = np.arange(200).reshape((2,100))
+            r["kaplan-meier"] = np.random.randn(nsnap,maxls)
+            r["observed_repr_rate"] = np.random.randn(nsnap,ws,maxls)
+            r.compute_obs_repr()
+            r.compute_obs_fitness()
+            res = r["kaplan-meier"]*r["observed_repr_rate"]
+            assert np.allclose(r["observed_fitness_term"],res)
+            assert np.allclose(r["observed_fitness"],np.sum(res,1))
 
     def test_compute_snapshot_age_dist_avrg(self, rec2):
         """Test snapshot age distribution averaging for randomly generated
