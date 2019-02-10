@@ -115,9 +115,17 @@ class Record(dict):
                     minlength = population.max_ls)/agehist.astype(float)
         self["generation_dist"][n_stage] = fivenum(population.generations)
         self["gentime_dist"][n_stage] = fivenum(population.gentimes)
+        # divide bit variance in two bins: loci before and after maturity
+        where_premature = np.zeros(self["chr_len"])
+        where_premature[self["maturity"]*self["n_base"]:] = 1
+        where_premature[self["max_ls"]*self["n_base"]:(self["max_ls"]+self["maturity"])*\
+                self["n_base"]] = 1
+        where_premature = where_premature.astype(bool)
+        where_mature = np.invert(where_premature)
+        where_mature[(2*self["max_ls"]-self["maturity"])*self["n_base"]:] = False
         self["bit_variance"][n_stage] = np.array([\
-                np.mean(self.compute_bits(population)[1][self["maturity"]:]),\
-                np.mean(self.compute_bits(population)[1][:self["maturity"]])])
+                np.mean(self.compute_bits(population)[1][where_premature]),\
+                np.mean(self.compute_bits(population)[1][where_mature])])
         if n_snap >= 0:
             self["snapshot_pops"][n_snap] = population.clone()
 

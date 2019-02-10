@@ -239,9 +239,17 @@ class TestRecord:
                 fivenum(pop.generations))
         assert np.allclose(rec2["gentime_dist"][0],
                 fivenum(pop.gentimes))
+        # divide bit variance in two bins: loci before and after maturity
+        where_premature = np.zeros(rec2["chr_len"])
+        where_premature[rec2["maturity"]*rec2["n_base"]:] = 1
+        where_premature[rec2["max_ls"]*rec2["n_base"]:(rec2["max_ls"]+rec2["maturity"])*\
+                rec2["n_base"]] = 1
+        where_premature = where_premature.astype(bool)
+        where_mature = np.invert(where_premature)
+        where_mature[(2*rec2["max_ls"]-rec2["maturity"])*rec2["n_base"]:] = False
         exp_bit_var = np.array([\
-                np.mean(rec2.compute_bits(pop2)[1][rec2["maturity"]:]),\
-                np.mean(rec2.compute_bits(pop2)[1][:rec2["maturity"]])])
+                np.mean(rec2.compute_bits(pop2)[1][where_premature]),\
+                np.mean(rec2.compute_bits(pop2)[1][where_mature])])
         assert np.allclose(rec2["bit_variance"][0],exp_bit_var)
         for n in xrange(1,len(rec2["snapshot_pops"])):
             assert rec2["snapshot_pops"][n] == 0
