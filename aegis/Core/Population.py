@@ -110,7 +110,7 @@ class Population:
             targets_generations = np.arange(self.N)
         else: targets_generations = targets
         if new_gentimes:
-            gentimes = np.repeat(0L, self.N)
+            gentimes = np.zeros((self.N,2)).astype(int) if self.assort else np.zeros(self.N).astype(int)
             targets_gentimes = np.arange(self.N)
         else: targets_gentimes = targets
         self.ages = np.copy(ages[targets_ages])
@@ -296,12 +296,14 @@ class Population:
         if self.assort and np.sum(parents) == 1: # Need 2 parents here
             return self.subset_clone(np.zeros(self.N).astype(bool))
         children = self.subset_clone(parents)
+        parent_ages = np.copy(children.ages).astype(int)
         if self.recombine: children.recombination(r_rate)
         if self.assort: children.assortment()
         # Mutate children and add to population
         children.mutate(m_rate, m_ratio)
         children.increment_generations()
-        children.gentimes = children.ages + 0L # Record parental ages
+        children.gentimes = parent_ages[0:children.N*2].reshape((children.N,2)) if self.assort\
+                else parent_ages
         children.ages[:] = 0L # Make newborn
         return children
 
@@ -358,10 +360,9 @@ class Population:
         through random assortment."""
         if self.N == 1:
             raise ValueError("Cannot perform assortment with a single parent.")
-        if self.N % 2 != 0: # If odd number of parents, discard one at random
-            index = self.prng.choice(self.N, 1)
-            self.subtract_members(index)
         self.shuffle() # Randomly assign mating partners
+        # If odd number of parents, discard one
+        if self.N % 2 != 0: self.subtract_members(np.array([self.N-1]))
         # Randomly combine parental chromatids
         parent_0 = np.arange(self.N/2)*2    # Parent 0
         parent_1 = parent_0 + 1             # Parent 1
@@ -374,9 +375,6 @@ class Population:
         # Update generations as the max of two parents
         self.generations[::2] = np.maximum(self.generations[::2],
                 self.generations[1::2])
-        # Update ages as rounded mean of two parents (for gentime recording)
-        self.ages[::2] += self.ages[1::2]
-        self.ages /= 2
         self.subset_members(np.tile([True,False], self.N/2))
 
     # Comparison methods

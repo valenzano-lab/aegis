@@ -52,7 +52,7 @@ def pop1(request, pop):
     p.genomes = np.ones(p.genomes.shape).astype(int)
     p.ages = np.tile(p.maturity, p.N)
     p.generations = np.zeros(p.N, dtype=int)
-    p.gentimes = np.zeros(p.N, dtype=int)
+    p.gentimes = np.zeros((p.N,2), dtype=int) if p.assort else np.zeros(p.N, dtype=int)
     return p
 
 @pytest.fixture(scope="module")
@@ -61,7 +61,8 @@ def pop2(request, pop):
     p = pop.clone()
     p.ages = np.tile(p.maturity, p.N)
     p.generations = np.zeros(p.N, dtype=int)
-    p.gentimes = np.zeros(p.N, dtype=int)
+    #p.gentimes = np.zeros(p.N, dtype=int)
+    p.gentimes = np.zeros((p.N,2), dtype=int) if p.assort else np.zeros(p.N, dtype=int)
     return p
 
 @pytest.fixture(scope="module")
@@ -200,7 +201,7 @@ class TestRecord:
         rec2.update(pop2, 100, rec2["s_range"], rec2["r_range"], 0, -1, 0)
         agehist=np.bincount(pop.ages,minlength=pop.max_ls)
         agedist=agehist/float(pop.N)
-        pages=pop.gentimes[pop.ages==0]
+        pages=pop.gentimes[pop.ages==0].flatten()
         agehist[agehist==0]=1
         obs_repr_rate=np.bincount(pages,minlength=pop.max_ls)/agehist.astype(float)
         assert rec2["resources"][0] == 100

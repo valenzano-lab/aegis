@@ -109,12 +109,15 @@ class Record(dict):
         if around_snap > -1:
             agehist =  np.bincount(population.ages,minlength = population.max_ls)
             self["age_distribution"][around_snap] = agehist / float(population.N)
-            parent_ages = population.gentimes[population.ages==0]
+            parent_ages = population.gentimes[population.ages==0].flatten()
             agehist[agehist==0] = 1 # avoid division by zero
             self["observed_repr_rate"][around_snap] = np.bincount(parent_ages,\
                     minlength = population.max_ls)/agehist.astype(float)
         self["generation_dist"][n_stage] = fivenum(population.generations)
-        self["gentime_dist"][n_stage] = fivenum(population.gentimes)
+        # prepare gentimes if assortment takes place
+        prep_gentimes = population.gentimes.sum(1)/2 if self["repr_mode"] in\
+                ["assort_only","sexual"] else population.gentimes
+        self["gentime_dist"][n_stage] = fivenum(prep_gentimes)
         # divide bit variance in two bins: loci before and after maturity
         where_premature = np.zeros(self["chr_len"])
         where_premature[self["maturity"]*self["n_base"]:] = 1
@@ -144,8 +147,14 @@ class Record(dict):
             minlen = {"age":p.max_ls, "gentime":p.max_ls, "generation":g}
             for k in ["age", "gentime", "generation"]:
                 key = "snapshot_{}_distribution".format(k)
-                newval = np.bincount(getattr(p, "{}s".format(k)),
-                        minlength=minlen[k])/float(p.N)
+                if k == "gentime" and self["repr_mode"] in ["assort_only","sexual"]:
+                    # compute rounded mean of two parents
+                    attr = getattr(p, "{}s".format(k))
+                    newval = np.bincount(attr.sum(1)/2,
+                            minlength=minlen[k])/float(p.N)
+                else:
+                    newval = np.bincount(getattr(p, "{}s".format(k)),
+                            minlength=minlen[k])/float(p.N)
                 if k == "generation":
                     # save only nonzero values in a 2 column matrix, where
                     # the first column is the generation and the second it's

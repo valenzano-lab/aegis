@@ -454,7 +454,6 @@ class TestPopulationGrowth:
         # Make a copy, assort and test
         p2 = p.clone()
         p2.assortment()
-        assert p2.ages == np.mean(p.ages).astype(int)
         assert p2.generations == np.max(p.generations)
 
     def test_assortment_gentimes(self, pop):
@@ -469,10 +468,6 @@ class TestPopulationGrowth:
         # Make a copy and assort
         p2 = p.clone()
         p2.assortment()
-        # Test that age sums match
-        s1, s2, n2 = np.sum(p.ages), np.sum(p2.ages), p2.N
-        print s1, 2*s2, s1-2*s2, n2
-        assert s1 - 2*s2 < n2
         # Test that generation
         g, outsum = np.sort(p.generations), np.sum(p2.generations)
         minsum,maxsum = np.sum(g[1::2]), np.sum(g[n:])
@@ -497,7 +492,9 @@ class TestPopulationGrowth:
         assortment."""
         p, rr = pop.clone(), np.linspace(1, 1, pop.n_base*2+1)
         p.generations[:] = 0
-        assert np.array_equal(np.tile(0, p.N), p.gentimes)
+        print "assort: ", p.assort
+        if p.assort: assert np.array_equal(np.zeros((p.N,2)).astype(int), p.gentimes)
+        else: assert np.array_equal(np.tile(0, p.N), p.gentimes)
         for mode in ["asexual", "recombine_only"]:
             print mode
             p.repr_mode = mode
