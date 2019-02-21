@@ -24,7 +24,7 @@ except:
        import pickle
 
 class Plotter:
-    """Wrapper class for storing a dataframes and its associated plots."""
+    """Wrapper class for storing dataframes and their associated plots."""
 
     def __init__(self, inpath, verbose=False, outpath=""):
         """Import csv files as pandas dataframes and initialise plotting methods."""
@@ -61,9 +61,11 @@ class Plotter:
                              "plot_fitness_term_snaps",\
                              "plot_fitness_term",\
                              "plot_n1_sliding_window_snaps",\
-                             "plot_generation",\
                              "plot_surv_curve",\
-                             "plot_age_dist"\
+                             "plot_observed_repr",\
+                             "plot_age_dist",\
+                             "plot_bit_variance"\
+                             #"plot_generation"\
                              ]
         self.plot_names = ["01_pop-res",\
                            "02_genotype-mean-snaps",\
@@ -71,9 +73,11 @@ class Plotter:
                            "03_fitness-term-snaps",\
                            "03_fitness-term",\
                            "04_bits-snaps",\
-                           "05_generation",\
-                           "06_surv-curve",\
-                           "07_age-dist"\
+                           "05_surv-curve",\
+                           "06_observed-repr",\
+                           "07_age-dist",\
+                           "08_bit-variance"\
+                           #"09_generation"\
                            ]
         self.figures = []
         self.outpath = os.getcwd() if outpath=="" else outpath
@@ -98,7 +102,9 @@ class Plotter:
         # Remove not generated plot names
         if not self.has_surv_curve:
             self.plot_methods.remove("plot_surv_curve")
-            self.plot_names.remove("06_surv-curve")
+            self.plot_names.remove("05_surv-curve")
+            self.plot_methods.remove("plot_observed_repr")
+            self.plot_names.remove("06_observed-repr")
         if not self.has_agedist:
             self.plot_methods.remove("plot_age_dist")
             self.plot_names.remove("07_age-dist")
@@ -132,6 +138,14 @@ class Plotter:
         sns.lineplot(data=df, ax=ax)
         ax.set_ylim(bottom=0)
         f.suptitle("population size")
+        return f
+
+    def plot_bit_variance(self):
+        f,ax = plt.subplots()
+        df = self.nstagex1_df.loc[:,["stage","bit_variance_premature","bit_variance_mature"]].set_index("stage")
+        sns.lineplot(data=df, ax=ax)
+        ax.set_ylim(bottom=0)
+        f.suptitle("mean bit variance")
         return f
 
     def plot_genotype_mean_snaps(self):
@@ -191,9 +205,19 @@ class Plotter:
         if not self.has_surv_curve: return
         f,ax = plt.subplots()
         df = self.maxlsx1_df
-        sns.lineplot(data=df, x="age", y="surv_mean", ax=ax)
+        sns.lineplot(data=df, x="age", y="kaplan-meier", ci=None, ax=ax)
         ax.set_ylim(bottom=0)
-        f.suptitle("survival curve")
+        f.suptitle("kaplan-meier survival curve (mean over all stages)")
+        return f
+
+    def plot_observed_repr(self):
+        if not self.has_surv_curve: return
+        f,ax = plt.subplots()
+        df = self.maxlsx1_df
+        df = df[df.age >= int(self.single_df.loc["maturity","value"])]
+        sns.lineplot(data=df, x="age", y="observed_repr_rate", ci=None, ax=ax)
+        ax.set_ylim(bottom=0)
+        f.suptitle("observed reproduction rate (mean over all stages)")
         return f
 
     def plot_generation(self):
@@ -209,5 +233,5 @@ class Plotter:
         f,ax = plt.subplots()
         df = self.nstagexmaxls_df
         sns.lineplot(data=df, x="age", y="age_distribution", ci=None, ax=ax)
-        f.suptitle("age distribution")
+        f.suptitle("age distribution (mean over all stages)")
         return f

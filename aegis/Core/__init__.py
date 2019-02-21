@@ -151,7 +151,7 @@ def get_csv(inpath, outpath="", last_K=500, verbose=False):
 
     nstagexmaxls_keys = ["age_distribution"]
 
-    maxlsx1_keys = ["surv_curve"] # special
+    maxlsx1_keys = ["kaplan-meier","observed_repr_rate"]
 
     nsnapxmaxls_keys = ["cmv_surv",\
                         "fitness_term",\
@@ -210,6 +210,9 @@ def get_csv(inpath, outpath="", last_K=500, verbose=False):
         df["gentime_median"] = rec["gentime_dist"][:,2]
         df["gentime_75_percentile"] = rec["gentime_dist"][:,3]
         df["gentime_max"] = rec["gentime_dist"][:,4]
+        # bit variance
+        df["bit_variance_premature"] = rec["bit_variance"][:,0]
+        df["bit_variance_mature"] = rec["bit_variance"][:,1]
         return df
 
     # shape = (nstage, maxls)
@@ -222,29 +225,12 @@ def get_csv(inpath, outpath="", last_K=500, verbose=False):
             df[key] = rec[key].flatten()
         return df
 
-    def compute_surv_curve(rec,last_K=last_K):
-        # get distribution of ages per stage in total numbers
-        agedist = rec["age_distribution"][np.where(rec["population_size"]>0)][-last_K:]
-        popn = rec["population_size"][np.where(rec["population_size"]>0)][-last_K:]
-        agehist = np.repeat(popn,agedist.shape[1]).reshape(agedist.shape)*agedist
-        sh = agehist.shape
-        # construct indices so as to track survival groups
-        ix1 = np.tile(np.arange(sh[1]),sh[0]-sh[1]).reshape((sh[0]-sh[1],sh[1]))+\
-                np.repeat(np.arange(sh[0]-sh[1]),sh[1]).reshape((sh[0]-sh[1],sh[1]))
-        ix2 = np.tile(np.arange(sh[1]),sh[0]-sh[1]).reshape(ix1.shape)
-        surv_curve = agehist[ix1,ix2]
-        surv_curve = surv_curve[surv_curve[:,0]>0] # exclude empty groups
-        surv_curve /= np.tile(surv_curve[:,0].reshape((surv_curve.shape[0],1)),\
-                surv_curve.shape[1]).astype("float")
-        return (surv_curve.mean(0), surv_curve.std(0))
-
     # shape = (maxls,)
-    def maxlsx1_df(rec):
+    def maxlsx1_df(rec, keys):
         df = pd.DataFrame()
-        sc_mean, sc_std = compute_surv_curve(rec)
-        df["age"] = np.arange(sc_mean.size)
-        df["surv_mean"] = sc_mean.flatten()
-        df["surv_std"] = sc_std.flatten()
+        df["age"] = np.arange(rec[keys[0]].size)
+        for key in keys:
+            df[key] = rec[key]
         return df
 
     # shape = (nsnap, maxls)
@@ -320,9 +306,7 @@ def get_csv(inpath, outpath="", last_K=500, verbose=False):
     if rec["age_dist_N"]=="all":
         nstagexmaxls_df(rec,nstagexmaxls_keys).to_csv(os.path.join(outpath,\
             "nstage-x-maxls.csv"),index=False)
-        # output survival curve only if last_K is lesser than number of stages
-        if last_K <= rec["population_size"].size:
-            maxlsx1_df(rec).to_csv(os.path.join(outpath,"maxls-x-1.csv"),index=False)
+        maxlsx1_df(rec,maxlsx1_keys).to_csv(os.path.join(outpath,"maxls-x-1.csv"),index=False)
     nsnapxmaxls_df(rec,nsnapxmaxls_keys).to_csv(os.path.join(outpath,\
             "nsnap-x-maxls.csv"),index=False)
     nsnapxnbit_df(rec,nsnapxnbit_keys).to_csv(os.path.join(outpath,\
