@@ -1,7 +1,7 @@
 from aegis.Core import Config, correct_r_rate
 from aegis.Core import chance, make_windows
 import pytest,importlib,types,random,copy,string,os,tempfile,math,imp
-import numpy as np, pickle
+import numpy as np, pickle, sys
 
 ##############
 ## FIXTURES ##
@@ -216,7 +216,7 @@ class TestConfig:
     def test_config_generate(self, conf_naive):
         """Test that gen_conf correctly generates derived simulation params."""
         c = copy.deepcopy(conf_naive)
-        np.set_printoptions(threshold=np.nan)
+        np.set_printoptions(threshold=sys.maxsize)
         # Save info and run
         crb1 = c["repr_bound"][1]
         c.generate()

@@ -1,7 +1,7 @@
 from aegis.Core import Config, Population # Classes
 from aegis.Core import chance, init_ages, init_genomes, init_generations
 from aegis.Core import correct_r_rate
-import pytest, random, copy
+import pytest, random, copy, sys
 import numpy as np
 
 # Import fixtures
@@ -304,7 +304,7 @@ class TestPopulationGrowth:
                 g[0][0][r_sites[1]+1:r_sites[2]], g[1][0][r_sites[2]:]))
         p.recombination(1, r_sites_fwd, r_sites_rev)
         # Prints
-        np.set_printoptions(threshold=np.nan)
+        np.set_printoptions(threshold=sys.maxsize)
         print "test 1"
         print "r_sites:\n", r_sites
         print "difference at sites:\n", np.nonzero(np.invert(p.genomes[0]==exp))

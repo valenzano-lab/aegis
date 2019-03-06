@@ -11,13 +11,13 @@ setup(name='aegis',
         setup_requires=['pytest-runner'],
         tests_require=['pytest'],
         install_requires=[
-            'numpy>=1.13.3',
-            'scipy>=0.19.1',
-            'python-dateutil>=2.6.1',
-            'pandas>=0.22.0',
+            'numpy>=1.15.4',
+            'scipy>=1.1.0',
+            'python-dateutil>=2.7.5',
+            'pandas>=0.23.4',
             'matplotlib==2.1.0',
-            'ggplot>=0.11.5'
-            # pytest?
+            'seaborn>=0.9.0',
+            'pytest>=4.3.0'
             ],
         scripts=['bin/aegis'],
         # Medadata for upload to PyPI

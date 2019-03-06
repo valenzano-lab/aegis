@@ -3,7 +3,7 @@ from aegis.Core import chance, init_ages, init_genomes, init_generations
 from aegis.Core import init_gentimes
 from aegis.Core import fivenum, make_windows
 from aegis.Core.Config import deep_eq, deep_key
-import pytest,importlib,types,random,copy,string
+import pytest,importlib,types,random,copy,string,sys
 import numpy as np
 
 #########################
@@ -618,7 +618,7 @@ class TestRecord:
         check2 = np.var(genomes,0)[order]
         check22 = rec2["n1_var"][0]
         check22[alocus] = 0
-        np.set_printoptions(threshold=np.nan)
+        np.set_printoptions(threshold=sys.maxsize)
         assert np.allclose(check11, check1)
         assert np.allclose(check22, check2)
 
