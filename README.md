@@ -1,4 +1,4 @@
-![Project logo](./readme_metadata/sample-logo.png)
+![Project logo](./readme_metadata/random-art-logo.png)
 
 # AEGIS
 > Ageing of Evolving Genomes In Silico
@@ -18,7 +18,7 @@ AEGIS can:
 * output simulation objects using [pickle](https://docs.python.org/2/library/pickle.html)
 * output recorded statistics to a [csv](https://en.wikipedia.org/wiki/Comma-separated_values)
 * generate figures from recorded statistics
-* determine when a population has reached evolutionary equilibrium (i.e. the genetic constitution is not expected to change anymore) (for details see here: **TODO** explain autostage)
+* stop a simulation when population has reached evolutionary equilibrium (i.e. the genetic constitution is not expected to change anymore, for details see aegis Wiki page Autostage)
 
 ### Installation
 ```shell
@@ -230,3 +230,5 @@ This project is developed in the [Valenzano Lab](http://valenzano-lab.age.mpg.de
 the [Max Planck Institute for Biology of Ageing, Cologne](https://www.age.mpg.de).
 We thank all the lab members and friends of the lab for their constructive
 comments and suggestions.
+
+Logo by [random art](http://www.random-art.org/) for input "aegis".
