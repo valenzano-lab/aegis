@@ -21,6 +21,8 @@ AEGIS can:
 * stop a simulation when population has reached evolutionary equilibrium (i.e. the genetic constitution is not expected to change anymore, for details see aegis Wiki page Autostage)
 
 ### Installation
+Since aegis has dependencies, you might want to put the installation in an isolated Python environment with [virtualenv](https://virtualenv.pypa.io/en/stable/).
+To install just do:
 ```shell
 pip install aegis
 ```
@@ -114,16 +116,6 @@ in which the population dies off after 1000 generations. We would modify the
 *starve_at* parameter in the config file accordingly.
 We will set output prefix to "scen4_dieoff".
 
-#### Advanced usage
-If you wish to do analysis on simulation data that goes beyond this basic functionality, we recommend you to get familiar with the Record object. Loading the Record file with *pickle* leaves you with a python dictionary to inspect. In it, the recorded statistics are saved in [numpy](http://www.numpy.org/) arrays. You can obtain a csv listing of all Record entries with basic information via:
-```shell
-aegis read -i ./sim1_files/records/run0.rec my_rec_info.csv
-```
-It is worth noting that runtime and memory needed increase with population and genome size. Also, sexual simulations can be considerably more costly in this respect due to additional computations involved (recombination and assortment).
-
-When running simulations until they reach evolutionary equilibrium (i.e. setting *n_stages = "auto"* in the config file), the runtime, depending also on population and genome size, is hard to estimate. Getting a sense for runtime by trial and by keeping log files might become necessary in some cases since the maximal number of stages allowed has to be defined a priori in the config file for computational reasons. When the maximal number of stages allowed is reached, the simulation will terminate irrespective of whether it has reached evolutionary equilibrium or not. If you have questions concerning this, don't hesitate to contact us.
-
-**TODO** keep coonfig file - in detail here or move somewhere else?
 #### Config file - in detail
 | Parameter     	| Possible values | Explanation |
 | ----------------- |:-----------:|:---------------:|
@@ -136,7 +128,7 @@ When running simulations until they reach evolutionary equilibrium (i.e. setting
 | output_prefix 	| string | prefix for output files |
 | output_mode 		| 0,1 or 2 | 0: output records only, 1: output records and final populations, 3: output records and all population snapshots |
 | age_dist_N 		| int or "all" | if int size of window around snapshots for which to record age distribution, else if "all" then records age distribution at all stages |
-| repr_mode 		| "sexual","asexual","assort_only" or "recombine_only" | / |
+| repr_mode 		| "sexual","asexual","assort_only" or "recombine_only" | reproduction mode |
 | res_start 		| int | initial amount of resources available |
 | start_pop 		| int | initial population size |
 | res_function 		| [lambda function](https://www.programiz.com/python-programming/anonymous-function) | function for updating resources |
@@ -157,6 +149,15 @@ When running simulations until they reach evolutionary equilibrium (i.e. setting
 | n_base 			| int | number of bits per locus on one chromosome |
 | max_ls 			| int | maximum lifespan |
 | maturity 			| int | age at which an agent can reproduce |
+
+#### Advanced usage
+If you wish to do analysis on simulation data that goes beyond this basic functionality, we recommend you to get familiar with the Record object. Loading the Record file with *pickle* leaves you with a python dictionary to inspect. In it, the recorded statistics are saved in [numpy](http://www.numpy.org/) arrays. You can obtain a csv listing of all Record entries with basic information via:
+```shell
+aegis read -i ./sim1_files/records/run0.rec my_rec_info.csv
+```
+It is worth noting that runtime and memory needed increase with population and genome size. Also, sexual simulations can be considerably more costly in this respect due to additional computations involved (recombination and assortment).
+
+When running simulations until they reach evolutionary equilibrium (i.e. setting *n_stages = "auto"* in the config file), the runtime, depending also on population and genome size, is hard to estimate. Getting a sense for runtime by trial and by keeping log files might become necessary in some cases since the maximal number of stages allowed has to be defined a priori in the config file for computational reasons. When the maximal number of stages allowed is reached, the simulation will terminate irrespective of whether it has reached evolutionary equilibrium or not. If you have questions concerning this, don't hesitate to contact us.
 
 ## Contributing
 If you'd like to contribute, please fork the repository and use a feature
