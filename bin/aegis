@@ -24,6 +24,23 @@ parser = argparse.ArgumentParser(
         formatter_class=argparse.RawTextHelpFormatter)
 
 subparsers = parser.add_subparsers(dest='subparser_name',help=mode_help)
+#-----------------------------------------------------------------------------
+# Format `wiz` parser
+#-----------------------------------------------------------------------------
+wiz_help = "Execute AEGIS simulation from config file, get csv files and make plots."
+
+parser_wiz = subparsers.add_parser("wiz", help=wiz_help, description=wiz_help)
+parser_wiz.add_argument('input', help="path to input Config file")
+parser_wiz.add_argument('-m', '--module', metavar='<str>', default="Core",
+        help="AEGIS module to use for simulation (default: 'Core')")
+parser_wiz.add_argument('-r', type=int, metavar="<int>", default=100,
+        help="report information every <int> stages (default:100)")
+parser_wiz.add_argument('-p', '--profile', metavar='<str>', default="",
+        help="profile simulation with cProfile and save results to this path")
+parser_wiz.add_argument('-v', '--verbose', action="store_true",
+        help="report verbosely at every report stage")
+parser_wiz.add_argument('-o', '--output', metavar='<str>', default="",
+        help="path to output dir (default: '.')")
 
 #-----------------------------------------------------------------------------
 # Format `run` parser
@@ -99,8 +116,33 @@ parser_plot.add_argument('-o', '--output', metavar='<str>', default="",
 args = parser.parse_args()
 
 module = getattr(aegis, args.module)
+last_K = 500 # how many last stages for per stage entries to include in the csv file
 
-if args.subparser_name == "run":
+import importlib,sys
+
+if args.subparser_name == "wiz":
+    if args.profile != "": # Start profiling
+        import cProfile, pstats, StringIO
+        pr = cProfile.Profile()
+        pr.enable()
+    inpath = os.path.expanduser(args.input)
+    outpath = os.path.expanduser(args.output)
+    sys.path.append(os.getcwd())
+    prefix = importlib.import_module("".join(inpath.split(".")[:-1])).output_prefix
+    csv_in = "./"+prefix+"_files/records/run0.rec"
+    plot_in = "./"+prefix+"_csv_files"
+    # run
+    module.run(inpath, args.r, args.verbose, outpath)
+    # read --csv
+    print "Reading simulation record and writing to csv files..."
+    module.get_csv(csv_in,outpath,last_K=last_K,verbose=args.verbose)
+    print "Done."
+    # plot
+    print "\nMaking plots..."
+    module.plot(plot_in, args.verbose, outpath)
+    print "Done.\n"
+
+elif args.subparser_name == "run":
     if args.profile != "": # Start profiling
         import cProfile, pstats, StringIO
         pr = cProfile.Profile()
@@ -117,7 +159,7 @@ elif args.subparser_name == "read":
     inpath = os.path.expanduser(args.input)
     outpath = os.path.expanduser(args.output)
     if args.csv:
-        module.get_csv(inpath,outpath,last_K=500,verbose=args.verbose)
+        module.get_csv(inpath,outpath,last_K=last_K,verbose=args.verbose)
     elif args.seed:
         module.getrseed(inpath, outpath,verbose=args.verbose)
     elif args.info:
@@ -128,6 +170,7 @@ elif args.subparser_name == "plot":
     outpath = os.path.expanduser(args.output)
     module.plot(inpath, args.verbose, outpath)
 
-if args.subparser_name == "run" and args.profile != "": # Finish profiling
+if (args.subparser_name == "run" or args.subparser_name == "wiz")\
+        and args.profile != "": # Finish profiling
     pr.create_stats()
     pr.dump_stats(args.profile)
