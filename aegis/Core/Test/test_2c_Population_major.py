@@ -108,7 +108,7 @@ class TestPopulationSubpop:
 
     def test_subpop_extreme_probs(self, pop):
         """Test that get_subpop appropriately handles 'probabilities'
-        outside of the range [0,1] (e.g. as the result of starvation."""
+        outside of the range [0,1] (e.g. as the result of starvation.)"""
         p = pop.clone()
         age_range = np.array([p.maturity, p.max_ls])
         p.ages = np.random.randint(age_range[0], age_range[1], p.N)
@@ -125,8 +125,6 @@ class TestPopulationSubpop:
         p.loci = p.sorted_loci()
         gs = p.get_subpop(ab, p.sorted_loci()[:,which_loci], vr)
         assert np.sum(gs) == 0
-
-        #! TODO: Test functionality for p_ranges other than 0->1
 
 class TestPopulationDeath:
     """Test methods relating to death, given that get_subpop was

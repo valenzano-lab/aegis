@@ -33,7 +33,7 @@ class Record(dict):
         # Basic run info
         self["dieoff"] = np.array(False)
         self["dieoff_at"] = np.zeros((conf["max_fail"],2)) if conf["auto"] else\
-                np.zeros(conf["max_fail"])
+                np.zeros(conf["max_fail"]) # for auto, records stage and generation at dieoff
         self["prev_failed"] = np.array(0)
         self["finalised"] = False
         self["age_dist_truncated"] = False
@@ -42,17 +42,8 @@ class Record(dict):
         ns,ml,mt = self["n_snapshots"], self["max_ls"], self["maturity"]
         for k in ["population_size", "resources"]:
             self[k] = np.zeros(n)
-        # determine what penalties to save
-        # do not save if constant
-        # NOTE this is hardcoded: dangerous. Maybe just take it out.
-        sp1 = conf["surv_pen_func"](conf["s_range"],100,100)
-        sp2 = conf["surv_pen_func"](sp1,100,100)
-        rp1 = conf["surv_pen_func"](conf["r_range"],100,100)
-        rp2 = conf["surv_pen_func"](rp1,100,100)
-        self["surv_pen"] = (sp1==sp2).all()
-        self["repr_pen"] = (rp1==rp2).all()
-        if self["surv_pen"]: self["s_range_pen"] = np.zeros((n,self["n_states"]))
-        if self["repr_pen"]: self["r_range_pen"] = np.zeros((n,self["n_states"]))
+        self["s_range_pen"] = np.zeros((n,self["n_states"]))
+        self["r_range_pen"] = np.zeros((n,self["n_states"]))
         self["age_distribution"] = np.zeros([n, ml])
         self["observed_repr_rate"] = np.zeros([n, ml])
         self["bit_variance"] = np.zeros([n,2])
@@ -104,8 +95,8 @@ class Record(dict):
         as a whole."""
         self["population_size"][n_stage] = population.N
         self["resources"][n_stage] = resources
-        if self["surv_pen"]: self["s_range_pen"][n_stage] = s_range_pen
-        if self["repr_pen"]: self["r_range_pen"][n_stage] = r_range_pen
+        self["s_range_pen"][n_stage] = s_range_pen
+        self["r_range_pen"][n_stage] = r_range_pen
         if around_snap > -1:
             agehist =  np.bincount(population.ages,minlength = population.max_ls)
             self["age_distribution"][around_snap] = agehist / float(population.N)
@@ -513,9 +504,9 @@ class Record(dict):
                                  "age_distribution",\
                                  "observed_repr_rate",\
                                  "generation_dist",\
-                                 "gentime_dist"]
-            if self["surv_pen"]: per_stage_entries.append("s_range_pen")
-            if self["repr_pen"]: per_stage_entries.append("r_range_pen")
+                                 "gentime_dist",\
+                                 "s_range_pen",\
+                                 "r_range_pen"]
 
             which = self["population_size"]>0
             for key in per_stage_entries:

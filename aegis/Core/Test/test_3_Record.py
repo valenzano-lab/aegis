@@ -122,10 +122,8 @@ class TestRecord:
         assert np.array_equal(R["bit_variance"], np.zeros([n,2]))
         assert np.array_equal(R["generation_dist"], np.zeros([n,5]))
         assert np.array_equal(R["gentime_dist"], np.zeros([n,5]))
-        if R["surv_pen"]:
-            assert np.array_equal(R["s_range_pen"], np.zeros((n,R["n_states"])))
-        if R["repr_pen"]:
-            assert np.array_equal(R["r_range_pen"], np.zeros((n,R["n_states"])))
+        assert np.array_equal(R["s_range_pen"], np.zeros((n,R["n_states"])))
+        assert np.array_equal(R["r_range_pen"], np.zeros((n,R["n_states"])))
         if R["auto"]:
             assert R["age_dist_stages"] == [[] for i in xrange(R["n_snapshots"])]
         # Snapshot population placeholders
@@ -206,10 +204,8 @@ class TestRecord:
         obs_repr_rate=np.bincount(pages,minlength=pop.max_ls)/agehist.astype(float)
         assert rec2["resources"][0] == 100
         assert rec2["population_size"][0] == pop.N
-        if rec2["surv_pen"]: assert np.array_equal(rec2["s_range_pen"][0],\
-                rec2["s_range"])
-        if rec2["repr_pen"]: assert np.array_equal(rec2["r_range_pen"][0],\
-                rec2["r_range"])
+        assert np.array_equal(rec2["s_range_pen"][0], rec2["s_range"])
+        assert np.array_equal(rec2["r_range_pen"][0], rec2["r_range"])
         assert np.array_equal(rec2["age_distribution"][0], agedist)
         assert np.array_equal(rec2["observed_repr_rate"][0], obs_repr_rate)
         assert np.allclose(rec2["generation_dist"][0],
@@ -233,8 +229,8 @@ class TestRecord:
         # Per-stage factors
         assert rec2["population_size"][0] == pop2.N
         assert rec2["resources"][0] == 200
-        if rec2["surv_pen"]: assert np.array_equal(rec2["s_range_pen"][0], x_range)
-        if rec2["repr_pen"]: assert np.array_equal(rec2["r_range_pen"][0], x_range)
+        assert np.array_equal(rec2["s_range_pen"][0], x_range)
+        assert np.array_equal(rec2["r_range_pen"][0], x_range)
         assert np.array_equal(rec2["age_distribution"][0], np.zeros(rec2["max_ls"]))
         assert np.allclose(rec2["generation_dist"][0],
                 fivenum(pop.generations))
@@ -277,9 +273,9 @@ class TestRecord:
                              "age_distribution",\
                              "observed_repr_rate",\
                              "generation_dist",\
-                             "gentime_dist"]
-        if rec1["surv_pen"]: per_stage_entries.append("s_range_pen")
-        if rec1["repr_pen"]: per_stage_entries.append("r_range_pen")
+                             "gentime_dist",\
+                             "s_range_pen",\
+                             "r_range_pen"]
 
         tocheck = np.zeros(len(per_stage_entries))
         for i in range(tocheck.size):

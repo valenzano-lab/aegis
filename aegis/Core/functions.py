@@ -164,4 +164,6 @@ def correct_r_rate(r_rate):
     if r_rate < 0 or r_rate > 1:
         raise ValueError("Invalid crossover rate: must be between 0 and 1.")
     r = r_rate if r_rate <= 0.5 else (1-r_rate)
+    # R = P[recombination at site] = P[forward and no backward recombination or backward and no forward recombination] = 2 * (r/2) * (1-r/2)
+    # this yields the result when solved for R with constraint 0<=R<=1
     return 1-(1-2*r)**0.5

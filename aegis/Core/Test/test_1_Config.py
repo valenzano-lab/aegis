@@ -44,8 +44,8 @@ def conf_naive(request, conf_path, ran_str, gen_trseed):
         nstage = random.randint(16,80)
         c["n_stages"] = "auto" if request.param[:-1] == "auto" else nstage
         c["n_snapshots"] = 2
-        # c["output_mode"] = random.randrange(3) # TODO: Test with this?
-        # c["max_fail"] = random.randrange(10) # TODO: Test with this?
+        c["output_mode"] = random.randrange(3)
+        c["max_fail"] = random.randrange(10)
         ## STARTING PARAMETERS ##
         c["repr_mode"] = random.choice(
                 ['sexual','asexual','assort_only','recombine_only'])

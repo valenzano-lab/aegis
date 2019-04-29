@@ -150,7 +150,6 @@ class TestPopulationInit:
         pop2.set_initial_size(pop4.params(), init_ages(),
                 pop4.genomes, pop4.generations, init_gentimes())
         assert pop2.N == n4 - len(drop)
-        # TODO: Expand for gentimes cases, or collapse for pandas df
 
     def test_initial_size_compatible(self, pop):
         """Test that set_initial_size returns an appropriate error
@@ -177,7 +176,6 @@ class TestPopulationInit:
         with pytest.raises(ValueError):
             pop2.set_initial_size(pop3.params(), pop3.ages, pop3.genomes,
                     pop3.generations, init_gentimes())
-        # TODO: Expand for gentimes cases, or collapse for pandas df
 
     def test_fill(self, conf):
         """Test that Population.fill correctly reads in member data
@@ -235,7 +233,6 @@ class TestPopulationInit:
         # Check gentimes
         for n in xrange(8):
             assert np.all(pops[n].gentimes == 0L)
-        # TODO: Expand for gentimes cases, or collapse for pandas df
 
     def test_population_init(self, pop):
         """Test that Population.__init__ applies the correct methods..."""

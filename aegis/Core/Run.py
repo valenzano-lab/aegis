@@ -54,7 +54,7 @@ class Run:
             self.population.g_dist = self.conf["g_dist"]
             self.population.repr_offset = self.conf["repr_offset"]
             self.population.neut_offset = self.conf["neut_offset"]
-            self.population.prng = self.conf["prng"] # NOTE
+            self.population.prng = self.conf["prng"]
             self.conf["params"] = self.conf.make_params()
         else:
             self.population = Population(self.conf["params"],self.conf["genmap"],

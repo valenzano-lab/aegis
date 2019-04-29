@@ -131,8 +131,6 @@ def get_csv(inpath, outpath="", last_K=500, verbose=False):
                     "output_mode",\
                     "res_start",\
                     "start_pop",\
-                    "repr_pen",\
-                    "surv_pen",\
                     "age_dist_N",\
                     "output_prefix",\
                     "path_to_seed_file",\
