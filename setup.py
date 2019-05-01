@@ -3,7 +3,7 @@ from setuptools.extension import Extension
 
 setup(name='aegis',
         # Version
-        version='0.5',
+        version='1.0',
         # Package data
         packages=find_packages(),
         #packages=['aegis'],

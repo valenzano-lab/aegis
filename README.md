@@ -219,7 +219,7 @@ As for Git workflow, we try to follow this [branching model](https://datasift.gi
 * [An In Silico Model to Simulate the Evolution of Biological Aging](https://www.biorxiv.org/content/early/2016/01/26/037952)
 
 ## Team
-* **Arian Šajina**     (arian.sajina@gmail.com)
+* **Arian Šajina**      (Arian.Sajina@age.mpg.de)
 * **William Bradshaw**  (William.Bradshaw@age.mpg.de)
 * **Dario Valenzano**   (Dario.Valenzano@age.mpg.de)
 
