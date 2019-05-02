@@ -5,8 +5,8 @@
 ## CORE PARAMETERS ##
 random_seed = "" # If numeric, sets random seed to that value before execution
 n_runs = 1 # Total number of independent runs
-n_stages = 10 # Total number of stages per run [int/"auto"]
-n_snapshots = 2 # Points in run at which to record detailed data
+n_stages = 10000 # Total number of stages per run [int/"auto"]
+n_snapshots = 8 # Points in run at which to record detailed data
 path_to_seed_file = "" # Path to simulation seed file, if no seed then ""
     # see README for which parameters are inherited from seed, which are
     # defined anew in this config file
@@ -14,7 +14,7 @@ max_fail = 10 # Maximum number of failed attempts tolerated for each run
 
 ## OUTPUT SPECIFICATIONS ##
 output_prefix = "test" # Prefix for output files within simulation directory
-output_mode = 1 # 0 = return records only, 1 = return records + final pop,
+output_mode = 0 # 0 = return records only, 1 = return records + final pop,
                 # 2 = return records + all snapshot populations
 age_dist_N = "all" # Window size around snapshots stage/generation for no_auto/auto
                    # for which to record age distribution [int/"all"]
@@ -44,7 +44,7 @@ scale = 1.01 # Scaling factor applied to target generation estimated for deltaba
 max_stages = 500000 # Maximum number of stages to run before terminating
 
 ## SIMULATION FUNDAMENTALS: CHANGE WITH CARE ##
-surv_bound = [0.94, 0.96] # min and max death rates
+surv_bound = [0.98, 0.99] # min and max death rates
 repr_bound = [0, 0.5] # min and max reproduction rates
 r_rate = 0.01 # recombination rate, if sexual
 m_rate = 0.001 # mutation rate
@@ -56,7 +56,7 @@ n_neutral = 5 # Number of neutral loci in genome
 n_base = 5 # Number of bits per locus
 repr_offset = 100 # Offset for repr loci in genome map (must be <= max_ls)
 neut_offset = 200 # Offset for neut loci (<= repr_offset + max_ls - maturity)
-max_ls = 98 # Maximum lifespan (must be > repr_offset) (-1 = infinite)
+max_ls = 70 # Maximum lifespan (must be > repr_offset) (-1 = infinite)
 maturity = 21 # Age from which an individual can reproduce (must be <= max_ls)
 
 # Size of sliding windows for recording averaged statistics:
