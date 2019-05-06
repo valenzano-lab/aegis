@@ -42,8 +42,7 @@ class Record(dict):
         ns,ml,mt = self["n_snapshots"], self["max_ls"], self["maturity"]
         for k in ["population_size", "resources"]:
             self[k] = np.zeros(n)
-        self["s_range_pen"] = np.zeros((n,self["n_states"]))
-        self["r_range_pen"] = np.zeros((n,self["n_states"]))
+        self["starvation_flag"] = np.zeros(n)
         self["age_distribution"] = np.zeros([n, ml])
         self["observed_repr_rate"] = np.zeros([n, ml])
         self["bit_variance"] = np.zeros([n,2])
@@ -88,15 +87,14 @@ class Record(dict):
         return self.p_calc(gt, self["repr_bound"])
 
     # PER-STAGE RECORDING
-    def update(self, population, resources, s_range_pen, r_range_pen, n_stage,
+    def update(self, population, resources, starvation_flag, n_stage,
             n_snap=-1, around_snap=-1):
         """Record per-stage data (population size, age distribution, resources,
         and survival penalties), plus, if on a snapshot stage, the population
         as a whole."""
         self["population_size"][n_stage] = population.N
         self["resources"][n_stage] = resources
-        self["s_range_pen"][n_stage] = s_range_pen
-        self["r_range_pen"][n_stage] = r_range_pen
+        self["starvation_flag"][n_stage] = starvation_flag
         if around_snap > -1:
             agehist =  np.bincount(population.ages,minlength = population.max_ls)
             self["age_distribution"][around_snap] = agehist / float(population.N)
@@ -302,13 +300,6 @@ class Record(dict):
         self["repr_value"] = repr_value
         self["junk_repr_value"] = junk_repr_value
 
-    def compute_pen_rates(self):
-        """Compute the average penalised survival and reproduction rates."""
-        if "s_range_pen" in self.keys():
-            self["s_range_pen"] = self["s_range_pen"].mean(0)
-        if "r_range_pen" in self.keys():
-            self["r_range_pen"] = self["r_range_pen"].mean(0)
-
     # OBSERVED SURVIVAL, REPRODUCTION, FITNESS
 
     def compute_kaplan_meier(self):
@@ -504,9 +495,7 @@ class Record(dict):
                                  "age_distribution",\
                                  "observed_repr_rate",\
                                  "generation_dist",\
-                                 "gentime_dist",\
-                                 "s_range_pen",\
-                                 "r_range_pen"]
+                                 "gentime_dist"]
 
             which = self["population_size"]>0
             for key in per_stage_entries:
@@ -545,7 +534,6 @@ class Record(dict):
         self.compute_bits_snaps()
         self.compute_entropies()
         self.compute_windows()
-        self.compute_pen_rates()
         if post_trunc:
             self.compute_snapshot_age_dist_avrg()
             self.compute_kaplan_meier()

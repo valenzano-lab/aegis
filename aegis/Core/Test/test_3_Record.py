@@ -19,7 +19,7 @@ def static_fill(rec_obj, pop_obj):
     c = 0
     for x in xrange(n):
         snapshot = c if x in s else -1
-        r.update(pop_obj, 100, 1, 1, x, snapshot)
+        r.update(pop_obj, 100, False, x, snapshot)
         c += 1 if x in s else 0
     # in case not all snapshot_generations reached
     for i in xrange(r["n_snapshots"]):
@@ -122,8 +122,7 @@ class TestRecord:
         assert np.array_equal(R["bit_variance"], np.zeros([n,2]))
         assert np.array_equal(R["generation_dist"], np.zeros([n,5]))
         assert np.array_equal(R["gentime_dist"], np.zeros([n,5]))
-        assert np.array_equal(R["s_range_pen"], np.zeros((n,R["n_states"])))
-        assert np.array_equal(R["r_range_pen"], np.zeros((n,R["n_states"])))
+        assert np.array_equal(R["starvation_flag"], np.zeros(n))
         if R["auto"]:
             assert R["age_dist_stages"] == [[] for i in xrange(R["n_snapshots"])]
         # Snapshot population placeholders
@@ -196,7 +195,8 @@ class TestRecord:
         pop2 = pop.clone()
         pop2.genomes[:] = 0
         # record age_dist
-        rec2.update(pop2, 100, rec2["s_range"], rec2["r_range"], 0, -1, 0)
+        rflag = np.random.rand >= 0.5
+        rec2.update(pop2, 100, rflag, 0, -1, 0)
         agehist=np.bincount(pop.ages,minlength=pop.max_ls)
         agedist=agehist/float(pop.N)
         pages=pop.gentimes[pop.ages==0].flatten()
@@ -204,8 +204,7 @@ class TestRecord:
         obs_repr_rate=np.bincount(pages,minlength=pop.max_ls)/agehist.astype(float)
         assert rec2["resources"][0] == 100
         assert rec2["population_size"][0] == pop.N
-        assert np.array_equal(rec2["s_range_pen"][0], rec2["s_range"])
-        assert np.array_equal(rec2["r_range_pen"][0], rec2["r_range"])
+        assert rec2["starvation_flag"][0] == rflag
         assert np.array_equal(rec2["age_distribution"][0], agedist)
         assert np.array_equal(rec2["observed_repr_rate"][0], obs_repr_rate)
         assert np.allclose(rec2["generation_dist"][0],
@@ -224,13 +223,12 @@ class TestRecord:
         np.random.shuffle(pop2.ages)
         np.random.shuffle(pop2.genomes)
         # do not record age_dist and observed_repr_rate
-        x_range = np.random.random(rec2["n_states"])
-        rec2.update(pop2, 200, x_range, x_range, 0, 0, -1)
+        rflag = np.random.rand >= 0.5
+        rec2.update(pop2, 200, rflag, 0, 0, -1)
         # Per-stage factors
         assert rec2["population_size"][0] == pop2.N
         assert rec2["resources"][0] == 200
-        assert np.array_equal(rec2["s_range_pen"][0], x_range)
-        assert np.array_equal(rec2["r_range_pen"][0], x_range)
+        assert rec2["starvation_flag"][0] == rflag
         assert np.array_equal(rec2["age_distribution"][0], np.zeros(rec2["max_ls"]))
         assert np.allclose(rec2["generation_dist"][0],
                 fivenum(pop.generations))
@@ -273,9 +271,7 @@ class TestRecord:
                              "age_distribution",\
                              "observed_repr_rate",\
                              "generation_dist",\
-                             "gentime_dist",\
-                             "s_range_pen",\
-                             "r_range_pen"]
+                             "gentime_dist"]
 
         tocheck = np.zeros(len(per_stage_entries))
         for i in range(tocheck.size):
@@ -572,8 +568,6 @@ class TestRecord:
         assert np.allclose(rec2["repr_value"], f2/rec2["cmv_surv"])
         assert np.allclose(rec2["junk_repr_value"], jf2/rec2["junk_cmv_surv"])
 
-    # TODO add test for compute_pen_rates
-
     # DONE
     def test_compute_bits_snaps(self, rec1, pop2, rec2):
         """Test computation of mean and variance in bit value along
@@ -722,7 +716,7 @@ class TestRecord:
         # Compare finalised entries
         for k in rec1_copy.keys():
             print k
-            if k in ["snapshot_pops","final_pop","snapshot_age_distribution", "s_range_pen", "r_range_pen"]:
+            if k in ["snapshot_pops","final_pop","snapshot_age_distribution"]:
                 continue
             o1, o2 = rec1[k], rec1_copy[k]
             if isinstance(o1, dict):
@@ -788,7 +782,7 @@ class TestRecord:
         """Test only wished age distribution entries are present after
         truncation. Test only for one key, the other follows."""
         rec2 = rec.copy()
-        rec2.update(pop, 100, 1, 1, 0, -1, 0)
+        rec2.update(pop, 100, False, 0, -1, 0)
         if rec2["age_dist_N"] == "all":
             exp = copy.deepcopy(rec2["age_distribution"])
             rec2.truncate_age_dist()

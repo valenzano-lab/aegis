@@ -177,8 +177,8 @@ class Run:
             else:
                 self.n_snap_ad_bool = True
         # Record information and return verbosity boolean
-        self.record.update(self.population, self.resources, self.r_range,
-                self.r_range, self.n_stage, snapshot, age_dist_rec)
+        self.record.update(self.population, self.resources, self.starving(),
+                self.n_stage, snapshot, age_dist_rec)
         self.n_snap += 1 if snapshot >= 0 else 0
         if (snapshot >= 0) and full_report: self.logprint("Snapshot taken.")
 
