@@ -42,7 +42,7 @@ class Record(dict):
         ns,ml,mt = self["n_snapshots"], self["max_ls"], self["maturity"]
         for k in ["population_size", "resources"]:
             self[k] = np.zeros(n)
-        self["starvation_flag"] = np.zeros(n)
+        self["starvation_flag"] = np.zeros(n).astype(int)
         self["age_distribution"] = np.zeros([n, ml])
         self["observed_repr_rate"] = np.zeros([n, ml])
 #        self["bit_variance"] = np.zeros([n,2])
@@ -491,6 +491,7 @@ class Record(dict):
         if self["auto"]:
             per_stage_entries = ["population_size",\
                                  "resources",\
+                                 "starvation_flag",\
 #                                 "bit_variance",\
                                  "age_distribution",\
                                  "observed_repr_rate",\
