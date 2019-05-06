@@ -119,7 +119,7 @@ class TestRecord:
         assert np.array_equal(R["resources"], a0)
         assert np.array_equal(R["age_distribution"], a1)
         assert np.array_equal(R["observed_repr_rate"], a1)
-        assert np.array_equal(R["bit_variance"], np.zeros([n,2]))
+#        assert np.array_equal(R["bit_variance"], np.zeros([n,2]))
         assert np.array_equal(R["generation_dist"], np.zeros([n,5]))
         assert np.array_equal(R["gentime_dist"], np.zeros([n,5]))
         assert np.array_equal(R["starvation_flag"], np.zeros(n))
@@ -211,7 +211,7 @@ class TestRecord:
                 fivenum(pop.generations))
         assert np.allclose(rec2["gentime_dist"][0],
                 fivenum(pop.gentimes))
-        assert np.allclose(rec2["bit_variance"],np.zeros(2))
+#        assert np.allclose(rec2["bit_variance"],np.zeros(2))
         for n in xrange(len(rec2["snapshot_pops"])):
             assert rec2["snapshot_pops"][n] == 0
 
@@ -245,7 +245,7 @@ class TestRecord:
         exp_bit_var = np.array([\
                 np.mean(rec2.compute_bits(pop2)[1][where_premature]),\
                 np.mean(rec2.compute_bits(pop2)[1][where_mature])])
-        assert np.allclose(rec2["bit_variance"][0],exp_bit_var)
+#        assert np.allclose(rec2["bit_variance"][0],exp_bit_var)
         for n in xrange(1,len(rec2["snapshot_pops"])):
             assert rec2["snapshot_pops"][n] == 0
         # Snapshot population
@@ -267,7 +267,7 @@ class TestRecord:
         rec1.truncate_per_stage_entries()
         per_stage_entries = ["population_size",\
                              "resources",\
-                             "bit_variance",\
+#                             "bit_variance",\
                              "age_distribution",\
                              "observed_repr_rate",\
                              "generation_dist",\

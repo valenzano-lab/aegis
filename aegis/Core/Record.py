@@ -45,7 +45,7 @@ class Record(dict):
         self["starvation_flag"] = np.zeros(n)
         self["age_distribution"] = np.zeros([n, ml])
         self["observed_repr_rate"] = np.zeros([n, ml])
-        self["bit_variance"] = np.zeros([n,2])
+#        self["bit_variance"] = np.zeros([n,2])
         for k in ["generation_dist", "gentime_dist"]:
             self[k] = np.zeros([n,5]) # Five-number summaries
         # Space for saving population state for each snapshot
@@ -115,9 +115,9 @@ class Record(dict):
         where_premature = where_premature.astype(bool)
         where_mature = np.invert(where_premature)
         where_mature[(2*self["max_ls"]-self["maturity"])*self["n_base"]:] = False
-        self["bit_variance"][n_stage] = np.array([\
-                np.mean(self.compute_bits(population)[1][where_premature]),\
-                np.mean(self.compute_bits(population)[1][where_mature])])
+#        self["bit_variance"][n_stage] = np.array([\
+#                np.mean(self.compute_bits(population)[1][where_premature]),\
+#                np.mean(self.compute_bits(population)[1][where_mature])])
         if n_snap >= 0:
             self["snapshot_pops"][n_snap] = population.clone()
 
@@ -491,7 +491,7 @@ class Record(dict):
         if self["auto"]:
             per_stage_entries = ["population_size",\
                                  "resources",\
-                                 "bit_variance",\
+#                                 "bit_variance",\
                                  "age_distribution",\
                                  "observed_repr_rate",\
                                  "generation_dist",\
