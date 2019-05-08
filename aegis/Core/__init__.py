@@ -209,8 +209,8 @@ def get_csv(inpath, outpath="", last_K=500, verbose=False):
         df["gentime_75_percentile"] = rec["gentime_dist"][:,3]
         df["gentime_max"] = rec["gentime_dist"][:,4]
         # bit variance
-        df["bit_variance_premature"] = rec["bit_variance"][:,0]
-        df["bit_variance_mature"] = rec["bit_variance"][:,1]
+#        df["bit_variance_premature"] = rec["bit_variance"][:,0]
+#        df["bit_variance_mature"] = rec["bit_variance"][:,1]
         return df
 
     # shape = (nstage, maxls)

@@ -64,7 +64,7 @@ class Plotter:
                              "plot_surv_curve",\
                              "plot_observed_repr",\
                              "plot_age_dist",\
-                             "plot_bit_variance"\
+                             #"plot_bit_variance"\
                              #"plot_generation"\
                              ]
         self.plot_names = ["01_pop-res",\
@@ -76,7 +76,7 @@ class Plotter:
                            "05_surv-curve",\
                            "06_observed-repr",\
                            "07_age-dist",\
-                           "08_bit-variance"\
+                           #"08_bit-variance"\
                            #"09_generation"\
                            ]
         self.figures = []
