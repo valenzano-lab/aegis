@@ -162,6 +162,34 @@ class Record(dict):
                 self["snapshot_age_distribution_avrg"] = \
                     self["age_distribution"].mean(1)
 
+    def compute_starvation_lengths(self):
+        """Compute the lengths of starvation periods."""
+        stv_flag = self["starvation_flag"]
+        try:
+            # check that there is at least on transition
+            x1 = np.where(stv_flag==0)[0][0]            # index of first 0
+            y1 = np.where(stv_flag==1)[0][0]            # index of first 1
+            x2 = np.where(stv_flag[y1:]==0)[0][0] + y1  # index of first 0 after first 1
+            y2 = np.where(stv_flag[x1:]==1)[0][0] + x1  # index of first 1 after first 0
+            if (x1 < y1 and y1 < x2) or (y1 < x1 and x1 < y2):
+                # mark transitions; starvation to no starvation with 1 and vice versa with -1
+                flags = stv_flag[:-1] - stv_flag[1:]
+                stv2no = np.where(flags==1)[0] + 1
+                no2stv = np.where(flags==-1)[0] + 1
+                # if started in starvation
+                if stv2no[0] < no2stv[0]:
+                    no2stv = np.append([0],no2stv)
+                # adjust lengths
+                newlen = min(stv2no.size, no2stv.size)
+                stv2no = stv2no[:newlen]
+                no2stv = no2stv[:newlen]
+                # compute lengths
+                self["starvation_lengths"] = stv2no - no2stv
+            else:
+                self["starvation_lengths"] = np.nan
+        except:
+            self["starvation_lengths"] = np.nan
+
     def compute_locus_density(self):
         """Compute normalised distributions of sum genotypes for each locus in
         the genome at each snapshot, for survival, reproduction, neutral and
@@ -532,6 +560,7 @@ class Record(dict):
         self.compute_fitness()
         self.compute_reproductive_value()
         # Other values
+        self.compute_starvation_lengths()
         self.compute_bits_snaps()
         self.compute_entropies()
         self.compute_windows()

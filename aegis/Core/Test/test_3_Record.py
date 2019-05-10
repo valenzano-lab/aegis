@@ -308,7 +308,57 @@ class TestRecord:
             assert np.all(o == exp_dist[k])
             assert np.allclose(np.sum(o, sum_dim[k]), 1)
 
-    # DONE
+    def test_compute_starvation_lengths(self, rec1):
+        savestate = np.copy(rec1["starvation_flag"])
+        # exclude cases that can come up because of test setup
+        if "starvation_flag" not in rec1.keys():
+            assert "starvation_lengths" not in rec1.keys()
+        # check that exceptions are handled correctly
+        # 00...0011...11 or 11...1100...00
+        method = [np.zeros, np.ones]
+        m1 = int(round(np.random.rand()))
+        m2 = abs(1-m1)
+        rec1["starvation_flag"] = np.append(method[m1](np.random.randint(5,100)), \
+                method[m2](np.random.randint(5,100))).astype(int)
+        rec1.compute_starvation_lengths()
+        assert np.isnan(rec1["starvation_lengths"])
+        # 00...00
+        rec1["starvation_flag"] = np.zeros(np.random.randint(5,100))
+        rec1.compute_starvation_lengths()
+        assert np.isnan(rec1["starvation_lengths"])
+        # 11...11
+        rec1["starvation_flag"] = np.ones(np.random.randint(5,100))
+        rec1.compute_starvation_lengths()
+        assert np.isnan(rec1["starvation_lengths"])
+        # 1 or 0
+        rec1["starvation_flag"] = int(round(np.random.rand()))
+        rec1.compute_starvation_lengths()
+        assert np.isnan(rec1["starvation_lengths"])
+        # with at least one transition
+        rec1["starvation_flag"] = np.random.randint(0,2,100)
+        print rec1["starvation_flag"][:20]
+        # compute iteratively
+        res = []
+        j = rec1["starvation_flag"][0]
+        c = 0 if j==0 else 1
+        for i in rec1["starvation_flag"][1:]:
+            if i==1:
+                c += 1
+            elif j==1:
+                res.append(c)
+                c = 0
+            j = i
+        res = np.array(res)
+        # compute with method from record
+        rec1.compute_starvation_lengths()
+        # compare
+        print "length of expected result: {0}".format(res.size)
+        print "length of record result: {0}".format(rec1["starvation_lengths"].size)
+        assert np.array_equal(res, rec1["starvation_lengths"])
+        # reset to savestate and execute method so that it can be used in test_finalise
+        rec1["starvation_flag"] = savestate
+        rec1.compute_starvation_lengths()
+
     def test_compute_locus_density(self, rec1, pop2, rec2):
         """Test that compute_locus_density performs correctly for a
         genome filled with 1's and one randomly generated."""
@@ -343,7 +393,6 @@ class TestRecord:
             assert np.array_equal(obj1[l], check1)
             assert np.allclose(obj2[l][0], check2)
 
-    # DONE
     def test_compute_total_density(self, rec1, pop2, rec2):
         """Test that compute_total_density performs correctly for a
         genome filled with 1's and one randomly generated."""
@@ -373,7 +422,6 @@ class TestRecord:
             assert np.array_equal(obj1[l], check1)
             assert np.allclose(obj2[l][0], loci_flat[l])
 
-    # DONE
     def test_compute_genotype_mean_var(self, rec1, pop2, rec2):
         """Test that compute_genotype_mean_var performs correctly for a
         genome filled with 1's and one randomly generated."""
@@ -470,7 +518,6 @@ class TestRecord:
             assert np.array_equal(rec1["junk_mean"][l], np.tile(vmax[l], [m,nn]))
             assert np.array_equal(rec1["junk_var"][l], np.zeros([m,nn]))
 
-    # DONE
     def test_compute_cmv_surv(self, rec1, pop2, rec2):
         """Test that cumulative survival probabilities are computed
         correctly for a genome filled with 1's and one randomly generated."""
@@ -499,7 +546,6 @@ class TestRecord:
         assert np.allclose(rec2["cmv_surv"][0], check2)
         assert np.allclose(rec2["junk_cmv_surv"][0], check2_junk)
 
-    # DONE
     def test_compute_mean_repr(self, rec1, pop2, rec2):
         """Test that mean reproduction probability calculations are
         computed correctly for a genome filled with 1's and one randomly generated.
@@ -530,7 +576,6 @@ class TestRecord:
         assert np.allclose(rec2["mean_repr"], check2)
         assert np.allclose(rec2["junk_repr"][0], check2_junk)
 
-    # DONE
     def test_compute_fitness(self, rec1, rec2):
         """Test that per-age and total fitness are computed correctly
         for a genome filled with 1's and one randomly generated."""
@@ -554,7 +599,6 @@ class TestRecord:
         assert np.allclose(rec2["junk_fitness"],
                 np.sum(rec2["junk_fitness_term"], 1))
 
-    # DONE
     def test_compute_reproductive_value(self, rec1, rec2):
         # Update record
         rec1.compute_reproductive_value()
@@ -569,7 +613,6 @@ class TestRecord:
         assert np.allclose(rec2["repr_value"], f2/rec2["cmv_surv"])
         assert np.allclose(rec2["junk_repr_value"], jf2/rec2["junk_cmv_surv"])
 
-    # DONE
     def test_compute_bits_snaps(self, rec1, pop2, rec2):
         """Test computation of mean and variance in bit value along
         chromosome for a genome filled with 1's and one randomly generated."""
@@ -733,7 +776,8 @@ class TestRecord:
                     if isinstance(w1, np.ndarray): assert np.array_equal(w1,w2)
                     else: return w1==w2
             elif not callable(o1):
-                assert np.array_equal(np.array(o1), np.array(o2))
+                assert np.array_equal(np.array(o1), np.array(o2)) or \
+                        np.isnan(o1) and np.isnan(o2)
         # TODO: Test different snapshot_pops saving options
 
     ## FINALISATION NEEDING SPECIAL SETUP ##
