@@ -185,10 +185,13 @@ class Record(dict):
                 no2stv = no2stv[:newlen]
                 # compute lengths
                 self["starvation_lengths"] = stv2no - no2stv
+                self["avg_starvation_length"] = np.mean(self["starvation_lengths"])
             else:
                 self["starvation_lengths"] = np.nan
+                self["avg_starvation_length"] = np.nan
         except:
             self["starvation_lengths"] = np.nan
+            self["avg_starvation_length"] = np.nan
 
     def compute_locus_density(self):
         """Compute normalised distributions of sum genotypes for each locus in

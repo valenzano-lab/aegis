@@ -322,18 +322,22 @@ class TestRecord:
                 method[m2](np.random.randint(5,100))).astype(int)
         rec1.compute_starvation_lengths()
         assert np.isnan(rec1["starvation_lengths"])
+        assert np.isnan(rec1["avg_starvation_length"])
         # 00...00
         rec1["starvation_flag"] = np.zeros(np.random.randint(5,100))
         rec1.compute_starvation_lengths()
         assert np.isnan(rec1["starvation_lengths"])
+        assert np.isnan(rec1["avg_starvation_length"])
         # 11...11
         rec1["starvation_flag"] = np.ones(np.random.randint(5,100))
         rec1.compute_starvation_lengths()
         assert np.isnan(rec1["starvation_lengths"])
+        assert np.isnan(rec1["avg_starvation_length"])
         # 1 or 0
         rec1["starvation_flag"] = int(round(np.random.rand()))
         rec1.compute_starvation_lengths()
         assert np.isnan(rec1["starvation_lengths"])
+        assert np.isnan(rec1["avg_starvation_length"])
         # with at least one transition
         rec1["starvation_flag"] = np.random.randint(0,2,100)
         print rec1["starvation_flag"][:20]
@@ -355,6 +359,7 @@ class TestRecord:
         print "length of expected result: {0}".format(res.size)
         print "length of record result: {0}".format(rec1["starvation_lengths"].size)
         assert np.array_equal(res, rec1["starvation_lengths"])
+        assert np.mean(res) == rec1["avg_starvation_length"]
         # reset to savestate and execute method so that it can be used in test_finalise
         rec1["starvation_flag"] = savestate
         rec1.compute_starvation_lengths()
