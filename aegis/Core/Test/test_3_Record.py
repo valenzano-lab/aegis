@@ -308,7 +308,7 @@ class TestRecord:
             assert np.all(o == exp_dist[k])
             assert np.allclose(np.sum(o, sum_dim[k]), 1)
 
-    def test_compute_starvation_lengths(self, rec1):
+    def test_compute_flag_lengths(self, rec1):
         savestate = np.copy(rec1["starvation_flag"])
         # exclude cases that can come up because of test setup
         if "starvation_flag" not in rec1.keys():
@@ -363,6 +363,7 @@ class TestRecord:
         # reset to savestate and execute method so that it can be used in test_finalise
         rec1["starvation_flag"] = savestate
         rec1.compute_starvation_lengths()
+        rec1.compute_growth_lengths()
 
     def test_compute_locus_density(self, rec1, pop2, rec2):
         """Test that compute_locus_density performs correctly for a

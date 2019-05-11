@@ -138,8 +138,10 @@ class Plotter:
         sns.lineplot(data=df, ax=ax)
         ax.set_ylim(bottom=0)
         f.suptitle("population size")
-        s = "mean starvation length: {0}".format(np.around(float(self.single_df.loc["avg_starvation_length","value"]),2))
-        ax.text(0.65, 0.96, s, fontsize=8, transform=ax.transAxes)
+        s1 = "mean starvation length: {0}".format(np.around(float(self.single_df.loc["avg_starvation_length","value"]),2))
+        s2 = "mean growth length: {0}".format(np.around(float(self.single_df.loc["avg_growth_length","value"]),2))
+        s = "{0}\n{1}".format(s1,s2)
+        ax.text(0.65, 1, s, fontsize=8, transform=ax.transAxes)
         return f
 
     def plot_bit_variance(self):

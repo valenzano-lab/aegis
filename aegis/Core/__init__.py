@@ -136,6 +136,7 @@ def get_csv(inpath, outpath="", last_K=500, verbose=False):
                     "path_to_seed_file",\
                     "repr_mode",\
                     "avg_starvation_length",\
+                    "avg_growth_length",\
                     # need special treatment since dicts
                     "g_dist_s",\
                     "g_dist_r",\

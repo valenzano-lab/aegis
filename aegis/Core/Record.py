@@ -162,9 +162,10 @@ class Record(dict):
                 self["snapshot_age_distribution_avrg"] = \
                     self["age_distribution"].mean(1)
 
-    def compute_starvation_lengths(self):
+    def compute_flag_lengths(self, reverse=False):
         """Compute the lengths of starvation periods."""
         stv_flag = self["starvation_flag"]
+        if reverse: stv_flag = np.array([1,0])[stv_flag]
         try:
             # check that there is at least on transition
             x1 = np.where(stv_flag==0)[0][0]            # index of first 0
@@ -184,14 +185,21 @@ class Record(dict):
                 stv2no = stv2no[:newlen]
                 no2stv = no2stv[:newlen]
                 # compute lengths
-                self["starvation_lengths"] = stv2no - no2stv
-                self["avg_starvation_length"] = np.mean(self["starvation_lengths"])
+                return (stv2no - no2stv, np.mean(stv2no - no2stv))
             else:
-                self["starvation_lengths"] = np.nan
-                self["avg_starvation_length"] = np.nan
+                return (np.nan, np.nan)
         except:
-            self["starvation_lengths"] = np.nan
-            self["avg_starvation_length"] = np.nan
+                return (np.nan, np.nan)
+
+    def compute_starvation_lengths(self):
+        """Compute the lengths of starvation periods."""
+        self["starvation_lengths"],self["avg_starvation_length"] =\
+                self.compute_flag_lengths(reverse=False)
+
+    def compute_growth_lengths(self):
+        """Compute the lengths of growth periods."""
+        self["growth_lengths"],self["avg_growth_length"] =\
+                self.compute_flag_lengths(reverse=True)
 
     def compute_locus_density(self):
         """Compute normalised distributions of sum genotypes for each locus in
@@ -564,6 +572,7 @@ class Record(dict):
         self.compute_reproductive_value()
         # Other values
         self.compute_starvation_lengths()
+        self.compute_growth_lengths()
         self.compute_bits_snaps()
         self.compute_entropies()
         self.compute_windows()
