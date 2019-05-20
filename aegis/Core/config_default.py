@@ -1,11 +1,11 @@
-################################################
-## GENOME SIMULATION v.2.1 CONFIGURATION FILE ##
-################################################
+##############################
+## AEGIS CONFIGURATION FILE ##
+##############################
 
 ## CORE PARAMETERS ##
 random_seed = "" # If numeric, sets random seed to that value before execution
 n_runs = 1 # Total number of independent runs
-n_stages = 10000 # Total number of stages per run [int/"auto"]
+n_stages = 1000 # Total number of stages per run [int/"auto"]
 n_snapshots = 8 # Points in run at which to record detailed data
 path_to_seed_file = "" # Path to simulation seed file, if no seed then ""
     # see README for which parameters are inherited from seed, which are
@@ -21,7 +21,7 @@ age_dist_N = "all" # Window size around snapshots stage/generation for no_auto/a
                    # "all" saves age distribution at all stages
 
 ## STARTING PARAMETERS ##
-repr_mode = "sexual" # sexual, asexual, assort_only or recombine_only
+repr_mode = "asexual" # sexual, asexual, assort_only or recombine_only
 res_start = 1000 # Starting resource value
 start_pop = res_start # Starting population size
 
@@ -34,8 +34,8 @@ kill_at = 0 # stage/generation for no_auto/auto repectively at which to force
 ## PENALISATION ##
 pen_cuml = True # Is the penalty cumulative? If True the function compounds,
                 # otherwise it is always applied on the default value
-surv_pen_func = lambda s_range,n,r: s_range*0.9
-repr_pen_func = lambda r_range,n,r: r_range
+surv_pen_func = lambda s_range,n,r: 1-(1-s_range)*3 # Survival penalisation function
+repr_pen_func = lambda r_range,n,r: r_range # Reproduction penalisation function
 
 ## AUTOCOMPUTING GENERATION NUMBER ##
 deltabar = 0.01 # Relative error allowed for the deviation from the stationary
@@ -47,8 +47,8 @@ max_stages = 500000 # Maximum number of stages to run before terminating
 surv_bound = [0.98, 0.99] # min and max death rates
 repr_bound = [0, 0.5] # min and max reproduction rates
 r_rate = 0.01 # recombination rate, if sexual
-m_rate = 0.001 # mutation rate
-m_ratio = 0.1 # Ratio of benevolent (0->1) to detrimental (1->0) mutations
+m_rate = 0.001 # rate of negative mutations
+m_ratio = 0.1 # Ratio of positive (0->1) to negative (1->0) mutations
 g_dist = {"s": 0.5, # Proportion of 1's in survival loci of initial genomes
         "r": 0.5,   #                      reproductive loci
         "n": 0.5}   #                      neutral loci

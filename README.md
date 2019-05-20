@@ -14,17 +14,18 @@ This is a software implementation of the model described in this [article](https
 ![shell recording 1](./readme_metadata/shell-rec1.gif)
 
 AEGIS can:
-* run sexual and asexual simulations with randomly generated populations or populations obtained from a previous simulation
+* simulate genome evolution in age-structured populations under a variety of evolutionary constraints
+* simulate both asexually and sexually reproducing populations
 * output simulation objects using [pickle](https://docs.python.org/2/library/pickle.html)
 * output recorded statistics to a [csv](https://en.wikipedia.org/wiki/Comma-separated_values)
 * generate figures from recorded statistics
-* stop a simulation when population has reached evolutionary equilibrium (i.e. the genetic constitution is not expected to change anymore, for details see aegis Wiki page Autostage)
+* run a simulation until the population has reached evolutionary equilibrium (i.e. the genetic constitution is not expected to change anymore, more details on this will be provided in a future blog post) 
 
 ### Installation
 Since aegis has dependencies, you might want to put the installation in an isolated Python environment with [virtualenv](https://virtualenv.pypa.io/en/stable/).
 To install just do:
 ```shell
-pip install aegis
+pip install mpi-aegis
 ```
 
 ### Usage
@@ -52,20 +53,27 @@ This will create a directory *mysim_csv_files* containing csv files extracted fr
 
 ![shell recording 2](./readme_metadata/shell-rec2.gif)
 
+For even easier usage, AEGIS provides a wrapper for running a simulation, extracting data to csv and generating figures:
+```shell
+aegis wiz config.py
+```
+
+![shell recording 1](./readme_metadata/shell-rec3.gif)
+
 #### Examples
 Following are examples of configuration files for different simulation scenarios with
 descriptions. See that you can derive the *description* from the respecting
 *configuration file*.
 
 ##### Scenario 1
-[config1.py](./readme_metadata/config1.py)
+[config1.py](./readme_metadata/conf1.py)
 
 **Description:**
-This simulation is asexual and the starting resources are set to 1000. The resources remain constant throughout the simulation. The starting population size is 500. The simulation consists of 1 run that is 1000 stages long. The run will be recorded at 5 snapshot stages. We haven't provided a seed Population, therefore a new one will be randonmly generated. At simulation completion only the record for the one run will be
+This simulation is asexual and the starting resources are set to 1000. The resources remain constant throughout the simulation. The starting population size is 500. The simulation consists of 1 run that is 1000 stages long. The run will be recorded at 8 snapshot stages. We haven't provided a seed Population, therefore a new one will be randomly generated. At simulation completion only the record for the one run will be
 saved in `./scen1_files/records/run0.rec`.
 
 ##### Scenario 2
-[config2.py](./readme_metadata/config2.py)
+[config2.py](./readme_metadata/conf2.py)
 
 **Description:**
 Same as Scenario 1, but we have 2 runs, at simulation completion we save records
@@ -73,20 +81,20 @@ and final populations and the number of stages per run is set automatically.
 Saved files are:
 * `./scen2_files/records/run0.rec`
 * `./scen2_files/records/run1.rec`
-* `./scen2_files/populations/run0.pop`
-* `./scen2_files/populations/run1.pop`
+* `./scen2_files/populations/final/run0.pop`
+* `./scen2_files/populations/final/run1.pop`
 
 ##### Scenario 3
-[config3.py](./readme_metadata/config3.py)
+[config3.py](./readme_metadata/conf3.py)
 
 **Description:**
 Say we copied the population from the first run in Scenario 2 to a file in our
-cwd named `scen2_run0.pop`. We want to see how this population will change
-if set the resources to 500 instead of previous 1000.
+cwd under the name `scen2_run0.pop`. We want to see how this population will change
+if we set the resources to 500 instead of 1000.
 This simulation has 1 run with `scen2_run0.pop` as seed and resources are set to 500. The remaining parameters are same as in Scenario 2. We changed the output prefix to be "scen2_run0_continue".
 
 ##### Scenario 4
-[config4.py](./readme_metadata/config4.py)
+[config4.py](./readme_metadata/conf4.py)
 
 **Description:**
 Same as Scenario 2, but the simulation is sexual, we record the runs at 20
@@ -95,25 +103,25 @@ Also, in order to keep the record file size smaller, we only record age
 distribution for 100 generations around snapshots.
 
 ##### Scenario 5
-[config5.py](./readme_metadata/config5.py)
+[config5.py](./readme_metadata/conf5.py)
 
 **Description:**
 Say we do want to have the complete age distribution data for our Scenario 5 run
 after all. We can retrieve the pseude-random number generator (*prng*) used to 
 produce that run and reproduce it. To get the prng:
 ```bash
-aegis get -rseed ./scen4_files/records/run0.rec ./scen4.prng_seed
+aegis get -o scen4.rseed -rseed ./scen4_files/records/run0.rec
 ```
-We now only need to pass the path to aegis in the config file and set age 
+We now only need to pass the path to the prng to aegis in the config file and set age 
 distribution to be recorded at every stage.
 
 ##### Scenario 6
-[config6.py](./readme_metadata/config6.py)
+[config6.py](./readme_metadata/conf6.py)
 
 **Description:**
 Say that we, for some reason, want to have a simulation like the one in Scenario 4
 in which the population dies off after 1000 generations. We would modify the
-*starve_at* parameter in the config file accordingly.
+*kill_at* parameter in the config file accordingly.
 We will set output prefix to "scen4_dieoff".
 
 #### Config file - in detail
@@ -155,9 +163,9 @@ If you wish to do analysis on simulation data that goes beyond this basic functi
 ```shell
 aegis read -i ./sim1_files/records/run0.rec my_rec_info.csv
 ```
-It is worth noting that runtime and memory needed increase with population and genome size. Also, sexual simulations can be considerably more costly in this respect due to additional computations involved (recombination and assortment).
+It is worth noting that runtime and memory needed increase with population and genome size. Also, sexual simulations can be considerably more costly in this respect due to additional computations involved (recombination and assortment). A future blog post will provide a more detailed overview of runtime.
 
-When running simulations until they reach evolutionary equilibrium (i.e. setting *n_stages = "auto"* in the config file), the runtime, depending also on population and genome size, is hard to estimate. Getting a sense for runtime by trial and by keeping log files might become necessary in some cases since the maximal number of stages allowed has to be defined a priori in the config file for computational reasons. When the maximal number of stages allowed is reached, the simulation will terminate irrespective of whether it has reached evolutionary equilibrium or not. If you have questions concerning this, don't hesitate to contact us.
+When running simulations until they reach evolutionary equilibrium (i.e. setting *n_stages = "auto"* in the config file), the runtime, depending also on population and genome size, is hard to estimate. Getting a sense for runtime by trial and by keeping log files might become necessary in some cases since the maximal number of stages allowed has to be defined a priori in the config file for computational reasons. When the maximal number of stages allowed is reached, the simulation will terminate irrespective of whether it has reached evolutionary equilibrium or not.
 
 ## Contributing
 If you'd like to contribute, please fork the repository and use a feature
@@ -178,7 +186,6 @@ Here is a *tree* listing of the relevant files:
 |   |   |-- Config.py
 |   |   |-- Population.py
 |   |   |-- Record.py
-|   |   |-- Plotter.py
 |   |   |-- Run.py
 |   |   |-- Simulation.py
 |   |   |-- Plotter.py
@@ -212,8 +219,6 @@ The code is organized in Classes and files by its function:
 * **Plotter** contains [seaborn](https://seaborn.pydata.org/) functions to generate plots from the csv files
 
 We use [pytest](https://docs.pytest.org/en/latest/) for testing.
-
-As for Git workflow, we try to follow this [branching model](https://datasift.github.io/gitflow/IntroducingGitFlow.html).
 
 ## Articles
 * [An In Silico Model to Simulate the Evolution of Biological Aging](https://www.biorxiv.org/content/early/2016/01/26/037952)

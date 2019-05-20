@@ -1,7 +1,10 @@
 from setuptools import setup, find_packages
 from setuptools.extension import Extension
 
-setup(name='aegis',
+with open("README-PyPI.md", "r") as fh:
+    long_description = fh.read()
+
+setup(name='mpi-aegis',
         # Version
         version='1.0',
         # Package data
@@ -21,9 +24,11 @@ setup(name='aegis',
             ],
         scripts=['bin/aegis'],
         # Medadata for upload to PyPI
-        author='Will Bradshaw, Dario Valenzano and Arian Sajina',
-        author_email='wbradshaw@age.mpg.de, asajina@age.mpg.de',
+        author='Will Bradshaw, Arian Sajina and Dario Valenzano',
+        author_email='wbradshaw@age.mpg.de, asajina@age.mpg.de, Dario.Valenzano@age.mpg.de',
         description='AEGIS - Ageing of Evolving Genomes In Silico',
+        long_description=long_description,
+        long_description_content_type="text/markdown",
         license='MIT',
-        url="tbc"
+        url="https://github.com/valenzano-lab/aegis"
         )
