@@ -25,7 +25,7 @@ AEGIS can:
 Since aegis has dependencies, you might want to put the installation in an isolated Python environment with [virtualenv](https://virtualenv.pypa.io/en/stable/).
 To install just do:
 ```shell
-pip install mpi-aegis
+pip install mpi-age-aegis
 ```
 
 ### Usage

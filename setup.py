@@ -4,7 +4,7 @@ from setuptools.extension import Extension
 with open("README-PyPI.md", "r") as fh:
     long_description = fh.read()
 
-setup(name='mpi-aegis',
+setup(name='mpi-age-aegis',
         # Version
         version='1.0',
         # Package data
