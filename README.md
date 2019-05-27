@@ -220,8 +220,9 @@ The code is organized in Classes and files by its function:
 
 We use [pytest](https://docs.pytest.org/en/latest/) for testing.
 
-## Articles
-* [An In Silico Model to Simulate the Evolution of Biological Aging](https://www.biorxiv.org/content/early/2016/01/26/037952)
+## Related articles
+* [An In Silico Model to Simulate the Evolution of Biological Aging (2016)](https://www.biorxiv.org/content/early/2016/01/26/037952)
+* [AEGIS: An In Silico Tool to model Genome Evolution in Age-Structured Populations (2019)](https://www.biorxiv.org/content/10.1101/646877v1?fbclid=IwAR0Jt96rfXqgyGwyXrZUiD9EPpkGt5j3FQ0ALFyKT-v8l3FVCCWP77za-38)
 
 ## Team
 * **Arian Šajina**      (Arian.Sajina@age.mpg.de)
