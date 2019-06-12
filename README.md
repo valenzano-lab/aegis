@@ -163,6 +163,9 @@ If you wish to do analysis on simulation data that goes beyond this basic functi
 ```shell
 aegis read -i ./sim1_files/records/run0.rec my_rec_info.csv
 ```
+
+For seeding a population from an old simulation to a new one, some parameters need to be inherited from the old simulation since they determine the structure of the population object. Those parameters are: max_ls, maturity, n_neutral, n_base, repr_offset, neut_offset. In case any of these parameters differs, AEGIS will warn you and default to the value present in the seed population.
+
 It is worth noting that runtime and memory needed increase with population and genome size. Also, sexual simulations can be considerably more costly in this respect due to additional computations involved (recombination and assortment). A future blog post will provide a more detailed overview of runtime.
 
 When running simulations until they reach evolutionary equilibrium (i.e. setting *n_stages = "auto"* in the config file), the runtime, depending also on population and genome size, is hard to estimate. Getting a sense for runtime by trial and by keeping log files might become necessary in some cases since the maximal number of stages allowed has to be defined a priori in the config file for computational reasons. When the maximal number of stages allowed is reached, the simulation will terminate irrespective of whether it has reached evolutionary equilibrium or not.
