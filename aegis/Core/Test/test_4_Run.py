@@ -21,6 +21,14 @@ def run(request, conf):
     """Unseeded run object inheriting from conf fixture."""
     return Run(conf, "", 0, 100, False)
 
+# pop is initialized with conf
+@pytest.fixture(scope="module")
+def conf_seed(request, conf):
+    c = copy.copy(conf)
+    for key in ["n_neutral", "n_base", "repr_offset", "neut_offset", "max_ls", "maturity", "chr_len"]:
+        c[key] += 1
+    return c
+
 @pytest.fixture(params=["noauto_all","noauto-nodieoff","noauto-dieoff", \
         "auto-nodieoff","auto-dieoff", "auto-max_stages"], scope="module")
 def confx(request, conf_path):
@@ -87,7 +95,6 @@ class TestRun:
         assert run1.resources == conf["res_start"]
         assert sorted(run1.genmap) == sorted(conf["genmap"])
         assert not np.array_equal(run1.genmap, conf["genmap"])
-        # TODO: Test correct inheritance of conf vs population parameters
         assert run1.n_snap == run1.n_stage == 0
         assert run1.n_run == conf["n_runs"]-1
         # TODO: Test initial state of record vs conf?
@@ -97,6 +104,16 @@ class TestRun:
         assert run1.verbose == verbose
         # Quick test of correct genmap transition from run -> pop -> record;
         # Population and Record initiation tested more thoroughly elsewhere
+
+    def test_init_run_seed_pop(self, conf_seed, pop):
+        """Test that run initialization with a seed population, defualts to parameter values from the seed population when
+        there is a conflict (for gene structure specific parameters)."""
+        pop_params = pop.params()
+        with pytest.warns(UserWarning):
+            run1 = Run(conf_seed, pop, conf_seed["n_runs"]-1, report_n=10, verbose=False)
+        for key in ["n_neutral", "n_base", "repr_offset", "neut_offset", "max_ls", "maturity", "chr_len"]:
+            assert run1.conf[key] == pop_params[key]
+            assert run1.conf[key] != conf_seed[key]
 
     def test_copy(self, run):
         """Test that copy of object is equal to the object."""

@@ -45,6 +45,7 @@ class Population:
         self.maturity = params["maturity"] # Age of maturity (for reproduction)
         self.max_ls = params["max_ls"] # Maximum lifespan
         self.n_base = params["n_base"] # Number of bits per locus
+        self.n_neutral = params["n_neutral"] # Number of neutral loci in genome
         self.g_dist = params["g_dist"].copy() # Proportions of 1's in initial loci
         self.repr_offset = params["repr_offset"] # Genmap offset for repr loci
         self.neut_offset = params["neut_offset"] # Genmap offset for neut loci
@@ -150,6 +151,7 @@ class Population:
                 "repr_mode":self.repr_mode,
                 "chr_len":self.chr_len,
                 "n_base":self.n_base,
+                "n_neutral":self.n_neutral,
                 "max_ls":self.max_ls,
                 "maturity":self.maturity,
                 "g_dist":self.g_dist,

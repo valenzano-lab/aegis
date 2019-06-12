@@ -58,7 +58,7 @@ class Config(dict):
         return True
 
     def make_params(self):
-        key_list = ["repr_mode", "chr_len", "n_base", "maturity", "start_pop",
+        key_list = ["repr_mode", "chr_len", "n_base", "n_neutral", "maturity", "start_pop",
                 "max_ls", "g_dist", "repr_offset", "neut_offset", "object_max_age",\
                 "prng"]
         return dict([(k, self[k]) for k in key_list])

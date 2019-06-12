@@ -9,7 +9,7 @@
 ## PACKAGE IMPORT ##
 import numpy as np
 import scipy.stats as st
-import copy, datetime, time
+import copy, datetime, time, warnings
 from .functions import init_ages, init_genomes, init_generations
 from .functions import init_gentimes, deep_eq
 from .functions import timenow, timediff, get_runtime
@@ -42,18 +42,19 @@ class Run:
         # Init Population
         if startpop != "": # If given a seeding population
             self.population = startpop.clone()
-            # Adopt from population: genmap, n_base, chr_len
+            # Check that parameters from config file and seed pop are compatible
+            warn_keys = ["n_neutral", "n_base", "repr_offset", "neut_offset", "max_ls", "maturity"]
+            for key in warn_keys:
+                if self.conf[key] != getattr(self.population, key):
+                    warnings.warn("The seed population and the configuration file have different values for parameter: {}. This is not supported. Defaulting to value defined in seed population.".format(key))
+                    self.conf[key] = getattr(self.population, key)
+            # Inherit from population object: genmap, chr_len, object_max_age
             self.conf["genmap"] = self.population.genmap
             self.conf["chr_len"] = self.population.chr_len
-            self.conf["n_base"] = self.population.n_base
             self.population.object_max_age += self.conf["object_max_age"]
             self.conf["object_max_age"] = self.population.object_max_age
-            # Keep new max_ls, maturity, sexual, g_dist, offsets, prng
+            # Inherit from config file: repr_mode, prng
             self.population.repr_mode = self.conf["repr_mode"]
-            self.population.maturity = self.conf["maturity"]
-            self.population.g_dist = self.conf["g_dist"]
-            self.population.repr_offset = self.conf["repr_offset"]
-            self.population.neut_offset = self.conf["neut_offset"]
             self.population.prng = self.conf["prng"]
             self.conf["params"] = self.conf.make_params()
         else:

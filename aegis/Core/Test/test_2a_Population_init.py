@@ -240,7 +240,7 @@ class TestPopulationInit:
         # Delete everything
         del pop2.genmap, pop2.genmap_argsort
         pop2.repr_mode, pop2.recombine, pop2.assort = ["",-1,-1]
-        pop2.chr_len, pop2.maturity, pop2.max_ls, pop2.n_base = [0,0,0,0]
+        pop2.chr_len, pop2.maturity, pop2.max_ls, pop2.n_base, pop2.n_neutral = [0,0,0,0,0]
         pop2.g_dist = {}
         pop2.repr_offset, pop2.neut_offset, pop2.N = [0,0,0]
         del pop2.ages, pop2.genomes, pop2.generations, pop2.gentimes

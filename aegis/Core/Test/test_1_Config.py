@@ -257,6 +257,7 @@ class TestConfig:
         assert c["params"]["repr_mode"] == c["repr_mode"]
         assert c["params"]["chr_len"] == c["chr_len"]
         assert c["params"]["n_base"] == c["n_base"]
+        assert c["params"]["n_neutral"] == c["n_neutral"]
         assert c["params"]["maturity"] == c["maturity"]
         assert c["params"]["max_ls"] == c["max_ls"]
         assert c["params"]["start_pop"] == c["start_pop"]

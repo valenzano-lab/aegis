@@ -143,7 +143,7 @@ def get_csv(inpath, outpath="", last_K=500, verbose=False):
                     "g_dist_n",\
                     "n1_window_size"]
 
-    nstagex1_keys = [   "poulation_size",\
+    nstagex1_keys = [   "population_size",\
                         "resources",\
                         # need special treatment since 5 columns
                         "generation_dist",\
