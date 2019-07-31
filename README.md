@@ -19,7 +19,7 @@ AEGIS can:
 * output simulation objects using [pickle](https://docs.python.org/2/library/pickle.html)
 * output recorded statistics to a [csv](https://en.wikipedia.org/wiki/Comma-separated_values)
 * generate figures from recorded statistics
-* run a simulation until the population has reached evolutionary equilibrium (i.e. the genetic constitution is not expected to change anymore, more details on this will be provided in a future blog post) 
+* run a simulation until the population has reached evolutionary equilibrium (for details see Wiki page "Analytic behaviour of the neutral loci") 
 
 ### Installation
 Since aegis has dependencies, you might want to put the installation in an isolated Python environment with [virtualenv](https://virtualenv.pypa.io/en/stable/).
