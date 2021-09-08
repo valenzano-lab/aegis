@@ -1,0 +1,86 @@
+#####################
+# GLOBAL PARAMETERS #
+#####################
+
+# GENERAL
+RANDOM_SEED_: # int, none | If nothing is given, a random integer will be used as the seed; otherwise the given integer will be used as the seed
+
+# RUNTIME
+STAGES_PER_SIMULATION_: 100000 # 1+ | How many stages does the simulation run for?
+LOGGING_RATE_: 1000 # 0+ | Log every ?-th stage; 0 for no logging
+
+# RECORDING
+# PICKLE_RATE_: 500 # 0+ | Pickle population every ? stages; 0 for no pickles
+SNAPSHOT_RATE_: 50000 # 0+ | Take a snapshot every ? stages; 0 for no snapshots
+VISOR_RATE_: 5000 # 0+ | Take a visor snapshot every ? stages; 0 for no visor records
+POPGENSTATS_RATE_: 5000 # 0+ | Record population genetic stats about the population every ? stages; 0 for no popgen stats
+
+# MULTIPLE ECOSYSTEMS
+ECOSYSTEM_NUMBER_: 1
+
+####################
+# LOCAL PARAMETERS #
+####################
+
+# ECOLOGY
+MAX_POPULATION_SIZE: 300 # 1+ | Number of individuals in the population
+OVERSHOOT_EVENT: starvation # starvation, cliff, treadmill_random, treadmill_zoomer, treadmill_boomer | Who dies when everyone is starving?
+CLIFF_SURVIVORSHIP: # null or 0-1 excluding 0 and 1 | What fraction of population survives after a cliff?; null if not applicable
+STAGES_PER_SEASON: 0 # 0+ | How many stages does one season last; 0 for no seasons
+
+# GENOTYPE
+MAX_LIFESPAN: 50 # 1+ | Maximum lifespan
+MATURATION_AGE: 10 # 1+ | Age at which reproduction is possible
+BITS_PER_LOCUS: 8 # 1+ | Number of bits that each locus has
+HEADSUP: -1 # -1, 0, 1+ |-1 if no preevolution, 0 for maturity guarantee, +x for headsup
+
+
+# GENOME STRUCTURE ====================
+
+# G_trait_agespecific: # true, false | Is the trait age specific?
+# G_trait_interpreter: # binary, uniform, ... | Interpreter to decode genome
+# G_trait_lo: # 0-1 | The minimum phenotypic value
+# G_trait_hi: # 0-1 | The maximum phenotypic value
+# G_trait_initial: # 0-1 | The fraction of bits that are 1 in the newly initialized population
+# G_trait_evol: # | The value of an non-evolvable trait
+
+G_surv_evolvable: true
+G_surv_agespecific: true
+G_surv_interpreter: binary
+G_surv_lo: 0
+G_surv_hi: 1
+G_surv_initial: 1
+
+G_repr_evolvable: true
+G_repr_agespecific: true
+G_repr_interpreter: binary
+G_repr_lo: 0
+G_repr_hi: 0.5
+G_repr_initial: 1
+
+G_neut_evolvable: false
+G_neut_agespecific:
+G_neut_interpreter:
+G_neut_lo:
+G_neut_hi:
+G_neut_initial: 1
+
+G_muta_evolvable: false
+G_muta_agespecific:
+G_muta_interpreter:
+G_muta_lo:
+G_muta_hi:
+G_muta_initial: 0.001
+
+# REPRODUCTION
+REPRODUCTION_MODE: asexual # sexual, asexual, asexual_diploid | Mode of reproduction
+RECOMBINATION_RATE: 0 # 0+ | Rate of recombination; 0 if no recombination
+
+# MUTATION
+MUTATION_RATIO: 0.1 # 0+ | Ratio of 0->1 mutations to 1->0 mutations
+
+# PHENOMAP
+PHENOMAP_SPECS: [] # | Specification of pleiotropic effects | [[geno index, pheno index, weight], ...]
+
+# ENVIRONMENT
+ENVIRONMENT_CHANGE_RATE: 0 # 0+ | Environmental map changes every ? stages; if no environmental change
