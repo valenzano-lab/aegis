@@ -9,12 +9,12 @@
 # HELPER FUNCS
 # ============
 
-# Remove old builds and make new build
+# Remove old builds and make a new build
 build:
 	rm dist/*
 	python3 -m build
 
-# Test aegis installed in test/venv
+# Test aegis installed in temp/venv
 test_venv:
 	. temp/venv/bin/activate
 	aegis misc/misc.yml
@@ -57,7 +57,6 @@ install_pypi:
 	python3 -m pip install aegis-sim[dev]
 
 
-
 # =============
 # MISCELLANEOUS
 # =============
@@ -66,11 +65,8 @@ manifest:
 	python3 -m pip install check-manifest
 	check-manifest --create
 
-performance_profile:
-	python3 profiling/profiler.py
-
 editable_install:
 	python3 -m pip install -e .
 
 editable_uninstall:
-	python3 -m pip uninstall aging-of-evolving-genomes
+	python3 -m pip uninstall aegis-sim
