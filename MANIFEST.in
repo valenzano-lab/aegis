@@ -1,0 +1,4 @@
+include LICENSE
+include Makefile
+recursive-include tests *.py
+recursive-include tests *.yml
