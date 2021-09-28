@@ -111,7 +111,7 @@ class Recorder:
     def collect(self, key, ages):
         """Add data into memory which will be recorded later."""
         for age in ages:
-            self.collection[key][age - 1] += 1  # age == index + 1
+            self.collection[key][age] += 1
 
     def flush(self):
         """Record data that has been collected over time."""
