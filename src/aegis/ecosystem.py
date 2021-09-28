@@ -231,7 +231,6 @@ class Ecosystem:
         # Count ages at death
         if causeofdeath != "max_lifespan":
             ages_death = self.population.ages[mask_kill]
-            # self.macroconfig.counter.count(f"age_at_{causeofdeath}", ages_death)
             self.recorder.collect(f"age_at_{causeofdeath}", ages_death)
 
         # Retain survivors
