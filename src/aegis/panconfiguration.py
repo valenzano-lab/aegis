@@ -33,6 +33,7 @@ class Panconfiguration:
     Contains simulation-wide parameters (parameters that affect the whole simulation and not just one ecosystem).
     Wraps also some other useful helper functions.
     """
+
     def skip(self, rate):
         """Should you skip an action performed at a certain rate"""
         return (rate <= 0) or (self.stage % rate > 0)
@@ -87,6 +88,8 @@ class Panconfiguration:
         if custom_config_path is None:
             parsed_args = run_parser()
             custom_config_path = pathlib.Path(parsed_args.custom_config_path).absolute()
+        else:
+            custom_config_path = pathlib.Path(custom_config_path)
 
         logging.info("Custom config path = %s", custom_config_path)
 
