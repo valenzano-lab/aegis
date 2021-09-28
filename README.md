@@ -1,20 +1,9 @@
-<style>
-details{
-    margin-bottom:12px;
-}
-summary {
-    margin-bottom:10px;
-    font-style:italic;
-    cursor:pointer;
-}
-</style>
-
 [![PyPI version](https://badge.fury.io/py/aegis-sim.svg)](https://badge.fury.io/py/aegis-sim)
 [![Python 3.6+](https://img.shields.io/badge/python-3.6%2B-blue)](https://www.python.org/downloads/release/python-360/)
 
 # AEGIS
 
-> Aging of Evolving Genomes In Silico (EY-jis, /eɪd͡ʒɪs/)
+> Aging of Evolving Genomes In Silico (AY-jis, /eɪd͡ʒɪs/)
 
 Numerical model for life history evolution of age-structured populations under customizable ecological scenarios.
 
