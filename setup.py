@@ -4,7 +4,7 @@ import pathlib
 setuptools.setup(
     name="aegis-sim",
     version="2.0.0",
-    description="Simulation tool for studying the evolution of life history trait evolution",
+    description="Numerical model for life history evolution of age-structured populations",
     long_description=(pathlib.Path(__file__).parent / "README.md").read_text(),
     long_description_content_type="text/markdown",
     author="Martin Bagic, Dario Valenzano",
