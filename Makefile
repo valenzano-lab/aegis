@@ -46,15 +46,18 @@ test:
 
 # Upload build to testpypi
 upload_testpypi:
-	twine upload --repository testpypi dist/*
+	python3 -m pip install --upgrade twine
+	python3 -m twine upload --repository testpypi dist/*
 
 # Install build from testpypi
 install_testpypi:
-	deactivate
-	rm -rf temp/venv
-	python3 -m venv temp/venv
-	. temp/venv/bin/activate
-	python3 -m pip install --index-url https://test.pypi.org/simple --extra-index-url https://pypi.org/simple aegis-sim[dev]
+	deactivate ; \
+	rm -rf temp/venv ; \
+	python3 -m venv temp/venv ; \
+	. temp/venv/bin/activate ; \
+	python3 -m pip install --upgrade pip pytest ; \
+	python3 -m pip install --index-url https://test.pypi.org/simple --extra-index-url https://pypi.org/simple aegis-sim ; \
+	python3 -m pytest tests/ --log-cli-level=DEBUG
 
 
 # ===================================
@@ -64,15 +67,18 @@ install_testpypi:
 
 # Upload build to pypi
 upload_pypi:
-	twine upload dist/*
+	python3 -m pip install --upgrade twine
+	python3 -m twine upload dist/*
 
 # Install build from pypi 
 install_pypi:
-	deactivate
-	rm -rf temp/venv
-	python3 -m venv temp/venv
-	. temp/venv/bin/activate
-	python3 -m pip install aegis-sim[dev]
+	deactivate ; \
+	rm -rf temp/venv ; \
+	python3 -m venv temp/venv ; \
+	. temp/venv/bin/activate ; \
+	python3 -m pip install --upgrade pip pytest ; \
+	python3 -m pip install aegis-sim ; \
+	python3 -m pytest tests/ --log-cli-level=DEBUG
 
 
 # =============

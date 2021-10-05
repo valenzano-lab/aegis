@@ -3,7 +3,7 @@ import pathlib
 
 setuptools.setup(
     name="aegis-sim",
-    version="2.0.0",
+    version="2.0",
     description="Numerical model for life history evolution of age-structured populations",
     long_description=(pathlib.Path(__file__).parent / "README.md").read_text(),
     long_description_content_type="text/markdown",

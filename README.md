@@ -108,7 +108,7 @@ make install_dev
 
 ## Authors
 
-- **Martin Bagić**: [email](martin.bagic@outlook.com), [github](https://github.com/martinbagic)
-- **Arian Šajina**: [github](https://github.com/ariansajina)
-- **William Bradshaw**: [github](https://github.com/willbradshaw)
-- **Dario Valenzano** : [github](https://github.com/dvalenzano)
+- **Martin Bagić** (v2): [email](martin.bagic@outlook.com), [github](https://github.com/martinbagic)
+- **Dario Valenzano** (v1, v2): [github](https://github.com/dvalenzano)
+- **Arian Šajina** (v1): [github](https://github.com/ariansajina)
+- **William Bradshaw** (v1): [github](https://github.com/willbradshaw)
