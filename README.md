@@ -37,24 +37,22 @@ python -m pip install aegis-sim
 
 ```bash
 # Unix/macOS
-. {path}/bin/activate # Activate virtual environment
-git clone git@github.com:valenzano-lab/aegis.git # Clone repo
+git clone git@github.com:valenzano-lab/aegis.git
 cd aegis
-python3 -m build # Local build
-python3 -m pip install -e . # Local editable install
+make install_dev
 ```
 </details>
 
 ## How to run
 
-1. __Create a configuration file.__
+1. __Create a configuration file__
 
-    Before running a custom AEGIS simulation, you must create a configuration file which will contain your
-    custom parameter values. The file must be in [YAML](https://en.wikipedia.org/wiki/YAML) format.
-    Default parameters are set in file [default.yml](src/aegis/parameters/default.yml).
+    Before running a custom AEGIS simulation, you must create a configuration file (in [YAML](https://en.wikipedia.org/wiki/YAML) format) which will contain your custom parameter values. 
     List of modifiable parameters, and all relevant details can be found in the [wiki](https://github.com/valenzano-lab/aegis/wiki/Input).
+    Default parameter values are set in the file [default.yml](src/aegis/parameters/default.yml).
+    
 
-    An example of a custom YML file:
+    An example of a YAML file:
     ```yml
     # custom.yml
 
@@ -64,16 +62,42 @@ python3 -m pip install -e . # Local editable install
     ```
 
 
-1. __Start the simulation.__
+1. __Start the simulation__
 
     ```sh
     $ aegis {path/to/file}.yml # In this case, `aegis custom.yml`
     ```
 
 
-1. __Inspect the output.__
+1. __Inspect the output__
 
-    Output files will be created in the `{path/to/file}` directory (in this case, in the `custom` directory). 
+    Output files will be created in the `{path/to/file}` directory (in this case, in the `custom` directory) which will have the following structure:
+    ```bash
+    {path/to/file}/
+        progress.log
+        {ecosystem-number}/
+            output-summary.json
+            snapshots/
+                demography/
+                    {stage}.feather
+                    ...
+                genotypes/
+                    {stage}.feather
+                    ...
+                phenotypes/
+                    {stage}.feather
+            visor/
+                genotypes.csv
+                phenotypes.csv
+                spectra/
+                    age_at_birth.csv
+                    age_at_end_of_sim.csv
+                    age_at_genetic.csv
+                    age_at_overshoot.csv
+                    age_at_season_shift.csv
+                    cumulative_ages.csv
+    ```
+
     Detailed description of the content and format of output files can be found in the [wiki](https://github.com/valenzano-lab/aegis/wiki/Output).
     
 

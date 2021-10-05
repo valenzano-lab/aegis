@@ -1,23 +1,41 @@
 .ONESHELL:
 
-# NOTES:
-# 	recipe_testpypi: build upload_testpypi install_testpypi test_venv
-# 	recipe_pypi: build upload_pypi install_pypi test_venv
-
-
 # ============
 # HELPER FUNCS
 # ============
 
+# Install AEGIS for development
+install_dev:
+	# Create, activate and update virtual environment
+	# Make fresh local build of AEGIS
+	# Install the developer version of the local build of AEGIS
+	# Test
+
+	rm -rf .venv ; \
+	python3 -m venv .venv ; \
+	. .venv/bin/activate ; \
+	python3 -m pip install --upgrade pip; \
+	rm -rf dist/* ; \
+	python3 -m pip install build ; \
+	python3 -m build ; \
+	python3 -m pip install -e .[dev] ; \
+	python3 -m pytest tests/ --log-cli-level=DEBUG
+
+# Uninstall local AEGIS installation
+uninstall_dev:
+	. .venv/bin/activate ; \
+	python3 -m pip uninstall aegis-sim ; \
+	deactivate ; \
+	rm -rf .venv
+
 # Remove old builds and make a new build
 build:
-	rm dist/*
+	rm -rf dist/*
 	python3 -m build
 
-# Test aegis installed in temp/venv
-test_venv:
-	. temp/venv/bin/activate
-	aegis misc/misc.yml
+# Test aegis installed in .venv
+test:
+	. .venv/bin/activate ; \
 	python3 -m pytest tests/ --log-cli-level=DEBUG
 
 
@@ -64,9 +82,3 @@ install_pypi:
 manifest:
 	python3 -m pip install check-manifest
 	check-manifest --create
-
-editable_install:
-	python3 -m pip install -e .
-
-editable_uninstall:
-	python3 -m pip uninstall aegis-sim
