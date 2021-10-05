@@ -34,6 +34,8 @@ setuptools.setup(
     extras_require={
         "dev": [
             "pytest==6.2.4",
+            "flake8",
+            "black",
         ]
     },
 )
