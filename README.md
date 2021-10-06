@@ -43,6 +43,8 @@ make install_dev
 ```
 </details>
 
+To check if installation is successful, run `aegis -h`. If it is, the output will contain `Aging of Evolving Genomes In Silico`; if not, it will say `aegis: command not found`.
+
 ## How to run
 
 1. __Create a configuration file__
