@@ -115,8 +115,8 @@ def validate_values(params):
     if not isinstance(params["MUTATION_RATIO"], (int, float)):
         raise TypeError("MUTATION_RATIO must be an integer or a float")
 
-    if not 0 <= params["MUTATION_RATIO"] <= 1:
-        raise ValueError("MUTATION_RATIO must be a number in the interval [0,1]")
+    if not 0 <= params["MUTATION_RATIO"]:
+        raise ValueError("MUTATION_RATIO must be a non-negative number")
 
     # Phenomap
     if not isinstance(params["PHENOMAP_SPECS"], list):

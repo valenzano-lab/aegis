@@ -89,4 +89,5 @@ def test_get_order(order, expected):
     result = reproducer._get_order(order=np.array(order))
     assert np.array_equal(result, np.array(expected)), f"{result} {expected}"
 
+
 # TODO _recombine
