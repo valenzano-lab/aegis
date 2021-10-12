@@ -3,7 +3,7 @@
 import pytest
 import numpy as np
 
-from aegis.classes import popgenstats
+from aegis.modules import popgenstats
 
 
 @pytest.mark.parametrize(

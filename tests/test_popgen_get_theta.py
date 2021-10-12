@@ -2,7 +2,7 @@
 
 import pytest
 
-from aegis.classes import popgenstats
+from aegis.modules import popgenstats
 
 
 @pytest.mark.parametrize(
