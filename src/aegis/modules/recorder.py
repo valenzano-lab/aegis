@@ -101,7 +101,7 @@ class Recorder:
             return
 
         with open(self.paths["BASE_DIR"] / "popgenstats.csv", "ab") as f:
-            array = self.popgenstats.analyze(population)
+            array = self.popgenstats.analyze(population.genomes, 0.1, False, None, population.phenotypes)
             np.savetxt(f, [array], delimiter=",", fmt="%1.3e")
 
     # ==============================
