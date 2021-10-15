@@ -96,12 +96,17 @@ class Recorder:
         df_dem.reset_index(drop=True, inplace=True)
         df_dem.to_feather(self.paths["snapshots_demography"] / f"{pan.stage}.feather")
 
-    def record_popgenstats(self, population):
+    def record_popgenstats(self, genomes, mutation_rate_func):
+        """Record population size in popgenstats, and record popgen statistics."""
+        self.popgenstats.record_pop_size_history(genomes)
+
         if pan.skip(pan.POPGENSTATS_RATE_):
             return
 
+        mutation_rates = mutation_rate_func("muta")
+        self.popgenstats.calc(genomes, mutation_rates)
         with open(self.paths["BASE_DIR"] / "popgenstats.csv", "ab") as f:
-            array = self.popgenstats.analyze(population)
+            array = self.popgenstats.emit()
             np.savetxt(f, [array], delimiter=",", fmt="%1.3e")
 
     # ==============================

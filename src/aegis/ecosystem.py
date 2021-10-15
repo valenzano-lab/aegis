@@ -91,10 +91,13 @@ class Ecosystem:
 
         self.recorder.record_snapshots(self.population)
         self.recorder.record_visor(self.population)
-        self.recorder.record_popgenstats(self.population)
         self.recorder.collect("cumulative_ages", self.population.ages)
+        self.recorder.record_popgenstats(
+            self.population.genomes, self._get_evaluation
+        )  # TODO defers calculation of mutation rates; hacky
 
-        if len(self.population):  # no living individuals
+        # If no living individuals
+        if len(self.population):
             self.eco_survival()
             self.gen_survival()
             self.reproduction()
