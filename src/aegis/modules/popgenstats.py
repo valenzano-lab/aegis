@@ -75,12 +75,12 @@ class PopgenStats:
     @staticmethod
     def harmonic(i):
         """Returns the i-th harmonic number"""
-        return np.sum([1 / x for x in np.arange(1, i + 1)])  # TODO vectorize
+        return (1 / np.arange(1, i + 1)).sum()
 
     @staticmethod
     def harmonic_sq(i):
         """Returns the i-th harmonic square"""
-        return np.sum([1 / (x ** 2) for x in np.arange(1, i + 1)])  # TODO vectorize
+        return (1 / np.arange(1, i + 1) ** 2).sum()
 
     @staticmethod
     def stagger_chromosome_bits(input_genomes):
