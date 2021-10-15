@@ -9,10 +9,6 @@ class PopgenStats:
     def __init__(self):
         self.pop_size_history = []
 
-    ####################
-    # HELPER FUNCTIONS #
-    ####################
-
     def record_pop_size_history(self, genomes):
         """Records population sizes at last 1000 stages"""
         if len(self.pop_size_history) >= 1000:
@@ -55,9 +51,7 @@ class PopgenStats:
         self.fayandwu_h = self.get_fayandwu_h()
 
     def emit(self):
-
         # TODO emit other variables
-
         return (
             self.n,
             self.ne,
@@ -71,6 +65,10 @@ class PopgenStats:
             self.theta_h,
             self.fayandwu_h,
         )
+
+    ####################
+    # HELPER FUNCTIONS #
+    ####################
 
     @staticmethod
     def harmonic(i):
@@ -239,14 +237,14 @@ class PopgenStats:
         where µ is the mutation rate per gene per generation and Ne is the effective population size"""
         return (self.ploidy * 2) * self.ne * self.mu
 
+    ##############################################
+    # OUTPUT: Statistics on population or sample #
+    ##############################################
+
     def get_reference_genome(self, genomes):
         """Returns the reference genome based on which allele is most common at each position.
         Equal fractions -> 0"""
         return np.round(genomes.reshape(genomes.shape[0], -1).mean(0)).astype("int32")
-
-    ##############################################
-    # OUTPUT: Statistics on population or sample #
-    ##############################################
 
     def get_segregating_sites(self, genomes):
         """Returns the number of segregating sites
