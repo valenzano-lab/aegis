@@ -19,6 +19,8 @@ class Recorder:
         III. One-time records
     """
 
+    # TODO add headers to csv's
+
     def __init__(self, ecosystem_id, MAX_LIFESPAN):
         # Define output paths and make necessary directories
         opath = pan.output_path / str(ecosystem_id)
@@ -30,6 +32,7 @@ class Recorder:
             "visor": opath / "visor",
             "visor_spectra": opath / "visor" / "spectra",
             "output_summary": opath,
+            "popgen": opath / "popgen",
         }
         for path in self.paths.values():
             path.mkdir(exist_ok=True, parents=True)
@@ -50,6 +53,8 @@ class Recorder:
 
         # PopgenStats
         self.popgenstats = PopgenStats()
+
+        # TODO add headers
 
     # ===============================
     # RECORDING METHOD I. (snapshots)
@@ -104,10 +109,20 @@ class Recorder:
             return
 
         mutation_rates = mutation_rate_func("muta")
-        self.popgenstats.calc(genomes, mutation_rates)
-        with open(self.paths["BASE_DIR"] / "popgenstats.csv", "ab") as f:
-            array = self.popgenstats.emit()
+        self.popgenstats.calc(
+            genomes, mutation_rates, 100
+        )  # TODO make sample size adjustible
+
+        # Record simple statistics
+        array = list(self.popgenstats.emit_simple().values())
+        with open(self.paths["popgen"] / "simple.csv", "ab") as f:
             np.savetxt(f, [array], delimiter=",", fmt="%1.3e")
+
+        # Record complex statistics
+        complex_statistics = self.popgenstats.emit_complex()
+        for key, array in complex_statistics.items():
+            with open(self.paths["popgen"] / f"{key}.csv", "ab") as f:
+                np.savetxt(f, [array], delimiter=",", fmt="%1.3e")
 
     # ==============================
     # RECORDING METHOD II. (flushes)

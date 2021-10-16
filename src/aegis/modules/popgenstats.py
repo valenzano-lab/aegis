@@ -15,7 +15,7 @@ class PopgenStats:
             del self.pop_size_history[0]
         self.pop_size_history.append(len(genomes))
 
-    def calc(self, input_genomes, mutation_rates, sample_size=-1):
+    def calc(self, input_genomes, mutation_rates, sample_size):
         """Calculates all popgen metrics"""
 
         # Infer ploidy from genomes
@@ -50,21 +50,38 @@ class PopgenStats:
         self.theta_h = self.get_theta_h()
         self.fayandwu_h = self.get_fayandwu_h()
 
-    def emit(self):
-        # TODO emit other variables
-        return (
-            self.n,
-            self.ne,
-            self.mean_h,
-            self.mean_h_expected,
-            self.mu,
-            self.theta,
-            self.theta_w,
-            self.theta_pi,
-            self.tajimas_d,
-            self.theta_h,
-            self.fayandwu_h,
-        )
+    def emit_simple(self):
+        attrs = [
+            "n",
+            "ne",
+            "mu",
+            "segregating_sites",
+            "segregating_sites_gsample",
+            "theta",
+            "theta_w",
+            "theta_pi",
+            "tajimas_d",
+            "theta_h",
+            "fayandwu_h",
+        ]
+
+        if self.ploidy == 2:
+            attrs += ["mean_h", "mean_h_expected"]
+
+        return {attr: getattr(self, attr) for attr in attrs}
+
+    def emit_complex(self):
+        attrs = [
+            "allele_frequencies",
+            "genotype_frequencies",
+            "sfs",
+            "reference_genome",
+        ]
+
+        if self.ploidy == 2:
+            attrs += ["mean_h_per_bit", "mean_h_per_locus", "mean_h_per_bit_expected"]
+
+        return {attr: getattr(self, attr) for attr in attrs}
 
     ####################
     # HELPER FUNCTIONS #
@@ -322,7 +339,9 @@ class PopgenStats:
         pre_sfs = self.gsample.reshape(self.nsample, -1).sum(0)
         pre_sfs[np.nonzero(reference_genome)] -= self.nsample
         pre_sfs = np.abs(pre_sfs)
-        sfs = np.bincount(pre_sfs, minlength=self.nsample + 1)[:-1]
+        sfs = np.bincount(pre_sfs, minlength=self.nsample + 1)[
+            :-1
+        ]  # TODO what if len(genomes) < sample_size
         return sfs
 
     def get_theta_h(self):
