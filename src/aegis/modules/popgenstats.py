@@ -3,6 +3,8 @@
 import statistics
 import itertools
 import numpy as np
+import pathlib
+import pickle
 
 
 class PopgenStats:
@@ -24,7 +26,7 @@ class PopgenStats:
 
         self.theta_pi = self.get_theta_pi(genomes)  # TODO add other arguments
         self.theta_w = self.get_theta_w(genomes)  # TODO add other arguments
-        self.reference_genome = self.get_reference_genome(genomes)
+        self.reference_genome = self.get_reference_genome(self.pickle_path, self.REPR_MODE)
         self.sfs = self.get_sfs(genomes)  # TODO add other arguments
         self.theta_h = self.get_theta_h(genomes)  # TODO add other arguments
 
@@ -155,13 +157,34 @@ class PopgenStats:
         theta = ploidy_factor * effective_pop_size * mutation_rate
         return theta
 
-    def get_reference_genome(self, genomes):
-        """Returns the reference genome based on which allele is most common at each position.
-        Equal fractions -> 0"""
-        # return np.round(genomes.reshape(genomes.shape[0], -1).mean(0)).astype("int32")
-        return np.round(
-            genomes.reshape(genomes.shape[0], genomes.shape[1], -1).mean(0)
-        ).astype("int32")
+    def get_reference_genome(self, pickle_path: pathlib.Path, repr_mode="asexual"):
+        """Returns the reference genome
+        Sexual case: Major and minor allele frequencies in current snapshot (folded).
+        Asexual case: Ancestral and derived allele frequencies based on lineages from most recent snapshot.
+        PATH-BASED ALTERNATIVE. POPGENSTATS_RATE must equal PICKLE_RATE or 0.
+        pickle_path is the absolute path in which pickles are stored."""
+        paths = sorted(pickle_path.iterdir(), key=lambda p: int(p.stem))[-2:]
+        populations = [pickle.load(path) for path in paths]
+
+        if repr_mode == "sexual":
+            genomes = populations[-1]["genomes"]
+            return np.round(genomes.reshape(genomes.shape[0], -1).mean(0)).astype("int32")
+
+        origins = populations[-1]["origins"]
+        counts = np.bincount(origins)
+        ancestors = counts.nonzero()[0]
+        counts = counts[counts != 0]
+        fractions = counts / len(origins)
+
+        last_genomes = populations[-2]["genomes"]
+        tmp = np.ones((1, last_genomes[ancestors].ndim), "int32").ravel()
+        tmp[0] = -1
+
+        fractions_reshaped = fractions.reshape(tmp)
+        pre_reference = last_genomes[ancestors] * fractions_reshaped
+
+        reference = np.round(pre_reference.sum(0)).squeeze()
+        return reference
 
     def get_segregating_sites(self, genomes):
         """Returns the number of segregating sites"""
@@ -224,7 +247,7 @@ class PopgenStats:
             )
             genomes_sample = genomes[indices, :, :]
 
-        segr_sites = self.segregating_sites(genomes_sample)
+        segr_sites = self.get_segregating_sites(genomes_sample)
         return segr_sites / self.harmonic(sample_size - 1)
 
     def get_theta_pi(self, genomes, sample_size=None, sample_provided=False):
