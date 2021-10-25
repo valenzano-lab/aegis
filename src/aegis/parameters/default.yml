@@ -34,7 +34,6 @@ MATURATION_AGE: 10 # 1+ | Age at which reproduction is possible
 BITS_PER_LOCUS: 8 # 1+ | Number of bits that each locus has
 HEADSUP: -1 # -1, 0, 1+ |-1 if no preevolution, 0 for maturity guarantee, +x for headsup
 
-
 # GENOME STRUCTURE
 
 # G_trait_agespecific: # true, false | Is the trait age specific?
@@ -80,7 +79,7 @@ RECOMBINATION_RATE: 0 # 0+ | Rate of recombination; 0 if no recombination
 MUTATION_RATIO: 0.1 # 0+ | Ratio of 0->1 mutations to 1->0 mutations
 
 # PHENOMAP
-PHENOMAP_SPECS: [] # | Specification of pleiotropic effects | [[geno index, pheno index, weight], ...]
+PHENOMAP_SPECS: [] # | Specification of pleiotropic effects [[trait1_name (str), locus_position (int), trait2_name (str), trait2_scope (str), effect_pattern (str)]]
 
 # ENVIRONMENT
 ENVIRONMENT_CHANGE_RATE: 0 # 0+ | Environmental map changes every ? stages; if no environmental change

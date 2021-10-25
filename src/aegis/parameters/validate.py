@@ -119,25 +119,7 @@ def validate_values(params):
         raise ValueError("MUTATION_RATIO must be a non-negative number")
 
     # Phenomap
-    if not isinstance(params["PHENOMAP_SPECS"], list):
-        raise TypeError("PHENOMAP_SPECS must be a list")
-
-    for triple in params["PHENOMAP_SPECS"]:
-        # genotype index
-        if not 0 <= triple[0] < params["MAX_LIFESPAN"]:
-            raise ValueError(
-                "Genotype index in PHENOMAP_SPECS must be a number in interval [0, MAX_LIFESPAN]"
-            )
-        # phenotype index
-        if not 0 <= triple[1] < params["MAX_LIFESPAN"]:
-            raise ValueError(
-                "Phenotype index in PHENOMAP_SPECS must be a number in interval [0, MAX_LIFESPAN]"
-            )
-        # phenomap weight
-        if not isinstance(triple[2], (int, float)):
-            raise TypeError(
-                "Phenomap weight in PHENOMAP_SPECS must be an integer or a float"
-            )
+    # TODO add validation
 
     # Environment
     if not isinstance(params["ENVIRONMENT_CHANGE_RATE"], int):
