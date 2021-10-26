@@ -14,6 +14,7 @@ LOGGING_RATE_: 1000 # 0+ | Log every ?-th stage; 0 for no logging
 SNAPSHOT_RATE_: 50000 # 0+ | Take a snapshot every ? stages; 0 for no snapshots
 VISOR_RATE_: 5000 # 0+ | Take a visor snapshot every ? stages; 0 for no visor records
 POPGENSTATS_RATE_: 5000 # 0+ | Record population genetic stats about the population every ? stages; 0 for no popgen stats
+POPGENSTATS_SAMPLE_SIZE_: 100 # 0, 3+ | Number of individuals to use when calculating population genetic metrics
 
 # MULTIPLE ECOSYSTEMS
 ECOSYSTEM_NUMBER_: 1

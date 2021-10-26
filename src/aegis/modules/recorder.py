@@ -109,9 +109,7 @@ class Recorder:
             return
 
         mutation_rates = mutation_rate_func("muta")
-        self.popgenstats.calc(
-            genomes, mutation_rates, 100
-        )  # TODO make sample size adjustible
+        self.popgenstats.calc(genomes, mutation_rates)
 
         # Record simple statistics
         array = list(self.popgenstats.emit_simple().values())

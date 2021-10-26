@@ -155,10 +155,10 @@ class PopgenStats:
             return None
 
         # Sample genomes
-        if 0 < sample_size <= genomes.shape[0]:
+        if 0 < pan.POPGENSTATS_SAMPLE_SIZE_ <= genomes.shape[0]:
             indices = np.random.choice(
                 range(genomes.shape[0]),
-                sample_size,
+                pan.POPGENSTATS_SAMPLE_SIZE_,
                 replace=False,
             )
             return genomes[indices]
