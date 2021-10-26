@@ -3,6 +3,7 @@
 import statistics
 import itertools
 import numpy as np
+from aegis.panconfiguration import pan
 
 
 class PopgenStats:
@@ -15,16 +16,21 @@ class PopgenStats:
             del self.pop_size_history[0]
         self.pop_size_history.append(len(genomes))
 
-    def calc(self, input_genomes, mutation_rates, sample_size):
-        """Calculates all popgen metrics"""
+    def calc(self, input_genomes, mutation_rates):
+        """Calculates all popgen metrics
+
+        Set sample_size value to 0 or -1 to not perform any sampling.
+        """
 
         # Infer ploidy from genomes
         self.ploidy = input_genomes.shape[1]
 
         # Data to process
-        self.genomes = self.stagger_chromosome_bits(input_genomes)
-        self.gsample = self.get_genomes_sample(sample_size)
-        self.nsample = len(self.gsample)
+        self.genomes = self.make_3D(input_genomes)
+        self.gsample = self.get_genomes_sample()
+        self.nsample = (
+            0 if self.gsample is None else len(self.gsample)
+        )  # TODO correct for ploidy?
 
         # Statistics on population
         self.n = self.get_n()
@@ -38,17 +44,34 @@ class PopgenStats:
         self.mean_h_expected = self.get_mean_h_expected()
         self.mu = self.get_mu(mutation_rates)
         self.theta = self.get_theta()
-        self.segregating_sites = self.get_segregating_sites(self.genomes)
+        self.segregating_sites = self.get_segregating_sites(self.genomes, self.ploidy)
+        self.reference_genome = self.get_reference_genome(self.genomes)
 
         # Statistics on sample
-        self.reference_genome = self.get_reference_genome(self.gsample)
-        self.segregating_sites_gsample = self.get_segregating_sites(self.gsample)
-        self.theta_w = self.get_theta_w()
-        self.theta_pi = self.get_theta_pi()
-        self.tajimas_d = self.get_tajimas_d()
-        self.sfs = self.get_sfs(self.reference_genome)
-        self.theta_h = self.get_theta_h()
-        self.fayandwu_h = self.get_fayandwu_h()
+        if self.nsample:
+            # TODO gsample is essentially haploid, check if that causes issues
+            self.reference_genome_gsample = self.get_reference_genome(self.gsample)
+            self.segregating_sites_gsample = self.get_segregating_sites(self.gsample, 1)
+            self.theta_w = self.get_theta_w()
+            self.theta_pi = self.get_theta_pi()
+            self.tajimas_d = self.get_tajimas_d()
+            self.sfs = self.get_sfs(
+                self.reference_genome_gsample
+            )  # Uses reference genome calculated from sample
+            self.theta_h = self.get_theta_h()
+            self.fayandwu_h = self.get_fayandwu_h()
+        else:
+            # TODO will cause Recorder to fail?
+            (
+                self.reference_genome_gsample,
+                self.segregating_sites_gsample,
+                self.theta_w,
+                self.theta_pi,
+                self.tajimas_d,
+                self.sfs,
+                self.theta_h,
+                self.fayandwu_h,
+            ) = [None] * 8
 
     def emit_simple(self):
         attrs = [
@@ -76,6 +99,7 @@ class PopgenStats:
             "genotype_frequencies",
             "sfs",
             "reference_genome",
+            "reference_genome_gsample",
         ]
 
         if self.ploidy == 2:
@@ -98,7 +122,7 @@ class PopgenStats:
         return (1 / np.arange(1, i + 1) ** 2).sum()
 
     @staticmethod
-    def stagger_chromosome_bits(input_genomes):
+    def make_3D(input_genomes):
         """Returns genomes array with merged chromosomes
 
         Methods of PopgenStats require the genomes to be in the form [individual, locus, bit] where, if individuals are diploid,
@@ -111,6 +135,8 @@ class PopgenStats:
         """
 
         n_individuals, ploidy, n_loci, bits_per_locus = input_genomes.shape
+
+        # TODO report when conversion cannot be executed
 
         if ploidy == 1:
             return input_genomes[:, 0]
@@ -129,7 +155,31 @@ class PopgenStats:
 
         return genomes
 
-    def get_genomes_sample(self, sample_size):
+    @staticmethod
+    def make_4D(genomes, ploidy):
+        """Returns genomes array with chromosomes split along the second dimension"""
+
+        n_individuals, n_loci, n_bits = genomes.shape
+        bits_per_locus = n_bits // ploidy
+
+        # TODO report when conversion cannot be executed
+
+        unstaggered = np.empty(
+            shape=(n_individuals, ploidy, n_loci, bits_per_locus),
+            dtype=bool,
+        )
+
+        if ploidy == 1:
+            unstaggered[:, 0] = genomes
+        if ploidy == 2:
+            # Chromosome 0 contains odd bits from input genomes
+            unstaggered[:, 0] = genomes[:, :, 0::2]
+            # Chromosome 1 contains even bits from input genomes
+            unstaggered[:, 1] = genomes[:, :, 1::2]
+
+        return unstaggered
+
+    def get_genomes_sample(self):
         """Returns a random sample of genomes"""
         if self.ploidy > 1:
             # The chromosomes get aligned
@@ -150,8 +200,10 @@ class PopgenStats:
         else:
             genomes = self.genomes
 
+        # TODO check if change in ploidy has implications for popgen stats
+
         # Check if there are enough genomes to sample
-        if len(genomes) < 3:  # Sometimes, 2 are enough
+        if len(genomes) < 2:  # NOTE tajimas_d requires minimum 2
             return None
 
         # Sample genomes
@@ -263,14 +315,14 @@ class PopgenStats:
         Equal fractions -> 0"""
         return np.round(genomes.reshape(genomes.shape[0], -1).mean(0)).astype("int32")
 
-    def get_segregating_sites(self, genomes):
+    def get_segregating_sites(self, genomes, ploidy):
         """Returns the number of segregating sites
 
         Genomes are first aligned and summed at each site across the population.
         A site is segregating if its sum is not equal to either 0 or the population size N.
         """
 
-        if self.ploidy == 1:
+        if ploidy == 1:
             pre_segr_sites = genomes.reshape(genomes.shape[0], -1).sum(0)
             segr_sites = (
                 genomes.shape[1] * genomes.shape[2]
@@ -317,6 +369,10 @@ class PopgenStats:
 
     def get_tajimas_d(self):
         """Returns Tajima's D"""
+
+        if self.nsample < 3:
+            return None
+
         pre_d = self.theta_pi - self.theta_w
         segr_sites = self.segregating_sites_gsample
 
@@ -332,7 +388,9 @@ class PopgenStats:
         e_2 = c_2 / ((a_1 ** 2) + a_2)
         d_stdev = ((e_1 * segr_sites) + (e_2 * segr_sites * (segr_sites - 1))) ** 0.5
 
-        return pre_d / d_stdev
+        return (
+            pre_d / d_stdev
+        )  # TODO RuntimeWarning: invalid value encountered in double_scalars
 
     def get_sfs(self, reference_genome):
         """Returns the site frequency spectrum (allele frequency spectrum) of a sample"""
