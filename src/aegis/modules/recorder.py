@@ -3,6 +3,7 @@ import numpy as np
 import json
 import time
 import copy
+import pickle
 
 from aegis.panconfiguration import pan
 from aegis.modules.popgenstats import PopgenStats
@@ -30,6 +31,7 @@ class Recorder:
             "visor": opath / "visor",
             "visor_spectra": opath / "visor" / "spectra",
             "output_summary": opath,
+            "pickles": opath / "pickles",
         }
         for path in self.paths.values():
             path.mkdir(exist_ok=True, parents=True)
@@ -103,6 +105,15 @@ class Recorder:
         with open(self.paths["BASE_DIR"] / "popgenstats.csv", "ab") as f:
             array = self.popgenstats.analyze(population)
             np.savetxt(f, [array], delimiter=",", fmt="%1.3e")
+
+    def record_pickle(self, population):
+        if (
+            pan.skip(pan.PICKLE_RATE_) and not pan.stage == 1
+        ):  # Also records the pickle before the first stage
+            return
+
+        with open(self.paths["pickles"] / str(pan.stage), "wb") as f:
+            pickle.dump(population, f)
 
     # ==============================
     # RECORDING METHOD II. (flushes)

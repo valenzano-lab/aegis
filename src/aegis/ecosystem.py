@@ -18,6 +18,7 @@ class Ecosystem:
     """
 
     def __init__(self, id_, population=None):
+        # TODO when loading from a pickle, load the envmap too
 
         self.id_ = id_  # Important when there are multiple populations
 
@@ -89,6 +90,7 @@ class Ecosystem:
             self.recorder.extinct = True
             return
 
+        self.recorder.record_pickle(self.population)
         self.recorder.record_snapshots(self.population)
         self.recorder.record_visor(self.population)
         self.recorder.record_popgenstats(self.population)

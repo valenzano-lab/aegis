@@ -1,17 +1,27 @@
 """This script is executed when this package is imported."""
 
 import logging
+import pickle
 
 
-def main(custom_config_path=None):
+def main(
+    arg_dict=None,  # used when programmatically calling AEGIS
+):
     from aegis.ecosystem import Ecosystem
     from aegis.panconfiguration import pan
 
     # Initialize pan
-    pan.init(custom_config_path)
+    pan.init(arg_dict)
 
     # Create ecosystems
-    ecosystems = [Ecosystem(i) for i in range(len(pan.params_list))]
+    if not pan.pickle_path:
+        ecosystems = [Ecosystem(i) for i in range(len(pan.params_list))]
+    else:
+        # TODO fix for multiple populations
+        with open(pan.pickle_path, "rb") as file_:
+            population = pickle.load(file_)
+        ecosystem = Ecosystem(0, population)
+        ecosystems = [ecosystem]
 
     # Run simulation
     while pan.run_stage():

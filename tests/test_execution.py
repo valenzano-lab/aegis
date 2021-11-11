@@ -27,4 +27,9 @@ import aegis
 )
 def test_execution(config_file):
     """Test if execution is successful with some other non-default parameter values."""
-    aegis.main(f"tests/execution/{config_file}.yml")
+    aegis.main(
+        arg_dict={
+            "custom_config_path": f"tests/execution/{config_file}.yml",
+            "pickle_path": "",
+        }
+    )

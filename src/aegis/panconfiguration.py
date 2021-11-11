@@ -41,17 +41,18 @@ class Panconfiguration:
     def __init__(self):
         pass
 
-    def init(self, custom_config_path=None):
+    def init(self, arg_dict=None):
         self.here = pathlib.Path(__file__).absolute().parent
         self.stage = 0
         self.time_start = time.time()
+
+        # TODO unnest functions
 
         def read_yml(path):
             with open(path, "r") as f:
                 return yaml.safe_load(f)
 
         def run_parser():
-
             parser = argparse.ArgumentParser(
                 description="Ageing of Evolving Genomes In Silico"
             )
@@ -60,7 +61,13 @@ class Panconfiguration:
                 type=str,
                 help="path to config file",
             )
-
+            parser.add_argument(
+                "-p",
+                "--pickle_path",
+                type=str,
+                help="path to pickle file",
+                default="",
+            )
             return parser.parse_args()
 
         def get_params(custom_config_path):
@@ -85,13 +92,22 @@ class Panconfiguration:
             return params
 
         # Get path to custom configuration file
-        if custom_config_path is None:
+        if arg_dict is None:
             parsed_args = run_parser()
             custom_config_path = pathlib.Path(parsed_args.custom_config_path).absolute()
+            self.pickle_path = (
+                pathlib.Path(parsed_args.pickle_path).absolute()
+                if parsed_args.pickle_path
+                else ""
+            )
         else:
-            custom_config_path = pathlib.Path(custom_config_path)
+            custom_config_path = pathlib.Path(arg_dict["custom_config_path"])
+            self.pickle_path = (
+                pathlib.Path(arg_dict["pickle_path"]) if arg_dict["pickle_path"] else ""
+            )
 
         logging.info("Custom config path = %s", custom_config_path)
+        logging.info("Custom config path = %s", self.pickle_path)
 
         # Get parameters
         params = get_params(custom_config_path)
@@ -101,7 +117,7 @@ class Panconfiguration:
         self.ECOSYSTEM_NUMBER_ = params["ECOSYSTEM_NUMBER_"]
         self.STAGES_PER_SIMULATION_ = params["STAGES_PER_SIMULATION_"]
         self.LOGGING_RATE_ = params["LOGGING_RATE_"]
-        # self.PICKLE_RATE_ = params["PICKLE_RATE_"]
+        self.PICKLE_RATE_ = params["PICKLE_RATE_"]
         self.SNAPSHOT_RATE_ = params["SNAPSHOT_RATE_"]
         self.VISOR_RATE_ = params["VISOR_RATE_"]
         self.POPGENSTATS_RATE_ = params["POPGENSTATS_RATE_"]
@@ -158,12 +174,11 @@ class Panconfiguration:
         self.stage += 1
 
         # Log progress
-
         if not self.skip(self.LOGGING_RATE_):
             self._log_progress()
 
         # Return True if the simulation is to be continued
-        return self.stage < self.STAGES_PER_SIMULATION_
+        return self.stage <= self.STAGES_PER_SIMULATION_
 
 
 pan = Panconfiguration()  # Initialize now, set up later

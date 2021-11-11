@@ -10,8 +10,8 @@ STAGES_PER_SIMULATION_: 100000 # 1+ | How many stages does the simulation run fo
 LOGGING_RATE_: 1000 # 0+ | Log every ?-th stage; 0 for no logging
 
 # RECORDING
-# PICKLE_RATE_: 500 # 0+ | Pickle population every ? stages; 0 for no pickles
-SNAPSHOT_RATE_: 50000 # 0+ | Take a snapshot every ? stages; 0 for no snapshots
+PICKLE_RATE_: 50000 # 0+ | Pickle population every ? stages; 0 for no pickles
+SNAPSHOT_RATE_: 25000 # 0+ | Take a snapshot every ? stages; 0 for no snapshots
 VISOR_RATE_: 5000 # 0+ | Take a visor snapshot every ? stages; 0 for no visor records
 POPGENSTATS_RATE_: 5000 # 0+ | Record population genetic stats about the population every ? stages; 0 for no popgen stats
 
