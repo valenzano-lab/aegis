@@ -27,9 +27,8 @@ class Phenomap:
         else:
             self.dummy = False
             self.map_ = np.diag([1.0] * gstruc.length)
-            for spec in self.process(PHENOMAP_SPECS, gstruc):
-                for locus1, locus2, weight in self.decode_spec(*spec):
-                    self.map_[locus1, locus2] = weight
+            for locus1, locus2, weight in self.unfold_specs(PHENOMAP_SPECS, gstruc):
+                self.map_[locus1, locus2] = weight
 
     def __call__(self, probs):
         """Translate interpreted values into phenotypic values.
@@ -67,21 +66,28 @@ class Phenomap:
         return np.linspace(first, last, n)
 
     @staticmethod
-    def decode_spec(pos1, scope1, pos2, scope2, pattern2):
-        locus1 = scope1 + pos1  # affecting loci
-        loci2 = Phenomap.decode_scope(scope2) + pos2  # affected loci
-        weights = Phenomap.decode_pattern(pattern2, len(loci2))  # magnitude of effect
-
-        for locus2, weight in zip(loci2, weights):
-            yield locus1, locus2, weight
-
-    @staticmethod
-    def process(PHENOMAP_SPECS, gstruc):
+    def unfold_specs(PHENOMAP_SPECS, gstruc):
         for trait1, scope1, trait2, scope2, pattern2 in PHENOMAP_SPECS:
-            # Change trait names with position of the first locus encoding for that trait
-            pos1 = gstruc[trait1].start
-            pos2 = gstruc[trait2].start
+
+            assert (trait1 is None and scope1 is None) or (
+                trait1 is not None and scope2 is not None
+            )
+
             # If no scope given, whole trait is affected
-            if scope2 == "":
-                scope2 = f"{gstruc[trait2].start}-{gstruc[trait2].end - 1}"
-            yield pos1, scope1, pos2, scope2, pattern2
+            if scope2 is None:
+                scope2 = f"{gstruc[trait2].start + 1}-{gstruc[trait2].end}"  # Note that PHENOMAP_SPECS scope is interpreted as a 1-indexed inclusive interval
+
+            pos2 = gstruc[trait2].start
+            loci2 = (
+                Phenomap.decode_scope(scope2) + pos2 - 1
+            )  # -1 because the PHENOMAP_SPECS is 1-indexed
+            weights = Phenomap.decode_pattern(pattern2, len(loci2))
+
+            if trait1 is None:
+                loci1 = loci2
+            else:
+                pos1 = gstruc[trait1].start
+                loci1 = [scope1 + pos1 - 1] * len(loci2)
+
+            for locus1, locus2, weight in zip(loci1, loci2, weights):
+                yield locus1, locus2, weight
