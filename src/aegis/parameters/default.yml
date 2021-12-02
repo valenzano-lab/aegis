@@ -37,7 +37,7 @@ HEADSUP: -1 # -1, 0, 1+ |-1 if no preevolution, 0 for maturity guarantee, +x for
 
 # GENOME STRUCTURE
 
-# G_trait_agespecific: # true, false | Is the trait age specific?
+# G_trait_agespecific: # true, false, int | Is the trait age specific? Use int to specify a custom number of loci
 # G_trait_interpreter: # binary, uniform, ... | Interpreter to decode genome
 # G_trait_lo: # 0-1 | The minimum phenotypic value
 # G_trait_hi: # 0-1 | The maximum phenotypic value

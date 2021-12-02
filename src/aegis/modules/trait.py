@@ -22,10 +22,10 @@ class Trait:
 
         # Determine the number of loci encoding the trait
         if self.evolvable:
-            if self.agespecific:  # one locus per age
+            if self.agespecific is True:  # one locus per age
                 self.length = params["MAX_LIFESPAN"]
             else:  # one locus for all ages
-                self.length = 1
+                self.length = self.agespecific
         else:  # no loci for a constant trait
             self.length = 0
 
@@ -45,8 +45,8 @@ class Trait:
             raise ValueError
 
         if self.evolvable:
-            if not isinstance(self.agespecific, bool):
-                raise TypeError
+            # if not isinstance(self.agespecific, bool):
+            #     raise TypeError
 
             if self.interpreter not in (
                 "uniform",
