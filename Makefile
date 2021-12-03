@@ -38,6 +38,15 @@ test:
 	. .venv/bin/activate ; \
 	python3 -m pytest tests/ --log-cli-level=DEBUG
 
+# Create and visualize performance profile
+# make profile_make yml=_
+# _ is the basic configuration
+profile:
+	. .venv/bin/activate ; \
+	python3 -m cProfile -o profiler/$(yml).prof src/aegis/__main__.py profiler/$(yml).yml
+	rm -r profiler/$(yml) ; \
+	snakeviz profiler/$(yml).prof
+
 
 # ========================================
 # TESTPYPI
