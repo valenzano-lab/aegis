@@ -1,4 +1,3 @@
-
 import numpy as np
 from aegis.modules.trait import Trait
 from aegis.modules.interpreter import Interpreter
@@ -39,10 +38,7 @@ class Gstruc:
 
         self.shape = (self.ploidy, self.length, self.bits_per_locus)
 
-        self.phenomap = Phenomap(
-            PHENOMAP_SPECS=params["PHENOMAP_SPECS"],
-            gstruc_length=self.length,
-        )
+        self.phenomap = Phenomap(params["PHENOMAP_SPECS"], self)
 
         self.interpreter = Interpreter(BITS_PER_LOCUS)
 

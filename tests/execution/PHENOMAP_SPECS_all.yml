@@ -4,4 +4,4 @@ SNAPSHOT_RATE_: 90
 VISOR_RATE_: 90
 POPGENSTATS_RATE_: 90
 
-PHENOMAP_SPECS: [["repr", 0, "surv", "3-5", "-0.5,0.1"]]
+PHENOMAP_SPECS: [["repr", 0, "surv", "", "0.2,-0.3"]]
