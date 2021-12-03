@@ -121,6 +121,7 @@ class Panconfiguration:
         self.SNAPSHOT_RATE_ = params["SNAPSHOT_RATE_"]
         self.VISOR_RATE_ = params["VISOR_RATE_"]
         self.POPGENSTATS_RATE_ = params["POPGENSTATS_RATE_"]
+        self.POPGENSTATS_SAMPLE_SIZE_ = params["POPGENSTATS_SAMPLE_SIZE_"]
 
         # Random number generator
         self.random_seed = (

@@ -20,6 +20,8 @@ class Recorder:
         III. One-time records
     """
 
+    # TODO add headers to csv's
+
     def __init__(self, ecosystem_id, MAX_LIFESPAN):
         # Define output paths and make necessary directories
         opath = pan.output_path / str(ecosystem_id)
@@ -32,6 +34,7 @@ class Recorder:
             "visor_spectra": opath / "visor" / "spectra",
             "output_summary": opath,
             "pickles": opath / "pickles",
+            "popgen": opath / "popgen",
         }
         for path in self.paths.values():
             path.mkdir(exist_ok=True, parents=True)
@@ -52,6 +55,8 @@ class Recorder:
 
         # PopgenStats
         self.popgenstats = PopgenStats()
+
+        # TODO add headers
 
     # ===============================
     # RECORDING METHOD I. (snapshots)
@@ -98,13 +103,26 @@ class Recorder:
         df_dem.reset_index(drop=True, inplace=True)
         df_dem.to_feather(self.paths["snapshots_demography"] / f"{pan.stage}.feather")
 
-    def record_popgenstats(self, population):
+    def record_popgenstats(self, genomes, mutation_rate_func):
+        """Record population size in popgenstats, and record popgen statistics."""
+        self.popgenstats.record_pop_size_history(genomes)
+
         if pan.skip(pan.POPGENSTATS_RATE_):
             return
 
-        with open(self.paths["BASE_DIR"] / "popgenstats.csv", "ab") as f:
-            array = self.popgenstats.analyze(population)
+        mutation_rates = mutation_rate_func("muta")
+        self.popgenstats.calc(genomes, mutation_rates)
+
+        # Record simple statistics
+        array = list(self.popgenstats.emit_simple().values())
+        with open(self.paths["popgen"] / "simple.csv", "ab") as f:
             np.savetxt(f, [array], delimiter=",", fmt="%1.3e")
+
+        # Record complex statistics
+        complex_statistics = self.popgenstats.emit_complex()
+        for key, array in complex_statistics.items():
+            with open(self.paths["popgen"] / f"{key}.csv", "ab") as f:
+                np.savetxt(f, [array], delimiter=",", fmt="%1.3e")
 
     def record_pickle(self, population):
         if (

@@ -34,6 +34,9 @@ def validate_values(params):
     if params["VISOR_RATE_"] < 0:
         raise ValueError("VISOR_RATE_ must be 0 or greater than 0")
 
+    if params["POPGENSTATS_SAMPLE_SIZE_"] != 0 and params["POPGENSTATS_SAMPLE_SIZE_"] < 3:
+        raise ValueError("POPGENSTATS_SAMPLE_SIZE_ must be 0 or greater than 2")
+
     # Multiple ecosystems
     if not isinstance(params["ECOSYSTEM_NUMBER_"], int):
         raise TypeError("ECOSYSTEM_NUMBER_ must be an integer")
