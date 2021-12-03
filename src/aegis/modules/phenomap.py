@@ -24,6 +24,7 @@ class Phenomap:
         # If no arguments are passed, this class becomes a dummy that does not do anything
         if PHENOMAP_SPECS == []:
             self.dummy = True
+            self.map_ = None
         else:
             self.dummy = False
             self.map_ = np.diag([1.0] * gstruc_length)

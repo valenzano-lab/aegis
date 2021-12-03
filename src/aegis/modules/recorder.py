@@ -35,6 +35,7 @@ class Recorder:
             "output_summary": opath,
             "pickles": opath / "pickles",
             "popgen": opath / "popgen",
+            "phenomap": opath,
         }
         for path in self.paths.values():
             path.mkdir(exist_ok=True, parents=True)
@@ -156,6 +157,10 @@ class Recorder:
     # =================================
     # RECORDING METHOD III. (record once)
     # =================================
+
+    def record_phenomap(self, map_):
+        with open(self.paths["phenomap"] / "phenomap.csv", "w") as f:
+            np.savetxt(f, map_, delimiter=",", fmt="%f")
 
     def record_output_summary(self):
         output_summary = {

@@ -27,18 +27,21 @@ class Ecosystem:
         # Initialize ecosystem variables
         self.max_uid = 0  # ID of the most recently born individual
 
-        # Initialize recorder
-        self.recorder = Recorder(
-            ecosystem_id=self.id_,
-            MAX_LIFESPAN=self._get_param("MAX_LIFESPAN"),
-        )
-
         # Initialize genome structure
         self.gstruc = Gstruc(
             pan.params_list[self.id_],
             BITS_PER_LOCUS=self._get_param("BITS_PER_LOCUS"),
             REPRODUCTION_MODE=self._get_param("REPRODUCTION_MODE"),
         )  # TODO You should not pass all parameters
+
+        # Initialize recorder
+        self.recorder = Recorder(
+            ecosystem_id=self.id_,
+            MAX_LIFESPAN=self._get_param("MAX_LIFESPAN"),
+        )
+
+        if self.gstruc.phenomap.map_ is not None:
+            self.recorder.record_phenomap(self.gstruc.phenomap.map_)
 
         # Initialize reproducer
         self.reproducer = Reproducer(
