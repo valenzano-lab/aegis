@@ -65,7 +65,7 @@ class Recorder:
 
     def record_visor(self, population):
         """Record data that is needed by visor."""
-        if pan.skip(pan.VISOR_RATE_):
+        if pan.skip(pan.VISOR_RATE_) or len(population) == 0:
             return
 
         # genotypes.csv | Record allele frequency
@@ -82,7 +82,7 @@ class Recorder:
 
     def record_snapshots(self, population):
         """Record demographic, genetic and phenotypic data from the current population."""
-        if pan.skip(pan.SNAPSHOT_RATE_):
+        if pan.skip(pan.SNAPSHOT_RATE_) or len(population) == 0:
             return
 
         # genotypes
@@ -108,7 +108,7 @@ class Recorder:
         """Record population size in popgenstats, and record popgen statistics."""
         self.popgenstats.record_pop_size_history(genomes)
 
-        if pan.skip(pan.POPGENSTATS_RATE_):
+        if pan.skip(pan.POPGENSTATS_RATE_) or len(genomes) == 0:
             return
 
         mutation_rates = mutation_rate_func("muta")
@@ -116,6 +116,9 @@ class Recorder:
 
         # Record simple statistics
         array = list(self.popgenstats.emit_simple().values())
+        if None in array:
+            return
+
         with open(self.paths["popgen"] / "simple.csv", "ab") as f:
             np.savetxt(f, [array], delimiter=",", fmt="%1.3e")
 
