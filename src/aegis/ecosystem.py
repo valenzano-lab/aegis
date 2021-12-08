@@ -162,7 +162,9 @@ class Ecosystem:
         # Check if reproducing
         probs_repr = self._get_evaluation("repr", part=mask_mature)
         mask_repr = pan.rng.random(len(probs_repr)) < probs_repr
-        if sum(mask_repr) < 2:  # Forgo if not at least two available parents
+
+        # Forgo if not at least two available parents
+        if np.count_nonzero(mask_repr) < 2:
             return
 
         # Count ages at reproduction
