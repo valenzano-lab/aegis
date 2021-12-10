@@ -42,12 +42,15 @@ class Recorder:
 
         # Initialize collection
         self._collection = {
+            # collected in ecosystem.reproduction
             "age_at_birth": [0] * MAX_LIFESPAN,
+            # collected in ecosystem._kill
             "age_at_overshoot": [0] * MAX_LIFESPAN,
             "age_at_genetic": [0] * MAX_LIFESPAN,
             "age_at_season_shift": [0] * MAX_LIFESPAN,
-            "cumulative_ages": [0] * MAX_LIFESPAN,
             "age_at_end_of_sim": [0] * MAX_LIFESPAN,
+            # collected in ecosystem.run_stage
+            "cumulative_ages": [0] * MAX_LIFESPAN,
         }
         self.collection = copy.deepcopy(self._collection)
 

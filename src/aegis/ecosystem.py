@@ -93,14 +93,6 @@ class Ecosystem:
             self.recorder.extinct = True
             return
 
-        self.recorder.record_pickle(self.population)
-        self.recorder.record_snapshots(self.population)
-        self.recorder.record_visor(self.population)
-        self.recorder.collect("cumulative_ages", self.population.ages)
-        self.recorder.record_popgenstats(
-            self.population.genomes, self._get_evaluation
-        )  # TODO defers calculation of mutation rates; hacky
-
         # If no living individuals
         if len(self.population):
             self.eco_survival()
@@ -112,6 +104,17 @@ class Ecosystem:
 
         # Evolve environment if applicable
         self.gstruc.environment.evolve()
+
+        # Population census
+        self.recorder.collect("cumulative_ages", self.population.ages)
+
+        # Record data
+        self.recorder.record_pickle(self.population)
+        self.recorder.record_snapshots(self.population)
+        self.recorder.record_visor(self.population)
+        self.recorder.record_popgenstats(
+            self.population.genomes, self._get_evaluation
+        )  # TODO defers calculation of mutation rates; hacky
 
     ###############
     # STAGE LOGIC #

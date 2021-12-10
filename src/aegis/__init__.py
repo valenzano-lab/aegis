@@ -24,9 +24,11 @@ def main(
         ecosystems = [ecosystem]
 
     # Run simulation
-    while pan.run_stage():
+    while pan.stage <= pan.STAGES_PER_SIMULATION_:
+        pan._log_progress()
         for ecosystem in ecosystems:
             ecosystem.run_stage()
+        pan.stage += 1
 
     # Record output summary
     for ecosystem in ecosystems:

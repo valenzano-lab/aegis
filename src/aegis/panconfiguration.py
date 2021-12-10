@@ -43,7 +43,7 @@ class Panconfiguration:
 
     def init(self, arg_dict=None):
         self.here = pathlib.Path(__file__).absolute().parent
-        self.stage = 0
+        self.stage = 1
         self.time_start = time.time()
 
         # TODO unnest functions
@@ -145,6 +145,10 @@ class Panconfiguration:
 
     def _log_progress(self):
         """Record some information about the time and speed of simulation."""
+
+        if self.skip(self.LOGGING_RATE_):
+            return
+
         logging.info("%8s / %s", self.stage, self.STAGES_PER_SIMULATION_)
 
         # Get time estimations
@@ -163,23 +167,6 @@ class Panconfiguration:
         content = (self.stage, eta, time_per_1M, runtime, stages_per_min)
         with open(self.progress_path, "ab") as f:
             np.savetxt(f, [content], fmt="%-10s", delimiter="| ")
-
-    def run_stage(self):
-        """
-        1) Increment stage
-        2) Log progress
-        3) Return whether the simulation should continue
-        """
-
-        # Increment stage
-        self.stage += 1
-
-        # Log progress
-        if not self.skip(self.LOGGING_RATE_):
-            self._log_progress()
-
-        # Return True if the simulation is to be continued
-        return self.stage <= self.STAGES_PER_SIMULATION_
 
 
 pan = Panconfiguration()  # Initialize now, set up later
