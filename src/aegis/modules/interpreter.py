@@ -17,12 +17,14 @@ class Interpreter:
 
         # Parameters for the binary interpreter
         self.binary_weights = 2 ** np.arange(BITS_PER_LOCUS)[::-1]
-        self.binary_max = self.binary_weights.sum()
+        self.binary_weights = self.binary_weights / self.binary_weights.sum()
 
         # Parameters for the binary switch interpreter
-        self.binary_switch_weights = self.binary_weights.copy()
+        self.binary_switch_weights = 2 ** np.arange(BITS_PER_LOCUS)[::-1]
         self.binary_switch_weights[-1] = 0  # Switch bit does not add to locus value
-        self.binary_switch_max = self.binary_switch_weights.sum()
+        self.binary_switch_weights = (
+            self.binary_switch_weights / self.binary_switch_weights.sum()
+        )
 
     def __call__(self, loci, interpreter_kind):
         """Exposed method"""
@@ -53,7 +55,8 @@ class Interpreter:
         High resolution (can produce 2^bits_per_locus different numbers).
         Position-dependent.
         """
-        return loci.dot(self.binary_weights) / self.binary_max
+
+        return loci.dot(self.binary_weights)
 
     def _switch(self, loci):
         """Return 0 if all bits are 0; 1 if all bits are 1; 0 or 1 randomly otherwise.
@@ -75,8 +78,8 @@ class Interpreter:
         """
         where_on = loci[:, :, -1] == 1  # Loci which are turned on
         values = np.zeros(loci.shape[:-1], float)  # Initialize output array with zeros
-        values[where_on] = (
-            loci[where_on].dot(self.binary_switch_weights) / self.binary_switch_max
+        values[where_on] = loci[where_on].dot(
+            self.binary_switch_weights
         )  # If the locus is turned on, make the value in the output array be the binary value
         return values
 
