@@ -1,4 +1,3 @@
-
 import numpy as np
 
 from aegis.panconfiguration import pan
@@ -28,7 +27,10 @@ class Interpreter:
     def __call__(self, loci, interpreter_kind):
         """Exposed method"""
         interpreter = getattr(self, f"_{interpreter_kind}")
-        loci = self._diploid_to_haploid(loci)
+        if loci.shape[1] == 1:  # Do not calculate mean if genomes are haploid
+            loci = loci[:, 0]
+        else:
+            loci = self._diploid_to_haploid(loci)
         interpretome = interpreter(loci)
         return interpretome
 
