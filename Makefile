@@ -39,7 +39,7 @@ test:
 	python3 -m pytest tests/ --log-cli-level=DEBUG
 
 # Create and visualize performance profile
-# make profile_make yml=_
+# make profile yml=_
 # _ is the basic configuration
 profile:
 	. .venv/bin/activate ; \
