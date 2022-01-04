@@ -135,13 +135,16 @@ class Reproducer:
         # Broadcast to fit [individual, chromatid, locus, bit] shape
         mutation_probabilities = muta_prob[:, None, None, None]
 
-        mutate_0to1 = (genomes == 0) & (
-            random_probabilities < (mutation_probabilities * self.rate_0to1)
-        )
-        mutate_1to0 = (genomes == 1) & (
-            random_probabilities < (mutation_probabilities * self.rate_1to0)
-        )
+        mutate_0to1 = (~genomes) & (
+            random_probabilities
+            < (mutation_probabilities * self.rate_0to1).astype("float32")
+        )  # genome == 0 &
+        mutate_1to0 = genomes & (
+            random_probabilities
+            < (mutation_probabilities * self.rate_1to0).astype("float32")
+        )  # genomes == 1 &
 
-        mutate_either = mutate_0to1 + mutate_1to0
+        genomes[mutate_0to1] = 1
+        genomes[mutate_1to0] = 0
 
-        return np.logical_xor(genomes, mutate_either)
+        return genomes
