@@ -56,7 +56,7 @@ class Interpreter:
         Position-dependent.
         """
 
-        return loci.dot(self.binary_weights)
+        return np.matmul(loci, self.binary_weights)
 
     def _switch(self, loci):
         """Return 0 if all bits are 0; 1 if all bits are 1; 0 or 1 randomly otherwise.
