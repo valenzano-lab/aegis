@@ -40,6 +40,8 @@ class Recorder:
         for path in self.paths.values():
             path.mkdir(exist_ok=True, parents=True)
 
+        self.MAX_LIFESPAN = MAX_LIFESPAN
+
         # Initialize collection
         self._collection = {
             # collected in ecosystem.reproduction
@@ -146,8 +148,7 @@ class Recorder:
 
     def collect(self, key, ages):
         """Add data into memory which will be recorded later."""
-        for age in ages:
-            self.collection[key][age] += 1
+        self.collection[key] += np.bincount(ages, minlength=self.MAX_LIFESPAN)
 
     def flush(self):
         """Record data that has been collected over time."""
