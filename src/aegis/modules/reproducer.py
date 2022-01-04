@@ -59,8 +59,8 @@ class Reproducer:
         rr = (
             self.RECOMBINATION_RATE / 2
         )  # / 2 because you are generating two random vectors (fwd and bkd)
-        reco_fwd = (pan.rng.random(chromatid1.shape) < rr) * -2 + 1
-        reco_bkd = (pan.rng.random(chromatid2.shape) < rr) * -2 + 1
+        reco_fwd = (pan.rng.random(chromatid1.shape, dtype=np.float32) < rr) * -2 + 1
+        reco_bkd = (pan.rng.random(chromatid2.shape, dtype=np.float32) < rr) * -2 + 1
 
         # Propagate synapse
         reco_fwd_cum = np.cumprod(reco_fwd, axis=1)
@@ -130,7 +130,7 @@ class Reproducer:
         """Induce germline mutations."""
 
         if random_probabilities is None:
-            random_probabilities = pan.rng.random(genomes.shape)
+            random_probabilities = pan.rng.random(genomes.shape, dtype=np.float32)
 
         # Broadcast to fit [individual, chromatid, locus, bit] shape
         mutation_probabilities = muta_prob[:, None, None, None]

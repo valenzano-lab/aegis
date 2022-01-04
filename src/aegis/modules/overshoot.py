@@ -1,4 +1,3 @@
-
 import numpy as np
 
 from aegis.panconfiguration import pan
@@ -6,7 +5,7 @@ from aegis.panconfiguration import pan
 
 class Overshoot:
     """Overshoot resolver
-    
+
     Decides which individuals to eliminate when there is overcrowding.
     """
 
@@ -40,7 +39,7 @@ class Overshoot:
         The probability of dying resets to the base value once the population dips under the maximum allowed size.
         """
         surv_probability = 0.95 ** self.consecutive_overshoot_n
-        random_probabilities = pan.rng.random(n)
+        random_probabilities = pan.rng.random(n, dtype=np.float32)
         mask = random_probabilities > surv_probability
         return mask
 

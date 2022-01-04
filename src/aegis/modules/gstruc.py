@@ -61,7 +61,7 @@ class Gstruc:
         """
 
         # Initial genomes with a trait.initial fraction of 1's
-        genomes = pan.rng.random(size=(n, *self.shape))
+        genomes = pan.rng.random(size=(n, *self.shape), dtype=np.float32)
 
         for trait in self.evolvable:
             genomes[:, :, trait.slice] = genomes[:, :, trait.slice] <= trait.initial

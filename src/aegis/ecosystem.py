@@ -134,7 +134,7 @@ class Ecosystem:
     def gen_survival(self):
         """Impose genomic death, i.e. death that arises with probability encoded in the genome."""
         probs_surv = self._get_evaluation("surv")
-        mask_surv = pan.rng.random(len(probs_surv)) < probs_surv
+        mask_surv = pan.rng.random(len(probs_surv), dtype=np.float32) < probs_surv
         self._kill(mask_kill=~mask_surv, causeofdeath="genetic")
 
     def season_step(self):
@@ -164,7 +164,7 @@ class Ecosystem:
 
         # Check if reproducing
         probs_repr = self._get_evaluation("repr", part=mask_mature)
-        mask_repr = pan.rng.random(len(probs_repr)) < probs_repr
+        mask_repr = pan.rng.random(len(probs_repr), dtype=np.float32) < probs_repr
 
         # Forgo if not at least two available parents
         if np.count_nonzero(mask_repr) < 2:
