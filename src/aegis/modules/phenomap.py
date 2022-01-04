@@ -13,7 +13,7 @@ class Phenomap:
         multiple traits can be understood as pleiotropy.
     """
 
-    def __init__(self, PHENOMAP_SPECS, gstruc):
+    def __init__(self, PHENOMAP_SPECS, gstruc, PHENOMAP_METHOD):
         """Initialize class.
 
         Arguments:
@@ -21,17 +21,24 @@ class Phenomap:
             gstruc_length: The length of genome, i.e. number of loci
         """
 
-        # If no arguments are passed, this class becomes a dummy that does not do anything
         if PHENOMAP_SPECS == []:
-            self.dummy = True
             self.map_ = None
-        else:
-            self.dummy = False
-            self.map_ = np.diag([1.0] * gstruc.length)
-            for locus1, locus2, weight in self.unfold_specs(PHENOMAP_SPECS, gstruc):
-                self.map_[locus1, locus2] = weight
+            self.calc = self._by_dummy
+            return
 
-    def __call__(self, probs):
+        self.trios = list(self.unfold_specs(PHENOMAP_SPECS, gstruc))
+
+        self.map_ = np.diag([1.0] * gstruc.length)
+        for locus1, locus2, weight in self.trios:
+            self.map_[locus1, locus2] = weight
+
+        if PHENOMAP_METHOD == "by_dot":
+            self.calc = self._by_dot
+
+        elif PHENOMAP_METHOD == "by_loop":
+            self.calc = self._by_loop
+
+    def calc(self, probs):
         """Translate interpreted values into phenotypic values.
 
         Arguments:
@@ -40,7 +47,50 @@ class Phenomap:
         Returns:
             A numpy array of probabilities of events encoded by traits (probabilities to survive, to reproduce, to mutate, ...)
         """
-        return probs if self.dummy else np.clip(probs.dot(self.map_), 0, 1)
+        # Replaced upon initialization
+        pass
+
+    def _by_dummy(self, probs):
+        """A dummy method for calc function"""
+        return probs
+
+    def _by_dot(self, probs):
+        """A vectorized method for calc function
+
+        Use when map_ is dense.
+        """
+        return self.clip(probs.dot(self.map_))
+
+    def _by_loop(self, probs):
+        """A naive method for calc function
+
+        Use when map_ is sparse.
+        Note that it modifies probs in place.
+        """
+        diffs = []
+
+        # Collect pleiotropic effects
+        for locus1, locus2, weight in self.trios:
+            if locus1 != locus2:
+                diffs.append([locus2, probs[:, locus1] * weight])
+
+        # Change baseline effects
+        for locus1, locus2, weight in self.trios:
+            if locus1 == locus2:
+                probs[:, locus1] = weight
+
+        # Apply pleiotropic effects
+        for locus2, diff in diffs:
+            probs[:, locus2] += diff
+
+        return self.clip(probs)
+
+    @staticmethod
+    def clip(array):
+        """Faster version of np.clip(?, 0, 1)"""
+        array[array > 1] = 1
+        array[array < 0] = 0
+        return array
 
     @staticmethod
     def decode_scope(scope):

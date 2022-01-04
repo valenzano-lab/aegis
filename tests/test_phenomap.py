@@ -5,11 +5,6 @@ import numpy as np
 from aegis.modules.phenomap import Phenomap
 
 
-def test_dummy():
-    phenomap = Phenomap([], None)
-    assert phenomap.dummy
-
-
 @pytest.mark.parametrize(
     "scope,expected",
     [

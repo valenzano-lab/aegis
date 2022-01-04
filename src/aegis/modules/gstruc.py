@@ -38,7 +38,9 @@ class Gstruc:
 
         self.shape = (self.ploidy, self.length, self.bits_per_locus)
 
-        self.phenomap = Phenomap(params["PHENOMAP_SPECS"], self)
+        self.phenomap = Phenomap(
+            params["PHENOMAP_SPECS"], self, params["PHENOMAP_METHOD"]
+        )
 
         self.interpreter = Interpreter(BITS_PER_LOCUS)
 
@@ -88,7 +90,7 @@ class Gstruc:
             interpretome[:, trait.slice] += probs  # add back
 
         # Apply phenomap
-        phenotypes = self.phenomap(interpretome)
+        phenotypes = self.phenomap.calc(interpretome)
 
         # Apply lo and hi bound
         for trait in self.evolvable:
