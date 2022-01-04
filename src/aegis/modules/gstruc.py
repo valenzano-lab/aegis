@@ -66,7 +66,7 @@ class Gstruc:
         for trait in self.evolvable:
             genomes[:, :, trait.slice] = genomes[:, :, trait.slice] <= trait.initial
 
-        genomes = genomes.astype(bool)
+        genomes = genomes.astype(np.bool8)
 
         # Guarantee survival and reproduction values up to a certain age
         if headsup is not None:
@@ -83,7 +83,9 @@ class Gstruc:
         envgenomes = self.environment(genomes)
 
         # Apply the interpreter functions
-        interpretome = np.zeros(shape=(envgenomes.shape[0], envgenomes.shape[2]))
+        interpretome = np.zeros(
+            shape=(envgenomes.shape[0], envgenomes.shape[2]), dtype=np.float32
+        )
         for trait in self.evolvable:
             loci = envgenomes[:, :, trait.slice]  # fetch
             probs = self.interpreter(loci, trait.interpreter)  # interpret

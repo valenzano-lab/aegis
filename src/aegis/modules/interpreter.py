@@ -77,7 +77,9 @@ class Interpreter:
         Position-dependent.
         """
         where_on = loci[:, :, -1] == 1  # Loci which are turned on
-        values = np.zeros(loci.shape[:-1], float)  # Initialize output array with zeros
+        values = np.zeros(
+            loci.shape[:-1], dtype=np.float32
+        )  # Initialize output array with zeros
         values[where_on] = loci[where_on].dot(
             self.binary_switch_weights
         )  # If the locus is turned on, make the value in the output array be the binary value

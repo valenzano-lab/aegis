@@ -74,9 +74,9 @@ class Ecosystem:
             )
 
             genomes = self.gstruc.initialize_genomes(num, headsup)
-            ages = np.zeros(num, int)
-            births = np.zeros(num, int)
-            birthdays = np.zeros(num, int)
+            ages = np.zeros(num, dtype=np.int32)
+            births = np.zeros(num, dtype=np.int32)
+            birthdays = np.zeros(num, dtype=np.int32)
             phenotypes = self.gstruc.get_phenotype(genomes)
 
             self.population = Population(genomes, ages, births, birthdays, phenotypes)
@@ -143,7 +143,7 @@ class Ecosystem:
         self.season.countdown -= 1
         if self.season.countdown == 0:
             # Kill all living
-            mask_kill = np.ones(len(self.population), bool)
+            mask_kill = np.ones(len(self.population), dtype=np.bool8)
             self._kill(mask_kill, "season_shift")
 
             # Hatch eggs and restart season
@@ -186,9 +186,9 @@ class Ecosystem:
         n = len(genomes)
         eggs = Population(
             genomes=genomes,
-            ages=np.zeros(n, int),
-            births=np.zeros(n, int),
-            birthdays=np.zeros(n, int) + pan.stage,
+            ages=np.zeros(n, dtype=np.int32),
+            births=np.zeros(n, dtype=np.int32),
+            birthdays=np.zeros(n, dtype=np.int32) + pan.stage,
             phenotypes=self.gstruc.get_phenotype(genomes),
         )
 
@@ -227,7 +227,7 @@ class Ecosystem:
             probs = self.population.phenotypes[which_individuals, which_loci]
 
         # expand values back into an array with shape of whole population
-        final_probs = np.zeros(len(self.population))
+        final_probs = np.zeros(len(self.population), dtype=np.float32)
         final_probs[which_individuals] += probs
 
         return final_probs

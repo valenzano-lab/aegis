@@ -1,11 +1,10 @@
-
 import numpy as np
 
 
 class Population:
     """Population data
-    
-    Contains demographic, genetic and phenotypic data of living individuals. 
+
+    Contains demographic, genetic and phenotypic data of living individuals.
     """
 
     attrs = (

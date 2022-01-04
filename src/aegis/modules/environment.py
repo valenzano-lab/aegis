@@ -15,7 +15,7 @@ class Environment:
             self.dummy = True
         else:
             self.dummy = False
-            self.map_ = np.zeros(gstruc_shape, bool)
+            self.map_ = np.zeros(gstruc_shape, dtype=np.bool8)
             self.ENVIRONMENT_CHANGE_RATE = ENVIRONMENT_CHANGE_RATE
 
     def __call__(self, genomes):
