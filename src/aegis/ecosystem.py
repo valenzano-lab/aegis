@@ -60,9 +60,6 @@ class Ecosystem:
             CLIFF_SURVIVORSHIP=self._get_param("CLIFF_SURVIVORSHIP"),
         )
 
-        # Initialize eggs
-        self.eggs = None
-
         # Initialize population
         if population is not None:
             self.population = population
@@ -89,18 +86,20 @@ class Ecosystem:
         """Perform one stage of simulation."""
 
         # If extinct (no living individuals nor eggs left), do nothing
-        if len(self) == 0:
+        if self.population.n_total == 0:
             self.recorder.extinct = True
             return
 
         # If no living individuals
-        if len(self.population):
+        if self.population.n_alive:
             self.eco_survival()
             self.gen_survival()
             self.reproduction()
             self.age()
 
         self.season_step()
+
+        self.population.reshuffle()
 
         # Evolve environment if applicable
         self.gstruc.environment.evolve()
@@ -120,50 +119,32 @@ class Ecosystem:
     # STAGE LOGIC #
     ###############
 
-    def age(self):
-        """Increase age of all by one and kill those that surpass max lifespan."""
-        self.population.ages += 1
-        mask_kill = self.population.ages >= self._get_param("MAX_LIFESPAN")
-        self._kill(mask_kill=mask_kill, causeofdeath="max_lifespan")
-
     def eco_survival(self):
         """Impose ecological death, i.e. death that arises due to resource scarcity."""
-        mask_kill = self.overshoot(n=len(self.population))
-        self._kill(mask_kill=mask_kill, causeofdeath="overshoot")
+        # NOTE At this point population.alive_ only contains True
+        mask_kill = self.overshoot(n=self.population.n_alive)
+        self.population.mask(~mask_kill)
+        self.recorder.collect("age_at_overshoot", self.population.ages[mask_kill])
 
     def gen_survival(self):
         """Impose genomic death, i.e. death that arises with probability encoded in the genome."""
-        probs_surv = self._get_evaluation("surv")
+        probs_surv = self._get_evaluation("surv", mask=self.population.alive_)
         mask_surv = pan.rng.random(len(probs_surv), dtype=np.float32) < probs_surv
-        self._kill(mask_kill=~mask_surv, causeofdeath="genetic")
-
-    def season_step(self):
-        """Let one time unit pass in the season.
-        Kill the population if the season is over, and hatch the saved eggs."""
-        self.season.countdown -= 1
-        if self.season.countdown == 0:
-            # Kill all living
-            mask_kill = np.ones(len(self.population), dtype=np.bool8)
-            self._kill(mask_kill, "season_shift")
-
-            # Hatch eggs and restart season
-            self._hatch_eggs()
-            self.season.start_new()
-
-        elif self.season.countdown == float("inf"):
-            # Add newborns to population
-            self._hatch_eggs()
+        self.population.mask(mask_surv)
+        self.recorder.collect("age_at_genetic", self.population.ages[~mask_surv])
 
     def reproduction(self):
         """Generate offspring of reproducing individuals."""
 
-        # Check if mature
-        mask_mature = self.population.ages >= self._get_param("MATURATION_AGE")
-        if not any(mask_mature):
+        # Check for alive mature individuals
+        mask = self.population.alive_ * (
+            self.population.ages >= self._get_param("MATURATION_AGE")
+        )
+        if not any(mask):
             return
 
         # Check if reproducing
-        probs_repr = self._get_evaluation("repr", part=mask_mature)
+        probs_repr = self._get_evaluation("repr", mask=mask)
         mask_repr = pan.rng.random(len(probs_repr), dtype=np.float32) < probs_repr
 
         # Forgo if not at least two available parents
@@ -171,15 +152,14 @@ class Ecosystem:
             return
 
         # Count ages at reproduction
-        ages_repr = self.population.ages[mask_repr]
-        self.recorder.collect("age_at_birth", ages_repr)
+        self.recorder.collect("age_at_birth", self.population.ages[mask_repr])
 
         # Increase births statistics
         self.population.births += mask_repr
 
         # Generate offspring genomes
         parents = self.population.genomes[mask_repr]
-        muta_prob = self._get_evaluation("muta", part=mask_repr)[mask_repr]
+        muta_prob = self._get_evaluation("muta", mask=mask_repr)[mask_repr]
         genomes = self.reproducer(parents, muta_prob)
 
         # Get eggs
@@ -192,26 +172,49 @@ class Ecosystem:
             phenotypes=self.gstruc.get_phenotype(genomes),
         )
 
-        if self.eggs is None:
-            self.eggs = eggs
-        else:
-            self.eggs += eggs
+        self.population.add_eggs(eggs)
+
+    def age(self):
+        """Increase age of all by one and kill those that surpass max lifespan."""
+        self.population.ages += 1
+        mask_kill = self.population.ages >= self._get_param("MAX_LIFESPAN")
+        self.population.mask(~mask_kill)
+        # NOTE Not recording or collecting ages at max_lifespan
+
+    def season_step(self):
+        """Let one time unit pass in the season.
+        Kill the population if the season is over, and hatch the saved eggs."""
+        self.season.countdown -= 1
+        if self.season.countdown == 0:
+            # Kill all living
+            self.recorder.collect(
+                "season_shift",
+                self.population.ages[self.population.alive_],
+            )
+            self.population.mask(~self.population.alive_)
+
+            # Hatch eggs and restart season
+            self.population.hatch_ = True
+            self.season.start_new()
+
+        elif self.season.countdown == float("inf"):
+            # Add newborns to population
+            self.population.hatch_ = True
 
     ################
     # HELPER FUNCS #
     ################
 
-    def _hatch_eggs(self):
-        """Add offspring from eggs into the living population."""
-        if self.eggs is not None:
-            self.population += self.eggs
-            self.eggs = None
+    def _get_evaluation(self, attr, mask=None):
+        """Return an array of phenotypic values for a trait.
+        Use argument mask if values for some individuals are not necessary. Those will not be calculated but set to 0.
+        """
 
-    def _get_evaluation(self, attr, part=None):
-        """Get phenotypic values of a certain trait for a certain individuals."""
-        which_individuals = np.arange(len(self.population))
-        if part is not None:
-            which_individuals = which_individuals[part]
+        # TODO rethinking masking and indexing
+
+        which_individuals = np.arange(self.population.n_self)
+        if mask is not None:
+            which_individuals = which_individuals[mask]
 
         # first scenario
         trait = self.gstruc[attr]
@@ -227,35 +230,10 @@ class Ecosystem:
             probs = self.population.phenotypes[which_individuals, which_loci]
 
         # expand values back into an array with shape of whole population
-        final_probs = np.zeros(len(self.population), dtype=np.float32)
+        final_probs = np.zeros(self.population.n_self, dtype=np.float32)
         final_probs[which_individuals] += probs
 
         return final_probs
-
-    def _kill(self, mask_kill, causeofdeath):
-        """Kill individuals and record their data.
-        Killing can occur due to age, genomic death, ecological death, and season shift.
-        """
-
-        # Skip if no one to kill
-        if not any(mask_kill):
-            return
-
-        # Count ages at death
-        if causeofdeath != "max_lifespan":
-            ages_death = self.population.ages[mask_kill]
-            self.recorder.collect(f"age_at_{causeofdeath}", ages_death)
-
-        # Retain survivors
-        self.population *= ~mask_kill
-
-    def __len__(self):
-        """Return the number of living individuals and saved eggs."""
-        return (
-            len(self.population) + len(self.eggs)
-            if self.eggs is not None
-            else len(self.population)
-        )
 
     def _get_param(self, param):
         """Get parameter value for this specific ecosystem."""

@@ -70,12 +70,12 @@ class Recorder:
 
     def record_visor(self, population):
         """Record data that is needed by visor."""
-        if pan.skip(pan.VISOR_RATE_) or len(population) == 0:
+        if pan.skip(pan.VISOR_RATE_) or population.n_self == 0:
             return
 
         # genotypes.csv | Record allele frequency
         with open(self.paths["visor"] / "genotypes.csv", "ab") as f:
-            array = population.genomes.reshape(len(population), -1).mean(0)
+            array = population.genomes.reshape(population.n_self, -1).mean(0)
             np.savetxt(f, [array], delimiter=",", fmt="%1.3e")
 
         # phenotypes.csv | Record median phenotype
@@ -87,11 +87,13 @@ class Recorder:
 
     def record_snapshots(self, population):
         """Record demographic, genetic and phenotypic data from the current population."""
-        if pan.skip(pan.SNAPSHOT_RATE_) or len(population) == 0:
+        if pan.skip(pan.SNAPSHOT_RATE_) or population.n_self == 0:
             return
 
         # genotypes
-        df_gen = pd.DataFrame(np.array(population.genomes.reshape(len(population), -1)))
+        df_gen = pd.DataFrame(
+            np.array(population.genomes.reshape(population.n_self, -1))
+        )
         df_gen.reset_index(drop=True, inplace=True)
         df_gen.columns = [str(c) for c in df_gen.columns]
         df_gen.to_feather(self.paths["snapshots_genotypes"] / f"{pan.stage}.feather")
@@ -148,7 +150,8 @@ class Recorder:
 
     def collect(self, key, ages):
         """Add data into memory which will be recorded later."""
-        self.collection[key] += np.bincount(ages, minlength=self.MAX_LIFESPAN)
+        if ages.size:
+            self.collection[key] += np.bincount(ages, minlength=self.MAX_LIFESPAN)
 
     def flush(self):
         """Record data that has been collected over time."""
