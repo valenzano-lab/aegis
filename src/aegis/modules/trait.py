@@ -55,8 +55,9 @@ class Trait:
                 "binary_exp",
                 "binary_switch",
                 "switch",
+                "linear",
             ):
-                raise ValueError
+                raise ValueError(f"{self.interpreter} is not a valid interpreter type")
 
             if not 0 <= self.lo <= 1:
                 raise ValueError
