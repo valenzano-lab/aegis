@@ -53,6 +53,9 @@ class Interpreter:
         """
         return loci.mean(1)
 
+    def _single_bit(self, loci):
+        return loci[:, :, 0]
+
     def _linear(self, loci):
         return np.matmul(loci, self.linear_weights)
 

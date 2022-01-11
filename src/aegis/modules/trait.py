@@ -56,6 +56,7 @@ class Trait:
                 "binary_switch",
                 "switch",
                 "linear",
+                "single_bit"
             ):
                 raise ValueError(f"{self.interpreter} is not a valid interpreter type")
 
