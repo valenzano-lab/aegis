@@ -53,6 +53,9 @@ class Interpreter:
         """
         return loci.mean(1)
 
+    def _const1(self, loci):
+        return np.ones((len(loci), 1))
+
     def _single_bit(self, loci):
         return loci[:, :, 0]
 
