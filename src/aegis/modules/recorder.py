@@ -68,6 +68,16 @@ class Recorder:
     # RECORDING METHOD I. (snapshots)
     # ===============================
 
+    def record_lineage(self, population):
+        """Record all genomes once a lineage takes over."""
+        winner = population.lineage[0]
+        if (population.lineage == winner).all():
+            with open(self.paths["visor"] / "lineage.csv", "ab") as f:
+                array = population.lineage_genomes[winner].reshape(-1)
+                np.savetxt(f, [[pan.stage] + list(array)], delimiter=",", fmt="%i")
+            population.reset_lineage()
+            print(f"lineage reset {pan.stage}")
+
     def record_visor(self, population):
         """Record data that is needed by visor."""
         if pan.skip(pan.VISOR_RATE_) or len(population) == 0:

@@ -78,8 +78,16 @@ class Ecosystem:
             births = np.zeros(num, dtype=np.int32)
             birthdays = np.zeros(num, dtype=np.int32)
             phenotypes = self.gstruc.get_phenotype(genomes)
+            lineage = np.arange(num, dtype=np.int32)
 
-            self.population = Population(genomes, ages, births, birthdays, phenotypes)
+            self.population = Population(
+                genomes,
+                ages,
+                births,
+                birthdays,
+                phenotypes,
+                lineage,
+            )
 
     ##############
     # MAIN LOGIC #
@@ -115,6 +123,7 @@ class Ecosystem:
         self.recorder.record_popgenstats(
             self.population.genomes, self._get_evaluation
         )  # TODO defers calculation of mutation rates; hacky
+        self.recorder.record_lineage(self.population)
 
     ###############
     # STAGE LOGIC #
@@ -190,6 +199,9 @@ class Ecosystem:
             births=np.zeros(n, dtype=np.int32),
             birthdays=np.zeros(n, dtype=np.int32) + pan.stage,
             phenotypes=self.gstruc.get_phenotype(genomes),
+            lineage=self.population.lineage[mask_repr]
+            # if self.reproducer.REPRODUCTION_MODE == "asexual"
+            # else np.zeros(n, dtype=np.int32),
         )
 
         if self.eggs is None:

@@ -13,14 +13,18 @@ class Population:
         "births",
         "birthdays",
         "phenotypes",
+        "lineage",
     )
 
-    def __init__(self, genomes, ages, births, birthdays, phenotypes):
+    def __init__(self, genomes, ages, births, birthdays, phenotypes, lineage):
         self.genomes = genomes
         self.ages = ages
         self.births = births
         self.birthdays = birthdays
         self.phenotypes = phenotypes
+        self.lineage = lineage
+
+        self.lineage_genomes = genomes.copy()
 
         if not (
             len(genomes)
@@ -28,8 +32,15 @@ class Population:
             == len(births)
             == len(birthdays)
             == len(phenotypes)
+            == len(lineage)
         ):
             raise ValueError("Population attributes must have equal length")
+
+    def reset_lineage(self):
+        """Restart lineage documentation by assigning each individual a new, unique lineage identifier."""
+        self.lineage = np.arange(len(self), dtype=np.int32)
+        self.lineage_genomes = self.genomes.copy()
+        assert self.lineage_genomes is not self.genomes
 
     def __len__(self):
         """Return the number of living individuals."""
@@ -43,6 +54,7 @@ class Population:
             births=self.births[index],
             birthdays=self.birthdays[index],
             phenotypes=self.phenotypes[index],
+            lineage=self.lineage[index],
         )
 
     def __imul__(self, index):
