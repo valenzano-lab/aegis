@@ -85,3 +85,10 @@ PHENOMAP_SPECS: [] # | Specification of pleiotropic effects [[trait1_name (str),
 
 # ENVIRONMENT
 ENVIRONMENT_CHANGE_RATE: 0 # 0+ | Environmental map changes every ? stages; if no environmental change
+
+#################
+# MISCELLANEOUS #
+#################
+
+NOTES:
+  - Here you can write custom notes.
