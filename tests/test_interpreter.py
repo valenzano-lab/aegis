@@ -33,7 +33,7 @@ be = Interpreter.binary_exp_base
 def test_binary(BITS_PER_LOCUS, loci, expected):
     interpreter = Interpreter(BITS_PER_LOCUS)
     result = interpreter._binary(np.array(loci))
-    assert (expected == result).all()
+    assert np.allclose(expected, result)
 
 
 @pytest.mark.parametrize(
@@ -54,7 +54,7 @@ def test_binary(BITS_PER_LOCUS, loci, expected):
 def test_binary_switch(BITS_PER_LOCUS, loci, expected):
     interpreter = Interpreter(BITS_PER_LOCUS)
     result = interpreter._binary_switch(np.array(loci))
-    assert (expected == result).all()
+    assert np.allclose(expected, result)
 
 
 @pytest.mark.parametrize(
@@ -75,7 +75,7 @@ def test_binary_switch(BITS_PER_LOCUS, loci, expected):
 def test_uniform(BITS_PER_LOCUS, loci, expected):
     interpreter = Interpreter(BITS_PER_LOCUS)
     result = interpreter._uniform(np.array(loci))
-    assert (expected == result).all()
+    assert np.allclose(expected, result)
 
 
 @pytest.mark.parametrize(
@@ -85,22 +85,22 @@ def test_uniform(BITS_PER_LOCUS, loci, expected):
         (
             4,
             [[[0, 0, 0, 0], [0, 0, 0, 1], [0, 0, 1, 1]]],
-            [[e ** 4, e ** 3, e ** 2]],
+            [[e**4, e**3, e**2]],
         ),
         # 2 individuals 1 locus
-        (4, [[[0, 1, 0, 1]], [[1, 1, 0, 1]]], [[e ** 2], [e ** 1]]),
+        (4, [[[0, 1, 0, 1]], [[1, 1, 0, 1]]], [[e**2], [e**1]]),
         # 1 individual 1 locus
-        (4, [[[0, 0, 0, 0]]], e ** 4),
-        (4, [[[0, 1, 1, 0]]], e ** 2),
-        (4, [[[0, 1, 1, 1]]], e ** 1),
-        (4, [[[1, 0, 0, 0]]], e ** 3),
-        (4, [[[1, 0, 0, 1]]], e ** 2),
+        (4, [[[0, 0, 0, 0]]], e**4),
+        (4, [[[0, 1, 1, 0]]], e**2),
+        (4, [[[0, 1, 1, 1]]], e**1),
+        (4, [[[1, 0, 0, 0]]], e**3),
+        (4, [[[1, 0, 0, 1]]], e**2),
     ],
 )
 def test_exp(BITS_PER_LOCUS, loci, expected):
     interpreter = Interpreter(BITS_PER_LOCUS)
     result = interpreter._exp(np.array(loci))
-    assert (expected == result).all()
+    assert np.allclose(expected, result)
 
 
 @pytest.mark.parametrize(
@@ -110,7 +110,7 @@ def test_exp(BITS_PER_LOCUS, loci, expected):
         (
             4,
             [[[0, 0, 0, 0], [0, 0, 0, 1], [0, 0, 1, 1]]],
-            [[be ** 0, be ** (1 / 15), be ** (3 / 15)]],
+            [[be**0, be ** (1 / 15), be ** (3 / 15)]],
         ),
         # 2 individuals 1 locus
         (4, [[[0, 1, 0, 1]], [[1, 1, 0, 1]]], [[be ** (5 / 15)], [be ** (13 / 15)]]),
@@ -125,4 +125,4 @@ def test_exp(BITS_PER_LOCUS, loci, expected):
 def test_binary_exp(BITS_PER_LOCUS, loci, expected):
     interpreter = Interpreter(BITS_PER_LOCUS)
     result = interpreter._binary_exp(np.array(loci))
-    assert (expected == result).all()
+    assert np.allclose(expected, result)

@@ -25,6 +25,7 @@ class Interpreter:
         self.binary_switch_weights = (
             self.binary_switch_weights / self.binary_switch_weights.sum()
         )
+        # e.g. when BITS_PER_LOCUS is 4, binary_switch_weights are [4/7, 2/7, 1/7, 0]
 
         # Parameters for the linear interpreter
         self.linear_weights = np.arange(BITS_PER_LOCUS)[::-1] + 1
@@ -123,4 +124,4 @@ class Interpreter:
         Position-dependent.
         """
         binary = self._binary(loci)
-        return self.binary_exp_base ** binary
+        return self.binary_exp_base**binary
