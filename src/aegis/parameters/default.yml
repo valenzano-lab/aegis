@@ -78,6 +78,7 @@ RECOMBINATION_RATE: 0 # 0+ | Rate of recombination; 0 if no recombination
 
 # MUTATION
 MUTATION_RATIO: 0.1 # 0+ | Ratio of 0->1 mutations to 1->0 mutations
+MUTATION_METHOD: by_bit # by_bit, by_index
 
 # PHENOMAP
 PHENOMAP_METHOD: by_loop # by_loop, by_dot, by_dummy | Non-vectorized, vectorized and null method of calculating phenotypic values

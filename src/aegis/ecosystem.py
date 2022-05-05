@@ -48,6 +48,7 @@ class Ecosystem:
             RECOMBINATION_RATE=self._get_param("RECOMBINATION_RATE"),
             MUTATION_RATIO=self._get_param("MUTATION_RATIO"),
             REPRODUCTION_MODE=self._get_param("REPRODUCTION_MODE"),
+            MUTATION_METHOD=self._get_param("MUTATION_METHOD"),
         )
 
         # Initialize season
