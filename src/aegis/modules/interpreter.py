@@ -26,6 +26,10 @@ class Interpreter:
             self.binary_switch_weights / self.binary_switch_weights.sum()
         )
 
+        # Parameters for the linear interpreter
+        self.linear_weights = np.arange(BITS_PER_LOCUS)[::-1] + 1
+        self.linear_weights = self.linear_weights / self.linear_weights.sum()
+
     def __call__(self, loci, interpreter_kind):
         """Exposed method"""
         interpreter = getattr(self, f"_{interpreter_kind}")
@@ -48,6 +52,15 @@ class Interpreter:
             A bool numpy array with shape (population size, gstruc.length, BITS_PER_LOCUS)
         """
         return loci.mean(1)
+
+    def _const1(self, loci):
+        return np.ones((len(loci), 1))
+
+    def _single_bit(self, loci):
+        return loci[:, :, 0]
+
+    def _linear(self, loci):
+        return np.matmul(loci, self.linear_weights)
 
     def _binary(self, loci):
         """Interpret locus as a binary number and normalize.
