@@ -77,7 +77,7 @@ class Phenomap:
         # Change baseline effects
         for locus1, locus2, weight in self.trios:
             if locus1 == locus2:
-                probs[:, locus1] = weight
+                probs[:, locus1] *= weight
 
         # Apply pleiotropic effects
         for locus2, diff in diffs:
