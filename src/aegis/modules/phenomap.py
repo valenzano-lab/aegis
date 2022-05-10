@@ -38,6 +38,15 @@ class Phenomap:
         elif PHENOMAP_METHOD == "by_loop":
             self.calc = self._by_loop
 
+        # Variables for Phenomap._by_loop
+        _ = np.array(list(zip(*self.trios)))
+        self._by_loop_loc1 = _[0].astype(int)
+        self._by_loop_loc2 = _[1].astype(int)
+        self._by_loop_weights = _[2]
+        self._by_loop_loc_self = self._by_loop_loc1[
+            self._by_loop_loc1 == self._by_loop_loc2
+        ]  # Loci that affect themselves; i.e. change the baseline weight from 1 to something else
+
     def calc(self, probs):
         """Translate interpreted values into phenotypic values.
 
@@ -67,21 +76,16 @@ class Phenomap:
         Use when map_ is sparse.
         Note that it modifies probs in place.
         """
-        diffs = []
 
-        # Collect pleiotropic effects
-        for locus1, locus2, weight in self.trios:
-            if locus1 != locus2:
-                diffs.append([locus2, probs[:, locus1] * weight])
+        # List phenotypic differences caused by loci1, scaled by the given phenomap weights
+        diffs = probs[:, self._by_loop_loc1] * self._by_loop_weights
 
-        # Change baseline effects
-        for locus1, locus2, weight in self.trios:
-            if locus1 == locus2:
-                probs[:, locus1] *= weight
+        # Override baseline weights
+        probs[:, self._by_loop_loc_self] = 0
 
-        # Apply pleiotropic effects
-        for locus2, diff in diffs:
-            probs[:, locus2] += diff
+        # Add back the phenotypic differences caused by loci1 to loci2
+        for i, loc2 in enumerate(self._by_loop_loc2):
+            probs[:, loc2] += diffs[:, i]
 
         return self.clip(probs)
 
