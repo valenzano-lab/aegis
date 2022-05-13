@@ -85,7 +85,7 @@ class Phenomap:
         probs[:, self._by_loop_loc_self] = 0
 
         # Add back the phenotypic differences caused by loci1 to loci2
-        df = pd.DataFrame(diffs).T.assign(loc2=self._by_loop_loc2).groupby("loc2").sum()
+        df = pd.DataFrame(diffs.T).groupby(self._by_loop_loc2).sum()
         loc2 = tuple(df.index)
         probs[:, loc2] += df.to_numpy().T
 
