@@ -81,12 +81,11 @@ upload_pypi:
 
 # Install build from pypi 
 install_pypi:
-	deactivate ; \
 	rm -rf temp/venv ; \
 	python3 -m venv temp/venv ; \
 	. temp/venv/bin/activate ; \
 	python3 -m pip install --upgrade pip pytest ; \
-	python3 -m pip install aegis-sim ; \
+	python3 -m pip install --no-cache-dir aegis-sim ; \
 	python3 -m pytest tests/ --log-cli-level=DEBUG
 
 
