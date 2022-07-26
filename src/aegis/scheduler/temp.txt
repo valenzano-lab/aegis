@@ -1,0 +1,26 @@
+RANDOM_SEED_	int, none	Seed for the random number generator
+STAGES_PER_SIMULATION_	int (1+)	Number of stages that the simulation will run for
+LOGGING_RATE_	int (0+)	Number of stages that pass between each output to the terminal
+PICKLE_RATE_	int (0+)	Number of stages that pass between pickling the population
+SNAPSHOT_RATE_	int(0+)	Number of stages that pass between recording snapshot data
+VISOR_RATE_	int(0+)	Number of stages that pass between recording visor data
+POPGENSTATS_RATE_	int(0+)	Number of stages that pass between calculating and recording population genetic metrics
+POPGENSTATS_SAMPLE_SIZE_	int (0, 3+)	Number of individuals whose data is used to calculate population genetic metrics
+MAX_POPULATION_SIZE	int (1+)	Highest possible number of individuals that can be alive in the simulation at any stage
+OVERSHOOT_EVENT	starvation, cliff, treadmill_random, treadmill_zoomer, treadmill_boomer	The scheme that specifies which individuals are at risk of death when population grows beyong the maximum number specified by MAX_POPULATION_SIZE
+CLIFF_SURVIVORSHIP	none or float(0-1)	Fraction of the population that survives a cliff
+STAGES_PER_SEASON	int (0+)	Duration of a season in stages
+MAX_LIFESPAN	int (1+)	Maximum number of stages that an individual can survive for
+MATURATION_AGE	int (1+)	Age below which the individual cannot reproduce
+BITS_PER_LOCUS	int (1+)	Number of bits per locus
+REPRODUCTION_MODE	sexual, asexual, asexual_diploid	Mode of reproduction
+RECOMBINATION_RATE	float (0-1)	The probability that a crossover occurs at a bit
+MUTATION_RATIO	float (0+)	Ratio of 0-to-1 mutations to 1-to-0 mutations
+ENVIRONMENT_CHANGE_RATE	int (0+)	Number of stages that pass between a change in the environmental map
+PHENOMAP_SPECS	[], [str, int, str, str, str]	Specification of pleiotropic effects
+G_{trait}_evolvable	bool	Will the trait be encoded in the genome
+G_{trait}_agespecific	bool	Number of loci that will encode the trait in the genome
+G_{trait}_interpreter	binary, uniform, switch, exp, binary_exp, binary_switch	How bits will be turned into probabilities
+G_{trait}_lo	float (0-1)	The minimum phenotypic value
+G_{trait}_hi	float (0-1)	THe maximum phenotypic value
+G_{trait}_initial	float (0-1)	Fraction of bits that are 1 in the newly initialized population

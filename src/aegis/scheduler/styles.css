@@ -1,0 +1,67 @@
+/* .option {
+    display:flex;
+} */
+
+/* Containers */
+
+body {
+  margin: 0;
+}
+
+p {
+  margin: 0;
+}
+
+h1 {
+  font-size: 3rem;
+}
+
+.main-container {
+  width: 1000px;
+  margin-left: auto;
+  margin-right: auto;
+  margin-top: 3rem;
+}
+
+.header {
+  margin: 2rem 0;
+}
+
+.footer {
+  height: 10rem;
+  width: 100%;
+  background-color: #444;
+  margin-top: 2rem;
+}
+
+.main-buttons {
+  margin: 2rem 0 3rem 0;
+}
+
+body {
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+.input-param {
+  height: 1.5rem;
+}
+
+.option > p {
+  padding: 0 1rem 0 1rem;
+  width: 250px;
+  /* max-width: 250px;
+  min-width: 250px; */
+}
+
+.option {
+  margin: 1rem 0 1rem 0;
+  display: flex;
+  align-items: center;
+}
+
+.options-label {
+  font-size: 1.5rem;
+  padding: 0.3rem 0.6rem;
+  color: white;
+  background-color: #555;
+}

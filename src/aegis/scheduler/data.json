@@ -1,0 +1,425 @@
+{
+  "categories": [
+    { "category": "general" },
+    { "category": "recording" },
+    { "category": "ecology" },
+    { "category": "genotype" },
+    { "category": "traits" },
+    { "category": "reproduction" },
+    { "category": "mutation" },
+    { "category": "pleiotropy" },
+    { "category": "miscellaneous" }
+  ],
+  "parameters": [
+    {
+      "name": "RANDOM_SEED_",
+      "nick": "random seed",
+      "description": "Seed for the random number generator",
+      "allowed": "",
+      "category": "general",
+      "default": ""
+    },
+    {
+      "name": "STAGES_PER_SIMULATION_",
+      "nick": "stages per simulation",
+      "description": "Number of stages that the simulation will run for",
+      "allowed": "",
+      "category": "general",
+      "default": "100000"
+    },
+    {
+      "name": "LOGGING_RATE_",
+      "nick": "logging rate",
+      "description": "Number of stages that pass between each output to the terminal",
+      "allowed": "",
+      "category": "general",
+      "default": "1000"
+    },
+    {
+      "name": "PICKLE_RATE_",
+      "nick": "pickle rate",
+      "description": "Number of stages that pass between pickling the population",
+      "allowed": "",
+      "category": "recording",
+      "default": "25000"
+    },
+    {
+      "name": "SNAPSHOT_RATE_",
+      "nick": "snapshot rate",
+      "description": "Number of stages that pass between recording snapshot data",
+      "allowed": "",
+      "category": "recording",
+      "default": "25000"
+    },
+    {
+      "name": "VISOR_RATE_",
+      "nick": "visor rate",
+      "description": "Number of stages that pass between recording visor data",
+      "allowed": "",
+      "category": "recording",
+      "default": "5000"
+    },
+    {
+      "name": "POPGENSTATS_RATE_",
+      "nick": "popgen stats rate",
+      "description": "Number of stages that pass between calculating and recording population genetic metrics",
+      "allowed": "",
+      "category": "recording",
+      "default": "100"
+    },
+    {
+      "name": "POPGENSTATS_SAMPLE_SIZE_",
+      "nick": "popgen stats sample size",
+      "description": "Number of individuals whose data is used to calculate population genetic metrics",
+      "allowed": "",
+      "category": "recording",
+      "default": "100"
+    },
+    {
+      "name": "MAX_POPULATION_SIZE",
+      "nick": "maximum population size",
+      "description": "Highest possible number of individuals that can be alive in the simulation at any stage",
+      "allowed": "",
+      "category": "ecology",
+      "default": "300"
+    },
+    {
+      "name": "OVERSHOOT_EVENT",
+      "nick": "overshoot event",
+      "description": "The scheme that specifies which individuals are at risk of death when population grows beyong the maximum number specified by maximum population size",
+      "allowed": "",
+      "category": "ecology",
+      "default": "starvation",
+      "type": "radio",
+      "radio-options": [
+        "starvation",
+        "cliff",
+        "treadmill_random",
+        "treadmill_zoomer",
+        "treadmill_boomer"
+      ]
+    },
+    {
+      "name": "CLIFF_SURVIVORSHIP",
+      "nick": "cliff survivorship",
+      "description": "Fraction of the population that survives a cliff",
+      "allowed": "",
+      "category": "ecology",
+      "default": ""
+    },
+    {
+      "name": "STAGES_PER_SEASON",
+      "nick": "stages per season",
+      "description": "Duration of a season in stages",
+      "allowed": "",
+      "category": "ecology",
+      "default": "0"
+    },
+    {
+      "name": "MAX_LIFESPAN",
+      "nick": "maximum lifespan",
+      "description": "Maximum number of stages that an individual can survive for",
+      "allowed": "",
+      "category": "genotype",
+      "default": "50"
+    },
+    {
+      "name": "MATURATION_AGE",
+      "nick": "maturation age",
+      "description": "Age below which the individual cannot reproduce",
+      "allowed": "",
+      "category": "genotype",
+      "default": "10"
+    },
+    {
+      "name": "BITS_PER_LOCUS",
+      "nick": "bits per locus",
+      "description": "Number of bits per locus",
+      "allowed": "",
+      "category": "genotype",
+      "default": "8"
+    },
+    {
+      "name": "HEADSUP",
+      "nick": "heads-up",
+      "description": "",
+      "allowed": "",
+      "category": "genotype",
+      "default": "-1"
+    },
+    {
+      "name": "G_surv_evolvable",
+      "nick": "",
+      "description": "",
+      "allowed": "",
+      "category": "traits",
+      "type": "bool",
+      "default": "true"
+    },
+    {
+      "name": "G_surv_agespecific",
+      "nick": "",
+      "description": "",
+      "allowed": "",
+      "category": "traits",
+      "default": "true"
+    },
+    {
+      "name": "G_surv_interpreter",
+      "nick": "",
+      "description": "",
+      "allowed": "",
+      "category": "traits",
+      "default": "binary",
+      "type": "radio",
+      "radio-options": ["binary", "uniform"]
+    },
+    {
+      "name": "G_surv_lo",
+      "nick": "",
+      "description": "",
+      "allowed": "",
+      "category": "traits",
+      "default": "0"
+    },
+    {
+      "name": "G_surv_hi",
+      "nick": "",
+      "description": "",
+      "allowed": "",
+      "category": "traits",
+      "default": "1"
+    },
+    {
+      "name": "G_surv_initial",
+      "nick": "",
+      "description": "",
+      "allowed": "",
+      "category": "traits",
+      "default": "1"
+    },
+    {
+      "name": "G_repr_evolvable",
+      "nick": "",
+      "description": "",
+      "allowed": "",
+      "category": "traits",
+      "type": "bool",
+      "default": "true"
+    },
+    {
+      "name": "G_repr_agespecific",
+      "nick": "",
+      "description": "",
+      "allowed": "",
+      "category": "traits",
+      "default": "true"
+    },
+    {
+      "name": "G_repr_interpreter",
+      "nick": "",
+      "description": "",
+      "allowed": "",
+      "category": "traits",
+      "default": "binary",
+      "type": "radio",
+      "radio-options": ["binary", "uniform"]
+    },
+    {
+      "name": "G_repr_lo",
+      "nick": "",
+      "description": "",
+      "allowed": "",
+      "category": "traits",
+      "default": "0"
+    },
+    {
+      "name": "G_repr_hi",
+      "nick": "",
+      "description": "",
+      "allowed": "",
+      "category": "traits",
+      "default": "0.5"
+    },
+    {
+      "name": "G_repr_initial",
+      "nick": "",
+      "description": "",
+      "allowed": "",
+      "category": "traits",
+      "default": "1"
+    },
+    {
+      "name": "G_neut_evolvable",
+      "nick": "",
+      "description": "",
+      "allowed": "",
+      "category": "traits",
+      "type": "bool",
+      "default": "false"
+    },
+    {
+      "name": "G_neut_agespecific",
+      "nick": "",
+      "description": "",
+      "allowed": "",
+      "category": "traits",
+      "default": ""
+    },
+    {
+      "name": "G_neut_interpreter",
+      "nick": "",
+      "description": "",
+      "allowed": "",
+      "category": "traits",
+      "default": "",
+      "type": "radio",
+      "radio-options": ["binary", "uniform"]
+    },
+    {
+      "name": "G_neut_lo",
+      "nick": "",
+      "description": "",
+      "allowed": "",
+      "category": "traits",
+      "default": ""
+    },
+    {
+      "name": "G_neut_hi",
+      "nick": "",
+      "description": "",
+      "allowed": "",
+      "category": "traits",
+      "default": ""
+    },
+    {
+      "name": "G_neut_initial",
+      "nick": "",
+      "description": "",
+      "allowed": "",
+      "category": "traits",
+      "default": "1"
+    },
+    {
+      "name": "G_muta_evolvable",
+      "nick": "",
+      "description": "",
+      "allowed": "",
+      "category": "traits",
+      "type": "bool",
+      "default": "false"
+    },
+    {
+      "name": "G_muta_agespecific",
+      "nick": "",
+      "description": "",
+      "allowed": "",
+      "category": "traits",
+      "default": ""
+    },
+    {
+      "name": "G_muta_interpreter",
+      "nick": "",
+      "description": "",
+      "allowed": "",
+      "category": "traits",
+      "default": "",
+      "type": "radio",
+      "radio-options": ["binary", "uniform"]
+    },
+    {
+      "name": "G_muta_lo",
+      "nick": "",
+      "description": "",
+      "allowed": "",
+      "category": "traits",
+      "default": ""
+    },
+    {
+      "name": "G_muta_hi",
+      "nick": "",
+      "description": "",
+      "allowed": "",
+      "category": "traits",
+      "default": ""
+    },
+    {
+      "name": "G_muta_initial",
+      "nick": "",
+      "description": "",
+      "allowed": "",
+      "category": "traits",
+      "default": "0.001"
+    },
+    {
+      "name": "REPRODUCTION_MODE",
+      "nick": "mode of reproduction",
+      "description": "Mode of reproduction",
+      "allowed": "",
+      "category": "reproduction",
+      "default": "asexual",
+      "type": "radio",
+      "radio-options": ["asexual", "sexual"]
+    },
+    {
+      "name": "RECOMBINATION_RATE",
+      "nick": "recombination rate",
+      "description": "The probability that a crossover occurs at a bit",
+      "allowed": "",
+      "category": "reproduction",
+      "default": "0"
+    },
+    {
+      "name": "MUTATION_RATIO",
+      "nick": "mutation ratio",
+      "description": "Ratio of 0-to-1 mutations to 1-to-0 mutations",
+      "allowed": "",
+      "category": "mutation",
+      "default": "0.1"
+    },
+    {
+      "name": "MUTATION_METHOD",
+      "nick": "mutation computation method",
+      "description": "Computational method by which mutating bits are determined",
+      "allowed": "",
+      "category": "mutation",
+      "default": "by_bit",
+      "type": "radio",
+      "radio-options": ["by_bit", "by_index"]
+    },
+    {
+      "name": "PHENOMAP_SPECS",
+      "nick": "phenomap specification",
+      "description": "Specification of pleiotropic effects",
+      "allowed": "",
+      "category": "pleiotropy",
+      "default": ""
+    },
+    {
+      "name": "PHENOMAP_METHOD",
+      "nick": "phenomap computation method",
+      "description": "Computational method by which the pleiotropic effects are calculated",
+      "allowed": "",
+      "category": "pleiotropy",
+      "default": "by_loop",
+      "type": "radio",
+      "radio-options": ["by_loop", "by_dot", "by_dummy"]
+    },
+    {
+      "name": "ENVIRONMENT_CHANGE_RATE",
+      "nick": "environment change rate",
+      "description": "Number of stages that pass between a change in the environmental map",
+      "allowed": "",
+      "category": "miscellaneous",
+      "default": "0"
+    },
+    {
+      "name": "NOTES",
+      "nick": "notes",
+      "description": "Custom text that is added to the configuration file",
+      "allowed": "",
+      "category": "miscellaneous",
+      "default": ""
+    }
+  ]
+}
