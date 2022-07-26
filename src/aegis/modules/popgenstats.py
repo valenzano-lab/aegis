@@ -2,6 +2,7 @@
 
 import statistics
 import itertools
+import logging
 import numpy as np
 from aegis.panconfiguration import pan
 
@@ -285,7 +286,7 @@ class PopgenStats:
         if self.ploidy == 1:
             return None
 
-        genotype_freqs_sqrd = self.genotype_frequencies ** 2
+        genotype_freqs_sqrd = self.genotype_frequencies**2
         sum_each_locus = genotype_freqs_sqrd.reshape(-1, 3).sum(1)
         return 1 - sum_each_locus
 
@@ -376,21 +377,25 @@ class PopgenStats:
         pre_d = self.theta_pi - self.theta_w
         segr_sites = self.segregating_sites_gsample
 
+        if segr_sites == 0:
+            logging.info(
+                "Cannot compute Tajima's D because there are no segregating sites"
+            )
+            return
+
         a_1 = self.harmonic(self.nsample - 1)
         a_2 = self.harmonic_sq(self.nsample - 1)
         b_1 = (self.nsample + 1) / (3 * (self.nsample - 1))
-        b_2 = (2 * (self.nsample ** 2 + self.nsample + 3)) / (
+        b_2 = (2 * (self.nsample**2 + self.nsample + 3)) / (
             9 * self.nsample * (self.nsample - 1)
         )
         c_1 = b_1 - (1 / a_1)
-        c_2 = b_2 - ((self.nsample + 2) / (a_1 * self.nsample)) + (a_2 / (a_1 ** 2))
+        c_2 = b_2 - ((self.nsample + 2) / (a_1 * self.nsample)) + (a_2 / (a_1**2))
         e_1 = c_1 / a_1
-        e_2 = c_2 / ((a_1 ** 2) + a_2)
+        e_2 = c_2 / ((a_1**2) + a_2)
         d_stdev = ((e_1 * segr_sites) + (e_2 * segr_sites * (segr_sites - 1))) ** 0.5
 
-        return (
-            pre_d / d_stdev
-        )  # TODO RuntimeWarning: invalid value encountered in double_scalars
+        return pre_d / d_stdev
 
     def get_sfs(self, reference_genome):
         """Returns the site frequency spectrum (allele frequency spectrum) of a sample"""
