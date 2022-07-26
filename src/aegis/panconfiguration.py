@@ -54,7 +54,7 @@ class Panconfiguration:
 
         def run_parser():
             parser = argparse.ArgumentParser(
-                description="Ageing of Evolving Genomes In Silico"
+                description="Aging of Evolving Genomes In Silico"
             )
             parser.add_argument(
                 "custom_config_path",
