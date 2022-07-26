@@ -22,7 +22,7 @@ class Recorder:
 
     # TODO add headers to csv's
 
-    def __init__(self, ecosystem_id, MAX_LIFESPAN):
+    def __init__(self, ecosystem_id, MAX_LIFESPAN, gstruc_shape):
         # Define output paths and make necessary directories
         opath = pan.output_path / str(ecosystem_id)
         self.paths = {
@@ -62,7 +62,21 @@ class Recorder:
         # PopgenStats
         self.popgenstats = PopgenStats()
 
-        # TODO add headers
+        # Add headers
+        for key in self._collection.keys():
+            with open(self.paths["visor_spectra"] / f"{key}.csv", "ab") as f:
+                array = np.arange(MAX_LIFESPAN)
+                np.savetxt(f, [array], delimiter=",", fmt="%i")
+
+        with open(self.paths["visor"] / "genotypes.csv", "ab") as f:
+            array = np.arange(
+                gstruc_shape[0] * gstruc_shape[1] * gstruc_shape[2]
+            )  # (ploidy, length, bits_per_locus)
+            np.savetxt(f, [array], delimiter=",", fmt="%i")
+
+        with open(self.paths["visor"] / "phenotypes.csv", "ab") as f:
+            array = np.arange(gstruc_shape[1])  # number of phenotypic values
+            np.savetxt(f, [array], delimiter=",", fmt="%i")
 
     # ===============================
     # RECORDING METHOD I. (snapshots)
