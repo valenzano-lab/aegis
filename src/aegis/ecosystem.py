@@ -38,6 +38,7 @@ class Ecosystem:
         self.recorder = Recorder(
             ecosystem_id=self.id_,
             MAX_LIFESPAN=self._get_param("MAX_LIFESPAN"),
+            gstruc_shape=self.gstruc.shape,
         )
 
         if self.gstruc.phenomap.map_ is not None:
