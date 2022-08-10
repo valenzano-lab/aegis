@@ -34,9 +34,7 @@ class Gstruc:
             "asexual_diploid": 2,
         }[REPRODUCTION_MODE]
 
-        self.bits_per_locus = BITS_PER_LOCUS
-
-        self.shape = (self.ploidy, self.length, self.bits_per_locus)
+        self.shape = (self.ploidy, self.length, BITS_PER_LOCUS)
 
         self.phenomap = Phenomap(
             params["PHENOMAP_SPECS"], self, params["PHENOMAP_METHOD"]
