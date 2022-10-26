@@ -3,6 +3,8 @@
 tests/execution/*/*
 profiler
 src/aegis/visor/example_data
+src/visor/old
+src/visor_git
 ipynb
 
 ### Python ###
