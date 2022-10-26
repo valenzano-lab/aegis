@@ -1,6 +1,9 @@
 ### Custom ###
 
 tests/execution/*/*
+profiler
+src/aegis/visor/example_data
+ipynb
 
 ### Python ###
 # Byte-compiled / optimized / DLL files
