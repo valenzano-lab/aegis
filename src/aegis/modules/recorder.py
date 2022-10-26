@@ -99,6 +99,23 @@ class Recorder:
 
         self.flush()
 
+    def record_inverse_lansing(
+        self, parental_genomes, offspring_genomes, parental_ages
+    ):
+        if pan.skip(pan.VISOR_RATE_) or len(parental_genomes) == 0:
+            return
+
+        with open(self.paths["visor"] / "inverse_lansing.csv", "ab") as f:
+            for parental_genome, offspring_genome, parental_age in zip(
+                parental_genomes, offspring_genomes, parental_ages
+            ):
+                np.savetxt(
+                    f,
+                    [[pan.stage, parental_age, *parental_genome, *offspring_genome]],
+                    delimiter=",",
+                    fmt="%1.3e",
+                )
+
     def record_snapshots(self, population):
         """Record demographic, genetic and phenotypic data from the current population."""
         if pan.skip(pan.SNAPSHOT_RATE_) or len(population) == 0:

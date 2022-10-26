@@ -184,6 +184,9 @@ class Ecosystem:
         muta_prob = self._get_evaluation("muta", part=mask_repr)[mask_repr]
         genomes = self.reproducer(parents, muta_prob)
 
+        offspring_phenotypes = self.gstruc.get_phenotype(genomes)
+        self.recorder.record_inverse_lansing(self.population.phenotypes[mask_repr], offspring_phenotypes, ages_repr)
+
         # Get eggs
         n = len(genomes)
         eggs = Population(
@@ -191,7 +194,7 @@ class Ecosystem:
             ages=np.zeros(n, dtype=np.int32),
             births=np.zeros(n, dtype=np.int32),
             birthdays=np.zeros(n, dtype=np.int32) + pan.stage,
-            phenotypes=self.gstruc.get_phenotype(genomes),
+            phenotypes=offspring_phenotypes,
         )
 
         if self.eggs is None:

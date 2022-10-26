@@ -1,6 +1,10 @@
 ### Custom ###
 
 tests/execution/*/*
+profiler
+src/visor
+src/visor_git/0728
+ipynb
 
 ### Python ###
 # Byte-compiled / optimized / DLL files
