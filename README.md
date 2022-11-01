@@ -15,6 +15,8 @@ We recommend that you install `aegis-sim` from [PyPI](https://pypi.org/project/a
 $ pip install aegis-sim
 ```
 
+If you will using the jupyter notebook visualization script, you might need to run `jupyter nbextension enable --py widgetsnbextension` to activate widgets.
+
 <details>
   <summary>Cheat sheet</summary>
 
