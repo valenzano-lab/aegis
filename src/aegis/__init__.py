@@ -33,5 +33,9 @@ def main(
     # Record output summary
     for ecosystem in ecosystems:
         ecosystem.recorder.record_output_summary()
+    
+    ecosystem.recorder.record_jupyter_path() # TODO record for every ecosystem
 
     logging.info("Simulation is successfully finished")
+    logging.info("Custom jupyter path = %s", str(pan.output_path.absolute()))
+    logging.info("Run visor by executing: python3 -m notebook %s", str(pan.here / "help"))
