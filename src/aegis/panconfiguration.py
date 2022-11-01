@@ -107,7 +107,6 @@ class Panconfiguration:
             )
 
         logging.info("Custom config path = %s", custom_config_path)
-        logging.info("Custom config path = %s", self.pickle_path)
 
         # Get parameters
         params = get_params(custom_config_path)
