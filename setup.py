@@ -3,7 +3,7 @@ import pathlib
 
 setuptools.setup(
     name="aegis-sim",
-    version="2.1",
+    version="2.2",
     description="Numerical model for life history evolution of age-structured populations",
     long_description=(pathlib.Path(__file__).parent / "README.md").read_text(),
     long_description_content_type="text/markdown",
@@ -15,9 +15,10 @@ setuptools.setup(
         "aegis",
         "aegis.modules",
         "aegis.parameters",
+        "aegis.help",
     ],
     package_data={
-        "aegis": ["parameters/default.yml"],
+        "aegis": ["parameters/default.yml", "help/visor.ipynb"],
     },
     python_requires=">=3.6",
     entry_points={
@@ -30,6 +31,8 @@ setuptools.setup(
         "pandas",
         "PyYAML",
         "pyarrow",
+        "jupyter",
+        "matplotlib",
     ],
     extras_require={
         "dev": [
