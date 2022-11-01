@@ -22,7 +22,7 @@ class Container:
         file_exists = stem in self.paths
         # TODO Read also files that are not .csv
         if not file_read and file_exists:
-            self.data[stem] = pd.read_csv(self.paths[stem], header=None)
+            self.data[stem] = pd.read_csv(self.paths[stem])
         return self.data.get(stem, pd.DataFrame())
 
     def get_json(self, stem):
