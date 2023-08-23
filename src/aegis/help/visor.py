@@ -130,6 +130,25 @@ def get_fertility_rate(phenotypes, max_age, t):
     return phenotypes.iloc[t, max_age:]
 
 
+def get_offspring_number(phenotypes, max_age, t):
+    return np.cumsum(
+        np.multiply(
+            list(phenotypes.iloc[t, max_age:]), list(phenotypes.iloc[t, :max_age])
+        )
+    )
+
+
+def get_birth_structure(age_at_birth, t):
+    return age_at_birth.iloc[t]
+
+
+def get_death_structure(age_at_genetic, age_at_overshoot, t):
+    pseudocount = 0
+    return (age_at_genetic.iloc[t] + pseudocount) / (
+        age_at_overshoot.iloc[t] + age_at_genetic.iloc[t] + pseudocount
+    )
+
+
 @app.callback(
     [Output("slider", "max")],
     [Input("dynamic-dropdown", "value")],
@@ -156,6 +175,9 @@ def update_slider_config(selected_option):
         Output("figure1", "figure"),
         Output("figure2", "figure"),
         Output("figure3", "figure"),
+        Output("figure4", "figure"),
+        Output("figure5", "figure"),
+        Output("figure6", "figure"),
     ],
     [
         Input("dynamic-dropdown", "value"),
@@ -236,7 +258,56 @@ def update_scatter_plot(selected_option, slider_input):
         ),
     )
 
-    return figure1, figure2, figure3
+    figure4 = go.Figure(
+        data=[
+            go.Scatter(
+                y=get_offspring_number(phenotypes, max_age, slider_input - 1),
+                name="Scatter Plot",
+                **fig_data,
+            )
+        ],
+        layout=go.Layout(
+            title=slider_input,
+            xaxis_title="age",
+            yaxis_title="age-cumulative # of offspring per individual",
+            **fig_layout,
+        ),
+    )
+
+    figure5 = go.Figure(
+        data=[
+            go.Scatter(
+                y=get_birth_structure(age_at_birth, slider_input - 1),
+                name="Scatter Plot",
+                **fig_data,
+            )
+        ],
+        layout=go.Layout(
+            title=slider_input,
+            xaxis_title="age",
+            yaxis_title="# of offspring born to parents of age x",
+            **fig_layout,
+        ),
+    )
+    figure6 = go.Figure(
+        data=[
+            go.Scatter(
+                y=get_death_structure(
+                    age_at_genetic, age_at_overshoot, slider_input - 1
+                ),
+                name="Scatter Plot",
+                **fig_data,
+            )
+        ],
+        layout=go.Layout(
+            title=slider_input,
+            xaxis_title="age",
+            yaxis_title="proportion of death that is intrinsic",
+            **fig_layout,
+        ),
+    )
+
+    return figure1, figure2, figure3, figure4, figure5, figure6
 
 
 # Run the app
