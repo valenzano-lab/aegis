@@ -43,7 +43,7 @@ app.layout = html.Div(
         #     rel="stylesheet", href="/styles.css"  # Path to your external CSS file
         # ),
         html.Button(
-            "Load simulation data",
+            "reload list of simulations",
             "load-paths-button",
         ),
         dcc.Dropdown(
@@ -116,9 +116,14 @@ app.layout = html.Div(
 def update_dropdown_options(n_clicks):
 
     with open(paths_txt, "r") as f:
+        # decode paths.txt
         paths = f.read().split()[::-1]
+        # remove duplicates with preserving order
+        paths = sorted(set(paths), key=paths.index)
+        # turn to pathlib.Path
+        paths = [pathlib.Path(path) for path in paths]
 
-    options = [{"label": path, "value": path} for path in paths]
+    options = [{"label": f"{i}. {str(path.stem)} ({str(path)})", "value": str(path)} for i, path in enumerate(paths)]
 
     return options, options[0]["value"]
 
