@@ -25,6 +25,8 @@ with open(paths_txt, "r") as f:
 # Initialize the app
 app = Dash(__name__)
 
+app._favicon = "favicon.ico"
+
 
 # Create example plots
 def create_plot(figure_name):
