@@ -40,8 +40,15 @@ app.layout = html.Div(
         # html.Link(
         #     rel="stylesheet", href="/styles.css"  # Path to your external CSS file
         # ),
-        html.Button("Load simulation data", "load-paths-button"),
-        dcc.Dropdown(id="dynamic-dropdown"),
+        html.Button(
+            "Load simulation data",
+            "load-paths-button",
+        ),
+        dcc.Dropdown(
+            id="dynamic-dropdown",
+            clearable=False,
+            style={"width": "50%"},
+        ),
         html.Div(
             [
                 html.Div(
