@@ -24,8 +24,8 @@ with open(paths_txt, "r") as f:
 
 # Initialize the app
 app = Dash(__name__)
-
 app._favicon = "favicon.ico"
+app.title = "AEGIS visualizer"
 
 
 # Create example plots
