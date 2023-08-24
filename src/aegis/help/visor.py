@@ -65,10 +65,24 @@ app.layout = html.Div(
             children=[
                 html.Div(
                     [
-                        dcc.Graph(
-                            id=f"figure{i}",
-                            config={"displayModeBar": False},
-                            className="figure",
+                        html.Div(
+                            [
+                                dcc.Graph(
+                                    id=f"figure{i}",
+                                    config={"displayModeBar": False},
+                                    className="figure",
+                                ),
+                            ],
+                            style={"padding-right": "20px"},
+                        ),
+                        html.Div(
+                            children=[
+                                html.P(children="title", className="figure-title"),
+                                html.P(
+                                    children="what the plot shows and why is it useful",
+                                    className="figure-description",
+                                ),
+                            ]
                         ),
                     ],
                     className="figure-card",
@@ -88,7 +102,7 @@ app.layout = html.Div(
                             updatemode="drag",
                         ),
                     ],
-                    style={"width": "400px"},
+                    # style={"width": "400px"},
                 ),
             ],
         ),
@@ -214,7 +228,11 @@ def update_scatter_plot(selected_option, slider_input):
     # genotypes = container.get_df("genotypes")
 
     fig_layout = dict(
-        yaxis={"range": [0, 1]}, xaxis={"range": [0, max_age]}, width=400, height=400
+        yaxis={"range": [0, 1]},
+        xaxis={"range": [0, max_age]},
+        width=300,
+        height=300,
+        margin={"t": 0, "r": 0, "b": 0, "l": 0},
     )
     fig_data = {
         "mode": "markers",
@@ -230,7 +248,6 @@ def update_scatter_plot(selected_option, slider_input):
             )
         ],
         layout=go.Layout(
-            title=slider_input,
             xaxis_title="age",
             yaxis_title="intrinsic mortality rate",
             **fig_layout,
@@ -246,7 +263,6 @@ def update_scatter_plot(selected_option, slider_input):
             )
         ],
         layout=go.Layout(
-            title=slider_input,
             xaxis_title="age",
             yaxis_title="survivorship",
             **fig_layout,
@@ -262,7 +278,6 @@ def update_scatter_plot(selected_option, slider_input):
             )
         ],
         layout=go.Layout(
-            title=slider_input,
             xaxis_title="age",
             yaxis_title="fertility rate",
             **fig_layout,
@@ -278,7 +293,6 @@ def update_scatter_plot(selected_option, slider_input):
             )
         ],
         layout=go.Layout(
-            title=slider_input,
             xaxis_title="age",
             yaxis_title="age-cumulative # of offspring per individual",
             **fig_layout,
@@ -294,7 +308,6 @@ def update_scatter_plot(selected_option, slider_input):
             )
         ],
         layout=go.Layout(
-            title=slider_input,
             xaxis_title="age",
             yaxis_title="# of offspring born to parents of age x",
             **fig_layout,
@@ -311,7 +324,6 @@ def update_scatter_plot(selected_option, slider_input):
             )
         ],
         layout=go.Layout(
-            title=slider_input,
             xaxis_title="age",
             yaxis_title="proportion of death that is intrinsic",
             **fig_layout,

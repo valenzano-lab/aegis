@@ -12,16 +12,15 @@
 
 .figure-card {
   /* outline: 5px solid red; */
-  background-color: pink;
-  margin: 10px 0;
+  /* background-color: rgb(250, 250, 250); */
+  margin: 30px 0;
   min-height: 100px;
   width: 100%;
+  display: flex;
 }
 
 .main-container {
-
   padding: 0 10%;
-
 }
 
 .figure-card-container {
@@ -29,5 +28,12 @@
 }
 
 h1 {
+}
+body {
   font-family: Arial, Helvetica, sans-serif;
+}
+
+.figure-title {
+  /* font-size:24px; */
+  font-weight: bold;
 }
