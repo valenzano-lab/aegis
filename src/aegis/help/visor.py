@@ -331,8 +331,6 @@ def update_scatter_plot(selected_option, slider_input):
         # paper_bgcolor="rgba(0, 0, 0, 0.1)",
     )
 
-    # print(phenotypes)
-
     figures = {}
 
     # Figure: life expectancy at age 0
@@ -462,7 +460,6 @@ def update_scatter_plot(selected_option, slider_input):
         age_at_overshoot.iloc[t] + age_at_genetic.iloc[t] + pseudocount
     )
     x = np.arange(len(y))[y.notna()]
-    print(y)
 
     figures[id_] = go.Figure(
         data=[
