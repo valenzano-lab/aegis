@@ -6,47 +6,104 @@ import numpy as np
 import plotly.graph_objs as go
 
 
+from aegis.help.container import Container
+
+import pathlib
+
 # Figure descriptions start
 
 FIGURE_INFO = {
-    "life_expectancy": {
+    "life expectancy": {
         "title": "life expectancy at age 0",
+        "description": dcc.Markdown(
+            """
+            Life expectancy at age 0
+            $$e_0$$
+            denotes the average expected lifespan at birth, i.e. how long does each individual live on average.
+            """,
+            mathjax=True,
+        ),
+        # graph
+        "figure_layout": {
+            "xaxis_title": "simulation time",
+            "yaxis_title": "e0",
+        },
+    },
+    "intrinsic mortality": {
+        "title": "intrinsic mortality",
         "description": "asdjfkwejkre",
         # graph
         "figure_layout": {
             "xaxis_title": "age",
-            "yaxis_title": "intrinsic mortality rate",
+            "yaxis_title": "intrinsic mortality",
+            # "yaxis": {"range": [0, 1]},
         },
-    }
+    },
+    "intrinsic survivorship": {
+        "title": "intrinsic survivorship",
+        "description": "asdjfkwejkre",
+        # graph
+        "figure_layout": {
+            "xaxis_title": "age",
+            "yaxis_title": "intrinsic survivorship",
+            # "yaxis": {"range": [0, 1]},
+        },
+    },
+    "fertility": {
+        "title": "fertility",
+        "description": "asdjfkwejkre",
+        # graph
+        "figure_layout": {
+            "xaxis_title": "age",
+            "yaxis_title": "",
+            # "yaxis": {"range": [0, 1]},
+        },
+    },
+    "cumulative reproduction": {
+        "title": "cumulative reproduction",
+        "description": "asdjfkwejkre",
+        # graph
+        "figure_layout": {
+            "xaxis_title": "age",
+            "yaxis_title": "",
+            # "yaxis": {"range": [0, 1]},
+        },
+    },
+    "lifetime reproduction": {
+        "title": "lifetime reproduction",
+        "description": "asdjfkwejkre",
+        # graph
+        "figure_layout": {
+            "xaxis_title": "simulation time",
+            "yaxis_title": "",
+            # "yaxis": {"range": [0, 1]},
+        },
+    },
+    "birth structure": {
+        "title": "birth structure",
+        "description": "asdjfkwejkre",
+        # graph
+        "figure_layout": {
+            "xaxis_title": "age",
+            "yaxis_title": "",
+            # "yaxis": {"range": [0, 1]},
+        },
+    },
+    "death structure": {
+        "title": "death structure",
+        "description": "asdjfkwejkre",
+        # graph
+        "figure_layout": {
+            "xaxis_title": "age",
+            "yaxis_title": "",
+            # "yaxis": {"range": [0, 1]},
+        },
+    },
 }
 
 
 # Figure description end
 
-
-# Analysis functions start
-import numpy as np
-
-
-def get_e0(survivorship):
-    # life expectancy at age 0
-
-    ages = np.arange(len(survivorship)) + 1
-    e0 = np.dot(survivorship, ages)
-
-    return e0
-
-
-def get_survivorship(pdf):
-    return np.cumprod(pdf)
-
-
-# Analysis functions stop
-
-
-from aegis.help.container import Container
-
-import pathlib
 
 # Incorporate data
 df = pd.read_csv(
@@ -183,35 +240,35 @@ max_age = 50
 ages = np.arange(1, max_age + 1)
 
 
-def get_mortality_rate(phenotypes, max_age, t):
-    return 1 - phenotypes.iloc[t, :max_age]
+# def get_mortality_rate(phenotypes, max_age, t):
+#     return 1 - phenotypes.iloc[t, :max_age]
 
 
-def get_survivorship(phenotypes, max_age, t):
-    return phenotypes.iloc[t, :max_age].cumprod()
+# def get_survivorship(phenotypes, max_age, t):
+#     return phenotypes.iloc[t, :max_age].cumprod()
 
 
-def get_fertility_rate(phenotypes, max_age, t):
-    return phenotypes.iloc[t, max_age:]
+# def get_fertility_rate(phenotypes, max_age, t):
+#     return phenotypes.iloc[t, max_age:]
 
 
-def get_offspring_number(phenotypes, max_age, t):
-    return np.cumsum(
-        np.multiply(
-            list(phenotypes.iloc[t, max_age:]), list(phenotypes.iloc[t, :max_age])
-        )
-    )
+# def get_offspring_number(phenotypes, max_age, t):
+#     return np.cumsum(
+#         np.multiply(
+#             list(phenotypes.iloc[t, max_age:]), list(phenotypes.iloc[t, :max_age])
+#         )
+#     )
 
 
-def get_birth_structure(age_at_birth, t):
-    return age_at_birth.iloc[t]
+# def get_birth_structure(age_at_birth, t):
+#     return age_at_birth.iloc[t]
 
 
-def get_death_structure(age_at_genetic, age_at_overshoot, t):
-    pseudocount = 0
-    return (age_at_genetic.iloc[t] + pseudocount) / (
-        age_at_overshoot.iloc[t] + age_at_genetic.iloc[t] + pseudocount
-    )
+# def get_death_structure(age_at_genetic, age_at_overshoot, t):
+#     pseudocount = 0
+#     return (age_at_genetic.iloc[t] + pseudocount) / (
+#         age_at_overshoot.iloc[t] + age_at_genetic.iloc[t] + pseudocount
+#     )
 
 
 @app.callback(
@@ -267,117 +324,130 @@ def update_scatter_plot(selected_option, slider_input):
         height=300,
         margin={"t": 0, "r": 0, "b": 0, "l": 0},
     )
-    fig_data = {
-        "mode": "markers",
-        "x": ages,
-    }
 
     # print(phenotypes)
 
     figures = {}
 
     # Figure: life expectancy at age 0
+    id_ = "life expectancy"
     pdf = phenotypes.iloc[:, :max_age]
     survivorship = pdf.cumprod(1)
-    e0 = survivorship.sum(1)
-    x = np.arange(len(e0))
+    y = survivorship.sum(1)
+    x = np.arange(len(y))
 
-    figures["life_expectancy"] = go.Figure(
-        data=[go.Scatter(x=x, y=e0, mode="markers")],
+    figures[id_] = go.Figure(
+        data=[go.Scatter(x=x, y=y, mode="markers")],
         layout=go.Layout(
-            **FIGURE_INFO["life_expectancy"]["figure_layout"],
+            **FIGURE_INFO[id_]["figure_layout"],
             **fig_layout,
         ),
     )
 
-    # Figure:
+    # Figure: intrinsic mortality
+    id_ = "intrinsic mortality"
+    pdf = phenotypes.iloc[-1, :max_age]
+    y = 1 - pdf
+    x = np.arange(max_age) + 1
 
-    figure1 = go.Figure(
-        data=[
-            go.Scatter(
-                y=get_mortality_rate(phenotypes, max_age, slider_input - 1),
-                **fig_data,
-            )
-        ],
+    figures[id_] = go.Figure(
+        data=[go.Scatter(x=x, y=y, mode="markers")],
         layout=go.Layout(
-            xaxis_title="age",
-            yaxis_title="intrinsic mortality rate",
+            **FIGURE_INFO[id_]["figure_layout"],
             **fig_layout,
         ),
     )
 
-    figure2 = go.Figure(
-        data=[
-            go.Scatter(
-                y=get_survivorship(phenotypes, max_age, slider_input - 1),
-                name="Scatter Plot",
-                **fig_data,
-            )
-        ],
+    # Figure: intrinsic survivorship
+    id_ = "intrinsic survivorship"
+    pdf = phenotypes.iloc[-1, :max_age]
+    y = pdf.cumprod()
+    x = np.arange(max_age) + 1
+
+    figures[id_] = go.Figure(
+        data=[go.Scatter(x=x, y=y, mode="markers")],
         layout=go.Layout(
-            xaxis_title="age",
-            yaxis_title="survivorship",
+            **FIGURE_INFO[id_]["figure_layout"],
             **fig_layout,
         ),
     )
 
-    figure3 = go.Figure(
-        data=[
-            go.Scatter(
-                y=get_fertility_rate(phenotypes, max_age, slider_input - 1),
-                name="Scatter Plot",
-                **fig_data,
-            )
-        ],
+    # Figure: fertility
+    id_ = "fertility"
+    fertility = phenotypes.iloc[-1, max_age:]
+    y = fertility
+    x = np.arange(max_age) + 1
+
+    figures[id_] = go.Figure(
+        data=[go.Scatter(x=x, y=y, mode="markers")],
         layout=go.Layout(
-            xaxis_title="age",
-            yaxis_title="fertility rate",
+            **FIGURE_INFO[id_]["figure_layout"],
             **fig_layout,
         ),
     )
 
-    figure4 = go.Figure(
-        data=[
-            go.Scatter(
-                y=get_offspring_number(phenotypes, max_age, slider_input - 1),
-                name="Scatter Plot",
-                **fig_data,
-            )
-        ],
+    # Figure: cumulative reproduction
+    # https://besjournals.onlinelibrary.wiley.com/doi/full/10.1111/2041-210X.13289
+    # BUG fertility is 0 before maturity
+    id_ = "cumulative reproduction"
+    survivorship = phenotypes.iloc[-1, :max_age].cumprod()
+    fertility = phenotypes.iloc[-1, max_age:]
+    y = (survivorship.values * fertility.values).cumsum()
+    x = np.arange(max_age) + 1
+
+    figures[id_] = go.Figure(
+        data=[go.Scatter(x=x, y=y, mode="markers")],
         layout=go.Layout(
-            xaxis_title="age",
-            yaxis_title="age-cumulative # of offspring per individual",
+            **FIGURE_INFO[id_]["figure_layout"],
             **fig_layout,
         ),
     )
 
-    figure5 = go.Figure(
-        data=[
-            go.Scatter(
-                y=get_birth_structure(age_at_birth, slider_input - 1),
-                name="Scatter Plot",
-                **fig_data,
-            )
-        ],
+    # Figure: lifetime reproduction
+    # BUG fertility is 0 before maturity
+    id_ = "lifetime reproduction"
+    survivorship = phenotypes.iloc[:, :max_age].cumprod(1)
+    fertility = phenotypes.iloc[:, max_age:]
+    y = np.sum((np.array(survivorship) * np.array(fertility)), axis=1)
+    x = np.arange(len(y))
+
+    figures[id_] = go.Figure(
+        data=[go.Scatter(x=x, y=y, mode="markers")],
         layout=go.Layout(
-            xaxis_title="age",
-            yaxis_title="# of offspring born to parents of age x",
+            **FIGURE_INFO[id_]["figure_layout"],
             **fig_layout,
         ),
     )
-    figure6 = go.Figure(
-        data=[
-            go.Scatter(
-                y=get_death_structure(
-                    age_at_genetic, age_at_overshoot, slider_input - 1
-                ),
-                name="Scatter Plot",
-                **fig_data,
-            )
-        ],
+
+    # Figure: birth structure
+    id_ = "birth structure"
+
+    y = age_at_birth.iloc[-1]
+    x = np.arange(len(y))
+
+    figures[id_] = go.Figure(
+        data=[go.Scatter(x=x, y=y, mode="markers")],
         layout=go.Layout(
-            xaxis_title="age",
-            yaxis_title="proportion of death that is intrinsic",
+            **FIGURE_INFO[id_]["figure_layout"],
+            **fig_layout,
+        ),
+    )
+
+    # Figure: death structure
+    id_ = "death structure"
+
+    t = -1
+    pseudocount = 0
+    y = (age_at_genetic.iloc[t] + pseudocount) / (
+        age_at_overshoot.iloc[t] + age_at_genetic.iloc[t] + pseudocount
+    )
+    x = np.arange(len(y))[y.notna()]
+    print(y)
+
+    figures[id_] = go.Figure(
+        data=[go.Scatter(x=x, y=y, mode="markers")],
+        layout=go.Layout(
+            **FIGURE_INFO[id_]["figure_layout"],
             **fig_layout,
         ),
     )
