@@ -6,6 +6,24 @@ import numpy as np
 import plotly.graph_objs as go
 
 
+# Figure descriptions start
+
+FIGURE_INFO = {
+    "life_expectancy": {
+        "title": "life expectancy at age 0",
+        "description": "asdjfkwejkre",
+        # graph
+        "figure_layout": {
+            "xaxis_title": "age",
+            "yaxis_title": "intrinsic mortality rate",
+        },
+    }
+}
+
+
+# Figure description end
+
+
 # Analysis functions start
 import numpy as np
 
@@ -88,7 +106,7 @@ app.layout = html.Div(
                         html.Div(
                             [
                                 dcc.Graph(
-                                    id=f"figure{i}",
+                                    id=figure_id,
                                     config={"displayModeBar": False},
                                     className="figure",
                                 ),
@@ -97,9 +115,11 @@ app.layout = html.Div(
                         ),
                         html.Div(
                             children=[
-                                html.P(children="title", className="figure-title"),
                                 html.P(
-                                    children="what the plot shows and why is it useful",
+                                    children=info["title"], className="figure-title"
+                                ),
+                                html.P(
+                                    children=info["description"],
                                     className="figure-description",
                                 ),
                             ]
@@ -107,7 +127,7 @@ app.layout = html.Div(
                     ],
                     className="figure-card",
                 )
-                for i in range(6)
+                for figure_id, info in FIGURE_INFO.items()
             ]
             + [
                 dcc.Graph(id="figurex"),
@@ -216,14 +236,7 @@ def update_slider_config(selected_option):
 
 # Callback to handle dropdown option change
 @app.callback(
-    [
-        Output("figure0", "figure"),
-        Output("figure1", "figure"),
-        Output("figure2", "figure"),
-        Output("figure3", "figure"),
-        Output("figure4", "figure"),
-        Output("figure5", "figure"),
-    ],
+    [Output(key, "figure") for key in FIGURE_INFO.keys()],
     [
         Input("dynamic-dropdown", "value"),
         Input("slider", "value"),
@@ -261,17 +274,18 @@ def update_scatter_plot(selected_option, slider_input):
 
     # print(phenotypes)
 
+    figures = {}
+
     # Figure: life expectancy at age 0
     pdf = phenotypes.iloc[:, :max_age]
     survivorship = pdf.cumprod(1)
     e0 = survivorship.sum(1)
     x = np.arange(len(e0))
 
-    figure_life_expectancy = go.Figure(
-        data=[go.Scatter(x=np.arange(len(e0)), y=e0, mode="markers")],
+    figures["life_expectancy"] = go.Figure(
+        data=[go.Scatter(x=x, y=e0, mode="markers")],
         layout=go.Layout(
-            xaxis_title="simulation time",
-            yaxis_title="life expectancy at age 0",
+            **FIGURE_INFO["life_expectancy"]["figure_layout"],
             **fig_layout,
         ),
     )
@@ -282,7 +296,6 @@ def update_scatter_plot(selected_option, slider_input):
         data=[
             go.Scatter(
                 y=get_mortality_rate(phenotypes, max_age, slider_input - 1),
-                name="Scatter Plot",
                 **fig_data,
             )
         ],
@@ -369,7 +382,7 @@ def update_scatter_plot(selected_option, slider_input):
         ),
     )
 
-    return figure_life_expectancy, figure1, figure2, figure3, figure4, figure5
+    return [figures[key] for key in FIGURE_INFO.keys()]
 
 
 # Run the app
