@@ -6,6 +6,26 @@ import numpy as np
 import plotly.graph_objs as go
 
 
+# Analysis functions start
+import numpy as np
+
+
+def get_e0(survivorship):
+    # life expectancy at age 0
+
+    ages = np.arange(len(survivorship)) + 1
+    e0 = np.dot(survivorship, ages)
+
+    return e0
+
+
+def get_survivorship(pdf):
+    return np.cumprod(pdf)
+
+
+# Analysis functions stop
+
+
 from aegis.help.container import Container
 
 import pathlib
@@ -228,8 +248,8 @@ def update_scatter_plot(selected_option, slider_input):
     # genotypes = container.get_df("genotypes")
 
     fig_layout = dict(
-        yaxis={"range": [0, 1]},
-        xaxis={"range": [0, max_age]},
+        # yaxis={"range": [0, 1]},
+        # xaxis={"range": [0, max_age]},
         width=300,
         height=300,
         margin={"t": 0, "r": 0, "b": 0, "l": 0},
@@ -238,6 +258,25 @@ def update_scatter_plot(selected_option, slider_input):
         "mode": "markers",
         "x": ages,
     }
+
+    # print(phenotypes)
+
+    # Figure: life expectancy at age 0
+    pdf = phenotypes.iloc[:, :max_age]
+    survivorship = pdf.cumprod(1)
+    e0 = survivorship.sum(1)
+    x = np.arange(len(e0))
+
+    figure_life_expectancy = go.Figure(
+        data=[go.Scatter(x=np.arange(len(e0)), y=e0, mode="markers")],
+        layout=go.Layout(
+            xaxis_title="simulation time",
+            yaxis_title="life expectancy at age 0",
+            **fig_layout,
+        ),
+    )
+
+    # Figure:
 
     figure1 = go.Figure(
         data=[
@@ -330,7 +369,7 @@ def update_scatter_plot(selected_option, slider_input):
         ),
     )
 
-    return figure1, figure2, figure3, figure4, figure5, figure6
+    return figure_life_expectancy, figure1, figure2, figure3, figure4, figure5
 
 
 # Run the app
