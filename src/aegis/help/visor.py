@@ -38,11 +38,15 @@ def create_plot(figure_name):
 # App layout
 app.layout = html.Div(
     [
-        # html.Link(
-        #     rel="stylesheet", href="/styles.css"  # Path to your external CSS file
-        # ),
+        # TITLE SECTION
         html.Div(
-            [
+            className="title-section",
+            children=[html.H1("AEGIS visor")],
+        ),
+        # DATASET SECTION
+        html.Div(
+            className="dataset-section",
+            children=[
                 html.Button(
                     "reload list of simulations",
                     "load-paths-button",
@@ -53,9 +57,11 @@ app.layout = html.Div(
                     style={"width": "50%"},
                 ),
             ],
-            className="dropdown-div",
         ),
+        #
+        # FIGURE SECTION
         html.Div(
+            className="figure-section",
             children=[
                 html.Div(
                     [
@@ -68,45 +74,9 @@ app.layout = html.Div(
                     className="figure-card",
                 )
                 for i in range(6)
-            ],
-            className="figure-card-container",
-        ),
-        html.Div(
-            [
-                # html.Div(
-                #     [
-                #         dcc.Graph(
-                #             id="figure1",
-                #             config={"displayModeBar": False},
-                #             className="graph",
-                #         ),
-                #         dcc.Graph(
-                #             id="figure2",
-                #             config={"displayModeBar": False},
-                #             className="graph",
-                #         ),
-                #         dcc.Graph(
-                #             id="figure3",
-                #             config={"displayModeBar": False},
-                #             className="graph",
-                #         ),
-                #         dcc.Graph(
-                #             id="figure4",
-                #             config={"displayModeBar": False},
-                #             className="graph",
-                #         ),
-                #         dcc.Graph(
-                #             id="figure5",
-                #             config={"displayModeBar": False},
-                #             className="graph",
-                #         ),
-                #         dcc.Graph(
-                #             id="figure6",
-                #             config={"displayModeBar": False},
-                #         ),
-                #     ],
-                #     className="plot-div",
-                # ),
+            ]
+            + [
+                dcc.Graph(id="figurex"),
                 html.Div(
                     [
                         dcc.Slider(
@@ -120,8 +90,11 @@ app.layout = html.Div(
                     ],
                     style={"width": "400px"},
                 ),
-            ]
+            ],
         ),
+        #
+        # FOOTER SECTION
+        html.Div([html.P(children="aba baba ja sam zaba")]),
     ],
     className="main-container",
 )
