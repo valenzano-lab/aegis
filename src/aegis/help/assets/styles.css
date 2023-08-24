@@ -1,2 +1,11 @@
 .graph {
 }
+.dropdown-div {
+  display: flex;
+}
+
+.plot-div {
+    display:flex;
+    flex-direction: row;
+    width:2000px;
+}

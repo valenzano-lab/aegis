@@ -42,14 +42,19 @@ app.layout = html.Div(
         # html.Link(
         #     rel="stylesheet", href="/styles.css"  # Path to your external CSS file
         # ),
-        html.Button(
-            "reload list of simulations",
-            "load-paths-button",
-        ),
-        dcc.Dropdown(
-            id="dynamic-dropdown",
-            clearable=False,
-            style={"width": "50%"},
+        html.Div(
+            [
+                html.Button(
+                    "reload list of simulations",
+                    "load-paths-button",
+                ),
+                dcc.Dropdown(
+                    id="dynamic-dropdown",
+                    clearable=False,
+                    style={"width": "50%"},
+                ),
+            ],
+            className="dropdown-div",
         ),
         html.Div(
             [
@@ -85,7 +90,7 @@ app.layout = html.Div(
                             config={"displayModeBar": False},
                         ),
                     ],
-                    style={"display": "flex", "flexDirection": "row"},
+                    className="plot-div",
                 ),
                 html.Div(
                     [
@@ -123,7 +128,10 @@ def update_dropdown_options(n_clicks):
         # turn to pathlib.Path
         paths = [pathlib.Path(path) for path in paths]
 
-    options = [{"label": f"{i}. {str(path.stem)} ({str(path)})", "value": str(path)} for i, path in enumerate(paths)]
+    options = [
+        {"label": f"{i}. {str(path.stem)} ({str(path)})", "value": str(path)}
+        for i, path in enumerate(paths)
+    ]
 
     return options, options[0]["value"]
 
@@ -235,7 +243,7 @@ def update_scatter_plot(selected_option, slider_input):
         layout=go.Layout(
             title=slider_input,
             xaxis_title="age",
-            yaxis_title="mortality rate",
+            yaxis_title="intrinsic mortality rate",
             **fig_layout,
         ),
     )
