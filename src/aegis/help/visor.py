@@ -1,6 +1,5 @@
 # Import packages
-import dash
-from dash import Dash, html, dcc, callback, Output, Input, State
+from dash import Dash, html, dcc, callback, Output, Input
 import pandas as pd
 import plotly.express as px
 import numpy as np
@@ -57,41 +56,57 @@ app.layout = html.Div(
             className="dropdown-div",
         ),
         html.Div(
-            [
+            children=[
                 html.Div(
                     [
                         dcc.Graph(
-                            id="figure1",
+                            id=f"figure{i}",
                             config={"displayModeBar": False},
-                            className="graph",
-                        ),
-                        dcc.Graph(
-                            id="figure2",
-                            config={"displayModeBar": False},
-                            className="graph",
-                        ),
-                        dcc.Graph(
-                            id="figure3",
-                            config={"displayModeBar": False},
-                            className="graph",
-                        ),
-                        dcc.Graph(
-                            id="figure4",
-                            config={"displayModeBar": False},
-                            className="graph",
-                        ),
-                        dcc.Graph(
-                            id="figure5",
-                            config={"displayModeBar": False},
-                            className="graph",
-                        ),
-                        dcc.Graph(
-                            id="figure6",
-                            config={"displayModeBar": False},
+                            className="figure",
                         ),
                     ],
-                    className="plot-div",
-                ),
+                    className="figure-card",
+                )
+                for i in range(6)
+            ],
+            className="figure-card-container",
+        ),
+        html.Div(
+            [
+                # html.Div(
+                #     [
+                #         dcc.Graph(
+                #             id="figure1",
+                #             config={"displayModeBar": False},
+                #             className="graph",
+                #         ),
+                #         dcc.Graph(
+                #             id="figure2",
+                #             config={"displayModeBar": False},
+                #             className="graph",
+                #         ),
+                #         dcc.Graph(
+                #             id="figure3",
+                #             config={"displayModeBar": False},
+                #             className="graph",
+                #         ),
+                #         dcc.Graph(
+                #             id="figure4",
+                #             config={"displayModeBar": False},
+                #             className="graph",
+                #         ),
+                #         dcc.Graph(
+                #             id="figure5",
+                #             config={"displayModeBar": False},
+                #             className="graph",
+                #         ),
+                #         dcc.Graph(
+                #             id="figure6",
+                #             config={"displayModeBar": False},
+                #         ),
+                #     ],
+                #     className="plot-div",
+                # ),
                 html.Div(
                     [
                         dcc.Slider(
@@ -107,7 +122,8 @@ app.layout = html.Div(
                 ),
             ]
         ),
-    ]
+    ],
+    className="main-container",
 )
 
 
@@ -194,12 +210,12 @@ def update_slider_config(selected_option):
 # Callback to handle dropdown option change
 @app.callback(
     [
+        Output("figure0", "figure"),
         Output("figure1", "figure"),
         Output("figure2", "figure"),
         Output("figure3", "figure"),
         Output("figure4", "figure"),
         Output("figure5", "figure"),
-        Output("figure6", "figure"),
     ],
     [
         Input("dynamic-dropdown", "value"),
@@ -222,7 +238,7 @@ def update_scatter_plot(selected_option, slider_input):
     age_at_birth = container.get_df("age_at_birth")
     age_at_genetic = container.get_df("age_at_genetic")
     age_at_overshoot = container.get_df("age_at_overshoot")
-    genotypes = container.get_df("genotypes")
+    # genotypes = container.get_df("genotypes")
 
     fig_layout = dict(
         yaxis={"range": [0, 1]}, xaxis={"range": [0, max_age]}, width=400, height=400

@@ -5,7 +5,22 @@
 }
 
 .plot-div {
-    display:flex;
-    flex-direction: row;
-    width:2000px;
+  display: flex;
+  flex-direction: row;
+  width: 2000px;
+}
+
+.figure-card {
+  /* outline: 5px solid red; */
+  background-color: pink;
+  margin: 10px 0;
+  min-height: 100px;
+  width: 100%;
+}
+
+.main-container {
+}
+
+.figure-card-container {
+  padding: 10px 100px;
 }
