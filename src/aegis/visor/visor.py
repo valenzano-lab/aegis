@@ -195,7 +195,7 @@ def update_output(n_clicks):
         if not isinstance(v, list)
     ],
 )
-def update_output(n_clicks, filename, *values):
+def update_output2(n_clicks, filename, *values):
 
     custom_config = {
         k: val

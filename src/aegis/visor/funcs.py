@@ -5,6 +5,8 @@ import pathlib
 import yaml
 import logging
 
+from aegis.parameters import param
+
 logging.basicConfig(level=logging.INFO)
 
 BASE_DIR = pathlib.Path(platformdirs.user_data_dir("aegis", "aegis"))
@@ -39,6 +41,8 @@ def run():
 def make_config_file(filename, configs):
     configs["PHENOMAP_SPECS"] = []
     configs["NOTES"] = []
+    for k, v in configs.items():
+        configs[k] = param.params[k].convert(v)
     logging.info("making config file")
     with open(BASE_DIR / f"{filename}.yml", "w") as file_:
         yaml.dump(configs, file_)
