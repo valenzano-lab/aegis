@@ -31,7 +31,7 @@ FIGURE_INFO = {
     },
     "intrinsic mortality": {
         "title": "intrinsic mortality",
-        "description": "asdjfkwejkre",
+        "description": """Probability to die """,
         # graph
         "figure_layout": {
             "xaxis_title": "age",
@@ -51,7 +51,7 @@ FIGURE_INFO = {
     },
     "fertility": {
         "title": "fertility",
-        "description": "asdjfkwejkre",
+        "description": "Age-specific probability to produce a single offspring.",
         # graph
         "figure_layout": {
             "xaxis_title": "age",
@@ -145,6 +145,7 @@ app.layout = html.Div(
                 html.Button(
                     "reload list of simulations",
                     "load-paths-button",
+                    style={"display": "none"},
                 ),
                 dcc.Dropdown(
                     id="dynamic-dropdown",
@@ -317,12 +318,17 @@ def update_scatter_plot(selected_option, slider_input):
     age_at_overshoot = container.get_df("age_at_overshoot")
     # genotypes = container.get_df("genotypes")
 
+    marker_color_surv = "dodgerblue"
+    marker_color_repr = "crimson"
+
     fig_layout = dict(
         # yaxis={"range": [0, 1]},
         # xaxis={"range": [0, max_age]},
         width=300,
         height=300,
         margin={"t": 0, "r": 0, "b": 0, "l": 0},
+        plot_bgcolor="rgba(0, 0, 0, 0.02)",
+        # paper_bgcolor="rgba(0, 0, 0, 0.1)",
     )
 
     # print(phenotypes)
@@ -337,7 +343,9 @@ def update_scatter_plot(selected_option, slider_input):
     x = np.arange(len(y))
 
     figures[id_] = go.Figure(
-        data=[go.Scatter(x=x, y=y, mode="markers")],
+        data=[
+            go.Scatter(x=x, y=y, mode="markers", marker={"color": marker_color_surv})
+        ],
         layout=go.Layout(
             **FIGURE_INFO[id_]["figure_layout"],
             **fig_layout,
@@ -351,7 +359,9 @@ def update_scatter_plot(selected_option, slider_input):
     x = np.arange(max_age) + 1
 
     figures[id_] = go.Figure(
-        data=[go.Scatter(x=x, y=y, mode="markers")],
+        data=[
+            go.Scatter(x=x, y=y, mode="markers", marker={"color": marker_color_surv})
+        ],
         layout=go.Layout(
             **FIGURE_INFO[id_]["figure_layout"],
             **fig_layout,
@@ -365,7 +375,9 @@ def update_scatter_plot(selected_option, slider_input):
     x = np.arange(max_age) + 1
 
     figures[id_] = go.Figure(
-        data=[go.Scatter(x=x, y=y, mode="markers")],
+        data=[
+            go.Scatter(x=x, y=y, mode="markers", marker={"color": marker_color_surv})
+        ],
         layout=go.Layout(
             **FIGURE_INFO[id_]["figure_layout"],
             **fig_layout,
@@ -379,7 +391,9 @@ def update_scatter_plot(selected_option, slider_input):
     x = np.arange(max_age) + 1
 
     figures[id_] = go.Figure(
-        data=[go.Scatter(x=x, y=y, mode="markers")],
+        data=[
+            go.Scatter(x=x, y=y, mode="markers", marker={"color": marker_color_repr})
+        ],
         layout=go.Layout(
             **FIGURE_INFO[id_]["figure_layout"],
             **fig_layout,
@@ -396,7 +410,9 @@ def update_scatter_plot(selected_option, slider_input):
     x = np.arange(max_age) + 1
 
     figures[id_] = go.Figure(
-        data=[go.Scatter(x=x, y=y, mode="markers")],
+        data=[
+            go.Scatter(x=x, y=y, mode="markers", marker={"color": marker_color_repr})
+        ],
         layout=go.Layout(
             **FIGURE_INFO[id_]["figure_layout"],
             **fig_layout,
@@ -412,7 +428,9 @@ def update_scatter_plot(selected_option, slider_input):
     x = np.arange(len(y))
 
     figures[id_] = go.Figure(
-        data=[go.Scatter(x=x, y=y, mode="markers")],
+        data=[
+            go.Scatter(x=x, y=y, mode="markers", marker={"color": marker_color_repr})
+        ],
         layout=go.Layout(
             **FIGURE_INFO[id_]["figure_layout"],
             **fig_layout,
@@ -426,7 +444,9 @@ def update_scatter_plot(selected_option, slider_input):
     x = np.arange(len(y))
 
     figures[id_] = go.Figure(
-        data=[go.Scatter(x=x, y=y, mode="markers")],
+        data=[
+            go.Scatter(x=x, y=y, mode="markers", marker={"color": marker_color_repr})
+        ],
         layout=go.Layout(
             **FIGURE_INFO[id_]["figure_layout"],
             **fig_layout,
@@ -445,12 +465,17 @@ def update_scatter_plot(selected_option, slider_input):
     print(y)
 
     figures[id_] = go.Figure(
-        data=[go.Scatter(x=x, y=y, mode="markers")],
+        data=[
+            go.Scatter(x=x, y=y, mode="markers", marker={"color": marker_color_repr})
+        ],
         layout=go.Layout(
             **FIGURE_INFO[id_]["figure_layout"],
             **fig_layout,
         ),
     )
+
+    # for figure in figures.values():
+    # figure.update_yaxes(showline=True)
 
     return [figures[key] for key in FIGURE_INFO.keys()]
 
