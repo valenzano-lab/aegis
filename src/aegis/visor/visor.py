@@ -21,6 +21,14 @@ funcs.hello()
 # Figure description end
 
 
+def print_function_name(func):
+    def wrapper(*args, **kwargs):
+        print(f"Executing function: {func.__name__}")
+        return func(*args, **kwargs)
+
+    return wrapper
+
+
 # Incorporate data
 df = pd.read_csv(
     "https://raw.githubusercontent.com/plotly/datasets/master/gapminder2007.csv"
@@ -28,9 +36,11 @@ df = pd.read_csv(
 
 container = None
 
-paths_txt = pathlib.Path(__file__).absolute().parent.parent / "help" / "paths.txt"
-with open(paths_txt, "r") as f:
-    paths = f.read().split()[::-1]
+# paths_txt = pathlib.Path(__file__).absolute().parent / "paths.txt"
+# paths_txt = funcs.BASE_DIR / "paths.txt"
+# with open(paths_txt, "r") as f:
+#     paths = f.read().split()[::-1]
+
 
 # Initialize the app
 app = Dash(__name__)
@@ -39,6 +49,7 @@ app.title = "AEGIS visualizer"
 
 
 # Create example plots
+@print_function_name
 def create_plot(figure_name):
     x = np.linspace(0, 10, 100)
     y = np.sin(x)
@@ -161,11 +172,35 @@ app.layout = html.Div(
 
 
 @app.callback(
+    [
+        Output("dynamic-dropdown", "options"),
+        Output("dynamic-dropdown", "value"),
+    ],
+    [
+        Input("toggle-button", "n_clicks"),
+    ],
+    prevent_initial_call=True,
+)
+def refresh_paths(_):
+    paths = [p for p in funcs.BASE_DIR.iterdir() if p.is_dir()]
+
+    options = [
+        {"label": f"{i}. {str(path.stem)} ({str(path)})", "value": str(path)}
+        for i, path in enumerate(paths)
+    ]
+
+    print(options)
+
+    return options, options[0]["value"]
+
+
+@app.callback(
     Output("sim-section", "style"),
     Output("figure-section", "style"),
     Input("toggle-button", "n_clicks"),
     prevent_initial_call=True,
 )
+@print_function_name
 def toggle_divs(n_clicks):
     div1_style = {"display": "block"}
     div2_style = {"display": "none"}
@@ -177,11 +212,19 @@ def toggle_divs(n_clicks):
 
 
 @app.callback(
-    Output("simulation-run-button", "style"), Input("simulation-run-button", "n_clicks")
+    Output("simulation-run-button", "style"),
+    Input("simulation-run-button", "n_clicks"),
+    State("config-make-text", "value"),
+    prevent_initial_call=True,
 )
-def update_output(n_clicks):
+@print_function_name
+def update_output(n_clicks, filename):
     if n_clicks is not None:
-        funcs.run()
+        funcs.run(filename)
+
+    # config_path = funcs.BASE_DIR / f"{filename}.yml"
+    # with open(paths_txt, "a") as f:
+    #     f.write(str(config_path) + "\n")
     return {}
 
 
@@ -194,7 +237,9 @@ def update_output(n_clicks):
         for k, v in funcs.DEFAULT_CONFIG_DICT.items()
         if not isinstance(v, list)
     ],
+    prevent_initial_call=True,
 )
+@print_function_name
 def update_output2(n_clicks, filename, *values):
 
     custom_config = {
@@ -208,67 +253,39 @@ def update_output2(n_clicks, filename, *values):
     return {}
 
 
-@callback(
-    [Output("dynamic-dropdown", "options"), Output("dynamic-dropdown", "value")],
-    [Input("load-paths-button", "n_clicks")],
-)
-def update_dropdown_options(n_clicks):
+# @callback(
+#     [Output("dynamic-dropdown", "options"), Output("dynamic-dropdown", "value")],
+#     [Input("load-paths-button", "n_clicks")],
+# )
+# @print_function_name
+# def update_dropdown_options(n_clicks):
 
-    with open(paths_txt, "r") as f:
-        # decode paths.txt
-        paths = f.read().split()[::-1]
-        # remove duplicates with preserving order
-        paths = sorted(set(paths), key=paths.index)
-        # turn to pathlib.Path
-        paths = [pathlib.Path(path) for path in paths]
+#     with open(paths_txt, "r") as f:
+#         # decode paths.txt
+#         paths = f.read().split()[::-1]
+#         # remove duplicates with preserving order
+#         paths = sorted(set(paths), key=paths.index)
+#         # turn to pathlib.Path
+#         paths = [pathlib.Path(path) for path in paths]
 
-    options = [
-        {"label": f"{i}. {str(path.stem)} ({str(path)})", "value": str(path)}
-        for i, path in enumerate(paths)
-    ]
+#     options = [
+#         {"label": f"{i}. {str(path.stem)} ({str(path)})", "value": str(path)}
+#         for i, path in enumerate(paths)
+#     ]
 
-    return options, options[0]["value"]
+#     return options, options[0]["value"]
 
 
 max_age = 50
 ages = np.arange(1, max_age + 1)
 
 
-# def get_mortality_rate(phenotypes, max_age, t):
-#     return 1 - phenotypes.iloc[t, :max_age]
-
-
-# def get_survivorship(phenotypes, max_age, t):
-#     return phenotypes.iloc[t, :max_age].cumprod()
-
-
-# def get_fertility_rate(phenotypes, max_age, t):
-#     return phenotypes.iloc[t, max_age:]
-
-
-# def get_offspring_number(phenotypes, max_age, t):
-#     return np.cumsum(
-#         np.multiply(
-#             list(phenotypes.iloc[t, max_age:]), list(phenotypes.iloc[t, :max_age])
-#         )
-#     )
-
-
-# def get_birth_structure(age_at_birth, t):
-#     return age_at_birth.iloc[t]
-
-
-# def get_death_structure(age_at_genetic, age_at_overshoot, t):
-#     pseudocount = 0
-#     return (age_at_genetic.iloc[t] + pseudocount) / (
-#         age_at_overshoot.iloc[t] + age_at_genetic.iloc[t] + pseudocount
-#     )
-
-
 @app.callback(
     [Output("slider", "max")],
     [Input("dynamic-dropdown", "value")],
+    prevent_initial_call=True,
 )
+@print_function_name
 def update_slider_config(selected_option):
 
     global container
@@ -292,7 +309,9 @@ def update_slider_config(selected_option):
         Input("dynamic-dropdown", "value"),
         Input("slider", "value"),
     ],
+    prevent_initial_call=True,
 )
+@print_function_name
 def update_scatter_plot(selected_option, slider_input):
 
     global container

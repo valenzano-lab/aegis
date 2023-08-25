@@ -1,4 +1,5 @@
 import platformdirs
+import subprocess
 
 import time
 import pathlib
@@ -31,10 +32,10 @@ def hello():
     print(BASE_DIR)
 
 
-def run():
+def run(filename):
     t = time.time()
-    # subprocess.run("python3 -m aegis temp/longg.yml", shell=True, check=True)
-    # make_config_file()
+    config_path = BASE_DIR / f"{filename}.yml"
+    subprocess.run(f"python3 -m aegis {config_path}", shell=True, check=True)
     print(time.time() - t)
 
 
@@ -44,7 +45,8 @@ def make_config_file(filename, configs):
     for k, v in configs.items():
         configs[k] = param.params[k].convert(v)
     logging.info("making config file")
-    with open(BASE_DIR / f"{filename}.yml", "w") as file_:
+    config_path = BASE_DIR / f"{filename}.yml"
+    with open(config_path, "w") as file_:
         yaml.dump(configs, file_)
 
 
