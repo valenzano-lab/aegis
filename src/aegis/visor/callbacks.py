@@ -48,7 +48,8 @@ def refresh_result_section(n_clicks):
         print(logline)
         print(output_summary)
 
-        time_of_creation = datetime.datetime.fromtimestamp(container.basepath.stat().st_ctime)
+        time_of_creation = datetime.datetime.fromtimestamp(input_summary["time_start"])
+        time_of_edit = datetime.datetime.fromtimestamp(container.paths["log"].stat().st_mtime)
 
         element = html.Div(
             children=[
@@ -59,6 +60,7 @@ def refresh_result_section(n_clicks):
                 ),
                 # date created
                 html.P(time_of_creation),
+                html.P(time_of_edit),
                 html.P(status[0]),
                 html.P(status[1]),
                 html.P(logline["ETA"]),
@@ -66,7 +68,7 @@ def refresh_result_section(n_clicks):
                 html.P(logline["stg/min"]),
                 html.P(str(container.basepath)),
             ],
-            style={"display": "flex"},
+            style={"display": "block"},
         )
         elements.append(element)
 
