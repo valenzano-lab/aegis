@@ -1,5 +1,5 @@
 # Import packages
-from dash import Dash, html, dcc, callback, Output, Input
+from dash import Dash, html, dcc, callback, Output, Input, State
 import pandas as pd
 import plotly.express as px
 import numpy as np
@@ -10,6 +10,8 @@ from aegis.help.container import Container
 from aegis.visor import funcs
 
 import pathlib
+
+funcs.hello()
 
 # Figure descriptions start
 
@@ -139,27 +141,56 @@ app.layout = html.Div(
             className="title-section",
             children=[html.H1("AEGIS visor")],
         ),
-        # DATASET SECTION
+        # CONTROL SECTION
         html.Div(
-            className="dataset-section",
+            className="control-section",
             children=[
-                html.Button(
-                    "reload list of simulations",
-                    "load-paths-button",
-                    style={"display": "none"},
-                ),
-                dcc.Dropdown(
-                    id="dynamic-dropdown",
-                    clearable=False,
-                    style={"width": "50%"},
-                ),
+                html.Button("Toggle Divs", id="toggle-button"),
             ],
         ),
-        #
+        # SIMULATION SECTION
+        html.Div(
+            id="sim-section",
+            children=[
+                html.Button("run simulation", id="simulation-run-button"),
+                dcc.Input(
+                    id="config-make-text", type="text", placeholder="Enter text..."
+                ),
+                html.Button("make config", id="config-make-button"),
+            ]
+            + [
+                html.Div(
+                    children=[
+                        html.Label(children=k),
+                        dcc.Input(type="text", placeholder=str(v), id=f"config-{k}"),
+                    ]
+                )
+                for k, v in funcs.DEFAULT_CONFIG_DICT.items()
+                if not isinstance(v, list)
+            ],
+        ),
         # FIGURE SECTION
         html.Div(
-            className="figure-section",
+            id="figure-section",
+            style={"display": "none"},
             children=[
+                html.Div(
+                    className="dataset-section",
+                    children=[
+                        html.Button(
+                            "reload list of simulations",
+                            "load-paths-button",
+                            style={"display": "none"},
+                        ),
+                        dcc.Dropdown(
+                            id="dynamic-dropdown",
+                            clearable=False,
+                            style={"width": "50%"},
+                        ),
+                    ],
+                ),
+            ]
+            + [
                 html.Div(
                     [
                         html.Div(
@@ -207,13 +238,62 @@ app.layout = html.Div(
         ),
         #
         # FOOTER SECTION
-        html.Div([html.P(children="aba baba ja sam zaba")]),
+        html.Div([html.Hr(), html.P(children="aba baba ja sam zaba")]),
     ],
     className="main-container",
 )
 
 
 # load paths
+
+
+@app.callback(
+    Output("sim-section", "style"),
+    Output("figure-section", "style"),
+    Input("toggle-button", "n_clicks"),
+    prevent_initial_call=True,
+)
+def toggle_divs(n_clicks):
+    div1_style = {"display": "block"}
+    div2_style = {"display": "none"}
+
+    if n_clicks % 2 == 1:
+        div1_style, div2_style = div2_style, div1_style
+
+    return div1_style, div2_style
+
+
+@app.callback(
+    Output("simulation-run-button", "style"), Input("simulation-run-button", "n_clicks")
+)
+def update_output(n_clicks):
+    if n_clicks is not None:
+        funcs.run()
+        print("funcs.run")
+    return {}
+
+
+@app.callback(
+    Output("config-make-button", "style"),
+    Input("config-make-button", "n_clicks"),
+    State("config-make-text", "value"),
+    [
+        State(f"config-{k}", "value")
+        for k, v in funcs.DEFAULT_CONFIG_DICT.items()
+        if not isinstance(v, list)
+    ],
+)
+def update_output(n_clicks, filename, *values):
+
+    custom_config = {
+        k: val
+        for (k, v), val in zip(funcs.DEFAULT_CONFIG_DICT.items(), values)
+        if not isinstance(v, list)
+    }
+
+    if n_clicks is not None:
+        funcs.make_config_file(filename, custom_config)
+    return {}
 
 
 @callback(

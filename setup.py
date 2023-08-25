@@ -33,6 +33,7 @@ setuptools.setup(
         "pyarrow",
         "jupyter",
         "matplotlib",
+        "platformdirs==2.5.2",
     ],
     extras_require={
         "dev": [
