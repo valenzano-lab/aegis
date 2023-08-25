@@ -1,9 +1,11 @@
-import subprocess
 import platformdirs
 
 import time
 import pathlib
 import yaml
+import logging
+
+logging.basicConfig(level=logging.INFO)
 
 BASE_DIR = pathlib.Path(platformdirs.user_data_dir("aegis", "aegis"))
 BASE_DIR.mkdir(parents=True, exist_ok=True)
@@ -18,8 +20,9 @@ def read_yml(path):
 
 DEFAULT_CONFIG_DICT = read_yml(HERE.parent / "parameters/default.yml")
 
-for k,v in DEFAULT_CONFIG_DICT.items():
-    print(isinstance(v, list))
+# for k, v in DEFAULT_CONFIG_DICT.items():
+# print(isinstance(v, list))
+# print()
 
 
 def hello():
@@ -36,11 +39,10 @@ def run():
 def make_config_file(filename, configs):
     configs["PHENOMAP_SPECS"] = []
     configs["NOTES"] = []
-
-    print(configs)
-    print(filename)
+    logging.info("making config file")
+    with open(BASE_DIR / f"{filename}.yml", "w") as file_:
+        yaml.dump(configs, file_)
 
 
 def get_default_config_dict():
     return read_yml(HERE.parent / "parameters/default.yml")
-
