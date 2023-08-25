@@ -1,23 +1,76 @@
 from dash import Dash, html, dcc, callback, Output, Input, State
 
+import datetime
+
 from aegis.visor import funcs
+from aegis.help.container import Container
 
 
 @callback(
     Output("sim-section", "style"),
+    Output("result-section", "style"),
     Output("figure-section", "style"),
     Input("toggle-button", "n_clicks"),
     prevent_initial_call=True,
 )
 @funcs.print_function_name
 def toggle_display(n_clicks):
-    div1_style = {"display": "block"}
-    div2_style = {"display": "none"}
+    # three possible displays
+    styles = [{"display": "none"}] * 3
+    styles[n_clicks % 3] = {"display": "block"}
+    return styles[0], styles[1], styles[2]
 
-    if n_clicks % 2 == 1:
-        div1_style, div2_style = div2_style, div1_style
 
-    return div1_style, div2_style
+@callback(
+    Output("result-section", "children"),
+    Input("toggle-button", "n_clicks"),
+    prevent_initial_call=True,
+)
+@funcs.print_function_name
+def refresh_result_section(n_clicks):
+
+    paths = funcs.get_sim_paths()
+    containers = [Container(path) for path in paths]
+    elements = []
+
+    for container in containers:
+        logline = container.get_log().iloc[-1].to_dict()
+        input_summary = container.get_input_summary()
+        output_summary = container.get_output_summary()
+
+        if output_summary is None:
+            status = ["running", "not extinct"]
+        elif output_summary["extinct"]:
+            status = ["finished", "extinct"]
+        else:
+            status = ["finished", "not extinct"]
+
+        print(logline)
+        print(output_summary)
+
+        time_of_creation = datetime.datetime.fromtimestamp(container.basepath.stat().st_ctime)
+
+        element = html.Div(
+            children=[
+                dcc.Checklist(
+                    id=str(container.basepath),
+                    options=[{"label": str(container.basepath.stem), "value": "yes"}],
+                    value=["yes"],
+                ),
+                # date created
+                html.P(time_of_creation),
+                html.P(status[0]),
+                html.P(status[1]),
+                html.P(logline["ETA"]),
+                html.P(logline["stage"]),
+                html.P(logline["stg/min"]),
+                html.P(str(container.basepath)),
+            ],
+            style={"display": "flex"},
+        )
+        elements.append(element)
+
+    return elements
 
 
 @callback(
@@ -31,7 +84,7 @@ def toggle_display(n_clicks):
     prevent_initial_call=True,
 )
 def refresh_dropdown_options(_):
-    paths = [p for p in funcs.BASE_DIR.iterdir() if p.is_dir()]
+    paths = funcs.get_sim_paths()
     dropdown_options = [
         {"label": f"{i}. {str(path.stem)} ({str(path)})", "value": str(path)}
         for i, path in enumerate(paths)

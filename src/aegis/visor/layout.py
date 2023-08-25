@@ -37,6 +37,8 @@ app_layout = html.Div(
                 if not isinstance(v, list)
             ],
         ),
+        # RESULT SECTION
+        html.Div(id="result-section", style={"display": "none"}, children=[]),
         # FIGURE SECTION
         html.Div(
             id="figure-section",
@@ -106,7 +108,7 @@ app_layout = html.Div(
         ),
         #
         # FOOTER SECTION
-        html.Div([html.Hr(), html.P(children="aba baba ja sam zaba")]),
+        html.Div([html.Hr(), html.P(children="https://github.com/valenzano-lab/aegis")]),
     ],
     className="main-container",
 )

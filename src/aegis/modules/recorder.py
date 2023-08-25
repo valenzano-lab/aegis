@@ -32,6 +32,7 @@ class Recorder:
             "snapshots_demography": opath / "snapshots" / "demography",
             "visor": opath / "visor",
             "visor_spectra": opath / "visor" / "spectra",
+            "input_summary": opath,
             "output_summary": opath,
             "pickles": opath / "pickles",
             "popgen": opath / "popgen",
@@ -184,7 +185,7 @@ class Recorder:
             np.savetxt(f, map_, delimiter=",", fmt="%f")
 
     def record_output_summary(self):
-        output_summary = {
+        summary = {
             "extinct": self.extinct,
             "random_seed": pan.random_seed,
             "time_start": pan.time_start,
@@ -192,7 +193,18 @@ class Recorder:
             "jupyter_path": str(pan.output_path.absolute()),
         }
         with open(self.paths["output_summary"] / "output_summary.json", "w") as f:
-            json.dump(output_summary, f, indent=4)
+            json.dump(summary, f, indent=4)
+
+    def record_input_summary(self):
+        summary = {
+            # "extinct": self.extinct,
+            "random_seed": pan.random_seed,
+            "time_start": pan.time_start,
+            # "time_end": time.time(),
+            "jupyter_path": str(pan.output_path.absolute()),
+        }
+        with open(self.paths["input_summary"] / "input_summary.json", "w") as f:
+            json.dump(summary, f, indent=4)
 
     def record_jupyter_path(self):
         with open(pan.here / "help/paths.txt", "a") as f:

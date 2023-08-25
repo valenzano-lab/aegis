@@ -1,6 +1,7 @@
 import pandas as pd
 import pathlib
 import logging
+import json
 
 
 class Container:
@@ -47,3 +48,13 @@ class Container:
         df = self.get_df(stem)
         json = df.T.to_json(index=False, orient="split")
         return json
+
+    def get_output_summary(self):
+        path = self.basepath / "0" / "output_summary.json"
+        if path.exists():
+            with open(self.basepath / "0" / "output_summary.json", "r") as file_:
+                return json.load(file_)
+
+    def get_input_summary(self):
+        with open(self.basepath / "0" / "input_summary.json", "r") as file_:
+            return json.load(file_)

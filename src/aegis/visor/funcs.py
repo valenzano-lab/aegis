@@ -57,3 +57,6 @@ def print_function_name(func):
         return func(*args, **kwargs)
 
     return wrapper
+
+def get_sim_paths():
+    return [p for p in BASE_DIR.iterdir() if p.is_dir()]
