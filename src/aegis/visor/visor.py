@@ -7,6 +7,7 @@ import plotly.graph_objs as go
 
 
 from aegis.help.container import Container
+from aegis.visor import funcs
 
 import pathlib
 
@@ -112,7 +113,7 @@ df = pd.read_csv(
 
 container = None
 
-paths_txt = pathlib.Path(__file__).absolute().parent / "paths.txt"
+paths_txt = pathlib.Path(__file__).absolute().parent.parent / "help" / "paths.txt"
 with open(paths_txt, "r") as f:
     paths = f.read().split()[::-1]
 
