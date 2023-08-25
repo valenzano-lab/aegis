@@ -56,7 +56,7 @@ def refresh_result_section(n_clicks):
                 dcc.Checklist(
                     id=str(container.basepath),
                     options=[{"label": str(container.basepath.stem), "value": "yes"}],
-                    value=["yes"],
+                    value=[],
                 ),
                 # date created
                 html.P(time_of_creation),
