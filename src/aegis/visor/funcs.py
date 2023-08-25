@@ -23,14 +23,6 @@ def read_yml(path):
 
 DEFAULT_CONFIG_DICT = read_yml(HERE.parent / "parameters/default.yml")
 
-# for k, v in DEFAULT_CONFIG_DICT.items():
-# print(isinstance(v, list))
-# print()
-
-
-def hello():
-    print(BASE_DIR)
-
 
 def run(filename):
     t = time.time()
@@ -52,3 +44,12 @@ def make_config_file(filename, configs):
 
 def get_default_config_dict():
     return read_yml(HERE.parent / "parameters/default.yml")
+
+
+def print_function_name(func):
+    def wrapper(*args, **kwargs):
+        print(f"Executing function: {func.__name__}")
+        return func(*args, **kwargs)
+
+    return wrapper
+
