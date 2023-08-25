@@ -8,7 +8,7 @@ class Param:
         self.drange = drange
 
     def convert(self, value):
-        if value is None:
+        if value is None or value == "":
             return self.default
         else:
             return self.dtype(value)
