@@ -24,10 +24,15 @@ def read_yml(path):
 DEFAULT_CONFIG_DICT = read_yml(HERE.parent / "parameters/default.yml")
 
 
+def get_config_path(filename):
+    return BASE_DIR / f"{filename}.yml"
+
+
 def run(filename):
     t = time.time()
-    config_path = BASE_DIR / f"{filename}.yml"
-    subprocess.run(f"python3 -m aegis {config_path}", shell=True, check=True)
+    subprocess.run(
+        f"python3 -m aegis {get_config_path(filename)}", shell=True, check=True
+    )
     print(time.time() - t)
 
 
@@ -37,7 +42,7 @@ def make_config_file(filename, configs):
     for k, v in configs.items():
         configs[k] = param.params[k].convert(v)
     logging.info("making config file")
-    config_path = BASE_DIR / f"{filename}.yml"
+    config_path = get_config_path(filename)
     with open(config_path, "w") as file_:
         yaml.dump(configs, file_)
 
@@ -52,4 +57,3 @@ def print_function_name(func):
         return func(*args, **kwargs)
 
     return wrapper
-
