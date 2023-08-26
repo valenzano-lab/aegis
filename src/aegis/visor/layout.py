@@ -8,6 +8,7 @@ app_layout = html.Div(
     [
         # checkers
         dcc.Interval(id="results-exist-interval", interval=1000, n_intervals=0),
+        dcc.Interval(id="process-monitor-interval", interval=1000, n_intervals=0),
         # TITLE SECTION
         html.Div(
             className="title-section",
