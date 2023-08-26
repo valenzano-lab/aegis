@@ -22,9 +22,9 @@ app_layout = html.Div(
             children=[
                 html.Button("run simulation", id="simulation-run-button"),
                 dcc.Input(
-                    id="config-make-text", type="text", placeholder="Enter text..."
+                    id="config-make-text", type="text", placeholder="unique name"
                 ),
-                html.Button("make config", id="config-make-button"),
+                # html.Button("make config", id="config-make-button"),
             ]
             + [
                 html.Div(
@@ -108,7 +108,9 @@ app_layout = html.Div(
         ),
         #
         # FOOTER SECTION
-        html.Div([html.Hr(), html.P(children="https://github.com/valenzano-lab/aegis")]),
+        html.Div(
+            [html.Hr(), html.P(children="https://github.com/valenzano-lab/aegis")]
+        ),
     ],
     className="main-container",
 )

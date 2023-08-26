@@ -5,7 +5,7 @@ import aegis.visor.callbacks
 import aegis.visor.callbacks_plot
 
 
-app = Dash(__name__)
+app = Dash(__name__, suppress_callback_exceptions=True)
 app._favicon = "favicon.ico"
 app.title = "AEGIS visualizer"
 app.layout = app_layout

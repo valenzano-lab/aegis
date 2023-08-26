@@ -1,5 +1,6 @@
 from dash import Dash, html, dcc, callback, Output, Input, State
 
+import logging
 import datetime
 
 from aegis.visor import funcs
@@ -49,7 +50,9 @@ def refresh_result_section(n_clicks):
         print(output_summary)
 
         time_of_creation = datetime.datetime.fromtimestamp(input_summary["time_start"])
-        time_of_edit = datetime.datetime.fromtimestamp(container.paths["log"].stat().st_mtime)
+        time_of_edit = datetime.datetime.fromtimestamp(
+            container.paths["log"].stat().st_mtime
+        )
 
         element = html.Div(
             children=[
@@ -98,18 +101,6 @@ def refresh_dropdown_options(_):
     Output("simulation-run-button", "style"),
     Input("simulation-run-button", "n_clicks"),
     State("config-make-text", "value"),
-    prevent_initial_call=True,
-)
-@funcs.print_function_name
-def run_simulation(n_clicks, filename):
-    if n_clicks is not None:
-        funcs.run(filename)
-
-
-@callback(
-    Output("config-make-button", "style"),
-    Input("config-make-button", "n_clicks"),
-    State("config-make-text", "value"),
     [
         State(f"config-{k}", "value")
         for k, v in funcs.DEFAULT_CONFIG_DICT.items()
@@ -118,14 +109,51 @@ def run_simulation(n_clicks, filename):
     prevent_initial_call=True,
 )
 @funcs.print_function_name
-def make_config_file(n_clicks, filename, *values):
+def run_simulation(n_clicks, filename, *values):
+    if n_clicks is None:
+        return
 
+    if filename is None or filename == "":
+        logging.error("no filename given")
+        return
+
+    sim_exists = funcs.sim_exists(filename)
+    if sim_exists:
+        logging.error("sim with that name already exists")
+        return
+
+    # make config file
     custom_config = {
         k: val
         for (k, v), val in zip(funcs.DEFAULT_CONFIG_DICT.items(), values)
         if not isinstance(v, list)
     }
+    funcs.make_config_file(filename, custom_config)
 
-    if n_clicks is not None:
-        funcs.make_config_file(filename, custom_config)
-    return {}
+    # run simulation
+    funcs.run(filename)
+
+
+# @callback(
+#     Output("config-make-button", "style"),
+#     Input("config-make-button", "n_clicks"),
+#     State("config-make-text", "value"),
+#     [
+#         State(f"config-{k}", "value")
+#         for k, v in funcs.DEFAULT_CONFIG_DICT.items()
+#         if not isinstance(v, list)
+#     ],
+#     prevent_initial_call=True,
+# )
+# @funcs.print_function_name
+# def make_config_file(n_clicks, filename, *values):
+
+#     custom_config = {
+#         k: val
+#         for (k, v), val in zip(funcs.DEFAULT_CONFIG_DICT.items(), values)
+#         if not isinstance(v, list)
+#     }
+
+#     if n_clicks is not None:
+#         funcs.make_config_file(filename, custom_config)
+#     return {}

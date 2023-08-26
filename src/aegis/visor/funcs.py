@@ -58,5 +58,11 @@ def print_function_name(func):
 
     return wrapper
 
+
 def get_sim_paths():
     return [p for p in BASE_DIR.iterdir() if p.is_dir()]
+
+
+def sim_exists(filename: str) -> bool:
+    paths = get_sim_paths()
+    return any(path.stem == filename for path in paths)
