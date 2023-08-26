@@ -8,7 +8,6 @@ app_layout = html.Div(
     [
         # checkers
         dcc.Interval(id="results-exist-interval", interval=1000, n_intervals=0),
-
         # TITLE SECTION
         html.Div(
             className="title-section",
@@ -28,9 +27,7 @@ app_layout = html.Div(
             id="sim-section",
             children=[
                 html.Button("run simulation", id="simulation-run-button"),
-                dcc.Input(
-                    id="config-make-text", type="text", placeholder="unique id"
-                ),
+                dcc.Input(id="config-make-text", type="text", placeholder="unique id"),
                 html.P("", id="simulation-run-text"),
                 # html.Button("make config", id="config-make-button"),
             ]
@@ -77,6 +74,10 @@ app_layout = html.Div(
             id="figure-section",
             style={"display": "none"},
             children=[
+                html.Button(
+                    "reload",
+                    "reload-plots-button",
+                ),
                 # html.Div(
                 #     className="dataset-section",
                 #     children=[

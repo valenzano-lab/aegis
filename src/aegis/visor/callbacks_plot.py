@@ -1,6 +1,6 @@
 import numpy as np
 import plotly.graph_objs as go
-from dash import callback, Output, Input
+from dash import callback, Output, Input, ctx
 
 from aegis.help.container import Container
 from aegis.visor import funcs
@@ -58,11 +58,22 @@ containers = {}
 #     return (len(phenotypes),)
 
 
+# @callback(
+#     Output("reload-plots-button", "style"),
+#     Input("reload-plots-button", "n_clicks"),
+#     prevent_initial_call=True,
+# )
+# def reload_plots(n_clicks):
+#     global containers
+#     containers = {}
+
+
 @callback(
     [Output(key, "figure") for key in FIGURE_INFO.keys()],
     # Input("dynamic-dropdown", "value"),
     # Input("slider", "value"),
     Input("plot-view-button", "n_clicks"),
+    Input("reload-plots-button", "n_clicks"),
     prevent_initial_call=True,
 )
 @funcs.print_function_name
@@ -85,6 +96,11 @@ def update_scatter_plot(*_):
     # # genotypes = container.get_df("genotypes")
 
     global containers
+
+    triggered = ctx.triggered_id
+    if triggered == "reload-plots-button":
+        containers = {}
+
     for sim in SELECTION:
         if sim not in containers:
             containers[sim] = Container(f"/home/user/.local/share/aegis/{sim}")
