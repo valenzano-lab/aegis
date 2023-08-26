@@ -122,22 +122,22 @@ app_layout = html.Div(
                 )
                 for figure_id, info in FIGURE_INFO.items()
             ]
-            + [
-                dcc.Graph(id="figurex"),
-                html.Div(
-                    [
-                        dcc.Slider(
-                            id="slider",
-                            min=1,
-                            max=10,
-                            step=1,
-                            value=5,
-                            updatemode="drag",
-                        ),
-                    ],
-                    # style={"width": "400px"},
-                ),
-            ],
+            # + [
+            #     dcc.Graph(id="figurex"),
+            #     html.Div(
+            #         [
+            #             dcc.Slider(
+            #                 id="slider",
+            #                 min=1,
+            #                 max=10,
+            #                 step=1,
+            #                 value=5,
+            #                 updatemode="drag",
+            #             ),
+            #         ],
+            #         # style={"width": "400px"},
+            #     ),
+            # ],
         ),
         #
         # FOOTER SECTION
