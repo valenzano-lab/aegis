@@ -24,6 +24,7 @@ app_layout = html.Div(
                 dcc.Input(
                     id="config-make-text", type="text", placeholder="unique name"
                 ),
+                html.P("", id="simulation-run-text"),
                 # html.Button("make config", id="config-make-button"),
             ]
             + [
