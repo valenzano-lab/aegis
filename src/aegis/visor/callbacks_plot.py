@@ -8,8 +8,12 @@ from aegis.visor import funcs
 from aegis.visor.static import FIGURE_INFO
 
 container = None
+containers = {}
+
 max_age = 50
 ages = np.arange(1, max_age + 1)
+
+colors = ["dodgerblue", "hotpink", "crimson"]
 
 
 @callback(
@@ -80,6 +84,12 @@ def update_scatter_plot(selected_option, slider_input):
     age_at_overshoot = container.get_df("age_at_overshoot")
     # genotypes = container.get_df("genotypes")
 
+    global containers
+    which_sims = ("asdf", "qwer", "ertoijlkretlkwerlk wefkjwdfj lweef ")
+    for sim in which_sims:
+        if sim not in containers:
+            containers[sim] = Container(f"/home/user/.local/share/aegis/{sim}")
+
     marker_color_surv = "dodgerblue"
     marker_color_repr = "crimson"
 
@@ -90,8 +100,26 @@ def update_scatter_plot(selected_option, slider_input):
         height=300,
         margin={"t": 0, "r": 0, "b": 0, "l": 0},
         plot_bgcolor="rgba(0, 0, 0, 0.02)",
+        # legend={"xanchor": "right", "yanchor": "bottom", "orientation": "v"},
         # paper_bgcolor="rgba(0, 0, 0, 0.1)",
     )
+
+    def make_figure(xs, ys):
+        return go.Figure(
+            data=[
+                go.Scatter(
+                    x=x,
+                    y=y,
+                    mode="markers",
+                    name=sim,
+                )
+                for x, y, sim in zip(xs, ys, which_sims)
+            ],
+            layout=go.Layout(
+                **FIGURE_INFO[id_]["figure_layout"],
+                **fig_layout,
+            ),
+        )
 
     figures = {}
 
@@ -99,141 +127,135 @@ def update_scatter_plot(selected_option, slider_input):
 
     # Figure: life expectancy at age 0
     id_ = "life expectancy"
-    pdf = phenotypes.iloc[:, :max_age]
-    survivorship = pdf.cumprod(1)
-    y = survivorship.sum(1)
-    x = np.arange(len(y))
 
-    figures[id_] = go.Figure(
-        data=[
-            go.Scatter(x=x, y=y, mode="markers", marker={"color": marker_color_surv})
-        ],
-        layout=go.Layout(
-            **FIGURE_INFO[id_]["figure_layout"],
-            **fig_layout,
-        ),
-    )
+    def get_life_expectancy(sim):
+        phenotypes = containers[sim].get_df("phenotypes")
+        pdf = phenotypes.iloc[:, :max_age]
+        survivorship = pdf.cumprod(1)
+        y = survivorship.sum(1)
+        return y
+
+    xs = [np.arange(1, max_age + 1) for sim in which_sims]
+    ys = [get_life_expectancy(sim) for sim in which_sims]
+    figures[id_] = make_figure(xs, ys)
 
     # Figure: intrinsic mortality
     id_ = "intrinsic mortality"
-    pdf = phenotypes.iloc[-1, :max_age]
-    y = 1 - pdf
-    x = np.arange(max_age) + 1
 
-    figures[id_] = go.Figure(
-        data=[
-            go.Scatter(x=x, y=y, mode="markers", marker={"color": marker_color_surv})
-        ],
-        layout=go.Layout(
-            **FIGURE_INFO[id_]["figure_layout"],
-            **fig_layout,
-        ),
-    )
+    def get_intrinsic_mortality(sim):
+        phenotypes = containers[sim].get_df("phenotypes")
+        pdf = phenotypes.iloc[-1, :max_age]
+        y = 1 - pdf
+        return y
+
+    xs = [np.arange(1, max_age + 1) for sim in which_sims]
+    ys = [get_intrinsic_mortality(sim) for sim in which_sims]
+    figures[id_] = make_figure(xs, ys)
 
     # Figure: intrinsic survivorship
     id_ = "intrinsic survivorship"
-    pdf = phenotypes.iloc[-1, :max_age]
-    y = pdf.cumprod()
-    x = np.arange(max_age) + 1
 
-    figures[id_] = go.Figure(
-        data=[
-            go.Scatter(x=x, y=y, mode="markers", marker={"color": marker_color_surv})
-        ],
-        layout=go.Layout(
-            **FIGURE_INFO[id_]["figure_layout"],
-            **fig_layout,
-        ),
-    )
+    def get_intrinsic_survivorship(sim):
+        phenotypes = containers[sim].get_df("phenotypes")
+        pdf = phenotypes.iloc[-1, :max_age]
+        y = pdf.cumprod()
+        return y
+
+    xs = [np.arange(1, max_age + 1) for sim in which_sims]
+    ys = [get_intrinsic_survivorship(sim) for sim in which_sims]
+    figures[id_] = make_figure(xs, ys)
 
     # Figure: fertility
     id_ = "fertility"
-    fertility = phenotypes.iloc[-1, max_age:]
-    y = fertility
-    x = np.arange(max_age) + 1
 
-    figures[id_] = go.Figure(
-        data=[
-            go.Scatter(x=x, y=y, mode="markers", marker={"color": marker_color_repr})
-        ],
-        layout=go.Layout(
-            **FIGURE_INFO[id_]["figure_layout"],
-            **fig_layout,
-        ),
-    )
+    def get_fertility(sim):
+        phenotypes = containers[sim].get_df("phenotypes")
+        fertility = phenotypes.iloc[-1, max_age:]
+        y = fertility
+        return y
+
+    xs = [np.arange(1, max_age + 1) for sim in which_sims]
+    ys = [get_fertility(sim) for sim in which_sims]
+    figures[id_] = make_figure(xs, ys)
 
     # Figure: cumulative reproduction
     # https://besjournals.onlinelibrary.wiley.com/doi/full/10.1111/2041-210X.13289
     # BUG fertility is 0 before maturity
     id_ = "cumulative reproduction"
-    survivorship = phenotypes.iloc[-1, :max_age].cumprod()
-    fertility = phenotypes.iloc[-1, max_age:]
-    y = (survivorship.values * fertility.values).cumsum()
-    x = np.arange(max_age) + 1
 
-    figures[id_] = go.Figure(
-        data=[
-            go.Scatter(x=x, y=y, mode="markers", marker={"color": marker_color_repr})
-        ],
-        layout=go.Layout(
-            **FIGURE_INFO[id_]["figure_layout"],
-            **fig_layout,
-        ),
-    )
+    def get_cumulative_reproduction(sim):
+        phenotypes = containers[sim].get_df("phenotypes")
+        survivorship = phenotypes.iloc[-1, :max_age].cumprod()
+        fertility = phenotypes.iloc[-1, max_age:]
+        y = (survivorship.values * fertility.values).cumsum()
+        return y
+
+    xs = [np.arange(1, max_age + 1) for sim in which_sims]
+    ys = [get_cumulative_reproduction(sim) for sim in which_sims]
+    figures[id_] = make_figure(xs, ys)
 
     # Figure: lifetime reproduction
     # BUG fertility is 0 before maturity
     id_ = "lifetime reproduction"
-    survivorship = phenotypes.iloc[:, :max_age].cumprod(1)
-    fertility = phenotypes.iloc[:, max_age:]
-    y = np.sum((np.array(survivorship) * np.array(fertility)), axis=1)
-    x = np.arange(len(y))
 
-    figures[id_] = go.Figure(
-        data=[
-            go.Scatter(x=x, y=y, mode="markers", marker={"color": marker_color_repr})
-        ],
-        layout=go.Layout(
-            **FIGURE_INFO[id_]["figure_layout"],
-            **fig_layout,
-        ),
-    )
+    def get_lifetime_reproduction(sim):
+        phenotypes = containers[sim].get_df("phenotypes")
+        survivorship = phenotypes.iloc[:, :max_age].cumprod(1)
+        fertility = phenotypes.iloc[:, max_age:]
+        y = np.sum((np.array(survivorship) * np.array(fertility)), axis=1)
+        return y
+
+    xs = [np.arange(1, max_age + 1) for sim in which_sims]
+    ys = [get_lifetime_reproduction(sim) for sim in which_sims]
+    figures[id_] = make_figure(xs, ys)
 
     # Figure: birth structure
     id_ = "birth structure"
 
-    y = age_at_birth.iloc[-1]
-    x = np.arange(len(y))
+    def get_birth_structure(sim):
+        age_at_birth = containers[sim].get_df("age_at_birth")
+        y = age_at_birth.iloc[-1]
+        return y
 
-    figures[id_] = go.Figure(
-        data=[
-            go.Scatter(x=x, y=y, mode="markers", marker={"color": marker_color_repr})
-        ],
-        layout=go.Layout(
-            **FIGURE_INFO[id_]["figure_layout"],
-            **fig_layout,
-        ),
-    )
+    xs = [np.arange(1, max_age + 1) for sim in which_sims]
+    ys = [get_birth_structure(sim) for sim in which_sims]
+    figures[id_] = make_figure(xs, ys)
 
     # Figure: death structure
     id_ = "death structure"
 
-    t = -1
-    pseudocount = 0
-    y = (age_at_genetic.iloc[t] + pseudocount) / (
-        age_at_overshoot.iloc[t] + age_at_genetic.iloc[t] + pseudocount
-    )
-    x = np.arange(len(y))[y.notna()]
+    def get_death_structure(sim):
+        age_at_genetic = containers[sim].get_df("age_at_genetic")
+        age_at_overshoot = containers[sim].get_df("age_at_overshoot")
 
-    figures[id_] = go.Figure(
-        data=[
-            go.Scatter(x=x, y=y, mode="markers", marker={"color": marker_color_repr})
-        ],
-        layout=go.Layout(
-            **FIGURE_INFO[id_]["figure_layout"],
-            **fig_layout,
-        ),
-    )
+        t = -1
+        pseudocount = 0
+        y = (age_at_genetic.iloc[t] + pseudocount) / (
+            age_at_overshoot.iloc[t] + age_at_genetic.iloc[t] + pseudocount
+        )
+        return y
+
+    xs = [np.arange(1, max_age + 1) for sim in which_sims]
+    ys = [get_death_structure(sim) for sim in which_sims]
+    figures[id_] = make_figure(xs, ys)
+
+    # aspect_ratio = 0.5
+
+    for figure in figures.values():
+        figure.update_layout(
+            showlegend=False,
+            # autosize=False,
+            # width=800,  # Adjust the width as needed
+            # height=int(
+            # 800 * aspect_ratio
+            # ),  # Calculate height to maintain the square aspect ratio
+            # legend=dict(
+            # x=1.02,  # Position of the legend along the x-axis (outside the plot)
+            # y=0.5,  # Position of the legend along the y-axis (centered)
+            # yanchor="middle",
+            # xanchor="left",
+            # ),
+        )
 
     # for figure in figures.values():
     # figure.update_yaxes(showline=True)

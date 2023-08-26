@@ -29,7 +29,6 @@ def toggle_display(*_):
     Output("result-view-button", "disabled"),
     Input("results-exist-interval", "n_intervals"),
 )
-@funcs.print_function_name
 def block_view_buttons(_):
     paths = funcs.get_sim_paths()
     if paths:
