@@ -19,7 +19,8 @@ def delete_simulation(_, filename):
     config_path = funcs.get_config_path(filename)
     sim_path = config_path.parent / filename
 
-    SELECTION.remove(filename)
+    if filename in SELECTION:
+        SELECTION.remove(filename)
 
     subprocess.run(["rm", "-r", sim_path], check=True)
     subprocess.run(["rm", config_path], check=True)

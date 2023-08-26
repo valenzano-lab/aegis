@@ -14,7 +14,7 @@ FIGURE_INFO = {
         # graph
         "figure_layout": {
             "xaxis_title": "stage",
-            "yaxis_title": "e0",
+            "yaxis_title": "",
         },
     },
     "intrinsic mortality": {
@@ -23,7 +23,7 @@ FIGURE_INFO = {
         # graph
         "figure_layout": {
             "xaxis_title": "age",
-            "yaxis_title": "intrinsic mortality",
+            "yaxis_title": "",
             # "yaxis": {"range": [0, 1]},
         },
     },
@@ -33,7 +33,7 @@ FIGURE_INFO = {
         # graph
         "figure_layout": {
             "xaxis_title": "age",
-            "yaxis_title": "intrinsic survivorship",
+            "yaxis_title": "",
             # "yaxis": {"range": [0, 1]},
         },
     },
