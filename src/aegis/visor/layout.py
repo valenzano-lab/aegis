@@ -77,21 +77,21 @@ app_layout = html.Div(
             id="figure-section",
             style={"display": "none"},
             children=[
-                html.Div(
-                    className="dataset-section",
-                    children=[
-                        html.Button(
-                            "reload list of simulations",
-                            "load-paths-button",
-                            style={"display": "none"},
-                        ),
-                        dcc.Dropdown(
-                            id="dynamic-dropdown",
-                            clearable=False,
-                            style={"width": "50%"},
-                        ),
-                    ],
-                ),
+                # html.Div(
+                #     className="dataset-section",
+                #     children=[
+                #         html.Button(
+                #             "reload list of simulations",
+                #             "load-paths-button",
+                #             style={"display": "none"},
+                #         ),
+                #         dcc.Dropdown(
+                #             id="dynamic-dropdown",
+                #             clearable=False,
+                #             style={"width": "50%"},
+                #         ),
+                #     ],
+                # ),
             ]
             + [
                 html.Div(

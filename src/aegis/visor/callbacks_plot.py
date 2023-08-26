@@ -7,82 +7,83 @@ from aegis.help.container import Container
 from aegis.visor import funcs
 from aegis.visor.static import FIGURE_INFO
 
-container = None
+# container = None
 containers = {}
 
 max_age = 50
-ages = np.arange(1, max_age + 1)
+# ages = np.arange(1, max_age + 1)
 
-colors = ["dodgerblue", "hotpink", "crimson"]
-
-
-@callback(
-    [
-        Output("dynamic-dropdown", "options"),
-        Output("dynamic-dropdown", "value"),
-    ],
-    [
-        Input("plot-view-button", "n_clicks"),
-    ],
-    prevent_initial_call=True,
-)
-@funcs.print_function_name
-def refresh_dropdown_options(*_):
-    paths = funcs.get_sim_paths()
-    dropdown_options = [
-        {"label": f"{i}. {str(path.stem)} ({str(path)})", "value": str(path)}
-        for i, path in enumerate(paths)
-    ]
-    # BUG fix if no dropdown_options available
-    return dropdown_options, dropdown_options[0]["value"]
+# colors = ["dodgerblue", "hotpink", "crimson"]
 
 
-@callback(
-    [Output("slider", "max")],
-    [Input("dynamic-dropdown", "value")],
-    prevent_initial_call=True,
-)
-@funcs.print_function_name
-def update_slider(selected_option):
+# @callback(
+#     [
+#         Output("dynamic-dropdown", "options"),
+#         Output("dynamic-dropdown", "value"),
+#     ],
+#     [
+#         Input("plot-view-button", "n_clicks"),
+#     ],
+#     prevent_initial_call=True,
+# )
+# @funcs.print_function_name
+# def refresh_dropdown_options(*_):
+#     paths = funcs.get_sim_paths()
+#     dropdown_options = [
+#         {"label": f"{i}. {str(path.stem)} ({str(path)})", "value": str(path)}
+#         for i, path in enumerate(paths)
+#     ]
+#     # BUG fix if no dropdown_options available
+#     return dropdown_options, dropdown_options[0]["value"]
 
-    global container
 
-    # initialize container if it is not
-    if container is None:
-        container = Container(selected_option)
+# @callback(
+#     [Output("slider", "max")],
+#     [Input("dynamic-dropdown", "value")],
+#     prevent_initial_call=True,
+# )
+# @funcs.print_function_name
+# def update_slider(selected_option):
 
-    # update container if path changed
-    if str(container.basepath) != str(selected_option):
-        container = Container(selected_option)
+#     global container
 
-    phenotypes = container.get_df("phenotypes")
-    return (len(phenotypes),)
+#     # initialize container if it is not
+#     if container is None:
+#         container = Container(selected_option)
+
+#     # update container if path changed
+#     if str(container.basepath) != str(selected_option):
+#         container = Container(selected_option)
+
+#     phenotypes = container.get_df("phenotypes")
+#     return (len(phenotypes),)
 
 
 @callback(
     [Output(key, "figure") for key in FIGURE_INFO.keys()],
-    Input("dynamic-dropdown", "value"),
-    Input("slider", "value"),
+    # Input("dynamic-dropdown", "value"),
+    # Input("slider", "value"),
+    Input("plot-view-button", "n_clicks"),
     prevent_initial_call=True,
 )
 @funcs.print_function_name
-def update_scatter_plot(selected_option, slider_input):
+def update_scatter_plot(*_):
 
-    global container
+    # global container
 
-    # initialize container if it is not
-    if container is None:
-        container = Container(selected_option)
+    # # initialize container if it is not
+    # if container is None:
+    #     container = Container(selected_option)
 
-    # update container if path changed
-    if str(container.basepath) != str(selected_option):
-        container = Container(selected_option)
+    # # update container if path changed
+    # if str(container.basepath) != str(selected_option):
+    #     container = Container(selected_option)
 
-    phenotypes = container.get_df("phenotypes")
-    age_at_birth = container.get_df("age_at_birth")
-    age_at_genetic = container.get_df("age_at_genetic")
-    age_at_overshoot = container.get_df("age_at_overshoot")
-    # genotypes = container.get_df("genotypes")
+    # phenotypes = container.get_df("phenotypes")
+    # age_at_birth = container.get_df("age_at_birth")
+    # age_at_genetic = container.get_df("age_at_genetic")
+    # age_at_overshoot = container.get_df("age_at_overshoot")
+    # # genotypes = container.get_df("genotypes")
 
     global containers
     which_sims = ("asdf", "qwer", "ertoijlkretlkwerlk wefkjwdfj lweef ")
@@ -90,8 +91,8 @@ def update_scatter_plot(selected_option, slider_input):
         if sim not in containers:
             containers[sim] = Container(f"/home/user/.local/share/aegis/{sim}")
 
-    marker_color_surv = "dodgerblue"
-    marker_color_repr = "crimson"
+    # marker_color_surv = "dodgerblue"
+    # marker_color_repr = "crimson"
 
     fig_layout = dict(
         # yaxis={"range": [0, 1]},
