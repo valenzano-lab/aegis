@@ -58,7 +58,7 @@ def refresh_result_section(*_):
                 html.Th("DISPLAY"),
                 html.Th("CREATED"),
                 # html.Th("edited"),
-                html.Th("RUNNING STATUS"),
+                html.Th("FINISHED STATUS"),
                 html.Th("EXTINCT STATUS"),
                 html.Th("TIME REMAINING"),
                 # html.Th("stage"),
@@ -78,7 +78,7 @@ def refresh_result_section(*_):
         output_summary = container.get_output_summary()
 
         if output_summary is None:
-            status = ["running", "not extinct"]
+            status = ["not finished", "not extinct"]
         elif output_summary["extinct"]:
             status = ["finished", "extinct"]
         else:
