@@ -1,11 +1,12 @@
 import numpy as np
-import plotly.express as px
 import plotly.graph_objs as go
-from dash import Dash, html, dcc, callback, Output, Input, State
+from dash import callback, Output, Input
 
 from aegis.help.container import Container
 from aegis.visor import funcs
 from aegis.visor.static import FIGURE_INFO
+
+from aegis.visor.callbacks_results import SELECTION
 
 # container = None
 containers = {}
@@ -86,8 +87,7 @@ def update_scatter_plot(*_):
     # # genotypes = container.get_df("genotypes")
 
     global containers
-    which_sims = ("asdf", "qwer", "ertoijlkretlkwerlk wefkjwdfj lweef ")
-    for sim in which_sims:
+    for sim in SELECTION:
         if sim not in containers:
             containers[sim] = Container(f"/home/user/.local/share/aegis/{sim}")
 
@@ -114,7 +114,7 @@ def update_scatter_plot(*_):
                     mode="markers",
                     name=sim,
                 )
-                for x, y, sim in zip(xs, ys, which_sims)
+                for x, y, sim in zip(xs, ys, SELECTION)
             ],
             layout=go.Layout(
                 **FIGURE_INFO[id_]["figure_layout"],
@@ -136,8 +136,8 @@ def update_scatter_plot(*_):
         y = survivorship.sum(1)
         return y
 
-    xs = [np.arange(1, max_age + 1) for sim in which_sims]
-    ys = [get_life_expectancy(sim) for sim in which_sims]
+    xs = [np.arange(1, max_age + 1) for sim in SELECTION]
+    ys = [get_life_expectancy(sim) for sim in SELECTION]
     figures[id_] = make_figure(xs, ys)
 
     # Figure: intrinsic mortality
@@ -149,8 +149,8 @@ def update_scatter_plot(*_):
         y = 1 - pdf
         return y
 
-    xs = [np.arange(1, max_age + 1) for sim in which_sims]
-    ys = [get_intrinsic_mortality(sim) for sim in which_sims]
+    xs = [np.arange(1, max_age + 1) for sim in SELECTION]
+    ys = [get_intrinsic_mortality(sim) for sim in SELECTION]
     figures[id_] = make_figure(xs, ys)
 
     # Figure: intrinsic survivorship
@@ -162,8 +162,8 @@ def update_scatter_plot(*_):
         y = pdf.cumprod()
         return y
 
-    xs = [np.arange(1, max_age + 1) for sim in which_sims]
-    ys = [get_intrinsic_survivorship(sim) for sim in which_sims]
+    xs = [np.arange(1, max_age + 1) for sim in SELECTION]
+    ys = [get_intrinsic_survivorship(sim) for sim in SELECTION]
     figures[id_] = make_figure(xs, ys)
 
     # Figure: fertility
@@ -175,8 +175,8 @@ def update_scatter_plot(*_):
         y = fertility
         return y
 
-    xs = [np.arange(1, max_age + 1) for sim in which_sims]
-    ys = [get_fertility(sim) for sim in which_sims]
+    xs = [np.arange(1, max_age + 1) for sim in SELECTION]
+    ys = [get_fertility(sim) for sim in SELECTION]
     figures[id_] = make_figure(xs, ys)
 
     # Figure: cumulative reproduction
@@ -191,8 +191,8 @@ def update_scatter_plot(*_):
         y = (survivorship.values * fertility.values).cumsum()
         return y
 
-    xs = [np.arange(1, max_age + 1) for sim in which_sims]
-    ys = [get_cumulative_reproduction(sim) for sim in which_sims]
+    xs = [np.arange(1, max_age + 1) for sim in SELECTION]
+    ys = [get_cumulative_reproduction(sim) for sim in SELECTION]
     figures[id_] = make_figure(xs, ys)
 
     # Figure: lifetime reproduction
@@ -206,8 +206,8 @@ def update_scatter_plot(*_):
         y = np.sum((np.array(survivorship) * np.array(fertility)), axis=1)
         return y
 
-    xs = [np.arange(1, max_age + 1) for sim in which_sims]
-    ys = [get_lifetime_reproduction(sim) for sim in which_sims]
+    xs = [np.arange(1, max_age + 1) for sim in SELECTION]
+    ys = [get_lifetime_reproduction(sim) for sim in SELECTION]
     figures[id_] = make_figure(xs, ys)
 
     # Figure: birth structure
@@ -218,8 +218,8 @@ def update_scatter_plot(*_):
         y = age_at_birth.iloc[-1]
         return y
 
-    xs = [np.arange(1, max_age + 1) for sim in which_sims]
-    ys = [get_birth_structure(sim) for sim in which_sims]
+    xs = [np.arange(1, max_age + 1) for sim in SELECTION]
+    ys = [get_birth_structure(sim) for sim in SELECTION]
     figures[id_] = make_figure(xs, ys)
 
     # Figure: death structure
@@ -236,8 +236,8 @@ def update_scatter_plot(*_):
         )
         return y
 
-    xs = [np.arange(1, max_age + 1) for sim in which_sims]
-    ys = [get_death_structure(sim) for sim in which_sims]
+    xs = [np.arange(1, max_age + 1) for sim in SELECTION]
+    ys = [get_death_structure(sim) for sim in SELECTION]
     figures[id_] = make_figure(xs, ys)
 
     # aspect_ratio = 0.5

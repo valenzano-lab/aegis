@@ -1,9 +1,11 @@
-from dash import html, dcc, callback, Output, Input, State, ALL, MATCH
+from dash import html, dcc, callback, Output, Input, State, ALL, MATCH, ctx
 import datetime
 
 from aegis.visor import funcs
 from aegis.help.container import Container
 import subprocess
+
+SELECTION = set()
 
 
 @callback(
@@ -17,9 +19,23 @@ def delete_simulation(_, filename):
     config_path = funcs.get_config_path(filename)
     sim_path = config_path.parent / filename
 
+    SELECTION.remove(filename)
+
     subprocess.run(["rm", "-r", sim_path], check=True)
     subprocess.run(["rm", config_path], check=True)
     return "deleted"
+
+
+# @callback(
+#     Output("result-section", "children", allow_duplicate=True),
+#     [Input("testo", "n_clicks")],
+#     [State("result-section", "children")],
+#     prevent_initial_call=True,
+# )
+# def test(_, children):
+#     # children += html.P("asdf")
+#     children.append(html.P("asdfjkwerj"))
+#     return children
 
 
 @callback(
@@ -34,6 +50,7 @@ def refresh_result_section(*_):
     paths = funcs.get_sim_paths()
     containers = [Container(path) for path in paths]
     table_elements = [
+        # html.Button(id="testo", children="testo"),
         html.Tr(
             [
                 html.Th("ID"),
@@ -48,7 +65,7 @@ def refresh_result_section(*_):
                 html.Th("FILEPATH"),
                 html.Th("DELETE"),
             ],
-        )
+        ),
     ]
 
     for container in containers:
@@ -76,13 +93,16 @@ def refresh_result_section(*_):
         # )
 
         element = html.Tr(
-            [
+            children=[
                 html.Td(container.basepath.stem),
                 html.Td(
                     dcc.Checklist(
-                        id=str(container.basepath),
-                        options=[{"label": "", "value": "yes"}],
-                        value=[],
+                        id={
+                            "type": "result-checklist",
+                            "index": container.basepath.stem,
+                        },
+                        options=[{"label": "", "value": "y"}],
+                        value=["y"] if container.basepath.stem in SELECTION else [],
                     ),
                 ),
                 html.Td(html.P(time_of_creation)),
@@ -109,3 +129,19 @@ def refresh_result_section(*_):
         table_elements.append(element)
 
     return html.Table(children=table_elements, className="result-table")
+
+
+@callback(
+    Output({"type": "result-checklist", "index": MATCH}, "style"),
+    Input({"type": "result-checklist", "index": MATCH}, "value"),
+    prevent_initial_call=True,
+)
+def update_selection(value):
+
+    sim = ctx.triggered_id["index"]
+    if value == ["y"]:
+        SELECTION.add(sim)
+    else:
+        SELECTION.remove(sim)
+    print(SELECTION)
+    return {}
