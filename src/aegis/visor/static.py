@@ -13,7 +13,7 @@ FIGURE_INFO = {
         ),
         # graph
         "figure_layout": {
-            "xaxis_title": "simulation time",
+            "xaxis_title": "stage",
             "yaxis_title": "e0",
         },
     },
@@ -62,7 +62,7 @@ FIGURE_INFO = {
         "description": "asdjfkwejkre",
         # graph
         "figure_layout": {
-            "xaxis_title": "simulation time",
+            "xaxis_title": "stage",
             "yaxis_title": "",
             # "yaxis": {"range": [0, 1]},
         },

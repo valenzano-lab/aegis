@@ -10,8 +10,6 @@ from aegis.visor.callbacks_results import SELECTION
 
 # container = None
 containers = {}
-
-max_age = 50
 # ages = np.arange(1, max_age + 1)
 
 # colors = ["dodgerblue", "hotpink", "crimson"]
@@ -96,7 +94,6 @@ def update_scatter_plot(*_):
 
     fig_layout = dict(
         # yaxis={"range": [0, 1]},
-        # xaxis={"range": [0, max_age]},
         width=300,
         height=300,
         margin={"t": 0, "r": 0, "b": 0, "l": 0},
@@ -126,18 +123,32 @@ def update_scatter_plot(*_):
 
     # BUG no data saved yet on running simulations or interrupted simulations
 
+    def get_xs(id_, ys):
+        type_ = FIGURE_INFO[id_]["figure_layout"]["xaxis_title"]
+        if type_ == "stage":
+            return [
+                np.arange(1, len(y) + 1) * containers[sim].get_config()["VISOR_RATE_"]
+                for sim, y in zip(SELECTION, ys)
+            ]
+        else:
+            return [
+                np.arange(1, containers[sim].get_config()["MAX_LIFESPAN"] + 1)
+                for sim in SELECTION
+            ]
+
     # Figure: life expectancy at age 0
     id_ = "life expectancy"
 
     def get_life_expectancy(sim):
         phenotypes = containers[sim].get_df("phenotypes")
+        max_age = containers[sim].get_config()["MAX_LIFESPAN"]
         pdf = phenotypes.iloc[:, :max_age]
         survivorship = pdf.cumprod(1)
         y = survivorship.sum(1)
         return y
 
-    xs = [np.arange(1, max_age + 1) for sim in SELECTION]
     ys = [get_life_expectancy(sim) for sim in SELECTION]
+    xs = get_xs(id_, ys)
     figures[id_] = make_figure(xs, ys)
 
     # Figure: intrinsic mortality
@@ -145,12 +156,13 @@ def update_scatter_plot(*_):
 
     def get_intrinsic_mortality(sim):
         phenotypes = containers[sim].get_df("phenotypes")
+        max_age = containers[sim].get_config()["MAX_LIFESPAN"]
         pdf = phenotypes.iloc[-1, :max_age]
         y = 1 - pdf
         return y
 
-    xs = [np.arange(1, max_age + 1) for sim in SELECTION]
     ys = [get_intrinsic_mortality(sim) for sim in SELECTION]
+    xs = get_xs(id_, ys)
     figures[id_] = make_figure(xs, ys)
 
     # Figure: intrinsic survivorship
@@ -158,12 +170,13 @@ def update_scatter_plot(*_):
 
     def get_intrinsic_survivorship(sim):
         phenotypes = containers[sim].get_df("phenotypes")
+        max_age = containers[sim].get_config()["MAX_LIFESPAN"]
         pdf = phenotypes.iloc[-1, :max_age]
         y = pdf.cumprod()
         return y
 
-    xs = [np.arange(1, max_age + 1) for sim in SELECTION]
     ys = [get_intrinsic_survivorship(sim) for sim in SELECTION]
+    xs = get_xs(id_, ys)
     figures[id_] = make_figure(xs, ys)
 
     # Figure: fertility
@@ -171,12 +184,13 @@ def update_scatter_plot(*_):
 
     def get_fertility(sim):
         phenotypes = containers[sim].get_df("phenotypes")
+        max_age = containers[sim].get_config()["MAX_LIFESPAN"]
         fertility = phenotypes.iloc[-1, max_age:]
         y = fertility
         return y
 
-    xs = [np.arange(1, max_age + 1) for sim in SELECTION]
     ys = [get_fertility(sim) for sim in SELECTION]
+    xs = get_xs(id_, ys)
     figures[id_] = make_figure(xs, ys)
 
     # Figure: cumulative reproduction
@@ -186,13 +200,14 @@ def update_scatter_plot(*_):
 
     def get_cumulative_reproduction(sim):
         phenotypes = containers[sim].get_df("phenotypes")
+        max_age = containers[sim].get_config()["MAX_LIFESPAN"]
         survivorship = phenotypes.iloc[-1, :max_age].cumprod()
         fertility = phenotypes.iloc[-1, max_age:]
         y = (survivorship.values * fertility.values).cumsum()
         return y
 
-    xs = [np.arange(1, max_age + 1) for sim in SELECTION]
     ys = [get_cumulative_reproduction(sim) for sim in SELECTION]
+    xs = get_xs(id_, ys)
     figures[id_] = make_figure(xs, ys)
 
     # Figure: lifetime reproduction
@@ -201,13 +216,14 @@ def update_scatter_plot(*_):
 
     def get_lifetime_reproduction(sim):
         phenotypes = containers[sim].get_df("phenotypes")
+        max_age = containers[sim].get_config()["MAX_LIFESPAN"]
         survivorship = phenotypes.iloc[:, :max_age].cumprod(1)
         fertility = phenotypes.iloc[:, max_age:]
         y = np.sum((np.array(survivorship) * np.array(fertility)), axis=1)
         return y
 
-    xs = [np.arange(1, max_age + 1) for sim in SELECTION]
     ys = [get_lifetime_reproduction(sim) for sim in SELECTION]
+    xs = get_xs(id_, ys)
     figures[id_] = make_figure(xs, ys)
 
     # Figure: birth structure
@@ -218,8 +234,8 @@ def update_scatter_plot(*_):
         y = age_at_birth.iloc[-1]
         return y
 
-    xs = [np.arange(1, max_age + 1) for sim in SELECTION]
     ys = [get_birth_structure(sim) for sim in SELECTION]
+    xs = get_xs(id_, ys)
     figures[id_] = make_figure(xs, ys)
 
     # Figure: death structure
@@ -236,8 +252,8 @@ def update_scatter_plot(*_):
         )
         return y
 
-    xs = [np.arange(1, max_age + 1) for sim in SELECTION]
     ys = [get_death_structure(sim) for sim in SELECTION]
+    xs = get_xs(id_, ys)
     figures[id_] = make_figure(xs, ys)
 
     # aspect_ratio = 0.5

@@ -2,6 +2,7 @@ import pandas as pd
 import pathlib
 import logging
 import json
+import yaml
 
 
 class Container:
@@ -47,6 +48,13 @@ class Container:
         if not file_read and file_exists:
             self.data[stem] = pd.read_csv(self.paths[stem])
         return self.data.get(stem, pd.DataFrame())
+
+    def get_config(self):
+        if "config" not in self.data:
+            path = self.basepath.parent / f"{self.basepath.stem}.yml"
+            with open(path, "r") as file_:
+                self.data["config"] = yaml.safe_load(file_)
+        return self.data["config"]
 
     def get_json(self, stem):
         df = self.get_df(stem)
