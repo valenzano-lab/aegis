@@ -1,6 +1,4 @@
-from dash import html, dcc, callback, Output, Input, State, ALL, MATCH
-import dash
-
+from dash import html, dcc, callback, Output, Input, State, ALL, MATCH, ctx
 from aegis.visor import funcs
 
 
@@ -15,7 +13,7 @@ from aegis.visor import funcs
 )
 @funcs.print_function_name
 def toggle_display(*_):
-    triggered = dash.callback_context.triggered[0]["prop_id"].split("-")[0]
+    triggered = ctx.triggered_id.split("-")[0]
     styles = {
         "plot": [{"display": "block"}, {"display": "none"}, {"display": "none"}],
         "config": [{"display": "none"}, {"display": "block"}, {"display": "none"}],
