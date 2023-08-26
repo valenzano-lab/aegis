@@ -74,6 +74,8 @@ def update_scatter_plot(selected_option, slider_input):
 
     figures = {}
 
+    # BUG no data saved yet on running simulations or interrupted simulations
+
     # Figure: life expectancy at age 0
     id_ = "life expectancy"
     pdf = phenotypes.iloc[:, :max_age]

@@ -1,10 +1,11 @@
-from dash import Dash, html, dcc, callback, Output, Input, State
+from dash import Dash, html, dcc, callback, Output, Input, State, ALL, MATCH
 
 import logging
 import datetime
 
 from aegis.visor import funcs
 from aegis.help.container import Container
+import subprocess
 
 
 @callback(
@@ -23,12 +24,28 @@ def toggle_display(n_clicks):
 
 
 @callback(
-    Output("result-section", "children"),
-    Input("toggle-button", "n_clicks"),
+    Output({"type": "delete-simulation-button", "index": MATCH}, "children"),
+    Input({"type": "delete-simulation-button", "index": MATCH}, "n_clicks"),
+    State({"type": "delete-simulation-button", "index": MATCH}, "value"),
     prevent_initial_call=True,
 )
 @funcs.print_function_name
-def refresh_result_section(n_clicks):
+def delete_simulation(_, filename):
+    config_path = funcs.get_config_path(filename)
+    sim_path = config_path.parent / filename
+    subprocess.run(f"rm -r {sim_path}", shell=True, check=True)
+    subprocess.run(f"rm {config_path}", shell=True, check=True)
+    return "deleted"
+
+
+@callback(
+    Output("result-section", "children"),
+    Input("toggle-button", "n_clicks"),
+    Input({"type": "delete-simulation-button", "index": ALL}, "children"),
+    prevent_initial_call=True,
+)
+@funcs.print_function_name
+def refresh_result_section(*_):
 
     paths = funcs.get_sim_paths()
     containers = [Container(path) for path in paths]
@@ -45,9 +62,6 @@ def refresh_result_section(n_clicks):
             status = ["finished", "extinct"]
         else:
             status = ["finished", "not extinct"]
-
-        print(logline)
-        print(output_summary)
 
         time_of_creation = datetime.datetime.fromtimestamp(input_summary["time_start"])
         time_of_edit = datetime.datetime.fromtimestamp(
@@ -70,6 +84,14 @@ def refresh_result_section(n_clicks):
                 html.P(logline["stage"]),
                 html.P(logline["stg/min"]),
                 html.P(str(container.basepath)),
+                html.Button(
+                    "delete simulation",
+                    id={
+                        "type": "delete-simulation-button",
+                        "index": container.basepath.stem,
+                    },
+                    value=container.basepath.stem,
+                ),
             ],
             style={"display": "block"},
         )
@@ -88,12 +110,14 @@ def refresh_result_section(n_clicks):
     ],
     prevent_initial_call=True,
 )
-def refresh_dropdown_options(_):
+@funcs.print_function_name
+def refresh_dropdown_options(*_):
     paths = funcs.get_sim_paths()
     dropdown_options = [
         {"label": f"{i}. {str(path.stem)} ({str(path)})", "value": str(path)}
         for i, path in enumerate(paths)
     ]
+    # BUG fix if no dropdown_options available
     return dropdown_options, dropdown_options[0]["value"]
 
 
