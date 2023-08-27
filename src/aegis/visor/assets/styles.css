@@ -53,13 +53,26 @@ button:disabled {
   /* width: 6rem; */
   height: 2rem;
   padding: 0.3rem;
-  margin: 0.3rem;
+  /* margin: 0.3rem; */
   background-color: var(--can-interact);
   color: var(--veryblue);
-  border-radius: 3rem;
-  cursor: pointer;
+  /* border-radius: 3rem; */
   display: flex;
   white-space: nowrap;
+}
+
+.view-button:hover {
+  background-color: var(--can-interact-hover);
+  cursor:pointer;
+
+}
+
+.view-button:first-of-type {
+  border-radius:10px 0 0 10px;
+}
+
+.view-button:last-of-type {
+  border-radius:0 10px 10px 0;
 }
 
 .view-button label {
