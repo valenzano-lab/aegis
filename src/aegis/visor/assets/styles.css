@@ -52,13 +52,14 @@ button:disabled {
 .view-button {
   /* width: 6rem; */
   height: 2rem;
-  padding: 0.3rem;
+  padding: 0.3rem 0.6rem;
   /* margin: 0.3rem; */
   background-color: var(--can-interact);
   color: var(--veryblue);
   /* border-radius: 3rem; */
   display: flex;
   white-space: nowrap;
+  font-weight:bold;
 }
 
 .view-button:hover {

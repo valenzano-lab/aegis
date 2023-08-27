@@ -20,8 +20,8 @@ app_layout = html.Div(
                     [
                         html.Div(
                             [
-                                html.Img(src="assets/plot.svg", className="svg-plot"),
-                                html.Label("config view"),
+                                html.Img(src="assets/sim.svg", className="svg-plot"),
+                                html.Label("run"),
                                 # html.Button("config view", id="config-view-button"),
                             ],
                             id="config-view-button",
@@ -29,8 +29,8 @@ app_layout = html.Div(
                         ),
                         html.Div(
                             [
-                                html.Img(src="assets/plot.svg", className="svg-plot"),
-                                html.Label("result view"),
+                                html.Img(src="assets/list.svg", className="svg-plot"),
+                                html.Label("list"),
                                 # html.Button("result view", id="result-view-button"),
                             ],
                             id="result-view-button",
@@ -39,7 +39,7 @@ app_layout = html.Div(
                         html.Div(
                             [
                                 html.Img(src="assets/plot.svg", className="svg-plot"),
-                                html.Label("plot view"),
+                                html.Label("plot"),
                                 # html.Button("plot view", id="plot-view-button"),
                             ],
                             id="plot-view-button",
