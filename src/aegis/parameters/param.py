@@ -121,7 +121,7 @@ params = {
     "MAX_POPULATION_SIZE": Param(
         name="MAX_POPULATION_SIZE",
         domain="ecology",
-        default=300,
+        default=500,
         info="Number of individuals in the population",
         dtype=int,
         drange="[1, inf)",
