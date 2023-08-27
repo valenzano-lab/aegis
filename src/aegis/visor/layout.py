@@ -75,10 +75,11 @@ app_layout = html.Div(
             id="figure-section",
             style={"display": "none"},
             children=[
+                html.Div(
                 html.Button(
                     "reload",
                     "reload-plots-button",
-                ),
+                ),style={"display":"block", "width":"100%"})
                 # html.Div(
                 #     className="dataset-section",
                 #     children=[

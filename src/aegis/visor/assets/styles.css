@@ -10,13 +10,21 @@
   width: 2000px;
 }
 
+#figure-section {
+  display:flex;
+  flex-wrap: wrap;
+  /* width:600px;
+  margin-left:auto;
+  margin-right:auto; */
+}
+
 .figure-card {
   /* outline: 5px solid red; */
   /* background-color: rgb(250, 250, 250); */
-  margin: 30px 0;
+  margin: 30px 3%;
   min-height: 100px;
-  width: 100%;
   display: flex;
+  /* width: 44%; */
 }
 
 .main-container {

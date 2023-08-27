@@ -16,7 +16,7 @@ import subprocess
 def toggle_display(*_):
     triggered = ctx.triggered_id.split("-")[0]
     styles = {
-        "plot": [{"display": "block"}, {"display": "none"}, {"display": "none"}],
+        "plot": [{"display": "flex"}, {"display": "none"}, {"display": "none"}],
         "config": [{"display": "none"}, {"display": "block"}, {"display": "none"}],
         "result": [{"display": "none"}, {"display": "none"}, {"display": "block"}],
     }
@@ -46,14 +46,14 @@ def monitor_processes(_, n_clicks):
         ['ps aux | grep "\-\-config_path"'], shell=True, capture_output=True
     ).stdout.decode()
 
-    print(stdout)
+    # print(stdout)
     if stdout:
         results = [
             line.split("share/aegis/")[1].strip(".yml")
             for line in stdout.strip().split("\n")
         ]
         sims = [result for result in results]
-        print(sims)
+        print(f"Simulations running: {', '.join([sims])}")
         if sims:
             if n_clicks is None:
                 n_clicks = 0
