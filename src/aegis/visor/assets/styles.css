@@ -43,7 +43,7 @@ button:hover {
   background-color: var(--can-interact-hover);
 }
 
-button:disabled {
+button.disabled {
   cursor: not-allowed;
   background-color: var(--cannot-interact);
   color: rgb(250, 200, 200);

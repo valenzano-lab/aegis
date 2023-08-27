@@ -24,16 +24,16 @@ def toggle_display(*_):
 
 
 @callback(
-    Output("plot-view-button", "disabled"),
-    Output("result-view-button", "disabled"),
+    Output("plot-view-button", "className"),
+    Output("result-view-button", "className"),
     Input("results-exist-interval", "n_intervals"),
 )
 def block_view_buttons(_):
     paths = funcs.get_sim_paths()
     if paths:
-        return False, False
+        return "view-button", "view-button"
     else:
-        return True, True
+        return "view-button disabled", "view-button disabled"
 
 
 @callback(
