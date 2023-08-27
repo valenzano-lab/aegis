@@ -9,6 +9,9 @@
   --bluish: rgb(250, 250, 255);
   --lightblue: rgb(50, 80, 100);
   --veryblue: rgb(0, 30, 100);
+
+  --interacted: rgb(70, 100, 150);
+  --can-interact: rgb(140, 170, 200);
 }
 
 td, th {
@@ -117,21 +120,34 @@ tr:nth-of-type(odd) {
   text-align: left;
 }
 
-input {
-
-  border: 0px solid;
-  background-color: var(--blue);
+label, input {
   border-radius: 6px;
   padding: 0.3rem 0.5rem;
+  font-size: 14px;
+}
+
+label {
+
+  padding: 0.25rem 0.5rem;
+}
+
+input {
+  border: 0px solid;
   color: var(--veryblue);
+  margin: 0.2rem;
+}
+
+input:placeholder-shown {
+  background-color: var(--can-interact);
+  color: var(--bluish);
 }
 
 input::placeholder {
-  color: var(--lightgray);
+  color: var(--bluish);
 }
 
 input:not(:placeholder-shown) {
-  background-color: var(--veryblue);
+  background-color: var(--interacted);
   color: var(--bluish);
 
 }
@@ -149,17 +165,50 @@ th.valid-values {
 } */
 
 label.dtype {
-  border-radius: 6px;
-  padding: 3px;
+  /* font-weight: bold; */
 }
 
-label.dtype-str {
-  color: white;
-  background-color: red;
+label.dtype-str, label.domain-recording {
+  color: rgb(212, 116, 116);
+  background-color: rgb(255, 247, 247);
 }
 
 label.dtype-int {
-  color: green;
+  color: rgb(147, 187, 53);
+  background-color: rgb(249, 255, 238);
+}
+
+
+label.dtype-float {
+  color: rgb(200, 144, 13);
+  background-color: rgb(255, 255, 225);
+}
+
+
+label.dtype-bool {
+  color: rgb(53, 178, 187);
+  background-color: rgb(232, 249, 255);
+}
+
+
+label.domain-ecology {
+  color: rgb(86, 176, 45);
+  background-color: rgb(242, 255, 238);
+}
+
+label.domain-initialization {
+  color: rgb(57, 53, 187);
+  background-color: rgb(240, 241, 255);
+}
+
+label.domain-genetics {
+  color: rgb(104, 53, 187);
+  background-color: rgb(247, 232, 255);
+}
+
+label.domain-computation {
+  color: rgb(207, 63, 195);
+  background-color: rgb(255, 240, 251);
 }
 
 td.td-info {

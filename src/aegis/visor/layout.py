@@ -68,7 +68,12 @@ app_layout = html.Div(
                                     )
                                 ),
                                 html.Td(children=v.drange, className="data-range"),
-                                html.Td(v.domain),
+                                html.Td(
+                                    children=html.Label(
+                                        v.domain,
+                                        className=f"domain-{v.domain} domain",
+                                    ),
+                                ),
                                 html.Td(v.info, className="td-info"),
                             ],
                         )
