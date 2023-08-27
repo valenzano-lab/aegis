@@ -7,7 +7,7 @@ import subprocess
     Output("figure-section", "style"),
     Output("sim-section", "style"),
     Output("result-section", "style"),
-    Output("main-container", "className"),
+    # Output("main-container", "className"),
     Input("plot-view-button", "n_clicks"),
     Input("config-view-button", "n_clicks"),
     Input("result-view-button", "n_clicks"),
@@ -21,19 +21,19 @@ def toggle_display(*_):
             {"display": "flex"},
             {"display": "none"},
             {"display": "none"},
-            "",
+            # "",
         ],
         "config": [
             {"display": "none"},
             {"display": "block"},
             {"display": "none"},
-            "bluish-bckg",
+            # "bluish-bckg",
         ],
         "result": [
             {"display": "none"},
             {"display": "none"},
             {"display": "block"},
-            "bluish-bckg",
+            # "bluish-bckg",
         ],
     }
     return styles[triggered]
