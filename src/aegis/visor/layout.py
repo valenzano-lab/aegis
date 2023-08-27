@@ -7,7 +7,9 @@ from aegis.parameters import param
 # HERE = pathlib.Path(__file__).absolute().parent
 
 app_layout = html.Div(
-    [
+    id="main-container",
+    # className="main-container",
+    children=[
         # checkers
         dcc.Interval(id="results-exist-interval", interval=1000, n_intervals=0),
         dcc.Interval(id="process-monitor-interval", interval=1000, n_intervals=0),
@@ -200,5 +202,4 @@ app_layout = html.Div(
             ]
         ),
     ],
-    className="main-container",
 )

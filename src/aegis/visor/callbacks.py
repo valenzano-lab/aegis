@@ -7,6 +7,7 @@ import subprocess
     Output("figure-section", "style"),
     Output("sim-section", "style"),
     Output("result-section", "style"),
+    Output("main-container", "className"),
     Input("plot-view-button", "n_clicks"),
     Input("config-view-button", "n_clicks"),
     Input("result-view-button", "n_clicks"),
@@ -16,9 +17,24 @@ import subprocess
 def toggle_display(*_):
     triggered = ctx.triggered_id.split("-")[0]
     styles = {
-        "plot": [{"display": "flex"}, {"display": "none"}, {"display": "none"}],
-        "config": [{"display": "none"}, {"display": "block"}, {"display": "none"}],
-        "result": [{"display": "none"}, {"display": "none"}, {"display": "block"}],
+        "plot": [
+            {"display": "flex"},
+            {"display": "none"},
+            {"display": "none"},
+            "",
+        ],
+        "config": [
+            {"display": "none"},
+            {"display": "block"},
+            {"display": "none"},
+            "bluish-bckg",
+        ],
+        "result": [
+            {"display": "none"},
+            {"display": "none"},
+            {"display": "block"},
+            "bluish-bckg",
+        ],
     }
     return styles[triggered]
 
