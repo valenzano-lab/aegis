@@ -24,7 +24,7 @@ def delete_simulation(_, filename):
 
     subprocess.run(["rm", "-r", sim_path], check=True)
     subprocess.run(["rm", config_path], check=True)
-    return "deleted"
+    return "deleting"
 
 
 # @callback(
