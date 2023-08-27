@@ -59,21 +59,21 @@ button.disabled {
   /* border-radius: 3rem; */
   display: flex;
   white-space: nowrap;
-  font-weight:bold;
+  font-weight: bold;
 }
 
 .view-button:hover {
   background-color: var(--can-interact-hover);
-  cursor:pointer;
+  cursor: pointer;
 
 }
 
 .view-button:first-of-type {
-  border-radius:10px 0 0 10px;
+  border-radius: 10px 0 0 10px;
 }
 
 .view-button:last-of-type {
-  border-radius:0 10px 10px 0;
+  border-radius: 0 10px 10px 0;
 }
 
 .view-button label {
@@ -164,17 +164,17 @@ tr:nth-of-type(odd) {
   background-color: var(--bluish);
 }
 
-.config-table td {
+.config-table td, .result-table td {
   height: 2rem;
   padding: 0.5rem 1rem;
 }
 
 .config-table th, .result-table th {
-  padding: 0.5rem 1.5rem 0.5rem 1rem;
+  padding: 0.5rem 1.5rem 0.5rem 1.5rem;
   margin-top: 1.5rem;
 }
 
-.config-table th {
+.config-table th, {
   color: var(--veryblue);
   text-align: left;
 }
@@ -282,7 +282,7 @@ td.td-info {
 table {
 
   box-shadow: 0 3px 10px rgba(161, 163, 211, 0.6);
-  border-radius:10px;
+  border-radius: 10px;
 
 }
 
