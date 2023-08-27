@@ -43,7 +43,7 @@ def run_simulation(n_clicks, filename, *values):
 @funcs.print_function_name
 def block_sim_button(filename):
 
-    if filename is None or filename == "":
+    if filename is None or filename == "" or "." in filename:
         return True
 
     sim_exists = funcs.sim_exists(filename)
