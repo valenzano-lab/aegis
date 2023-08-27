@@ -248,6 +248,7 @@ def update_scatter_plot(*_):
     def get_birth_structure(sim):
         age_at_birth = containers[sim].get_df("age_at_birth")
         y = age_at_birth.iloc[-1]
+        y /= y.sum()
         return y
 
     ys = [get_birth_structure(sim) for sim in SELECTION]

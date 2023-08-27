@@ -86,7 +86,7 @@ FIGURE_INFO = {
     "birth structure": {
         "title": "birth structure",
         "description": dcc.Markdown(
-            """The counted number of offspring produced by parents of each age.""",
+            """The proportion of newborns produced by parents of a given age.""",
             mathjax=True,
         ),
         # graph
@@ -99,7 +99,7 @@ FIGURE_INFO = {
     "death structure": {
         "title": "death structure",
         "description": dcc.Markdown(
-            """The measured ratio of intrinsic deaths versus total deaths at each age.""",
+            """The measured ratio of intrinsic deaths versus total deaths, grouped by age.""",
             mathjax=True,
         ),
         # graph
