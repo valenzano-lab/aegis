@@ -56,8 +56,8 @@ app_layout = html.Div(
         html.Div(
             id="sim-section",
             children=[
-                html.Button("run simulation", id="simulation-run-button"),
                 dcc.Input(id="config-make-text", type="text", placeholder="unique id"),
+                html.Button("run simulation", id="simulation-run-button"),
                 html.P("", id="simulation-run-text"),
                 # html.Button("make config", id="config-make-button"),
             ]
