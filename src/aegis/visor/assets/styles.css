@@ -11,7 +11,9 @@
   --veryblue: rgb(0, 30, 100);
 
   --interacted: rgb(70, 100, 150);
-  --can-interact: rgb(140, 170, 200);
+  --can-interact: rgb(180, 210, 240);
+  --cannot-interact: rgb(250, 240, 240);
+  --can-interact-hover: rgb(130, 160, 190);
 }
 
 td, th {
@@ -30,12 +32,39 @@ td, th {
                                 supported by Chrome, Edge, Opera and Firefox */
 }
 
-button:hover {
-  cursor: pointer;
+button {
+  background-color: var(--can-interact);
+  color: var(--veryblue);
+  border-radius: 1rem;
 }
 
-button:disabled:hover {
+button:hover {
+  cursor: pointer;
+  background-color: var(--can-interact-hover);
+}
+
+button:disabled {
   cursor: not-allowed;
+  background-color: var(--cannot-interact);
+  color: rgb(250, 200, 200);
+}
+
+.view-button {
+  /* width: 6rem; */
+  height: 2rem;
+  padding: 0.3rem;
+  margin: 0.3rem;
+  background-color: var(--can-interact);
+  color: var(--veryblue);
+  border-radius: 3rem;
+  cursor: pointer;
+  display: flex;
+  white-space: nowrap;
+}
+
+.view-button label {
+
+  font-size: 16px;
 }
 
 .graph {}
@@ -78,9 +107,21 @@ button:disabled:hover {
 
 h1 {
   color: rgb(50, 50, 50);
-  padding: 30px 0;
+  /* padding: 30px 0; */
   font-weight: black;
   /* text-align: center; */
+}
+
+.material-symbols-rounded {
+  font-variation-settings:
+    'FILL'0,
+    'wght'400,
+    'GRAD'0,
+    'opsz'24
+}
+
+.title-section {
+  padding: 1rem 0rem 2rem 0;
 }
 
 body {
@@ -120,10 +161,15 @@ tr:nth-of-type(odd) {
   text-align: left;
 }
 
-label, input {
-  border-radius: 6px;
+label, input, button {
   padding: 0.3rem 0.5rem;
   font-size: 14px;
+  border: none;
+  margin: 0.1rem;
+}
+
+label, input {
+  border-radius: 6px;
 }
 
 label {
@@ -213,6 +259,13 @@ label.domain-computation {
 
 td.td-info {
   color: var(--lightblue);
+}
+
+table {
+
+  box-shadow: 0 3px 10px rgba(161, 163, 211, 0.6);
+  border-radius:10px;
+
 }
 
 .result-table {

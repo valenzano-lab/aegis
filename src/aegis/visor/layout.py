@@ -1,8 +1,10 @@
 from dash import html, dcc
 from aegis.visor.static import FIGURE_INFO
-
+import pathlib
 
 from aegis.parameters import param
+
+# HERE = pathlib.Path(__file__).absolute().parent
 
 app_layout = html.Div(
     [
@@ -12,17 +14,47 @@ app_layout = html.Div(
         # TITLE SECTION
         html.Div(
             className="title-section",
-            children=[html.H1("AEGIS visor")],
-        ),
-        # CONTROL SECTION
-        html.Div(
-            className="control-section",
             children=[
-                html.Button("plot view", id="plot-view-button"),
-                html.Button("config view", id="config-view-button"),
-                html.Button("result view", id="result-view-button"),
+                html.H1("AEGIS visor"),
+                html.Div(
+                    [
+                        html.Div(
+                            [
+                                html.Img(src="assets/plot.svg", className="svg-plot"),
+                                html.Label("config view"),
+                                # html.Button("config view", id="config-view-button"),
+                            ],
+                            id="config-view-button",
+                            className="view-button",
+                        ),
+                        html.Div(
+                            [
+                                html.Img(src="assets/plot.svg", className="svg-plot"),
+                                html.Label("result view"),
+                                # html.Button("result view", id="result-view-button"),
+                            ],
+                            id="result-view-button",
+                            className="view-button",
+                        ),
+                        html.Div(
+                            [
+                                html.Img(src="assets/plot.svg", className="svg-plot"),
+                                html.Label("plot view"),
+                                # html.Button("plot view", id="plot-view-button"),
+                            ],
+                            id="plot-view-button",
+                            className="view-button",
+                        ),
+                    ],
+                    style={"display": "flex", "flex-wrap": "wrap"},
+                ),
             ],
         ),
+        # # CONTROL SECTION
+        # html.Div(
+        #     className="control-section",
+        #     children=[],
+        # ),
         # CONFIG SECTION
         html.Div(
             id="sim-section",
