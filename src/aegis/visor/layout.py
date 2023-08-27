@@ -40,7 +40,9 @@ app_layout = html.Div(
                             [
                                 html.Th("PARAMETER"),
                                 html.Th("VALUE"),
-                                html.Th("VALID VALUES"),
+                                html.Th("VALID TYPES"),
+                                html.Th("VALID VALUES", className="valid-values"),
+                                html.Th("PARAMETER TYPE"),
                                 html.Th("PARAMETER DESCRIPTION"),
                             ],
                         )
@@ -58,7 +60,15 @@ app_layout = html.Div(
                                         id=f"config-{k}",
                                     ),
                                 ),
+                                # html.Td(children=v.dtype.__name__, className=f"dtype-{v.dtype.__name__} dtype"),
+                                html.Td(
+                                    children=html.Label(
+                                        v.dtype.__name__,
+                                        className=f"dtype-{v.dtype.__name__} dtype",
+                                    )
+                                ),
                                 html.Td(children=v.drange, className="data-range"),
+                                html.Td(v.domain),
                                 html.Td(v.info, className="td-info"),
                             ],
                         )
@@ -76,10 +86,12 @@ app_layout = html.Div(
             style={"display": "none"},
             children=[
                 html.Div(
-                html.Button(
-                    "reload",
-                    "reload-plots-button",
-                ),style={"display":"block", "width":"100%"})
+                    html.Button(
+                        "reload",
+                        "reload-plots-button",
+                    ),
+                    style={"display": "block", "width": "100%"},
+                )
                 # html.Div(
                 #     className="dataset-section",
                 #     children=[
@@ -145,7 +157,10 @@ app_layout = html.Div(
         #
         # FOOTER SECTION
         html.Div(
-            [html.Hr(), html.P(children="https://github.com/valenzano-lab/aegis")]
+            [
+                # html.Hr(),
+                html.P(children="https://github.com/valenzano-lab/aegis"),
+            ]
         ),
     ],
     className="main-container",
