@@ -148,7 +148,7 @@ params = {
         domain="ecology",
         default=None,
         info="What fraction of population survives after a cliff?; null if not applicable",
-        dtype=int,
+        dtype=float,
         drange="{None, (0,1)}",
         inrange=lambda x: x is None or (0 < x < 1),
     ),
