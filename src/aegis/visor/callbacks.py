@@ -53,7 +53,7 @@ def monitor_processes(_, n_clicks):
             for line in stdout.strip().split("\n")
         ]
         sims = [result for result in results]
-        print(f"Simulations running: {', '.join([sims])}")
+        print(f"Simulations running: {', '.join(sims)}")
         if sims:
             if n_clicks is None:
                 n_clicks = 0
