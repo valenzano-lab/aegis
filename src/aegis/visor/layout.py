@@ -52,11 +52,6 @@ app_layout = html.Div(
                 ),
             ],
         ),
-        # # CONTROL SECTION
-        # html.Div(
-        #     className="control-section",
-        #     children=[],
-        # ),
         # CONFIG SECTION
         html.Div(
             id="sim-section",
@@ -129,52 +124,41 @@ app_layout = html.Div(
                         "reload",
                         "reload-plots-button",
                     ),
-                    style={"display": "block", "width": "100%"},
-                )
-                # html.Div(
-                #     className="dataset-section",
-                #     children=[
-                #         html.Button(
-                #             "reload list of simulations",
-                #             "load-paths-button",
-                #             style={"display": "none"},
-                #         ),
-                #         dcc.Dropdown(
-                #             id="dynamic-dropdown",
-                #             clearable=False,
-                #             style={"width": "50%"},
-                #         ),
-                #     ],
-                # ),
-            ]
-            + [
+                    style={"margin": "0.5rem 0 1rem 0"},
+                ),
                 html.Div(
-                    [
+                    id="figure-container",
+                    children=[
                         html.Div(
                             [
-                                dcc.Graph(
-                                    id=figure_id,
-                                    config={"displayModeBar": False},
-                                    className="figure",
+                                html.Div(
+                                    [
+                                        dcc.Graph(
+                                            id=figure_id,
+                                            config={"displayModeBar": False},
+                                            className="figure",
+                                        ),
+                                    ],
+                                    style={"padding-right": "20px"},
+                                ),
+                                html.Div(
+                                    children=[
+                                        html.P(
+                                            children=info["title"],
+                                            className="figure-title",
+                                        ),
+                                        html.P(
+                                            children=info["description"],
+                                            className="figure-description",
+                                        ),
+                                    ]
                                 ),
                             ],
-                            style={"padding-right": "20px"},
-                        ),
-                        html.Div(
-                            children=[
-                                html.P(
-                                    children=info["title"], className="figure-title"
-                                ),
-                                html.P(
-                                    children=info["description"],
-                                    className="figure-description",
-                                ),
-                            ]
-                        ),
+                            className="figure-card",
+                        )
+                        for figure_id, info in FIGURE_INFO.items()
                     ],
-                    className="figure-card",
-                )
-                for figure_id, info in FIGURE_INFO.items()
+                ),
             ]
             # + [
             #     dcc.Graph(id="figurex"),
