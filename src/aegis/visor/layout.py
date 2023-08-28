@@ -18,7 +18,7 @@ app_layout = html.Div(
                 html.Button("result view", id="result-view-button"),
             ],
         ),
-        # SIMULATION SECTION
+        # CONFIG SECTION
         html.Div(
             id="sim-section",
             children=[
@@ -30,15 +30,23 @@ app_layout = html.Div(
                 # html.Button("make config", id="config-make-button"),
             ]
             + [
-                html.Div(
-                    children=[
-                        html.Label(children=k),
-                        dcc.Input(type="text", placeholder=str(v), id=f"config-{k}"),
+                html.Table(
+                    [
+                        html.Tr(
+                            [
+                                html.Th("parameter"),
+                                html.Th("value"),
+                            ]
+                        )
+                    ]
+                    + [
+                        html.Tr([html.Td(k),
+                                 html.Td(dcc.Input(type="text", placeholder=str(v), id=f"config-{k}"))])
+                        for k, v in DEFAULT_CONFIG_DICT.items()
+                        if not isinstance(v, list)
                     ]
                 )
-                for k, v in DEFAULT_CONFIG_DICT.items()
-                if not isinstance(v, list)
-            ],
+            ]
         ),
         # RESULT SECTION
         html.Div(id="result-section", style={"display": "none"}, children=[]),
