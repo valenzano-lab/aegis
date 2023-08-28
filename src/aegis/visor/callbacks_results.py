@@ -47,14 +47,15 @@ def delete_simulation(_, filename):
 )
 @funcs.print_function_name
 def refresh_result_section(*_):
-
     paths = funcs.get_sim_paths()
     containers = [Container(path) for path in paths]
     table_elements = [
         # html.Button(id="testo", children="testo"),
         html.Tr(
             [
-                html.Th("ID"),
+                html.Th(
+                    "ID", style={"padding-left": "1.3rem", "padding-right": "0.8rem"}
+                ),
                 html.Th("DISPLAY"),
                 html.Th("CREATED"),
                 # html.Th("edited"),
@@ -64,7 +65,7 @@ def refresh_result_section(*_):
                 # html.Th("stage"),
                 html.Th("STAGE PER MINUTE"),
                 html.Th("FILEPATH"),
-                html.Th("DELETE"),
+                html.Th("DELETE", style={"padding-right": "2rem"}),
             ],
         ),
     ]
@@ -138,7 +139,6 @@ def refresh_result_section(*_):
     prevent_initial_call=True,
 )
 def update_selection(value):
-
     sim = ctx.triggered_id["index"]
     if value == ["y"]:
         SELECTION.add(sim)

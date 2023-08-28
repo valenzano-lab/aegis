@@ -267,8 +267,12 @@ tr:nth-of-type(odd) {
   background-color: rgb(18, 20, 21);
 }
 
-.config-table th {
+.config-table th, .result-table th {
   color: var(--prim);
+}
+
+.config-table th {
+
   text-align: left;
 }
 

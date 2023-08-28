@@ -33,7 +33,7 @@ def toggle_display(*_):
             {"display": "none"},
             {"display": "none"},
             {"display": "block"},
-            {"display": "block"},
+            {"display": "flex"},
             {"display": "none"},
             {"display": "none"},
             # "bluish-bckg",
