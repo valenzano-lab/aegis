@@ -1,9 +1,28 @@
 @font-face {
+  font-family: "Quicksand";
+  src: url("Quicksand.tff") format("truetype");
+}
+
+@font-face {
   font-family: "Inter";
   src: url("Inter.tff") format("truetype");
 }
 
 :root {
+
+  --dark-black: #101112;
+  --mid-black: #191A1C;
+  --mid-black-hover: #222325;
+
+  --midmidmid-black: #111213;
+  --midmid-black: #151617;
+  --offwhite: #bebdb7;
+
+  --lite-black: #2E3133;
+  --litelite-black: rgb(65, 69, 71);
+  --prim: #E4B268;
+
+
   --bckg: rgb(240, 250, 255);
   --blue: rgb(220, 240, 255);
   --bluish: rgb(250, 250, 255);
@@ -17,11 +36,10 @@
 }
 
 body {
-  /* font-family: Arial, Helvetica, sans-serif; */
-  font-family: Inter;
+  font-family: Quicksand;
   margin: 0;
 
-  background-color: var(--bckg);
+  background-color: var(--dark-black);
 
   /* -ms-overflow-style: none;
   scrollbar-width: none;
@@ -58,29 +76,60 @@ td, th {
                                 supported by Chrome, Edge, Opera and Firefox */
 }
 
+td {
+  /* color: rgb(200, 200, 200); */
+  /* td.td-info { */
+  color: var(--offwhite);
+  /* } */
+}
+
+button, .view-button {
+  background-color: var(--prim);
+  color: var(--mid-black);
+  font-weight: bold;
+  cursor: pointer;
+
+}
+
+input, button {
+  font-family: Quicksand;
+  font-weight: 700;
+}
+
+input:focus {
+  outline: 2px solid var(--prim) !important;
+}
+
+.domain, .dtype {
+  font-family: Quicksand;
+  font-weight: 600;
+}
+
 button {
-  background-color: var(--can-interact);
-  color: var(--veryblue);
   border-radius: 1rem;
 }
 
-button:hover {
+button:hover, .view-button:hover {
   cursor: pointer;
-  background-color: var(--can-interact-hover);
+  background-color: var(--mid-black-hover);
+  color: var(--prim);
 }
 
-button.disabled {
-  cursor: not-allowed;
-  background-color: var(--cannot-interact);
-  color: rgb(250, 200, 200);
+button:active {
+  background-color: var(--midmid-black);
+  color: var(--prim);
+
 }
+
+.view-button label:hover {
+  cursor: pointer;
+}
+
 
 .view-button {
   height: 2rem;
   padding: 0.3rem 0.6rem;
   /* margin: 0.3rem; */
-  background-color: var(--can-interact);
-  color: var(--veryblue);
   /* border-radius: 3rem; */
   display: flex;
   white-space: nowrap;
@@ -88,8 +137,7 @@ button.disabled {
 }
 
 .view-button:hover {
-  background-color: var(--can-interact-hover);
-  cursor: pointer;
+  /* background-color: var(--can-interact-hover); */
 
 }
 
@@ -103,10 +151,16 @@ button.disabled {
 
 .view-button label {
 
-  font-size: 16px;
+  font-size: 14px;
+  margin: 2px 0;
 }
 
-.graph {}
+.svg-plot {
+  width: 26px;
+  height: 26px;
+  margin: 3px 0;
+}
+
 
 .dropdown-div {
   display: flex;
@@ -136,8 +190,8 @@ button.disabled {
   /* outline: 5px solid red; */
   /* background-color: rgb(250, 250, 250); */
   /* margin:; */
-  padding:30px;
-  margin:0 15px 15px 0 ;
+  padding: 30px;
+  margin: 0 15px 15px 0;
   min-height: 100px;
   display: flex;
   width: 42%;
@@ -145,15 +199,16 @@ button.disabled {
   border-radius: 16px;
 }
 
-.bluish-bckg {
+/* .bluish-bckg {
   background-color: var(--bckg);
-}
+} */
 
 
 h1 {
-  color: rgb(50, 50, 50);
+  color: var(--prim);
   /* padding: 30px 0; */
   font-weight: black;
+  margin: 0 2rem 0 0;
   /* text-align: center; */
 }
 
@@ -168,6 +223,7 @@ h1 {
 .title-section {
   display: flex;
   flex-direction: row;
+  padding-top: 1rem;
 }
 
 
@@ -183,13 +239,11 @@ h1 {
 }
 
 
-tr:nth-of-type(odd) {
-  background-color: var(--bluish);
-}
 
 td, th {
-  padding-left: 1rem;
-  padding-right: 1rem;
+  padding-left: 0.5rem;
+  padding-right: 0.5rem;
+  font-family: Inter;
 }
 
 td {
@@ -202,15 +256,19 @@ th {
   padding-top: 0.8rem;
   padding-bottom: 0.8rem;
   margin-top: 1.5rem;
-  background-color: var(--blue);
+  background-color: rgb(29, 32, 33);
 }
 
 tr {
-  background-color: white;
+  background-color: rgb(20, 22, 23);
+}
+
+tr:nth-of-type(odd) {
+  background-color: rgb(18, 20, 21);
 }
 
 .config-table th {
-  color: var(--veryblue);
+  color: var(--prim);
   text-align: left;
 }
 
@@ -218,7 +276,7 @@ label, input, button {
   padding: 0.3rem 0.5rem;
   font-size: 14px;
   border: none;
-  margin: 0.1rem;
+  /* margin: 0.1rem; */
 }
 
 label, input {
@@ -232,24 +290,31 @@ label {
 
 input {
   border: 0px solid;
-  color: var(--veryblue);
+  /* color: var(--veryblue); */
   margin: 0.2rem;
 }
 
 input:placeholder-shown {
-  background-color: var(--can-interact);
-  color: var(--bluish);
+  background-color: var(--mid-black);
+  color: var(--lite-black);
 }
 
 input::placeholder {
-  color: var(--bluish);
+  color: var(--litelite-black);
+  font-weight: bold;
+}
+
+input:hover {
+  background-color: var(--mid-black-hover);
 }
 
 input:not(:placeholder-shown) {
-  background-color: var(--interacted);
-  color: var(--bluish);
+  background-color: var(--prim);
+  color: var(--mid-black);
 
 }
+
+
 
 .config-table td.td-info {
   font-size: 14px;
@@ -266,50 +331,47 @@ label.dtype {
 
 label.dtype-str, label.domain-recording {
   color: rgb(212, 116, 116);
-  background-color: rgb(255, 247, 247);
+  background-color: rgba(255, 195, 195, 0.03);
 }
 
 label.dtype-int {
   color: rgb(147, 187, 53);
-  background-color: rgb(249, 255, 238);
+  background-color: rgba(226, 255, 173, 0.03);
 }
 
 
 label.dtype-float {
   color: rgb(200, 144, 13);
-  background-color: rgb(255, 255, 225);
+  background-color: rgba(255, 255, 167, 0.03);
 }
 
 
 label.dtype-bool {
   color: rgb(53, 178, 187);
-  background-color: rgb(232, 249, 255);
+  background-color: rgba(179, 235, 255, 0.03);
 }
 
 
 label.domain-ecology {
   color: rgb(86, 176, 45);
-  background-color: rgb(242, 255, 238);
+  background-color: rgba(212, 255, 199, 0.03);
 }
 
 label.domain-initialization {
-  color: rgb(57, 53, 187);
-  background-color: rgb(240, 241, 255);
+  color: rgb(103, 129, 231);
+  background-color: rgba(189, 193, 255, 0.03);
 }
 
 label.domain-genetics {
-  color: rgb(104, 53, 187);
-  background-color: rgb(247, 232, 255);
+  color: rgb(147, 104, 217);
+  background-color: rgba(229, 180, 255, 0.03);
 }
 
 label.domain-computation {
-  color: rgb(207, 63, 195);
-  background-color: rgb(255, 240, 251);
+  color: rgb(217, 89, 196);
+  background-color: rgba(255, 192, 238, 0.03);
 }
 
-td.td-info {
-  color: var(--lightblue);
-}
 
 table {
   border-radius: 10px;
@@ -317,7 +379,7 @@ table {
 }
 
 /* table:hover {
-  box-shadow: 0 0 10px rgba(50, 50, 50, 0.1);
+  box-shadow: 0 0 10px rgba(50, 50, 50, 0.03);
   transition: box-shadow 0.2s ease-in;
 } */
 
@@ -346,4 +408,23 @@ tr:last-of-type td:last-of-type {
 
 .footer-p {
   font-size: 12px;
+}
+
+#plot-section-control {
+  /* margin: 0.5rem 0 1rem 0; */
+  /* height: 2.6rem; */
+}
+
+.control-element {
+  height: 2.6rem;
+  border-radius: 10px;
+  padding: 0 1rem;
+  margin: 0 0.2rem;
+}
+
+
+button:disabled {
+  cursor: not-allowed;
+  background-color: var(--mid-black);
+  color: var(--lite-black);
 }

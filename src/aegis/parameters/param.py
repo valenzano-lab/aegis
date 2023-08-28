@@ -3,9 +3,9 @@ import logging
 
 class Param:
     def __init__(
-        self, name, domain, default, info, dtype, drange, inrange=lambda x: True
+        self, key, name, domain, default, info, dtype, drange, inrange=lambda x: True
     ):
-
+        self.key = key
         self.name = name
         self.domain = domain
         self.default = default
@@ -18,7 +18,7 @@ class Param:
         if value is None or value == "":
             return self.default
         elif self.dtype == bool:
-            return (value == "True" or value == "true")
+            return value == "True" or value == "true"
         else:
             return self.dtype(value)
 
@@ -37,10 +37,17 @@ class Param:
         # Valid
         return True
 
+    def get_name(self):
+        if self.name:
+            return self.name
+        name = self.key.replace("_", " ").strip().lower()
+        return name
+
 
 params = {
     "RANDOM_SEED_": Param(
-        name="RANDOM_SEED_",
+        key="RANDOM_SEED_",
+        name="",
         domain="recording",
         default=None,
         info="If nothing is given, a random integer will be used as the seed; otherwise the given integer will be used as the seed",
@@ -49,16 +56,18 @@ params = {
         inrange=lambda x: True,
     ),
     "STAGES_PER_SIMULATION_": Param(
-        name="STAGES_PER_SIMULATION_",
+        key="STAGES_PER_SIMULATION_",
+        name="",
         domain="recording",
-        default=100000,
+        default=1000000,
         info="How many stages does the simulation run for?",
         dtype=int,
         drange="[1, inf)",
         inrange=lambda x: x >= 1,
     ),
     "LOGGING_RATE_": Param(
-        name="LOGGING_RATE_",
+        key="LOGGING_RATE_",
+        name="",
         domain="recording",
         default=1000,
         info="Log every ?-th stage; 0 for no logging",
@@ -67,7 +76,8 @@ params = {
         inrange=lambda x: x >= 0,
     ),
     "PICKLE_RATE_": Param(
-        name="PICKLE_RATE_",
+        key="PICKLE_RATE_",
+        name="",
         domain="recording",
         default=100000,
         info="Pickle population every ? stages; 0 for no pickles",
@@ -76,7 +86,8 @@ params = {
         inrange=lambda x: x >= 0,
     ),
     "SNAPSHOT_RATE_": Param(
-        name="SNAPSHOT_RATE_",
+        key="SNAPSHOT_RATE_",
+        name="",
         domain="recording",
         default=10000,
         info="Take a snapshot every ? stages; 0 for no snapshots",
@@ -85,7 +96,8 @@ params = {
         inrange=lambda x: x >= 0,
     ),
     "VISOR_RATE_": Param(
-        name="VISOR_RATE_",
+        key="VISOR_RATE_",
+        name="",
         domain="recording",
         default=1000,
         info="Take a visor snapshot every ? stages; 0 for no visor records",
@@ -94,7 +106,8 @@ params = {
         inrange=lambda x: x >= 0,
     ),
     "POPGENSTATS_RATE_": Param(
-        name="POPGENSTATS_RATE_",
+        key="POPGENSTATS_RATE_",
+        name="",
         domain="recording",
         default=1000,
         info="Record population genetic stats about the population every ? stages; 0 for no popgen stats",
@@ -103,7 +116,8 @@ params = {
         inrange=lambda x: x >= 0,
     ),
     "POPGENSTATS_SAMPLE_SIZE_": Param(
-        name="POPGENSTATS_SAMPLE_SIZE_",
+        key="POPGENSTATS_SAMPLE_SIZE_",
+        name="",
         domain="recording",
         default=100,
         info="Number of individuals to use when calculating population genetic metrics",
@@ -112,7 +126,8 @@ params = {
         inrange=lambda x: x == 0 or x >= 3,
     ),
     "ECOSYSTEM_NUMBER_": Param(
-        name="ECOSYSTEM_NUMBER_",
+        key="ECOSYSTEM_NUMBER_",
+        name="",
         domain="ecology",
         default=1,
         info="Number of subpopulations",
@@ -121,7 +136,8 @@ params = {
         inrange=lambda x: x >= 1,
     ),
     "MAX_POPULATION_SIZE": Param(
-        name="MAX_POPULATION_SIZE",
+        key="MAX_POPULATION_SIZE",
+        name="",
         domain="ecology",
         default=1000,
         info="Number of individuals in the population",
@@ -130,7 +146,8 @@ params = {
         inrange=lambda x: x >= 1,
     ),
     "OVERSHOOT_EVENT": Param(
-        name="OVERSHOOT_EVENT",
+        key="OVERSHOOT_EVENT",
+        name="",
         domain="ecology",
         default="starvation",
         info="Who dies when everyone is starving?",
@@ -146,7 +163,8 @@ params = {
         ),
     ),
     "CLIFF_SURVIVORSHIP": Param(
-        name="CLIFF_SURVIVORSHIP",
+        key="CLIFF_SURVIVORSHIP",
+        name="",
         domain="ecology",
         default=None,
         info="What fraction of population survives after a cliff?; null if not applicable",
@@ -155,7 +173,8 @@ params = {
         inrange=lambda x: x is None or (0 < x < 1),
     ),
     "STAGES_PER_SEASON": Param(
-        name="STAGES_PER_SEASON",
+        key="STAGES_PER_SEASON",
+        name="",
         domain="ecology",
         default=0,
         info="How many stages does one season last; 0 for no seasons",
@@ -164,7 +183,8 @@ params = {
         inrange=lambda x: x >= 0,
     ),
     "MAX_LIFESPAN": Param(
-        name="MAX_LIFESPAN",
+        key="MAX_LIFESPAN",
+        name="",
         domain="genetics",
         default=50,
         info="Maximum lifespan",
@@ -173,7 +193,8 @@ params = {
         inrange=lambda x: x >= 1,
     ),
     "MATURATION_AGE": Param(
-        name="MATURATION_AGE",
+        key="MATURATION_AGE",
+        name="",
         domain="genetics",
         default=10,
         info="Age at which reproduction is possible",
@@ -182,7 +203,8 @@ params = {
         inrange=lambda x: x >= 1,
     ),
     "BITS_PER_LOCUS": Param(
-        name="BITS_PER_LOCUS",
+        key="BITS_PER_LOCUS",
+        name="",
         domain="genetics",
         default=8,
         info="Number of bits that each locus has",
@@ -191,7 +213,8 @@ params = {
         inrange=lambda x: x >= 1,
     ),
     "HEADSUP": Param(
-        name="HEADSUP",
+        key="HEADSUP",
+        name="",
         domain="initialization",
         default=-1,
         info="-1 if no preevolution, 0 for maturity guarantee, +x for headsup",
@@ -200,7 +223,8 @@ params = {
         inrange=lambda x: x in (-1, 0) or x >= 1,
     ),
     "REPRODUCTION_MODE": Param(
-        name="REPRODUCTION_MODE",
+        key="REPRODUCTION_MODE",
+        name="",
         domain="genetics",
         default="asexual",
         info="Mode of reproduction",
@@ -209,7 +233,8 @@ params = {
         inrange=lambda x: x in ("sexual", "asexual", "asexual_diploid"),
     ),
     "RECOMBINATION_RATE": Param(
-        name="RECOMBINATION_RATE",
+        key="RECOMBINATION_RATE",
+        name="",
         domain="genetics",
         default=0,
         info="Rate of recombination; 0 if no recombination",
@@ -218,7 +243,8 @@ params = {
         inrange=lambda x: x >= 0,
     ),
     "MUTATION_RATIO": Param(
-        name="MUTATION_RATIO",
+        key="MUTATION_RATIO",
+        name="",
         domain="genetics",
         default=0.1,
         info="Ratio of 0->1 mutations to 1->0 mutations",
@@ -227,7 +253,8 @@ params = {
         inrange=lambda x: x >= 0,
     ),
     "MUTATION_METHOD": Param(
-        name="MUTATION_METHOD",
+        key="MUTATION_METHOD",
+        name="",
         domain="computation",
         default="by_bit",
         info="Mutate by XOR with a randomized bit matrix or generate random indices to mutate",
@@ -236,7 +263,8 @@ params = {
         inrange=lambda x: x in ("by_bit", "by_index"),
     ),
     "PHENOMAP_METHOD": Param(
-        name="PHENOMAP_METHOD",
+        key="PHENOMAP_METHOD",
+        name="",
         domain="computation",
         default="by_loop",
         info="Non-vectorized, vectorized and null method of calculating phenotypic values",
@@ -245,7 +273,8 @@ params = {
         inrange=lambda x: x in ("by_loop", "by_dot", "by_dummy"),
     ),
     "ENVIRONMENT_CHANGE_RATE": Param(
-        name="ENVIRONMENT_CHANGE_RATE",
+        key="ENVIRONMENT_CHANGE_RATE",
+        name="",
         domain="ecology",
         default=0,
         info="Environmental map changes every ? stages; if no environmental change",
@@ -254,7 +283,8 @@ params = {
         inrange=lambda x: x >= 0,
     ),
     "G_surv_evolvable": Param(
-        name="G_surv_evolvable",
+        key="G_surv_evolvable",
+        name="",
         domain="genetics",
         default=True,
         info="Is survival an evolvable trait?",
@@ -263,7 +293,8 @@ params = {
         inrange=lambda x: True,
     ),
     "G_surv_agespecific": Param(
-        name="G_surv_agespecific",
+        key="G_surv_agespecific",
+        name="",
         domain="genetics",
         default=True,
         info="Is survival age-specific?",
@@ -272,7 +303,8 @@ params = {
         inrange=lambda x: True,
     ),
     "G_surv_interpreter": Param(
-        name="G_surv_interpreter",
+        key="G_surv_interpreter",
+        name="",
         domain="genetics",
         default="binary",
         info="",
@@ -280,7 +312,8 @@ params = {
         drange="",
     ),
     "G_surv_lo": Param(
-        name="G_surv_lo",
+        key="G_surv_lo",
+        name="",
         domain="genetics",
         default=0,
         info="Minimum survival rate",
@@ -288,7 +321,8 @@ params = {
         drange="",
     ),
     "G_surv_hi": Param(
-        name="G_surv_hi",
+        key="G_surv_hi",
+        name="",
         domain="genetics",
         default=1,
         info="Maximum survival rate",
@@ -296,7 +330,8 @@ params = {
         drange="",
     ),
     "G_surv_initial": Param(
-        name="G_surv_initial",
+        key="G_surv_initial",
+        name="",
         domain="initialization",
         default=1,
         info="Initial survival rate",
@@ -304,7 +339,8 @@ params = {
         drange="",
     ),
     "G_repr_evolvable": Param(
-        name="G_repr_evolvable",
+        key="G_repr_evolvable",
+        name="",
         domain="genetics",
         default=True,
         info="Is fertility an evolvable trait?",
@@ -312,7 +348,8 @@ params = {
         drange="",
     ),
     "G_repr_agespecific": Param(
-        name="G_repr_agespecific",
+        key="G_repr_agespecific",
+        name="",
         domain="genetics",
         default=True,
         info="Is fertility age-specific?",
@@ -320,7 +357,8 @@ params = {
         drange="",
     ),
     "G_repr_interpreter": Param(
-        name="G_repr_interpreter",
+        key="G_repr_interpreter",
+        name="",
         domain="genetics",
         default="binary",
         info="",
@@ -328,7 +366,8 @@ params = {
         drange="",
     ),
     "G_repr_lo": Param(
-        name="G_repr_lo",
+        key="G_repr_lo",
+        name="",
         domain="genetics",
         default=0,
         info="Minimum fertility",
@@ -336,7 +375,8 @@ params = {
         drange="",
     ),
     "G_repr_hi": Param(
-        name="G_repr_hi",
+        key="G_repr_hi",
+        name="",
         domain="genetics",
         default=0.5,
         info="Maximum fertility",
@@ -344,7 +384,8 @@ params = {
         drange="",
     ),
     "G_repr_initial": Param(
-        name="G_repr_initial",
+        key="G_repr_initial",
+        name="",
         domain="initialization",
         default=1,
         info="Initial fertility rate",
@@ -352,7 +393,8 @@ params = {
         drange="",
     ),
     "G_neut_evolvable": Param(
-        name="G_neut_evolvable",
+        key="G_neut_evolvable",
+        name="",
         domain="genetics",
         default=False,
         info="",
@@ -360,7 +402,8 @@ params = {
         drange="",
     ),
     "G_neut_agespecific": Param(
-        name="G_neut_agespecific",
+        key="G_neut_agespecific",
+        name="",
         domain="genetics",
         default=None,
         info="",
@@ -368,7 +411,8 @@ params = {
         drange="",
     ),
     "G_neut_interpreter": Param(
-        name="G_neut_interpreter",
+        key="G_neut_interpreter",
+        name="",
         domain="genetics",
         default=None,
         info="",
@@ -376,7 +420,8 @@ params = {
         drange="",
     ),
     "G_neut_lo": Param(
-        name="G_neut_lo",
+        key="G_neut_lo",
+        name="",
         domain="genetics",
         default=None,
         info="",
@@ -384,7 +429,8 @@ params = {
         drange="",
     ),
     "G_neut_hi": Param(
-        name="G_neut_hi",
+        key="G_neut_hi",
+        name="",
         domain="genetics",
         default=None,
         info="",
@@ -392,7 +438,8 @@ params = {
         drange="",
     ),
     "G_neut_initial": Param(
-        name="G_neut_initial",
+        key="G_neut_initial",
+        name="",
         domain="initialization",
         default=1,
         info="",
@@ -400,7 +447,8 @@ params = {
         drange="",
     ),
     "G_muta_evolvable": Param(
-        name="G_muta_evolvable",
+        key="G_muta_evolvable",
+        name="",
         domain="genetics",
         default=False,
         info="",
@@ -408,7 +456,8 @@ params = {
         drange="",
     ),
     "G_muta_agespecific": Param(
-        name="G_muta_agespecific",
+        key="G_muta_agespecific",
+        name="",
         domain="genetics",
         default=None,
         info="",
@@ -416,7 +465,8 @@ params = {
         drange="",
     ),
     "G_muta_interpreter": Param(
-        name="G_muta_interpreter",
+        key="G_muta_interpreter",
+        name="",
         domain="genetics",
         default=None,
         info="",
@@ -424,7 +474,8 @@ params = {
         drange="",
     ),
     "G_muta_lo": Param(
-        name="G_muta_lo",
+        key="G_muta_lo",
+        name="",
         domain="genetics",
         default=None,
         info="",
@@ -432,7 +483,8 @@ params = {
         drange="",
     ),
     "G_muta_hi": Param(
-        name="G_muta_hi",
+        key="G_muta_hi",
+        name="",
         domain="genetics",
         default=None,
         info="",
@@ -440,7 +492,8 @@ params = {
         drange="",
     ),
     "G_muta_initial": Param(
-        name="G_muta_initial",
+        key="G_muta_initial",
+        name="",
         domain="initialization",
         default=0.001,
         info="Initial mutation rate",
@@ -448,7 +501,8 @@ params = {
         drange="",
     ),
     "PHENOMAP_SPECS": Param(
-        name="PHENOMAP_SPECS",
+        key="PHENOMAP_SPECS",
+        name="",
         domain="genetics",
         default=[],
         info="",
@@ -456,7 +510,8 @@ params = {
         drange="",
     ),
     "NOTES": Param(
-        name="NOTES",
+        key="NOTES",
+        name="",
         domain="recording",
         default=[],
         info="",

@@ -17,7 +17,6 @@ app_layout = html.Div(
         html.Div(
             style={"padding": "1rem 0rem 2rem 0"},
             children=[
-                html.H1("AEGIS visor"),
                 html.Div(
                     className="title-section",
                     children=[
@@ -28,6 +27,7 @@ app_layout = html.Div(
                                 "margin-right": "2rem",
                             },
                             children=[
+                                html.H1("aegis"),
                                 html.Div(
                                     [
                                         html.Img(
@@ -42,7 +42,9 @@ app_layout = html.Div(
                                 html.Div(
                                     [
                                         html.Img(
-                                            src="assets/list.svg", className="svg-plot"
+                                            src="assets/list.svg",
+                                            className="svg-plot",
+                                            style={"width": "30px", "height": "34px", "margin-top":"-2px"},
                                         ),
                                         html.Label("list"),
                                         # html.Button("result view", id="result-view-button"),
@@ -71,11 +73,15 @@ app_layout = html.Div(
                                     children=[
                                         dcc.Input(
                                             id="config-make-text",
+                                            className="control-element",
                                             type="text",
                                             placeholder="unique id",
+                                            autoComplete="off",
                                         ),
                                         html.Button(
-                                            "run simulation", id="simulation-run-button"
+                                            "run simulation",
+                                            id="simulation-run-button",
+                                            className="control-element",
                                         ),
                                         html.P("", id="simulation-run-text"),
                                         # html.Button("make config", id="config-make-button"),]
@@ -90,12 +96,12 @@ app_layout = html.Div(
                                     id="plot-section-control",
                                     style={
                                         "display": "none",
-                                        "margin": "0.5rem 0 1rem 0",
                                     },
                                     children=[
                                         html.Button(
                                             "reload",
                                             "reload-plots-button",
+                                            className="control-element",
                                         ),
                                     ],
                                 ),
@@ -114,19 +120,21 @@ app_layout = html.Div(
                     children=[
                         html.Tr(
                             [
-                                html.Th("PARAMETER"),
+                                html.Th("PARAMETER", style={"padding-left": "1.2rem"}),
                                 html.Th("VALUE"),
-                                html.Th("VALID TYPES"),
-                                html.Th("VALID VALUES", className="valid-values"),
-                                html.Th("PARAMETER TYPE"),
-                                html.Th("PARAMETER DESCRIPTION"),
+                                html.Th("TYPE"),
+                                html.Th("RANGE", className="valid-values"),
+                                html.Th("DOMAIN"),
+                                html.Th(
+                                    "DESCRIPTION", style={"padding-right": "1.2rem"}
+                                ),
                             ],
                         )
                     ]
                     + [
                         html.Tr(
                             [
-                                html.Td(k),
+                                html.Td(v.get_name(), style={"padding-left": "1.2rem"}),
                                 html.Td(
                                     children=dcc.Input(
                                         type="text",
@@ -134,6 +142,7 @@ app_layout = html.Div(
                                         if v.default is not None
                                         else "",
                                         id=f"config-{k}",
+                                        autoComplete="off",
                                     ),
                                 ),
                                 # html.Td(children=v.dtype.__name__, className=f"dtype-{v.dtype.__name__} dtype"),
@@ -150,7 +159,11 @@ app_layout = html.Div(
                                         className=f"domain-{v.domain} domain",
                                     ),
                                 ),
-                                html.Td(v.info, className="td-info"),
+                                html.Td(
+                                    v.info,
+                                    className="td-info",
+                                    style={"padding-right": "0.8rem"},
+                                ),
                             ],
                         )
                         for k, v in param.params.items()
