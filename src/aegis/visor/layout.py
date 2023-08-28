@@ -182,7 +182,7 @@ app_layout = html.Div(
         html.Div(
             [
                 # html.Hr(),
-                html.P(children="https://github.com/valenzano-lab/aegis"),
+                # html.A("github link", href="https://github.com/valenzano-lab/aegis", className="footer-text"),
             ]
         ),
     ],
