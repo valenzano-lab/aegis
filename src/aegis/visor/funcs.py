@@ -30,8 +30,7 @@ def get_config_path(filename):
 
 def run(filename):
     subprocess.run(
-        f'python3 -m aegis --config_path "{get_config_path(filename)}"',
-        shell=True,
+        ["python3", "-m", "aegis", "--config_path", get_config_path(filename)],
         check=True,
     )
 

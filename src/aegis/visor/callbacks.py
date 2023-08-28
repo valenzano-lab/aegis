@@ -33,8 +33,9 @@ def toggle_display(n_clicks):
 def delete_simulation(_, filename):
     config_path = funcs.get_config_path(filename)
     sim_path = config_path.parent / filename
-    subprocess.run(f"rm -r {sim_path}", shell=True, check=True)
-    subprocess.run(f"rm {config_path}", shell=True, check=True)
+
+    subprocess.run(["rm", "-r", sim_path], check=True)
+    subprocess.run(["rm", config_path], check=True)
     return "deleted"
 
 
