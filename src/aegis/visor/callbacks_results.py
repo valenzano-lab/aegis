@@ -59,13 +59,13 @@ def refresh_result_section(*_):
                 html.Th("DISPLAY"),
                 html.Th("CREATED"),
                 # html.Th("edited"),
-                html.Th("FINISHED STATUS"),
-                html.Th("EXTINCT STATUS"),
-                html.Th("TIME REMAINING"),
+                html.Th("FINISHED"),
+                html.Th("EXTINCT"),
+                html.Th("ETA"),
                 # html.Th("stage"),
-                html.Th("STAGE PER MINUTE"),
+                # html.Th("STAGE PER MINUTE"),
                 html.Th("FILEPATH"),
-                html.Th("DELETE", style={"padding-right": "2rem"}),
+                html.Th("DELETE", style={"padding-right": "1rem"}),
             ],
         ),
     ]
@@ -86,9 +86,16 @@ def refresh_result_section(*_):
             status = ["finished", "not extinct"]
 
         time_of_creation = (
-            datetime.datetime.fromtimestamp(input_summary["time_start"])
+            datetime.datetime.fromtimestamp(input_summary["time_start"]).strftime('%Y-%m-%d %H:%M')
             if input_summary
             else None
+        )
+
+        time_of_finishing = (
+            datetime.datetime.fromtimestamp(input_summary["time_start"]).strftime('%Y-%m-%d %H:%M')
+            if output_summary
+            else None
+
         )
         # time_of_edit = datetime.datetime.fromtimestamp(
         #     container.paths["log"].stat().st_mtime
@@ -96,25 +103,46 @@ def refresh_result_section(*_):
 
         element = html.Tr(
             children=[
-                html.Td(container.basepath.stem),
                 html.Td(
-                    dcc.Checklist(
-                        id={
-                            "type": "result-checklist",
-                            "index": container.basepath.stem,
-                        },
-                        options=[{"label": "", "value": "y"}],
-                        value=["y"] if container.basepath.stem in SELECTION else [],
-                    ),
+                    container.basepath.stem,
+                    style={"padding-left": "1.3rem", "padding-right": "0.8rem"},
+                ),
+                html.Td(
+                    children=[
+                        html.Button(
+                            children="display",
+                            id={
+                                "type": "result-checklist",
+                                "index": container.basepath.stem,
+                            },
+                            className="checklist"
+                            if container.basepath.stem not in SELECTION
+                            else "checklist checked",
+                            # id={
+                            #     "type": "result-checklist",
+                            #     "index": container.basepath.stem,
+                            # },
+                            # options=[{"label": "", "value": "y"}],
+                            # value=["y"] if container.basepath.stem in SELECTION else [],
+                        ),
+                        # dcc.Checklist(
+                        #     id={
+                        #         "type": "result-checklist",
+                        #         "index": container.basepath.stem,
+                        #     },
+                        #     options=[{"label": "", "value": "y"}],
+                        #     value=["y"] if container.basepath.stem in SELECTION else [],
+                        # ),
+                    ]
                 ),
                 html.Td(html.P(time_of_creation)),
                 # date created
                 # html.Td(html.P(time_of_edit)),
-                html.Td(html.P(status[0])),
+                html.Td(html.P(time_of_finishing)),
                 html.Td(html.P(status[1])),
-                html.Td(html.P(logline["ETA"])),
+                html.Td(html.P(logline["ETA"] if time_of_finishing is None else "       ")),
                 # html.Td(html.P(logline["stage"])),
-                html.Td(html.P(logline["stg/min"])),
+                # html.Td(html.P(logline["stg/min"])),
                 html.Td(html.P(str(container.basepath))),
                 html.Td(
                     html.Button(
@@ -124,7 +152,8 @@ def refresh_result_section(*_):
                             "index": container.basepath.stem,
                         },
                         value=container.basepath.stem,
-                    )
+                    ),
+                    style={"padding-right": "1rem"},
                 ),
             ],
         )
@@ -134,15 +163,16 @@ def refresh_result_section(*_):
 
 
 @callback(
-    Output({"type": "result-checklist", "index": MATCH}, "style"),
-    Input({"type": "result-checklist", "index": MATCH}, "value"),
+    Output({"type": "result-checklist", "index": MATCH}, "className"),
+    Input({"type": "result-checklist", "index": MATCH}, "n_clicks"),
     prevent_initial_call=True,
 )
-def update_selection(value):
+def update_selection(n_clicks):
+    print(n_clicks)
     sim = ctx.triggered_id["index"]
-    if value == ["y"]:
+    if sim not in SELECTION:
         SELECTION.add(sim)
+        return "checked checklist"
     else:
         SELECTION.remove(sim)
-    print(SELECTION)
-    return {}
+        return "checklist"

@@ -21,6 +21,7 @@
   --lite-black: #2E3133;
   --litelite-black: rgb(65, 69, 71);
   --prim: #E4B268;
+  --sec: rgb(29, 124, 219);
 
 
   --bckg: rgb(240, 250, 255);
@@ -431,4 +432,22 @@ button:disabled {
   cursor: not-allowed;
   background-color: var(--mid-black);
   color: var(--lite-black);
+}
+
+button.checklist.checked {
+  background-color: var(--sec);
+  color: white;
+  /* #a17430; */
+}
+
+button.checklist.checked:hover {
+  background-color: rgb(18, 87, 157);
+  color: white;
+  /* #a17430; */
+}
+
+button.checklist.checked:active {
+  background-color: rgb(14, 68, 122);
+  color: var(--offwhite);
+  /* #a17430; */
 }
