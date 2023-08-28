@@ -15,40 +15,93 @@ app_layout = html.Div(
         dcc.Interval(id="process-monitor-interval", interval=1000, n_intervals=0),
         # TITLE SECTION
         html.Div(
-            className="title-section",
+            style={"padding": "1rem 0rem 2rem 0"},
             children=[
                 html.H1("AEGIS visor"),
                 html.Div(
-                    [
+                    className="title-section",
+                    children=[
                         html.Div(
-                            [
-                                html.Img(src="assets/sim.svg", className="svg-plot"),
-                                html.Label("run"),
-                                # html.Button("config view", id="config-view-button"),
+                            style={
+                                "display": "flex",
+                                "flex-wrap": "wrap",
+                                "margin-right": "2rem",
+                            },
+                            children=[
+                                html.Div(
+                                    [
+                                        html.Img(
+                                            src="assets/sim.svg", className="svg-plot"
+                                        ),
+                                        html.Label("run"),
+                                        # html.Button("config view", id="config-view-button"),
+                                    ],
+                                    id="config-view-button",
+                                    className="view-button",
+                                ),
+                                html.Div(
+                                    [
+                                        html.Img(
+                                            src="assets/list.svg", className="svg-plot"
+                                        ),
+                                        html.Label("list"),
+                                        # html.Button("result view", id="result-view-button"),
+                                    ],
+                                    id="result-view-button",
+                                    className="view-button",
+                                ),
+                                html.Div(
+                                    [
+                                        html.Img(
+                                            src="assets/plot.svg", className="svg-plot"
+                                        ),
+                                        html.Label("plot"),
+                                        # html.Button("plot view", id="plot-view-button"),
+                                    ],
+                                    id="plot-view-button",
+                                    className="view-button",
+                                ),
                             ],
-                            id="config-view-button",
-                            className="view-button",
                         ),
                         html.Div(
-                            [
-                                html.Img(src="assets/list.svg", className="svg-plot"),
-                                html.Label("list"),
-                                # html.Button("result view", id="result-view-button"),
+                            children=[
+                                html.Div(
+                                    id="sim-section-control",
+                                    style={"display": "flex"},
+                                    children=[
+                                        dcc.Input(
+                                            id="config-make-text",
+                                            type="text",
+                                            placeholder="unique id",
+                                        ),
+                                        html.Button(
+                                            "run simulation", id="simulation-run-button"
+                                        ),
+                                        html.P("", id="simulation-run-text"),
+                                        # html.Button("make config", id="config-make-button"),]
+                                    ],
+                                ),
+                                html.Div(
+                                    id="result-section-control",
+                                    style={"display": "none"},
+                                    children=[],
+                                ),
+                                html.Div(
+                                    id="plot-section-control",
+                                    style={
+                                        "display": "none",
+                                        "margin": "0.5rem 0 1rem 0",
+                                    },
+                                    children=[
+                                        html.Button(
+                                            "reload",
+                                            "reload-plots-button",
+                                        ),
+                                    ],
+                                ),
                             ],
-                            id="result-view-button",
-                            className="view-button",
-                        ),
-                        html.Div(
-                            [
-                                html.Img(src="assets/plot.svg", className="svg-plot"),
-                                html.Label("plot"),
-                                # html.Button("plot view", id="plot-view-button"),
-                            ],
-                            id="plot-view-button",
-                            className="view-button",
                         ),
                     ],
-                    style={"display": "flex", "flex-wrap": "wrap"},
                 ),
             ],
         ),
@@ -56,12 +109,6 @@ app_layout = html.Div(
         html.Div(
             id="sim-section",
             children=[
-                dcc.Input(id="config-make-text", type="text", placeholder="unique id"),
-                html.Button("run simulation", id="simulation-run-button"),
-                html.P("", id="simulation-run-text"),
-                # html.Button("make config", id="config-make-button"),
-            ]
-            + [
                 html.Table(
                     className="config-table",
                     children=[
@@ -119,13 +166,6 @@ app_layout = html.Div(
             id="figure-section",
             style={"display": "none"},
             children=[
-                html.Div(
-                    html.Button(
-                        "reload",
-                        "reload-plots-button",
-                    ),
-                    style={"margin": "0.5rem 0 1rem 0"},
-                ),
                 html.Div(
                     id="figure-container",
                     children=[

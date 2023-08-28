@@ -5,8 +5,11 @@ import subprocess
 
 @callback(
     Output("figure-section", "style"),
+    Output("plot-section-control", "style"),
     Output("sim-section", "style"),
+    Output("sim-section-control", "style"),
     Output("result-section", "style"),
+    Output("result-section-control", "style"),
     # Output("main-container", "className"),
     Input("plot-view-button", "n_clicks"),
     Input("config-view-button", "n_clicks"),
@@ -19,19 +22,28 @@ def toggle_display(*_):
     styles = {
         "plot": [
             {"display": "flex"},
+            {"display": "flex"},
+            {"display": "none"},
+            {"display": "none"},
             {"display": "none"},
             {"display": "none"},
             # "",
         ],
         "config": [
             {"display": "none"},
+            {"display": "none"},
             {"display": "block"},
+            {"display": "block"},
+            {"display": "none"},
             {"display": "none"},
             # "bluish-bckg",
         ],
         "result": [
             {"display": "none"},
             {"display": "none"},
+            {"display": "none"},
+            {"display": "none"},
+            {"display": "block"},
             {"display": "block"},
             # "bluish-bckg",
         ],
