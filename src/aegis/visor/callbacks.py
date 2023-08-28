@@ -156,7 +156,7 @@ def refresh_dropdown_options(*_):
 
 
 @callback(
-    Output("simulation-run-text", "children"),
+    Output("config-make-text", "value"),
     Input("simulation-run-button", "n_clicks"),
     State("config-make-text", "value"),
     [
@@ -171,15 +171,6 @@ def run_simulation(n_clicks, filename, *values):
     if n_clicks is None:
         return
 
-    if filename is None or filename == "":
-        logging.error("no filename given")
-        return "no filename given. no simulation started."
-
-    sim_exists = funcs.sim_exists(filename)
-    if sim_exists:
-        logging.error("sim with that name already exists")
-        return "sim with that name already exists. no simulation started."
-
     # make config file
     custom_config = {
         k: val
@@ -191,13 +182,15 @@ def run_simulation(n_clicks, filename, *values):
     # run simulation
     funcs.run(filename)
 
+    return ""
+
 
 @callback(
     Output("simulation-run-button", "disabled"),
     Input("config-make-text", "value"),
 )
 @funcs.print_function_name
-def block_sim_button(filename, _):
+def block_sim_button(filename):
 
     if filename is None or filename == "":
         return True
