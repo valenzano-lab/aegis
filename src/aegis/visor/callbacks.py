@@ -104,9 +104,7 @@ def refresh_result_section(*_):
                 html.Td(
                     dcc.Checklist(
                         id=str(container.basepath),
-                        options=[
-                            {"label": "", "value": "yes"}
-                        ],
+                        options=[{"label": "", "value": "yes"}],
                         value=[],
                     ),
                 ),
@@ -194,26 +192,16 @@ def run_simulation(n_clicks, filename, *values):
     funcs.run(filename)
 
 
-# @callback(
-#     Output("config-make-button", "style"),
-#     Input("config-make-button", "n_clicks"),
-#     State("config-make-text", "value"),
-#     [
-#         State(f"config-{k}", "value")
-#         for k, v in funcs.DEFAULT_CONFIG_DICT.items()
-#         if not isinstance(v, list)
-#     ],
-#     prevent_initial_call=True,
-# )
-# @funcs.print_function_name
-# def make_config_file(n_clicks, filename, *values):
+@callback(
+    Output("simulation-run-button", "disabled"),
+    Input("config-make-text", "value"),
+)
+def block_sim_button(filename):
 
-#     custom_config = {
-#         k: val
-#         for (k, v), val in zip(funcs.DEFAULT_CONFIG_DICT.items(), values)
-#         if not isinstance(v, list)
-#     }
+    if filename is None or filename == "":
+        return True
 
-#     if n_clicks is not None:
-#         funcs.make_config_file(filename, custom_config)
-#     return {}
+    sim_exists = funcs.sim_exists(filename)
+    if sim_exists:
+        return True
+    return False
