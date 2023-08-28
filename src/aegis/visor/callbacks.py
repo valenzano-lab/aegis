@@ -56,7 +56,23 @@ def refresh_result_section(*_):
 
     paths = funcs.get_sim_paths()
     containers = [Container(path) for path in paths]
-    elements = []
+    table_elements = [
+        html.Tr(
+            [
+                html.Th("sim name"),
+                html.Th("display"),
+                html.Th("created"),
+                html.Th("edited"),
+                html.Th("running status"),
+                html.Th("exinct status"),
+                html.Th("ETA"),
+                html.Th("stage"),
+                html.Th("stage per minute"),
+                html.Th("path to files"),
+                html.Th("delete simulation"),
+            ],
+        )
+    ]
 
     for container in containers:
         if len(container.get_log()) > 0:
@@ -82,36 +98,42 @@ def refresh_result_section(*_):
             container.paths["log"].stat().st_mtime
         )
 
-        element = html.Div(
-            children=[
-                dcc.Checklist(
-                    id=str(container.basepath),
-                    options=[{"label": str(container.basepath.stem), "value": "yes"}],
-                    value=[],
+        element = html.Tr(
+            [
+                html.Td(container.basepath.stem),
+                html.Td(
+                    dcc.Checklist(
+                        id=str(container.basepath),
+                        options=[
+                            {"label": str(container.basepath.stem), "value": "yes"}
+                        ],
+                        value=[],
+                    ),
                 ),
+                html.Td(html.P(time_of_creation)),
                 # date created
-                html.P(time_of_creation),
-                html.P(time_of_edit),
-                html.P(status[0]),
-                html.P(status[1]),
-                html.P(logline["ETA"]),
-                html.P(logline["stage"]),
-                html.P(logline["stg/min"]),
-                html.P(str(container.basepath)),
-                html.Button(
-                    "delete simulation",
-                    id={
-                        "type": "delete-simulation-button",
-                        "index": container.basepath.stem,
-                    },
-                    value=container.basepath.stem,
+                html.Td(html.P(time_of_edit)),
+                html.Td(html.P(status[0])),
+                html.Td(html.P(status[1])),
+                html.Td(html.P(logline["ETA"])),
+                html.Td(html.P(logline["stage"])),
+                html.Td(html.P(logline["stg/min"])),
+                html.Td(html.P(str(container.basepath))),
+                html.Td(
+                    html.Button(
+                        "delete simulation",
+                        id={
+                            "type": "delete-simulation-button",
+                            "index": container.basepath.stem,
+                        },
+                        value=container.basepath.stem,
+                    )
                 ),
             ],
-            style={"display": "block"},
         )
-        elements.append(element)
+        table_elements.append(element)
 
-    return elements
+    return html.Table(children=table_elements)
 
 
 @callback(
