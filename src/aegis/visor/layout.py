@@ -13,7 +13,9 @@ app_layout = html.Div(
         html.Div(
             className="control-section",
             children=[
-                html.Button("Toggle Divs", id="toggle-button"),
+                html.Button("plot view", id="plot-view-button"),
+                html.Button("config view", id="config-view-button"),
+                html.Button("result view", id="result-view-button"),
             ],
         ),
         # SIMULATION SECTION

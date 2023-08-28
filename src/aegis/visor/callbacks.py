@@ -1,4 +1,5 @@
 from dash import Dash, html, dcc, callback, Output, Input, State, ALL, MATCH
+import dash
 
 import logging
 import datetime
@@ -9,18 +10,23 @@ import subprocess
 
 
 @callback(
+    Output("figure-section", "style"),
     Output("sim-section", "style"),
     Output("result-section", "style"),
-    Output("figure-section", "style"),
-    Input("toggle-button", "n_clicks"),
+    Input("plot-view-button", "n_clicks"),
+    Input("config-view-button", "n_clicks"),
+    Input("result-view-button", "n_clicks"),
     prevent_initial_call=True,
 )
 @funcs.print_function_name
-def toggle_display(n_clicks):
-    # three possible displays
-    styles = [{"display": "none"}] * 3
-    styles[n_clicks % 3] = {"display": "block"}
-    return styles[0], styles[1], styles[2]
+def toggle_display(*_):
+    triggered = dash.callback_context.triggered[0]["prop_id"].split("-")[0]
+    styles = {
+        "plot": [{"display": "block"}, {"display": "none"}, {"display": "none"}],
+        "config": [{"display": "none"}, {"display": "block"}, {"display": "none"}],
+        "result": [{"display": "none"}, {"display": "none"}, {"display": "block"}],
+    }
+    return styles[triggered]
 
 
 @callback(
@@ -41,7 +47,7 @@ def delete_simulation(_, filename):
 
 @callback(
     Output("result-section", "children"),
-    Input("toggle-button", "n_clicks"),
+    Input("result-view-button", "n_clicks"),
     Input({"type": "delete-simulation-button", "index": ALL}, "children"),
     prevent_initial_call=True,
 )
@@ -49,7 +55,6 @@ def delete_simulation(_, filename):
 def refresh_result_section(*_):
 
     paths = funcs.get_sim_paths()
-    print(paths)
     containers = [Container(path) for path in paths]
     elements = []
 
@@ -115,7 +120,7 @@ def refresh_result_section(*_):
         Output("dynamic-dropdown", "value"),
     ],
     [
-        Input("toggle-button", "n_clicks"),
+        Input("plot-view-button", "n_clicks"),
     ],
     prevent_initial_call=True,
 )
