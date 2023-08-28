@@ -11,16 +11,16 @@
 :root {
 
   --dark-black: #101112;
-  --mid-black: #191A1C;
+  --mid-black: rgb(24, 25, 27);
   --mid-black-hover: #222325;
 
-  --midmidmid-black: #111213;
+  --midmidmid-black: rgb(17, 18, 19);
   --midmid-black: #151617;
-  --offwhite: #bebdb7;
+  --offwhite: rgb(190, 189, 183);
 
-  --lite-black: #2E3133;
+  --lite-black: rgb(46, 49, 51);
   --litelite-black: rgb(65, 69, 71);
-  --prim: #E4B268;
+  --prim: rgb(228, 178, 104);
   --sec: rgb(29, 124, 219);
 
 
@@ -191,14 +191,24 @@ button:active {
   /* outline: 5px solid red; */
   /* background-color: rgb(250, 250, 250); */
   /* margin:; */
-  padding: 30px;
+  padding: 30px 15px 30px 15px;
   margin: 0 15px 15px 0;
   min-height: 100px;
   display: flex;
-  width: 42%;
-  background-color: white;
+  width: 100%;
+  background-color: var(--mid-black);
+  color: var(--offwhite);
   border-radius: 16px;
+
 }
+
+.figure-card:hover {
+
+  box-shadow: 0 0 10px rgb(228, 178, 104, 0.1);
+  transition: box-shadow 0.1s ease;
+}
+
+
 
 /* .bluish-bckg {
   background-color: var(--bckg);
@@ -383,10 +393,7 @@ table {
   margin-bottom: 2rem;
 }
 
-/* table:hover {
-  box-shadow: 0 0 10px rgba(50, 50, 50, 0.03);
-  transition: box-shadow 0.2s ease-in;
-} */
+table:hover {}
 
 .result-table {
   text-align: center;
@@ -450,4 +457,8 @@ button.checklist.checked:active {
   background-color: rgb(14, 68, 122);
   color: var(--offwhite);
   /* #a17430; */
+}
+
+text.xtitle {
+  fill: white !important;
 }

@@ -78,7 +78,6 @@ containers = {}
 )
 @funcs.print_function_name
 def update_scatter_plot(*_):
-
     # global container
 
     # # initialize container if it is not
@@ -115,11 +114,33 @@ def update_scatter_plot(*_):
         margin={"t": 0, "r": 0, "b": 0, "l": 0},
         plot_bgcolor="rgba(0, 0, 0, 0.02)",
         # legend={"xanchor": "right", "yanchor": "bottom", "orientation": "v"},
-        # paper_bgcolor="rgba(0, 0, 0, 0.1)",
+        paper_bgcolor="rgba(24, 25, 27, 0)",
+        xaxis=dict(
+            # range=[0, 1],
+            gridcolor="rgb(46, 49, 51)",
+            linecolor="rgb(46, 49, 51)",
+            tickfont=dict(
+                color="rgb(190, 189, 183)",
+            ),  # Change the x-axis tick label color
+            titlefont=dict(
+                color="rgb(190, 189, 183)",
+            ),  # Change the y-axis tick label color
+        ),
+        yaxis=dict(
+            # range=[0, 1],
+            gridcolor="rgb(46, 49, 51)",
+            linecolor="rgb(46, 49, 51)",
+            tickfont=dict(
+                color="rgb(190, 189, 183)",
+            ),  # Change the y-axis tick label color
+            titlefont=dict(
+                color="rgb(190, 189, 183)",
+            ),  # Change the y-axis tick label color
+        ),
     )
 
     def make_figure(xs, ys):
-        return go.Figure(
+        figure = go.Figure(
             data=[
                 go.Scatter(
                     x=x,
@@ -134,6 +155,17 @@ def update_scatter_plot(*_):
                 **fig_layout,
             ),
         )
+
+        maxx = max(max(x) for x in xs) if ys else 1
+        maxy = max(max(y) for y in ys) if ys else 1
+
+        figure.update_layout(
+            xaxis_range=[0, 1 if maxx < 1 else maxx * 1.05],
+            yaxis_range=[0, 1 if maxy < 1 else maxy * 1.05],
+            showlegend=False,
+        )
+
+        return figure
 
     figures = {}
 
@@ -273,25 +305,5 @@ def update_scatter_plot(*_):
     xs = get_xs(id_, ys)
     figures[id_] = make_figure(xs, ys)
 
-    # aspect_ratio = 0.5
-
-    for figure in figures.values():
-        figure.update_layout(
-            showlegend=False,
-            # autosize=False,
-            # width=800,  # Adjust the width as needed
-            # height=int(
-            # 800 * aspect_ratio
-            # ),  # Calculate height to maintain the square aspect ratio
-            # legend=dict(
-            # x=1.02,  # Position of the legend along the x-axis (outside the plot)
-            # y=0.5,  # Position of the legend along the y-axis (centered)
-            # yanchor="middle",
-            # xanchor="left",
-            # ),
-        )
-
-    # for figure in figures.values():
-    # figure.update_yaxes(showline=True)
 
     return [figures[key] for key in FIGURE_INFO.keys()]

@@ -168,7 +168,6 @@ def refresh_result_section(*_):
     prevent_initial_call=True,
 )
 def update_selection(n_clicks):
-    print(n_clicks)
     sim = ctx.triggered_id["index"]
     if sim not in SELECTION:
         SELECTION.add(sim)

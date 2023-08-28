@@ -74,7 +74,6 @@ def monitor_processes(_, n_clicks):
         ['ps aux | grep "\-\-config_path"'], shell=True, capture_output=True
     ).stdout.decode()
 
-    # print(stdout)
     if stdout:
         results = [
             line.split("share/aegis/")[1].strip(".yml")
@@ -88,4 +87,3 @@ def monitor_processes(_, n_clicks):
             else:
                 n_clicks += 1
 
-    # print(n_clicks)
