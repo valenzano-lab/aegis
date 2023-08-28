@@ -1,6 +1,8 @@
 from dash import html, dcc
-from aegis.visor.funcs import DEFAULT_CONFIG_DICT
 from aegis.visor.static import FIGURE_INFO
+
+
+from aegis.parameters import param
 
 app_layout = html.Div(
     [
@@ -31,22 +33,39 @@ app_layout = html.Div(
             ]
             + [
                 html.Table(
-                    [
+                    className="config-table",
+                    children=[
                         html.Tr(
                             [
-                                html.Th("parameter"),
-                                html.Th("value"),
-                            ]
+                                html.Th("PARAMETER"),
+                                html.Th("VALUE"),
+                                html.Th("VALID VALUES"),
+                                html.Th("PARAMETER DESCRIPTION"),
+                            ],
                         )
                     ]
                     + [
-                        html.Tr([html.Td(k),
-                                 html.Td(dcc.Input(type="text", placeholder=str(v), id=f"config-{k}"))])
-                        for k, v in DEFAULT_CONFIG_DICT.items()
-                        if not isinstance(v, list)
-                    ]
+                        html.Tr(
+                            [
+                                html.Td(k),
+                                html.Td(
+                                    children=dcc.Input(
+                                        type="text",
+                                        placeholder=str(v.default)
+                                        if v.default is not None
+                                        else "",
+                                        id=f"config-{k}",
+                                    ),
+                                ),
+                                html.Td(children=v.drange, className="data-range"),
+                                html.Td(v.info, className="td-info"),
+                            ],
+                        )
+                        for k, v in param.params.items()
+                        if not isinstance(v.default, list)
+                    ],
                 )
-            ]
+            ],
         ),
         # RESULT SECTION
         html.Div(id="result-section", style={"display": "none"}, children=[]),

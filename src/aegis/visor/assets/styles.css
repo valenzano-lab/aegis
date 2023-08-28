@@ -43,3 +43,24 @@ body {
   /* font-size:24px; */
   font-weight: bold;
 }
+
+.config-table td {
+  height: 2rem;
+  padding: 0 1rem;
+}
+.config-table th, .result-table th {
+ padding: 2rem 0 1rem 0;
+}
+
+.config-table td.td-info {
+  font-size: 14px;
+}
+
+.result-table {
+  text-align: center;
+}
+
+
+/* td.data-range {
+  padding: 0 1rem;
+} */

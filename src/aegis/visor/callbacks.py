@@ -59,17 +59,17 @@ def refresh_result_section(*_):
     table_elements = [
         html.Tr(
             [
-                html.Th("sim name"),
-                html.Th("display"),
-                html.Th("created"),
-                html.Th("edited"),
-                html.Th("running status"),
-                html.Th("exinct status"),
-                html.Th("ETA"),
-                html.Th("stage"),
-                html.Th("stage per minute"),
-                html.Th("path to files"),
-                html.Th("delete simulation"),
+                html.Th("ID"),
+                html.Th("DISPLAY"),
+                html.Th("CREATED"),
+                # html.Th("edited"),
+                html.Th("RUNNING STATUS"),
+                html.Th("EXTINCT STATUS"),
+                html.Th("TIME REMAINING"),
+                # html.Th("stage"),
+                html.Th("STAGE PER MINUTE"),
+                html.Th("FILEPATH"),
+                html.Th("DELETE"),
             ],
         )
     ]
@@ -94,9 +94,9 @@ def refresh_result_section(*_):
             if input_summary
             else None
         )
-        time_of_edit = datetime.datetime.fromtimestamp(
-            container.paths["log"].stat().st_mtime
-        )
+        # time_of_edit = datetime.datetime.fromtimestamp(
+        #     container.paths["log"].stat().st_mtime
+        # )
 
         element = html.Tr(
             [
@@ -105,18 +105,18 @@ def refresh_result_section(*_):
                     dcc.Checklist(
                         id=str(container.basepath),
                         options=[
-                            {"label": str(container.basepath.stem), "value": "yes"}
+                            {"label": "", "value": "yes"}
                         ],
                         value=[],
                     ),
                 ),
                 html.Td(html.P(time_of_creation)),
                 # date created
-                html.Td(html.P(time_of_edit)),
+                # html.Td(html.P(time_of_edit)),
                 html.Td(html.P(status[0])),
                 html.Td(html.P(status[1])),
                 html.Td(html.P(logline["ETA"])),
-                html.Td(html.P(logline["stage"])),
+                # html.Td(html.P(logline["stage"])),
                 html.Td(html.P(logline["stg/min"])),
                 html.Td(html.P(str(container.basepath))),
                 html.Td(
@@ -133,7 +133,7 @@ def refresh_result_section(*_):
         )
         table_elements.append(element)
 
-    return html.Table(children=table_elements)
+    return html.Table(children=table_elements, className="result-table")
 
 
 @callback(
