@@ -196,7 +196,8 @@ def run_simulation(n_clicks, filename, *values):
     Output("simulation-run-button", "disabled"),
     Input("config-make-text", "value"),
 )
-def block_sim_button(filename):
+@funcs.print_function_name
+def block_sim_button(filename, _):
 
     if filename is None or filename == "":
         return True
@@ -205,3 +206,17 @@ def block_sim_button(filename):
     if sim_exists:
         return True
     return False
+
+
+@callback(
+    Output("plot-view-button", "disabled"),
+    Output("result-view-button", "disabled"),
+    Input("results-exist-interval", "n_intervals"),
+)
+@funcs.print_function_name
+def block_view_buttons(_):
+    paths = funcs.get_sim_paths()
+    if paths:
+        return False, False
+    else:
+        return True, True
