@@ -17,6 +17,8 @@ class Param:
     def convert(self, value):
         if value is None or value == "":
             return self.default
+        elif self.dtype == bool:
+            return (value == "True" or value == "true")
         else:
             return self.dtype(value)
 
@@ -67,7 +69,7 @@ params = {
     "PICKLE_RATE_": Param(
         name="PICKLE_RATE_",
         domain="recording",
-        default=50000,
+        default=100000,
         info="Pickle population every ? stages; 0 for no pickles",
         dtype=int,
         drange="[0, inf)",
@@ -76,7 +78,7 @@ params = {
     "SNAPSHOT_RATE_": Param(
         name="SNAPSHOT_RATE_",
         domain="recording",
-        default=25000,
+        default=10000,
         info="Take a snapshot every ? stages; 0 for no snapshots",
         dtype=int,
         drange="[0, inf)",
@@ -85,7 +87,7 @@ params = {
     "VISOR_RATE_": Param(
         name="VISOR_RATE_",
         domain="recording",
-        default=5000,
+        default=1000,
         info="Take a visor snapshot every ? stages; 0 for no visor records",
         dtype=int,
         drange="[0, inf)",
@@ -94,7 +96,7 @@ params = {
     "POPGENSTATS_RATE_": Param(
         name="POPGENSTATS_RATE_",
         domain="recording",
-        default=5000,
+        default=1000,
         info="Record population genetic stats about the population every ? stages; 0 for no popgen stats",
         dtype=int,
         drange="[0, inf)",
@@ -121,7 +123,7 @@ params = {
     "MAX_POPULATION_SIZE": Param(
         name="MAX_POPULATION_SIZE",
         domain="ecology",
-        default=500,
+        default=1000,
         info="Number of individuals in the population",
         dtype=int,
         drange="[1, inf)",
