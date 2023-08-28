@@ -2,7 +2,6 @@ import pathlib
 import time
 import numpy as np
 import shutil
-import argparse
 import logging
 import yaml
 
@@ -41,7 +40,7 @@ class Panconfiguration:
     def __init__(self):
         pass
 
-    def init(self, arg_dict=None):
+    def init(self, custom_config_path):
         self.here = pathlib.Path(__file__).absolute().parent
         self.stage = 1
         self.time_start = time.time()
@@ -51,24 +50,6 @@ class Panconfiguration:
         def read_yml(path):
             with open(path, "r") as f:
                 return yaml.safe_load(f)
-
-        def run_parser():
-            parser = argparse.ArgumentParser(
-                description="Aging of Evolving Genomes In Silico"
-            )
-            parser.add_argument(
-                "custom_config_path",
-                type=str,
-                help="path to config file",
-            )
-            parser.add_argument(
-                "-p",
-                "--pickle_path",
-                type=str,
-                help="path to pickle file",
-                default="",
-            )
-            return parser.parse_args()
 
         def get_params(custom_config_path):
             """Fetch and validate input parameters."""
@@ -91,23 +72,6 @@ class Panconfiguration:
 
             return params
 
-        # Get path to custom configuration file
-        if arg_dict is None:
-            parsed_args = run_parser()
-            custom_config_path = pathlib.Path(parsed_args.custom_config_path).absolute()
-            self.pickle_path = (
-                pathlib.Path(parsed_args.pickle_path).absolute()
-                if parsed_args.pickle_path
-                else ""
-            )
-        else:
-            custom_config_path = pathlib.Path(arg_dict["custom_config_path"])
-            self.pickle_path = (
-                pathlib.Path(arg_dict["pickle_path"]) if arg_dict["pickle_path"] else ""
-            )
-
-        logging.info("Custom config path = %s", custom_config_path)
-
         # Get parameters
         params = get_params(custom_config_path)
         self.params_list = (params,)
@@ -124,7 +88,7 @@ class Panconfiguration:
 
         # Random number generator
         self.random_seed = (
-            np.random.randint(1, 10 ** 6)
+            np.random.randint(1, 10**6)
             if params["RANDOM_SEED_"] is None
             else params["RANDOM_SEED_"]
         )
