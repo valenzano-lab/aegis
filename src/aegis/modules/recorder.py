@@ -206,6 +206,6 @@ class Recorder:
         with open(self.paths["input_summary"] / "input_summary.json", "w") as f:
             json.dump(summary, f, indent=4)
 
-    def record_jupyter_path(self):
-        with open(pan.here / "help/paths.txt", "a") as f:
-            f.write(str(pan.output_path.absolute()) + "\n")
+    # def record_jupyter_path(self):
+    #     with open(pan.here / "help/paths.txt", "a") as f:
+    #         f.write(str(pan.output_path.absolute()) + "\n")

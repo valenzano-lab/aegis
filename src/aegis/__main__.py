@@ -73,7 +73,7 @@ def main():
         for ecosystem in ecosystems:
             ecosystem.recorder.record_output_summary()
 
-        ecosystem.recorder.record_jupyter_path()  # TODO record for every ecosystem
+        # ecosystem.recorder.record_jupyter_path()  # TODO record for every ecosystem
 
         logging.info("Simulation is successfully finished")
         logging.info("Custom jupyter path = %s", str(pan.output_path.absolute()))
