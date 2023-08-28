@@ -13,6 +13,27 @@ ages = np.arange(1, max_age + 1)
 
 
 @callback(
+    [
+        Output("dynamic-dropdown", "options"),
+        Output("dynamic-dropdown", "value"),
+    ],
+    [
+        Input("plot-view-button", "n_clicks"),
+    ],
+    prevent_initial_call=True,
+)
+@funcs.print_function_name
+def refresh_dropdown_options(*_):
+    paths = funcs.get_sim_paths()
+    dropdown_options = [
+        {"label": f"{i}. {str(path.stem)} ({str(path)})", "value": str(path)}
+        for i, path in enumerate(paths)
+    ]
+    # BUG fix if no dropdown_options available
+    return dropdown_options, dropdown_options[0]["value"]
+
+
+@callback(
     [Output("slider", "max")],
     [Input("dynamic-dropdown", "value")],
     prevent_initial_call=True,
