@@ -1,12 +1,7 @@
-from dash import Dash, html, dcc, callback, Output, Input, State, ALL, MATCH
+from dash import html, dcc, callback, Output, Input, State, ALL, MATCH
 import dash
 
-import logging
-import datetime
-
 from aegis.visor import funcs
-from aegis.help.container import Container
-import subprocess
 
 
 @callback(
@@ -41,4 +36,3 @@ def block_view_buttons(_):
         return False, False
     else:
         return True, True
-

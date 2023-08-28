@@ -1,7 +1,4 @@
-from dash import Dash, html, dcc, callback, Output, Input, State, ALL, MATCH
-import dash
-
-import logging
+from dash import html, dcc, callback, Output, Input, State, ALL, MATCH
 import datetime
 
 from aegis.visor import funcs
@@ -99,7 +96,7 @@ def refresh_result_section(*_):
                 html.Td(html.P(str(container.basepath))),
                 html.Td(
                     html.Button(
-                        "delete simulation",
+                        "delete",
                         id={
                             "type": "delete-simulation-button",
                             "index": container.basepath.stem,

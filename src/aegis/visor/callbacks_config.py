@@ -1,14 +1,5 @@
-from dash import Dash, html, dcc, callback, Output, Input, State, ALL, MATCH
-import dash
-
-import logging
-import datetime
-
+from dash import html, dcc, callback, Output, Input, State, ALL, MATCH
 from aegis.visor import funcs
-from aegis.help.container import Container
-import subprocess
-
-
 
 
 @callback(
@@ -55,4 +46,3 @@ def block_sim_button(filename):
     if sim_exists:
         return True
     return False
-
