@@ -29,11 +29,11 @@ def get_config_path(filename):
 
 
 def run(filename):
-    t = time.time()
     subprocess.run(
-        f"python3 -m aegis --config_path \"{get_config_path(filename)}\"", shell=True, check=True
+        f'python3 -m aegis --config_path "{get_config_path(filename)}"',
+        shell=True,
+        check=True,
     )
-    print(time.time() - t)
 
 
 def make_config_file(filename, configs):

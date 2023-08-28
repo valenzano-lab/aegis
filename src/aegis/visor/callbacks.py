@@ -48,11 +48,15 @@ def delete_simulation(_, filename):
 def refresh_result_section(*_):
 
     paths = funcs.get_sim_paths()
+    print(paths)
     containers = [Container(path) for path in paths]
     elements = []
 
     for container in containers:
-        logline = container.get_log().iloc[-1].to_dict()
+        if len(container.get_log()) > 0:
+            logline = container.get_log().iloc[-1].to_dict()
+        else:
+            logline = {"ETA": None, "stage": None, "stg/min": None}
         input_summary = container.get_input_summary()
         output_summary = container.get_output_summary()
 
@@ -63,7 +67,11 @@ def refresh_result_section(*_):
         else:
             status = ["finished", "not extinct"]
 
-        time_of_creation = datetime.datetime.fromtimestamp(input_summary["time_start"])
+        time_of_creation = (
+            datetime.datetime.fromtimestamp(input_summary["time_start"])
+            if input_summary
+            else None
+        )
         time_of_edit = datetime.datetime.fromtimestamp(
             container.paths["log"].stat().st_mtime
         )
