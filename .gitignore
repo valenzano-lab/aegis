@@ -1,6 +1,8 @@
 ### Custom ###
 
 tests/execution/*/*
+profiler
+ipynb
 
 ### Python ###
 # Byte-compiled / optimized / DLL files
