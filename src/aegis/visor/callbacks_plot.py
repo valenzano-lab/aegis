@@ -102,7 +102,7 @@ def update_scatter_plot(*_):
 
     for sim in SELECTION:
         if sim not in containers:
-            containers[sim] = Container(f"/home/user/.local/share/aegis/{sim}")
+            containers[sim] = Container(funcs.BASE_DIR / sim)
 
     # marker_color_surv = "dodgerblue"
     # marker_color_repr = "crimson"
