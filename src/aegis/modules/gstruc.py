@@ -66,7 +66,7 @@ class Gstruc:
         for trait in self.evolvable:
             genomes[:, :, trait.slice] = genomes[:, :, trait.slice] <= trait.initial
 
-        genomes = genomes.astype(np.bool8)
+        genomes = genomes.astype(np.bool_)
 
         # Guarantee survival and reproduction values up to a certain age
         if headsup is not None:

@@ -81,7 +81,7 @@ class Reproducer:
 
         # Choose bits from first or second chromatid
         # recombined = np.empty(flat_genomes.shape, bool)
-        recombined = np.empty(flat_genomes.shape, dtype=np.bool8)
+        recombined = np.empty(flat_genomes.shape, dtype=np.bool_)
         recombined[:, 0] = np.choose(reco_final, [chromatid1, chromatid2])
         recombined[:, 1] = np.choose(reco_final, [chromatid2, chromatid1])
         recombined = recombined.reshape(genomes.shape)
@@ -126,7 +126,7 @@ class Reproducer:
         gametes = genomes[order]
 
         # Unify gametes
-        children = np.empty(genomes.shape, dtype=np.bool8)
+        children = np.empty(genomes.shape, dtype=np.bool_)
         children[:, 0] = gametes[::2, 0]  # 1st chromatid from 1st parent
         children[:, 1] = gametes[1::2, 1]  # 2nd chromatid from 2nd parent
 

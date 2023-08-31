@@ -145,7 +145,7 @@ class Ecosystem:
         self.season.countdown -= 1
         if self.season.countdown == 0:
             # Kill all living
-            mask_kill = np.ones(len(self.population), dtype=np.bool8)
+            mask_kill = np.ones(len(self.population), dtype=np.bool_)
             self._kill(mask_kill, "season_shift")
 
             # Hatch eggs and restart season

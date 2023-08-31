@@ -145,7 +145,7 @@ class PopgenStats:
         else:
             genomes = np.empty(
                 shape=(n_individuals, n_loci, ploidy * bits_per_locus),
-                dtype=np.bool8,
+                dtype=np.bool_,
             )
 
             # Odd bits contain bits from chromosome 0
@@ -167,7 +167,7 @@ class PopgenStats:
 
         unstaggered = np.empty(
             shape=(n_individuals, ploidy, n_loci, bits_per_locus),
-            dtype=np.bool8,
+            dtype=np.bool_,
         )
 
         if ploidy == 1:

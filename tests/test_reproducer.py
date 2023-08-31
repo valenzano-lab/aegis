@@ -29,7 +29,7 @@ reproducer = Reproducer(0.5, 0.1, "sexual", "by_bit")
     ],
 )
 def test_mutate(genomes, muta_prob, random_probabilities, expected):
-    genomes = np.array(genomes, dtype=np.bool8)
+    genomes = np.array(genomes, dtype=np.bool_)
     result = reproducer._mutate(
         np.array(genomes), np.array(muta_prob), np.array(random_probabilities)
     )

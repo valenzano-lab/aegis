@@ -26,7 +26,7 @@ class Overshoot:
         """Exposed method"""
         if n <= self.MAX_POPULATION_SIZE:
             self.consecutive_overshoot_n = 0
-            return np.zeros(n, dtype=np.bool8)
+            return np.zeros(n, dtype=np.bool_)
         else:
             self.consecutive_overshoot_n += 1
             return self.func(n)
@@ -49,7 +49,7 @@ class Overshoot:
         The population size is brought down to the maximum allowed size in one go.
         """
         indices = pan.rng.choice(n, n - self.MAX_POPULATION_SIZE, replace=False)
-        mask = np.zeros(n, dtype=np.bool8)
+        mask = np.zeros(n, dtype=np.bool_)
         mask[indices] = True
         return mask
 
@@ -64,7 +64,7 @@ class Overshoot:
             int(self.MAX_POPULATION_SIZE * self.CLIFF_SURVIVORSHIP),
             replace=False,
         )
-        mask = np.ones(n, dtype=np.bool8)
+        mask = np.ones(n, dtype=np.bool_)
         mask[indices] = False
         return mask
 
@@ -73,7 +73,7 @@ class Overshoot:
 
         The population size is brought down to the maximum allowed size in one go.
         """
-        mask = np.ones(n, dtype=np.bool8)
+        mask = np.ones(n, dtype=np.bool_)
         mask[-self.MAX_POPULATION_SIZE :] = False
         return mask
 
@@ -82,6 +82,6 @@ class Overshoot:
 
         The population size is brought down to the maximum allowed size in one go.
         """
-        mask = np.ones(n, dtype=np.bool8)
+        mask = np.ones(n, dtype=np.bool_)
         mask[: self.MAX_POPULATION_SIZE] = False
         return mask
