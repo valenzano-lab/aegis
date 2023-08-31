@@ -1,4 +1,9 @@
 include LICENSE
 include Makefile
+include src/aegis/visor/assets/favicon.ico
+include src/aegis/visor/assets/*.svg
+include src/aegis/visor/assets/*.ttf
+include src/aegis/visor/assets/*.css
+include src/aegis/parameters/default.yml
 recursive-include tests *.py
 recursive-include tests *.yml

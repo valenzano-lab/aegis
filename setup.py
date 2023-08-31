@@ -3,23 +3,16 @@ import pathlib
 
 setuptools.setup(
     name="aegis-sim",
-    version="2.2",
+    version="2.3.0",
     description="Numerical model for life history evolution of age-structured populations",
     long_description=(pathlib.Path(__file__).parent / "README.md").read_text(),
     long_description_content_type="text/markdown",
     author="Martin Bagic, Dario Valenzano",
     author_email="martin.bagic@outlook.com, Dario.Valenzano@leibniz-fli.de",
     url="https://github.com/valenzano-lab/aegis",
+    packages=["aegis", "aegis.help", "aegis.modules", "aegis.parameters", "aegis.visor"],
     package_dir={"": "src"},
-    packages=[
-        "aegis",
-        "aegis.modules",
-        "aegis.parameters",
-        "aegis.help",
-    ],
-    package_data={
-        "aegis": ["parameters/default.yml", "help/visor.ipynb"],
-    },
+    include_package_data=True,
     python_requires=">=3.6",
     entry_points={
         "console_scripts": [
@@ -31,10 +24,8 @@ setuptools.setup(
         "pandas",
         "PyYAML",
         "pyarrow",
-        "jupyter",
-        "matplotlib",
-        "platformdirs==2.5.2",
-        "dash>2.13.0",
+        "platformdirs",
+        "dash",
     ],
     extras_require={
         "dev": [
