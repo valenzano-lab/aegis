@@ -1,4 +1,5 @@
 import math
+import logging
 
 
 class Environment:
@@ -17,8 +18,20 @@ class Environment:
         self.ENVIRONMENT_HAZARD_SHAPE = ENVIRONMENT_HAZARD_SHAPE
         self.func = getattr(self, ENVIRONMENT_HAZARD_SHAPE)
 
+        if (
+            ENVIRONMENT_HAZARD_SHAPE == "flat"
+            and ENVIRONMENT_HAZARD_AMPLITUDE > 0
+            and ENVIRONMENT_HAZARD_OFFSET > 0
+        ):
+            logging.info(
+                "Note that under flat environmental hazard, amplitude and offset have the same effects; the total environmental mortality is simply their sum."
+            )
+
     def __call__(self, stage):
         return self.func(stage) + self.ENVIRONMENT_HAZARD_OFFSET
+
+    def flat(self):
+        return self.ENVIRONMENT_HAZARD_AMPLITUDE
 
     def sinusoidal(self, stage):
         return self.ENVIRONMENT_HAZARD_AMPLITUDE * math.sin(
