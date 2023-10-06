@@ -7,6 +7,7 @@ from aegis.modules.recorder import Recorder
 from aegis.modules.season import Season
 from aegis.modules.gstruc import Gstruc
 from aegis.modules.population import Population
+from aegis.modules.environment import Environment
 
 from aegis.panconfiguration import pan
 
@@ -62,6 +63,14 @@ class Ecosystem:
             CLIFF_SURVIVORSHIP=self._get_param("CLIFF_SURVIVORSHIP"),
         )
 
+        # Initialize environmental hazards
+        self.environment = Environment(
+            ENVIRONMENT_HAZARD_AMPLITUDE=self._get_param("ENVIRONMENT_HAZARD_AMPLITUDE"),
+            ENVIRONMENT_HAZARD_OFFSET=self._get_param("ENVIRONMENT_HAZARD_OFFSET"),
+            ENVIRONMENT_HAZARD_PERIOD=self._get_param("ENVIRONMENT_HAZARD_PERIOD"),
+            ENVIRONMENT_HAZARD_SHAPE=self._get_param("ENVIRONMENT_HAZARD_SHAPE"),
+        )
+
         # Initialize eggs
         self.eggs = None
 
@@ -99,6 +108,7 @@ class Ecosystem:
         if len(self.population):
             self.eco_survival()
             self.gen_survival()
+            self.env_survival()
             self.reproduction()
             self.age()
 
@@ -127,6 +137,12 @@ class Ecosystem:
         self.population.ages += 1
         mask_kill = self.population.ages >= self._get_param("MAX_LIFESPAN")
         self._kill(mask_kill=mask_kill, causeofdeath="max_lifespan")
+
+    def env_survival(self):
+        """Impose environmental hazard death; i.e. death due to abiotic and cyclical factors such as temperature."""
+        hazard = self.environment(pan.stage)
+        mask_kill = pan.rng.random(len(self.population), dtype=np.float32) < hazard
+        self._kill(mask_kill=mask_kill, causeofdeath="environment")
 
     def eco_survival(self):
         """Impose ecological death, i.e. death that arises due to resource scarcity."""

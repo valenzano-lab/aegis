@@ -293,17 +293,20 @@ def update_scatter_plot(*_):
     def get_death_structure(sim):
         age_at_genetic = containers[sim].get_df("age_at_genetic")
         age_at_overshoot = containers[sim].get_df("age_at_overshoot")
+        age_at_environment = containers[sim].get_df("age_at_environment")
 
         t = -1
         pseudocount = 0
         y = (age_at_genetic.iloc[t] + pseudocount) / (
-            age_at_overshoot.iloc[t] + age_at_genetic.iloc[t] + pseudocount
+            age_at_overshoot.iloc[t]
+            + age_at_environment.iloc[t]
+            + age_at_genetic.iloc[t]
+            + pseudocount
         )
         return y
 
     ys = [get_death_structure(sim) for sim in SELECTION]
     xs = get_xs(id_, ys)
     figures[id_] = make_figure(xs, ys)
-
 
     return [figures[key] for key in FIGURE_INFO.keys()]

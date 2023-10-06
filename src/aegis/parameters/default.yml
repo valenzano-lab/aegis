@@ -87,6 +87,12 @@ PHENOMAP_SPECS: [] # | Specification of pleiotropic effects [[trait1_name (str),
 # FLIPMAP
 FLIPMAP_CHANGE_RATE: 0 # 0+ | Flipmap changes every ? stages
 
+# ENVIRONMENT HAZARDS
+ENVIRONMENT_HAZARD_AMPLITUDE: 0.01
+ENVIRONMENT_HAZARD_PERIOD: 10
+ENVIRONMENT_HAZARD_OFFSET: 0.01
+ENVIRONMENT_HAZARD_SHAPE: sinusoidal
+
 #################
 # MISCELLANEOUS #
 #################
