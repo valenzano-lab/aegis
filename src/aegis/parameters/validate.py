@@ -129,9 +129,9 @@ def validate_values(params):
     if not (params["PHENOMAP_METHOD"] in ("by_loop", "by_dummy", "by_dot")):
         raise ValueError("PHENOMAP_METHOD must be by_loop, by_dummy or by_dot")
 
-    # Environment
-    if not isinstance(params["ENVIRONMENT_CHANGE_RATE"], int):
-        raise TypeError("ENVIRONMENT_CHANGE_RATE must be an integer")
+    # Flipmap
+    if not isinstance(params["FLIPMAP_CHANGE_RATE"], int):
+        raise TypeError("FLIPMAP_CHANGE_RATE must be an integer")
 
-    if params["ENVIRONMENT_CHANGE_RATE"] < 0:
-        raise ValueError("ENVIRONMENT_CHANGE_RATE must be 0 or greater than 0")
+    if params["FLIPMAP_CHANGE_RATE"] < 0:
+        raise ValueError("FLIPMAP_CHANGE_RATE must be 0 or greater than 0")

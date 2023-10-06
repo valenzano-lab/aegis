@@ -104,8 +104,8 @@ class Ecosystem:
 
         self.season_step()
 
-        # Evolve environment if applicable
-        self.gstruc.environment.evolve()
+        # Evolve flipmap if applicable
+        self.gstruc.flipmap.evolve()
 
         # Population census
         self.recorder.collect("cumulative_ages", self.population.ages)

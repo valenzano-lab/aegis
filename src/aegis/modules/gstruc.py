@@ -2,7 +2,7 @@ import numpy as np
 from aegis.modules.trait import Trait
 from aegis.modules.interpreter import Interpreter
 from aegis.modules.phenomap import Phenomap
-from aegis.modules.environment import Environment
+from aegis.modules.flipmap import Flipmap
 from aegis.panconfiguration import pan
 
 
@@ -10,7 +10,7 @@ class Gstruc:
     """Genome structure
 
     Contains information about ploidy, number of loci, and number of bits per locus.
-    Calculates phenotypes from input genomes (calls Interpreter, Phenomap and Environment).
+    Calculates phenotypes from input genomes (calls Interpreter, Phenomap and Flipmap).
     """
 
     def __init__(self, params, BITS_PER_LOCUS, REPRODUCTION_MODE):
@@ -44,9 +44,9 @@ class Gstruc:
 
         self.interpreter = Interpreter(BITS_PER_LOCUS)
 
-        self.environment = Environment(
+        self.flipmap = Flipmap(
             gstruc_shape=self.shape,
-            ENVIRONMENT_CHANGE_RATE=params["ENVIRONMENT_CHANGE_RATE"],
+            FLIPMAP_CHANGE_RATE=params["FLIPMAP_CHANGE_RATE"],
         )
 
     def __getitem__(self, name):
@@ -79,8 +79,8 @@ class Gstruc:
 
     def get_phenotype(self, genomes):
         """Translate genomes into an array of phenotypes probabilities."""
-        # Apply the environmental map
-        envgenomes = self.environment(genomes)
+        # Apply the flipmap
+        envgenomes = self.flipmap(genomes)
 
         # Apply the interpreter functions
         interpretome = np.zeros(

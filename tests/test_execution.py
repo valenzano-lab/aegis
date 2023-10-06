@@ -22,7 +22,7 @@ import aegis
         "MUTATION_RATIO",
         "PHENOMAP_SPECS",
         "STAGES_PER_SIMULATION_",
-        "ENVIRONMENT_CHANGE_RATE",
+        "FLIPMAP_CHANGE_RATE",
     ],
 )
 def test_execution(config_file):

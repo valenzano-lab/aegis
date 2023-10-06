@@ -272,12 +272,12 @@ params = {
         drange="{by_loop, by_dot, by_dummy}",
         inrange=lambda x: x in ("by_loop", "by_dot", "by_dummy"),
     ),
-    "ENVIRONMENT_CHANGE_RATE": Param(
-        key="ENVIRONMENT_CHANGE_RATE",
+    "FLIPMAP_CHANGE_RATE": Param(
+        key="FLIPMAP_CHANGE_RATE",
         name="",
         domain="ecology",
         default=0,
-        info="Environmental map changes every ? stages; if no environmental change",
+        info="Flipmap changes every ? stages",
         dtype=int,
         drange="[0, inf)",
         inrange=lambda x: x >= 0,
