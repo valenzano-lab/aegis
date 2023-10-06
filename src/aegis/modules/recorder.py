@@ -53,6 +53,7 @@ class Recorder:
             "age_at_season_shift": [0] * MAX_LIFESPAN,
             "age_at_end_of_sim": [0] * MAX_LIFESPAN,
             "age_at_environment": [0] * MAX_LIFESPAN,
+            "age_at_disease": [0] * MAX_LIFESPAN,
             # collected in ecosystem.run_stage
             "cumulative_ages": [0] * MAX_LIFESPAN,
         }

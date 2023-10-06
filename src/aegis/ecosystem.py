@@ -8,6 +8,7 @@ from aegis.modules.season import Season
 from aegis.modules.gstruc import Gstruc
 from aegis.modules.population import Population
 from aegis.modules.environment import Environment
+from aegis.modules.disease import Disease
 
 from aegis.panconfiguration import pan
 
@@ -65,10 +66,20 @@ class Ecosystem:
 
         # Initialize environmental hazards
         self.environment = Environment(
-            ENVIRONMENT_HAZARD_AMPLITUDE=self._get_param("ENVIRONMENT_HAZARD_AMPLITUDE"),
+            ENVIRONMENT_HAZARD_AMPLITUDE=self._get_param(
+                "ENVIRONMENT_HAZARD_AMPLITUDE"
+            ),
             ENVIRONMENT_HAZARD_OFFSET=self._get_param("ENVIRONMENT_HAZARD_OFFSET"),
             ENVIRONMENT_HAZARD_PERIOD=self._get_param("ENVIRONMENT_HAZARD_PERIOD"),
             ENVIRONMENT_HAZARD_SHAPE=self._get_param("ENVIRONMENT_HAZARD_SHAPE"),
+        )
+
+        # Initialize disease
+        self.disease = Disease(
+            BACKGROUND_INFECTIVITY=self._get_param("BACKGROUND_INFECTIVITY"),
+            TRANSMISSIBILITY=self._get_param("TRANSMISSIBILITY"),
+            RECOVERY_RATE=self._get_param("RECOVERY_RATE"),
+            FATALITY_RATE=self._get_param("FATALITY_RATE"),
         )
 
         # Initialize eggs
@@ -89,8 +100,11 @@ class Ecosystem:
             births = np.zeros(num, dtype=np.int32)
             birthdays = np.zeros(num, dtype=np.int32)
             phenotypes = self.gstruc.get_phenotype(genomes)
+            disease = np.zeros(num, dtype=np.int32)
 
-            self.population = Population(genomes, ages, births, birthdays, phenotypes)
+            self.population = Population(
+                genomes, ages, births, birthdays, phenotypes, disease
+            )
 
     ##############
     # MAIN LOGIC #
@@ -109,6 +123,7 @@ class Ecosystem:
             self.eco_survival()
             self.gen_survival()
             self.env_survival()
+            self.dis_survival()
             self.reproduction()
             self.age()
 
@@ -154,6 +169,12 @@ class Ecosystem:
         probs_surv = self._get_evaluation("surv")
         mask_surv = pan.rng.random(len(probs_surv), dtype=np.float32) < probs_surv
         self._kill(mask_kill=~mask_surv, causeofdeath="genetic")
+
+    def dis_survival(self):
+        """Impose death due to infection."""
+        self.disease(self.population)
+        mask_kill = self.population.disease == -1
+        self._kill(mask_kill=mask_kill, causeofdeath="disease")
 
     def season_step(self):
         """Let one time unit pass in the season.
@@ -208,6 +229,7 @@ class Ecosystem:
             births=np.zeros(n, dtype=np.int32),
             birthdays=np.zeros(n, dtype=np.int32) + pan.stage,
             phenotypes=self.gstruc.get_phenotype(genomes),
+            disease=np.zeros(n, dtype=np.int32),
         )
 
         if self.eggs is None:
