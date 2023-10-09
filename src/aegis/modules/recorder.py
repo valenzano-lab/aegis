@@ -50,6 +50,7 @@ class Recorder:
             # collected in ecosystem._kill
             "age_at_overshoot": [0] * MAX_LIFESPAN,
             "age_at_genetic": [0] * MAX_LIFESPAN,
+            "age_at_predation": [0] * MAX_LIFESPAN,
             "age_at_season_shift": [0] * MAX_LIFESPAN,
             "age_at_end_of_sim": [0] * MAX_LIFESPAN,
             # collected in ecosystem.run_stage

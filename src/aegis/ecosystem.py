@@ -7,6 +7,7 @@ from aegis.modules.recorder import Recorder
 from aegis.modules.season import Season
 from aegis.modules.gstruc import Gstruc
 from aegis.modules.population import Population
+from aegis.modules.predation import Predation
 
 from aegis.panconfiguration import pan
 
@@ -60,6 +61,13 @@ class Ecosystem:
             OVERSHOOT_EVENT=self._get_param("OVERSHOOT_EVENT"),
             MAX_POPULATION_SIZE=self._get_param("MAX_POPULATION_SIZE"),
             CLIFF_SURVIVORSHIP=self._get_param("CLIFF_SURVIVORSHIP"),
+            OVERSHOOT_MORTALITY=self._get_param("OVERSHOOT_MORTALITY"),
+        )
+
+        # Initialize predation module
+        self.predation = Predation(
+            PREDATION_RATE=self._get_param("PREDATION_RATE"),
+            PREDATOR_GROWTH=self._get_param("PREDATOR_GROWTH"),
         )
 
         # Initialize eggs
@@ -99,6 +107,7 @@ class Ecosystem:
         if len(self.population):
             self.eco_survival()
             self.gen_survival()
+            self.pred_survival()
             self.reproduction()
             self.age()
 
@@ -138,6 +147,12 @@ class Ecosystem:
         probs_surv = self._get_evaluation("surv")
         mask_surv = pan.rng.random(len(probs_surv), dtype=np.float32) < probs_surv
         self._kill(mask_kill=~mask_surv, causeofdeath="genetic")
+
+    def pred_survival(self):
+        """Impose predation death"""
+        probs_kill = self.predation(len(self))
+        mask_kill = pan.rng.random(len(self), dtype=np.float32) < probs_kill
+        self._kill(mask_kill=mask_kill, causeofdeath="predation")
 
     def season_step(self):
         """Let one time unit pass in the season.
