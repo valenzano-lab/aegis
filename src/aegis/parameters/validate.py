@@ -60,6 +60,7 @@ def validate_values(params):
         "treadmill_zoomer",
         "cliff",
         "starvation",
+        "logistic",
     ):
         raise TypeError("The specified OVERSHOOT_EVENT is not legal")
 

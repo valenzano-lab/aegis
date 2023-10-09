@@ -25,7 +25,8 @@ ECOSYSTEM_NUMBER_: 1
 
 # ECOLOGY
 MAX_POPULATION_SIZE: 1000 # 1+ | Number of individuals in the population
-OVERSHOOT_EVENT: starvation # starvation, cliff, treadmill_random, treadmill_zoomer, treadmill_boomer | Who dies when everyone is starving?
+OVERSHOOT_EVENT: starvation # starvation, cliff, treadmill_random, treadmill_zoomer, treadmill_boomer, logistic | Who dies when everyone is starving?
+OVERSHOOT_MORTALITY: 0.05 # 0+
 CLIFF_SURVIVORSHIP: # null or 0-1 excluding 0 and 1 | What fraction of population survives after a cliff?; null if not applicable
 STAGES_PER_SEASON: 0 # 0+ | How many stages does one season last; 0 for no seasons
 
@@ -98,6 +99,10 @@ BACKGROUND_INFECTIVITY: 0.01
 TRANSMISSIBILITY: 1.1
 RECOVERY_RATE: 0.1
 FATALITY_RATE: 0.01
+
+# PREDATION
+PREDATION_RATE: 0.05 # 0+ | Mortality rate when number of predators equal to number of prey
+PREDATOR_GROWTH: 0.05 # 0+ | Intrinsic growth rate of predators
 
 #################
 # MISCELLANEOUS #
