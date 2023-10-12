@@ -89,20 +89,20 @@ PHENOMAP_SPECS: [] # | Specification of pleiotropic effects [[trait1_name (str),
 FLIPMAP_CHANGE_RATE: 0 # 0+ | Flipmap changes every ? stages
 
 # ENVIRONMENT HAZARDS
-ENVIRONMENT_HAZARD_AMPLITUDE: 0.01
-ENVIRONMENT_HAZARD_PERIOD: 10
-ENVIRONMENT_HAZARD_OFFSET: 0.01
-ENVIRONMENT_HAZARD_SHAPE: sinusoidal
+ENVIRONMENT_HAZARD_AMPLITUDE: 0 # 0+ e.g 0.01
+ENVIRONMENT_HAZARD_PERIOD: 1 # 1+ e.g. 10
+ENVIRONMENT_HAZARD_OFFSET: 0 # 0+ e.g. 0.01
+ENVIRONMENT_HAZARD_SHAPE: sinusoidal # sinusoidal, flat, triangle, square, sawtooth, ramp
 
 # DISEASE
-BACKGROUND_INFECTIVITY: 0.01
-TRANSMISSIBILITY: 1.1
-RECOVERY_RATE: 0.1
-FATALITY_RATE: 0.01
+BACKGROUND_INFECTIVITY: 0 # 0+ e.g. 0.01
+TRANSMISSIBILITY: 0 # 0+ e.g. 1.1
+RECOVERY_RATE: 0 # 0+ e.g. 0.1
+FATALITY_RATE: 0 # 0+ e.g. 0.01
 
 # PREDATION
-PREDATION_RATE: 0.05 # 0+ | Mortality rate when number of predators equal to number of prey
-PREDATOR_GROWTH: 0.05 # 0+ | Intrinsic growth rate of predators
+PREDATION_RATE: 0 # 0+ e.g. 0.05 | Mortality rate when number of predators equal to number of prey
+PREDATOR_GROWTH: 0 # 0+ e.g. 0.05 | Intrinsic growth rate of predators
 
 #################
 # MISCELLANEOUS #
