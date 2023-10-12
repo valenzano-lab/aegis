@@ -82,6 +82,7 @@ MUTATION_RATIO: 0.1 # 0+ | Ratio of 0->1 mutations to 1->0 mutations
 MUTATION_METHOD: by_bit # by_bit, by_index
 
 # PHENOMAP
+DOMINANCE_FACTOR: 0.5 # 0+, [0+] | 0 for recessive, 0.5 for true additive, 0-1 for partial dominant, 1 for dominant, 1+ for overdominant
 PHENOMAP_METHOD: by_loop # by_loop, by_dot, by_dummy | Non-vectorized, vectorized and null method of calculating phenotypic values
 PHENOMAP_SPECS: [] # | Specification of pleiotropic effects [[trait1_name (str), locus_position (int), trait2_name (str), trait2_scope (str), effect_pattern (str)]]
 

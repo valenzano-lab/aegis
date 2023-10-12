@@ -35,6 +35,7 @@ class Ecosystem:
             pan.params_list[self.id_],
             BITS_PER_LOCUS=self._get_param("BITS_PER_LOCUS"),
             REPRODUCTION_MODE=self._get_param("REPRODUCTION_MODE"),
+            DOMINANCE_FACTOR=self._get_param("DOMINANCE_FACTOR"),
         )  # TODO You should not pass all parameters
 
         # Initialize recorder

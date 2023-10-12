@@ -13,7 +13,8 @@ class Interpreter:
     exp_base = 0.5  # Important for _exp
     binary_exp_base = 0.98  # Important for _binary_exp
 
-    def __init__(self, BITS_PER_LOCUS):
+    def __init__(self, BITS_PER_LOCUS, DOMINANCE_FACTOR):
+        self.DOMINANCE_FACTOR = DOMINANCE_FACTOR
 
         # Parameters for the binary interpreter
         self.binary_weights = 2 ** np.arange(BITS_PER_LOCUS)[::-1]
@@ -44,15 +45,24 @@ class Interpreter:
     def _diploid_to_haploid(self, loci):
         """Merge two arrays encoding two chromatids into one array.
 
-        The two chromatids contribute equally to bits, so that 1+1->1, 0+0->0 and 1+0->0.5 (as well as 0+1->0.5).
-
         Arguments:
             loci: A bool numpy array with shape (population size, ploidy, gstruc.length, BITS_PER_LOCUS)
 
         Returns:
             A bool numpy array with shape (population size, gstruc.length, BITS_PER_LOCUS)
         """
-        return loci.mean(1)
+
+        # compute homozygous (0, 1) or heterozygous (0.5)
+        zygosity = loci.mean(1)
+        mask = zygosity == 0.5
+
+        # correct heterozygous with DOMINANCE_FACTOR
+        if isinstance(self.DOMINANCE_FACTOR, list):
+            zygosity[mask] = self.DOMINANCE_FACTOR[mask]
+        else:
+            zygosity[mask] = self.DOMINANCE_FACTOR
+
+        return zygosity
 
     def _const1(self, loci):
         return np.ones((len(loci), 1))
