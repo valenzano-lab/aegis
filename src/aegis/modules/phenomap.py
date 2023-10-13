@@ -39,6 +39,9 @@ class Phenomap:
         elif PHENOMAP_METHOD == "by_loop":
             self.calc = self._by_loop
 
+        elif PHENOMAP_METHOD == "by_loop_multiplicative":
+            self.calc = self._by_loop_multiplicative
+
         # Variables for Phenomap._by_loop
         _ = np.array(list(zip(*self.trios)))
         self._by_loop_loc1 = _[0].astype(int)
@@ -91,6 +94,24 @@ class Phenomap:
 
         return self.clip(probs)
 
+    def _by_loop_multiplicative(self, probs):
+        """Version of _by_loop function for multiplicative variants
+        
+        """
+
+        # Calculate modifying effects
+        effects = probs[:, self._by_loop_loc1] * self._by_loop_weights + 1
+
+        # Generate baseline phenotype
+        pheno = np.ones(shape=probs.shape)
+
+        # Apply modifying effects to baseline phenotype
+        df = pd.DataFrame(effects.T).groupby(self._by_loop_loc2).prod()
+        loc2 = tuple(df.index)
+        pheno[:, loc2] *= df.to_numpy().T
+
+        return self.clip(pheno)
+
     @staticmethod
     def clip(array):
         """Faster version of np.clip(?, 0, 1)"""
@@ -125,7 +146,6 @@ class Phenomap:
     @staticmethod
     def unfold_specs(PHENOMAP_SPECS, gstruc):
         for trait1, scope1, trait2, scope2, pattern2 in PHENOMAP_SPECS:
-
             assert (trait1 is None and scope1 is None) or (
                 trait1 is not None and scope2 is not None
             )

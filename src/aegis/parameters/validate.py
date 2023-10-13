@@ -127,8 +127,8 @@ def validate_values(params):
 
     # Phenomap
     # TODO add validation
-    if not (params["PHENOMAP_METHOD"] in ("by_loop", "by_dummy", "by_dot")):
-        raise ValueError("PHENOMAP_METHOD must be by_loop, by_dummy or by_dot")
+    if not (params["PHENOMAP_METHOD"] in ("by_loop", "by_dummy", "by_dot", "by_loop_multiplicative")):
+        raise ValueError("PHENOMAP_METHOD must be by_loop, by_dummy or by_dot or by_loop_multiplicative")
 
     # Flipmap
     if not isinstance(params["FLIPMAP_CHANGE_RATE"], int):
