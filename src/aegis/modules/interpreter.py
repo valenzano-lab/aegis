@@ -13,8 +13,9 @@ class Interpreter:
     exp_base = 0.5  # Important for _exp
     binary_exp_base = 0.98  # Important for _binary_exp
 
-    def __init__(self, BITS_PER_LOCUS, DOMINANCE_FACTOR):
+    def __init__(self, BITS_PER_LOCUS, DOMINANCE_FACTOR, THRESHOLD):
         self.DOMINANCE_FACTOR = DOMINANCE_FACTOR
+        self.THRESHOLD = THRESHOLD
 
         # Parameters for the binary interpreter
         self.binary_weights = 2 ** np.arange(BITS_PER_LOCUS)[::-1]
@@ -69,6 +70,12 @@ class Interpreter:
 
     def _single_bit(self, loci):
         return loci[:, :, 0]
+
+    def _threshold(self, loci):
+        """Penna interpreter
+        Cares only about the first bit of the locus.
+        """
+        return (~loci[:, :, 0]).cumsum(-1) < self.THRESHOLD
 
     def _linear(self, loci):
         return np.matmul(loci, self.linear_weights)

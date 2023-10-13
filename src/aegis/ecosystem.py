@@ -36,6 +36,7 @@ class Ecosystem:
             BITS_PER_LOCUS=self._get_param("BITS_PER_LOCUS"),
             REPRODUCTION_MODE=self._get_param("REPRODUCTION_MODE"),
             DOMINANCE_FACTOR=self._get_param("DOMINANCE_FACTOR"),
+            THRESHOLD=self._get_param("THRESHOLD"),
         )  # TODO You should not pass all parameters
 
         # Initialize recorder

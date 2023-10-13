@@ -13,7 +13,7 @@ class Gstruc:
     Calculates phenotypes from input genomes (calls Interpreter, Phenomap and Flipmap).
     """
 
-    def __init__(self, params, BITS_PER_LOCUS, REPRODUCTION_MODE, DOMINANCE_FACTOR):
+    def __init__(self, params, BITS_PER_LOCUS, REPRODUCTION_MODE, DOMINANCE_FACTOR, THRESHOLD):
         # Generate traits and save
         self.traits = {}
         self.evolvable = []
@@ -44,6 +44,7 @@ class Gstruc:
         self.interpreter = Interpreter(
             BITS_PER_LOCUS=BITS_PER_LOCUS,
             DOMINANCE_FACTOR=DOMINANCE_FACTOR,
+            THRESHOLD=THRESHOLD,
         )
 
         self.flipmap = Flipmap(

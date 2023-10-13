@@ -73,6 +73,8 @@ G_muta_lo:
 G_muta_hi:
 G_muta_initial: 0.001
 
+THRESHOLD: 3
+
 # REPRODUCTION
 REPRODUCTION_MODE: asexual # sexual, asexual, asexual_diploid | Mode of reproduction
 RECOMBINATION_RATE: 0 # 0+ | Rate of recombination; 0 if no recombination

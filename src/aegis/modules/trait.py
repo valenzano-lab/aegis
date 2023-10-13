@@ -58,6 +58,7 @@ class Trait:
                 "linear",
                 "single_bit",
                 "const1",
+                "threshold",
             ):
                 raise ValueError(f"{self.interpreter} is not a valid interpreter type")
 
