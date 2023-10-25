@@ -1,6 +1,10 @@
 import logging
 
 
+def get_default_parameters(params):
+    return {p.key: p.default for p in params.values()}
+
+
 class Param:
     def __init__(
         self, key, name, domain, default, info, dtype, drange, inrange=lambda x: True
