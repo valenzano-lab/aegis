@@ -13,6 +13,10 @@ texts_domain = {
     "environment": "asdf",
 }
 
+assert set(config.get_domains()) == set(
+    texts_domain
+), "Specified and expected domains do not match"
+
 preface = [
     html.Div(
         children=[
