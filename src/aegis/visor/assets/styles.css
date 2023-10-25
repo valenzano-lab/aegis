@@ -9,7 +9,6 @@
 }
 
 :root {
-
   --dark-black: #101112;
   --mid-black: rgb(24, 25, 27);
   --mid-black-hover: #222325;
@@ -22,7 +21,6 @@
   --litelite-black: rgb(65, 69, 71);
   --prim: rgb(228, 178, 104);
   --sec: rgb(29, 124, 219);
-
 
   --bckg: rgb(240, 250, 255);
   --blue: rgb(220, 240, 255);
@@ -48,11 +46,9 @@ body {
 }
 
 body::-webkit-scrollbar {
-
   /* display: none; */
   /* for Chrome, Safari, and Opera */
 }
-
 
 #main-container {
   padding: 0 10%;
@@ -60,8 +56,8 @@ body::-webkit-scrollbar {
   /* width: 100%; */
 }
 
-
-td, th {
+td,
+th {
   -webkit-touch-callout: none;
   /* iOS Safari */
   -webkit-user-select: none;
@@ -84,15 +80,16 @@ td {
   /* } */
 }
 
-button, .view-button {
+button,
+.view-button {
   background-color: var(--prim);
   color: var(--mid-black);
   font-weight: bold;
   cursor: pointer;
-
 }
 
-input, button {
+input,
+button {
   font-family: Quicksand;
   font-weight: 700;
 }
@@ -101,7 +98,8 @@ input:focus {
   outline: 2px solid var(--prim) !important;
 }
 
-.domain, .dtype {
+.domain,
+.dtype {
   font-family: Quicksand;
   font-weight: 600;
 }
@@ -110,7 +108,8 @@ button {
   border-radius: 1rem;
 }
 
-button:hover, .view-button:hover {
+button:hover,
+.view-button:hover {
   cursor: pointer;
   background-color: var(--mid-black-hover);
   color: var(--prim);
@@ -119,13 +118,11 @@ button:hover, .view-button:hover {
 button:active {
   background-color: var(--midmid-black);
   color: var(--prim);
-
 }
 
 .view-button label:hover {
   cursor: pointer;
 }
-
 
 .view-button {
   height: 2rem;
@@ -139,7 +136,6 @@ button:active {
 
 .view-button:hover {
   /* background-color: var(--can-interact-hover); */
-
 }
 
 .view-button:first-of-type {
@@ -151,7 +147,6 @@ button:active {
 }
 
 .view-button label {
-
   font-size: 14px;
   margin: 2px 0;
 }
@@ -161,7 +156,6 @@ button:active {
   height: 26px;
   margin: 3px 0;
 }
-
 
 .dropdown-div {
   display: flex;
@@ -174,7 +168,6 @@ button:active {
 }
 
 #figure-section {
-
   display: flex;
   flex-direction: column;
   margin-left: auto;
@@ -199,21 +192,16 @@ button:active {
   background-color: var(--mid-black);
   color: var(--offwhite);
   border-radius: 16px;
-
 }
 
 .figure-card:hover {
-
   box-shadow: 0 0 10px rgb(228, 178, 104, 0.1);
   transition: box-shadow 0.1s ease;
 }
 
-
-
 /* .bluish-bckg {
   background-color: var(--bckg);
 } */
-
 
 h1 {
   color: var(--prim);
@@ -224,11 +212,7 @@ h1 {
 }
 
 .material-symbols-rounded {
-  font-variation-settings:
-    'FILL'0,
-    'wght'400,
-    'GRAD'0,
-    'opsz'24
+  font-variation-settings: "FILL" 0, "wght" 400, "GRAD" 0, "opsz" 24;
 }
 
 .title-section {
@@ -237,21 +221,20 @@ h1 {
   padding-top: 1rem;
 }
 
-
 .figure-title {
   /* font-size:24px; */
   font-weight: bold;
 }
 
-.config-table, .result-table {
+.config-table,
+.result-table {
   border-spacing: 0px;
   font-size: 14px;
-
+  width: 100%;
 }
 
-
-
-td, th {
+td,
+th {
   padding-left: 0.5rem;
   padding-right: 0.5rem;
   font-family: Inter;
@@ -278,28 +261,40 @@ tr:nth-of-type(odd) {
   background-color: rgb(18, 20, 21);
 }
 
-.config-table th, .result-table th {
+.config-table th,
+.result-table th {
   color: var(--prim);
 }
 
 .config-table th {
-
   text-align: left;
 }
 
-label, input, button {
+.config-domain {
+  text-transform: uppercase;
+  font-weight: 700;
+  color: var(--offwhite);
+}
+
+.config-domain-desc {
+  color: var(--offwhite);
+}
+
+label,
+input,
+button {
   padding: 0.3rem 0.5rem;
   font-size: 14px;
   border: none;
   /* margin: 0.1rem; */
 }
 
-label, input {
+label,
+input {
   border-radius: 6px;
 }
 
 label {
-
   padding: 0.25rem 0.5rem;
 }
 
@@ -326,10 +321,7 @@ input:hover {
 input:not(:placeholder-shown) {
   background-color: var(--prim);
   color: var(--mid-black);
-
 }
-
-
 
 .config-table td.td-info {
   font-size: 14px;
@@ -339,12 +331,12 @@ th.valid-values {
   width: 100px;
 }
 
-
 label.dtype {
   /* font-weight: bold; */
 }
 
-label.dtype-str, label.domain-recording {
+label.dtype-str,
+label.domain-recording {
   color: rgb(212, 116, 116);
   background-color: rgba(255, 195, 195, 0.03);
 }
@@ -354,18 +346,15 @@ label.dtype-int {
   background-color: rgba(226, 255, 173, 0.03);
 }
 
-
 label.dtype-float {
   color: rgb(200, 144, 13);
   background-color: rgba(255, 255, 167, 0.03);
 }
 
-
 label.dtype-bool {
   color: rgb(53, 178, 187);
   background-color: rgba(179, 235, 255, 0.03);
 }
-
 
 label.domain-ecology {
   color: rgb(86, 176, 45);
@@ -387,19 +376,18 @@ label.domain-computation {
   background-color: rgba(255, 192, 238, 0.03);
 }
 
-
 table {
   border-radius: 10px;
   margin-bottom: 2rem;
 }
 
-table:hover {}
+table:hover {
+}
 
 .result-table {
   text-align: center;
   /* border: solid black 0px; */
 }
-
 
 /* Rounded corners of tables -- */
 th:first-of-type {
@@ -433,7 +421,6 @@ tr:last-of-type td:last-of-type {
   padding: 0 1rem;
   margin: 0 0.2rem;
 }
-
 
 button:disabled {
   cursor: not-allowed;
