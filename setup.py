@@ -26,7 +26,7 @@ setuptools.setup(
         "pyarrow",
         "platformdirs",
         "dash",
-        "urllib3==1.26"  # for dash
+        "urllib3==1.26.18"  # for dash
     ],
     extras_require={
         "dev": [
