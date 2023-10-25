@@ -1,11 +1,11 @@
 @font-face {
   font-family: "Quicksand";
-  src: url("Quicksand.tff") format("truetype");
+  src: url("Quicksand.ttf") format("truetype");
 }
 
 @font-face {
   font-family: "Inter";
-  src: url("Inter.tff") format("truetype");
+  src: url("Inter.ttf") format("truetype");
 }
 
 :root {
