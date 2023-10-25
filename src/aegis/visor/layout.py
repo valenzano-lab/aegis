@@ -44,7 +44,11 @@ app_layout = html.Div(
                                         html.Img(
                                             src="assets/list.svg",
                                             className="svg-plot",
-                                            style={"width": "30px", "height": "34px", "margin-top":"-2px"},
+                                            style={
+                                                "width": "30px",
+                                                "height": "34px",
+                                                "margin-top": "-2px",
+                                            },
                                         ),
                                         html.Label("list"),
                                         # html.Button("result view", id="result-view-button"),
@@ -115,6 +119,20 @@ app_layout = html.Div(
         html.Div(
             id="sim-section",
             children=[
+                html.Div(
+                    children=[
+                        html.P(
+                            [
+                                """
+                            Using this tab you can customize your simulation and run it.
+                            Change the parameter values under the column name VALUE.
+                            Run the simulation by giving it a unique id name and clicking the button 'run simulation'.
+                            """,
+                            ],
+                        )
+                    ],
+                    style={"color": "white"},
+                ),
                 html.Table(
                     className="config-table",
                     children=[
@@ -169,7 +187,7 @@ app_layout = html.Div(
                         for k, v in param.params.items()
                         if not isinstance(v.default, list)
                     ],
-                )
+                ),
             ],
         ),
         # RESULT SECTION
