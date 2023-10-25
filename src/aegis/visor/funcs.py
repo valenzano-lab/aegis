@@ -6,7 +6,7 @@ import pathlib
 import yaml
 import logging
 
-from aegis.parameters import param
+from aegis.help import config
 
 logging.basicConfig(level=logging.INFO)
 
@@ -19,9 +19,6 @@ HERE = pathlib.Path(__file__).absolute().parent
 def read_yml(path):
     with open(path, "r") as f:
         return yaml.safe_load(f)
-
-
-DEFAULT_CONFIG_DICT = read_yml(HERE.parent / "parameters/default.yml")
 
 
 def get_config_path(filename):
@@ -38,15 +35,11 @@ def make_config_file(filename, configs):
     configs["PHENOMAP_SPECS"] = []
     configs["NOTES"] = []
     for k, v in configs.items():
-        configs[k] = param.params[k].convert(v)
+        configs[k] = config.params[k].convert(v)
     logging.info("making config file")
     config_path = get_config_path(filename)
     with open(config_path, "w") as file_:
         yaml.dump(configs, file_)
-
-
-def get_default_config_dict():
-    return read_yml(HERE.parent / "parameters/default.yml")
 
 
 def print_function_name(func):

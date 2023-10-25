@@ -1,7 +1,10 @@
 from dash import html, dcc, callback, Output, Input, State, ALL, MATCH
 from aegis.visor import funcs
+from aegis.help import config
 
 from aegis.visor.callbacks_results import SELECTION
+
+DEFAULT_CONFIG_DICT = config.get_default_parameters()
 
 
 @callback(
@@ -10,7 +13,7 @@ from aegis.visor.callbacks_results import SELECTION
     State("config-make-text", "value"),
     [
         State(f"config-{k}", "value")
-        for k, v in funcs.DEFAULT_CONFIG_DICT.items()
+        for k, v in DEFAULT_CONFIG_DICT.items()
         if not isinstance(v, list)
     ],
     prevent_initial_call=True,
@@ -23,7 +26,7 @@ def run_simulation(n_clicks, filename, *values):
     # make config file
     custom_config = {
         k: val
-        for (k, v), val in zip(funcs.DEFAULT_CONFIG_DICT.items(), values)
+        for (k, v), val in zip(DEFAULT_CONFIG_DICT.items(), values)
         if not isinstance(v, list)
     }
     funcs.make_config_file(filename, custom_config)
@@ -42,7 +45,6 @@ def run_simulation(n_clicks, filename, *values):
 )
 @funcs.print_function_name
 def block_sim_button(filename):
-
     if filename is None or filename == "" or "." in filename:
         return True
 

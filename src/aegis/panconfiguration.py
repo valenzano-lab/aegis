@@ -5,8 +5,7 @@ import shutil
 import logging
 import yaml
 
-
-from aegis.parameters import validate
+from aegis.help import config
 
 
 logging.basicConfig(
@@ -60,15 +59,23 @@ class Panconfiguration:
                 custom_config_params = {}
 
             # Read config parameters from the default config file
-            default_config_params = read_yml(self.here / "parameters/default.yml")
+            default_config_params = config.get_default_parameters()
 
             # Fuse
             params = {}
             params.update(default_config_params)
             params.update(custom_config_params)
 
-            validate.validate_keys(params, list(default_config_params.keys()))
-            validate.validate_values(params)
+            config.validate(params)
+
+            # for key, val in params.items():
+            #     # Validate key
+            #     if all(key != p.key for p in parameters.params.values()):
+            #         raise ValueError(f"'{key}' is not a valid parameter name")
+
+            #     # Validate value type and range
+            #     parameters.params[key].validate_dtype(val)
+            #     parameters.params[key].validate_inrange(val)
 
             return params
 

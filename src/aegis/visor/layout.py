@@ -2,7 +2,7 @@ from dash import html, dcc
 from aegis.visor.static import FIGURE_INFO
 import pathlib
 
-from aegis.parameters import param
+from aegis.help import config
 
 # HERE = pathlib.Path(__file__).absolute().parent
 
@@ -184,7 +184,7 @@ app_layout = html.Div(
                                 ),
                             ],
                         )
-                        for k, v in param.params.items()
+                        for k, v in config.params.items()
                         if not isinstance(v.default, list)
                     ],
                 ),

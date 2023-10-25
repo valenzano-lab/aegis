@@ -1,8 +1,19 @@
 import logging
 
 
-def get_default_parameters(params):
+def get_default_parameters():
     return {p.key: p.default for p in params.values()}
+
+
+def validate(pdict):
+    for key, val in pdict.items():
+        # Validate key
+        if all(key != p.key for p in params.values()):
+            raise ValueError(f"'{key}' is not a valid parameter name")
+
+        # Validate value type and range
+        params[key].validate_dtype(val)
+        params[key].validate_inrange(val)
 
 
 class Param:
@@ -47,8 +58,41 @@ class Param:
         name = self.key.replace("_", " ").strip().lower()
         return name
 
+    def validate_dtype(self, value):
+        can_be_none = self.default is None
+        # given custom value is None which is a valid data type
+        if can_be_none and value is None:
+            return
+        # given custom value is of valid data type
+        if isinstance(value, self.dtype):
+            return
+        # given custom value is int but float is valid
+        if self.dtype is float and isinstance(value, int):
+            return
+        raise TypeError(
+            f"You set {self.key} to be '{value}' which is of type {type(value)} but it should be {self.dtype} {'or None' if can_be_none else ''}"
+        )
 
+    def validate_inrange(self, value):
+        if self.inrange(value):
+            return
+        raise ValueError(
+            f"{self.key} is set to be '{value}' which is outside of the valid range '{self.drange}'."
+        )
+
+
+# You need the keys so you can find the param (in a list, you cannot)
 params = {
+    # "": Param(
+    #     key="",
+    #     name="",
+    #     domain="",
+    #     default=None,
+    #     info="",
+    #     dtype=float,
+    #     drange="[0,inf)",
+    #     inrange=lambda x: x >= 0,
+    # ),
     "RANDOM_SEED_": Param(
         key="RANDOM_SEED_",
         name="",
@@ -166,6 +210,16 @@ params = {
             "treadmill_boomer",
         ),
     ),
+    "OVERSHOOT_MORTALITY": Param(
+        key="OVERSHOOT_MORTALITY",
+        name="",
+        domain="ecology",
+        default=0.05,
+        info="",
+        dtype=float,
+        drange="(0,1)",
+        inrange=lambda x: 0 <= x <= 1,
+    ),
     "CLIFF_SURVIVORSHIP": Param(
         key="CLIFF_SURVIVORSHIP",
         name="",
@@ -266,6 +320,16 @@ params = {
         drange="{by_bit, by_index}",
         inrange=lambda x: x in ("by_bit", "by_index"),
     ),
+    "DOMINANCE_FACTOR": Param(
+        key="DOMINANCE_FACTOR",
+        name="",
+        domain="",
+        default=0.5,
+        info="0 for recessive, 0.5 for true additive, 0-1 for partial dominant, 1 for dominant, 1+ for overdominant",
+        dtype=float,
+        drange="[0, inf)",
+        inrange=lambda x: x >= 0,
+    ),
     "PHENOMAP_METHOD": Param(
         key="PHENOMAP_METHOD",
         name="",
@@ -284,6 +348,107 @@ params = {
         info="Flipmap changes every ? stages",
         dtype=int,
         drange="[0, inf)",
+        inrange=lambda x: x >= 0,
+    ),
+    "ENVIRONMENT_HAZARD_AMPLITUDE": Param(
+        key="ENVIRONMENT_HAZARD_AMPLITUDE",
+        name="",
+        domain="environment",
+        default=0,
+        info="",
+        dtype=float,
+        drange="[0, inf)",
+        inrange=lambda x: x >= 0,
+    ),
+    "ENVIRONMENT_HAZARD_PERIOD": Param(
+        key="ENVIRONMENT_HAZARD_PERIOD",
+        name="",
+        domain="environment",
+        default=1,
+        info="",
+        dtype=float,
+        drange="[1, inf)",
+        inrange=lambda x: x >= 1,
+    ),
+    "ENVIRONMENT_HAZARD_OFFSET": Param(
+        key="ENVIRONMENT_HAZARD_OFFSET",
+        name="",
+        domain="environment",
+        default=0,
+        info=r"e.g. 0.01 means that environmental mortality is increased by 1% each stage",
+        dtype=float,
+        drange="[0, inf)",
+        inrange=lambda x: x >= 0,
+    ),
+    "ENVIRONMENT_HAZARD_SHAPE": Param(
+        key="ENVIRONMENT_HAZARD_SHAPE",
+        name="",
+        domain="environment",
+        default="sinusoidal",
+        info="",
+        dtype=str,
+        drange="{sinusoidal, flat, triangle, square, sawtooth, ramp}",
+        inrange=lambda x: x
+        in {"sinusoidal", "flat", "triangle", "square", "sawtooth", "ramp"},
+    ),
+    "BACKGROUND_INFECTIVITY": Param(
+        key="BACKGROUND_INFECTIVITY",
+        name="",
+        domain="infection",
+        default=0,
+        info="",
+        dtype=float,
+        drange="[0,inf)",
+        inrange=lambda x: x >= 0,
+    ),
+    "TRANSMISSIBILITY": Param(
+        key="TRANSMISSIBILITY",
+        name="",
+        domain="",
+        default=0,
+        info="",
+        dtype=float,
+        drange="[0,inf)",
+        inrange=lambda x: x >= 0,
+    ),
+    "RECOVERY_RATE": Param(
+        key="RECOVERY_RATE",
+        name="",
+        domain="",
+        default=0,
+        info="",
+        dtype=float,
+        drange="[0,inf)",
+        inrange=lambda x: x >= 0,
+    ),
+    "FATALITY_RATE": Param(
+        key="FATALITY_RATE",
+        name="",
+        domain="",
+        default=0,
+        info="",
+        dtype=float,
+        drange="[0,inf)",
+        inrange=lambda x: x >= 0,
+    ),
+    "PREDATION_RATE": Param(
+        key="PREDATION_RATE",
+        name="",
+        domain="",
+        default=0,
+        info="Mortality rate when number of predators equal to number of prey",
+        dtype=float,
+        drange="[0, inf)",
+        inrange=lambda x: x >= 0,
+    ),
+    "PREDATOR_GROWTH": Param(
+        key="PREDATOR_GROWTH",
+        name="",
+        domain="",
+        default=0,
+        info="Intrinsic growth rate of predators",
+        dtype=float,
+        drange="[0,inf)",
         inrange=lambda x: x >= 0,
     ),
     "G_surv_evolvable": Param(
@@ -502,6 +667,15 @@ params = {
         default=0.001,
         info="Initial mutation rate",
         dtype=float,
+        drange="",
+    ),
+    "THRESHOLD": Param(
+        key="THRESHOLD",
+        name="",
+        domain="genetics",
+        default=None,  # 3
+        info="",
+        dtype=int,
         drange="",
     ),
     "PHENOMAP_SPECS": Param(
