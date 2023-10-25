@@ -1,14 +1,10 @@
 from dash import html, dcc
 from aegis.visor.static import FIGURE_INFO
-import pathlib
+from aegis.visor.layout_config import get_config_section
 
-from aegis.help import config
-
-# HERE = pathlib.Path(__file__).absolute().parent
 
 app_layout = html.Div(
     id="main-container",
-    # className="main-container",
     children=[
         # checkers
         dcc.Interval(id="results-exist-interval", interval=1000, n_intervals=0),
@@ -116,80 +112,7 @@ app_layout = html.Div(
             ],
         ),
         # CONFIG SECTION
-        html.Div(
-            id="sim-section",
-            children=[
-                html.Div(
-                    children=[
-                        html.P(
-                            [
-                                """
-                            Using this tab you can customize your simulation and run it.
-                            Change the parameter values under the column name VALUE.
-                            Run the simulation by giving it a unique id name and clicking the button 'run simulation'.
-                            """,
-                            ],
-                        )
-                    ],
-                    style={"color": "white"},
-                ),
-                html.Table(
-                    className="config-table",
-                    children=[
-                        html.Tr(
-                            [
-                                html.Th("PARAMETER", style={"padding-left": "1.2rem"}),
-                                html.Th("VALUE"),
-                                html.Th("TYPE"),
-                                html.Th("RANGE", className="valid-values"),
-                                html.Th("DOMAIN"),
-                                html.Th(
-                                    "DESCRIPTION", style={"padding-right": "1.2rem"}
-                                ),
-                            ],
-                        )
-                    ]
-                    + [
-                        html.Tr(
-                            [
-                                html.Td(v.get_name(), style={"padding-left": "1.2rem"}),
-                                html.Td(
-                                    children=dcc.Input(
-                                        type="text",
-                                        placeholder=str(v.default)
-                                        if v.default is not None
-                                        else "",
-                                        id=f"config-{k}",
-                                        autoComplete="off",
-                                    ),
-                                ),
-                                # html.Td(children=v.dtype.__name__, className=f"dtype-{v.dtype.__name__} dtype"),
-                                html.Td(
-                                    children=html.Label(
-                                        v.dtype.__name__,
-                                        className=f"dtype-{v.dtype.__name__} dtype",
-                                    )
-                                ),
-                                html.Td(children=v.drange, className="data-range"),
-                                html.Td(
-                                    children=html.Label(
-                                        v.domain,
-                                        className=f"domain-{v.domain} domain",
-                                    ),
-                                ),
-                                html.Td(
-                                    v.info,
-                                    className="td-info",
-                                    style={"padding-right": "0.8rem"},
-                                ),
-                            ],
-                        )
-                        for k, v in config.params.items()
-                        if not isinstance(v.default, list)
-                    ],
-                ),
-            ],
-        ),
+        get_config_section(),
         # RESULT SECTION
         html.Div(id="result-section", style={"display": "none"}, children=[]),
         # FIGURE SECTION
