@@ -5,6 +5,10 @@ def get_default_parameters():
     return {p.key: p.default for p in params.values()}
 
 
+def get_domains():
+    return {p.domain for p in params.values()}
+
+
 def validate(pdict):
     for key, val in pdict.items():
         # Validate key
@@ -323,7 +327,7 @@ params = {
     "DOMINANCE_FACTOR": Param(
         key="DOMINANCE_FACTOR",
         name="",
-        domain="",
+        domain="genetics",
         default=0.5,
         info="0 for recessive, 0.5 for true additive, 0-1 for partial dominant, 1 for dominant, 1+ for overdominant",
         dtype=float,
@@ -404,7 +408,7 @@ params = {
     "TRANSMISSIBILITY": Param(
         key="TRANSMISSIBILITY",
         name="",
-        domain="",
+        domain="infection",
         default=0,
         info="",
         dtype=float,
@@ -414,7 +418,7 @@ params = {
     "RECOVERY_RATE": Param(
         key="RECOVERY_RATE",
         name="",
-        domain="",
+        domain="infection",
         default=0,
         info="",
         dtype=float,
@@ -424,7 +428,7 @@ params = {
     "FATALITY_RATE": Param(
         key="FATALITY_RATE",
         name="",
-        domain="",
+        domain="infection",
         default=0,
         info="",
         dtype=float,
@@ -434,7 +438,7 @@ params = {
     "PREDATION_RATE": Param(
         key="PREDATION_RATE",
         name="",
-        domain="",
+        domain="predation",
         default=0,
         info="Mortality rate when number of predators equal to number of prey",
         dtype=float,
@@ -444,7 +448,7 @@ params = {
     "PREDATOR_GROWTH": Param(
         key="PREDATOR_GROWTH",
         name="",
-        domain="",
+        domain="predation",
         default=0,
         info="Intrinsic growth rate of predators",
         dtype=float,
