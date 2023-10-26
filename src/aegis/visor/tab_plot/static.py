@@ -14,10 +14,23 @@ FIGURE_INFO = {
             # "yaxis": {"range": [0, 1]},
         },
     },
+    "total survivorship": {
+        "title": "total survivorship",
+        "description": dcc.Markdown(
+            """Observed expected probability to survive to a specific age (when all sources of mortality are considered). A population average.""",
+            mathjax=True,
+        ),
+        # graph
+        "figure_layout": {
+            "xaxis_title": "age",
+            "yaxis_title": "",
+            # "yaxis": {"range": [0, 1]},
+        },
+    },
     "intrinsic survivorship": {
         "title": "intrinsic survivorship",
         "description": dcc.Markdown(
-            """Expected probability to survive to a specific age given genetic mortality. A population average.""",
+            """Inferred expected probability to survive to a specific age only given genetic mortality. A population average.""",
             mathjax=True,
         ),
         # graph
@@ -109,4 +122,17 @@ FIGURE_INFO = {
             # "yaxis": {"range": [0, 1]},
         },
     },
+    # "total survivorship": {
+    #     "title": "total survivorship",
+    #     "description": dcc.Markdown(
+    #         """xxx.""",
+    #         mathjax=True,
+    #     ),
+    #     # graph
+    #     "figure_layout": {
+    #         "xaxis_title": "age",
+    #         "yaxis_title": "",
+    #         # "yaxis": {"range": [0, 1]},
+    #     },
+    # },
 }

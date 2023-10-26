@@ -1,4 +1,11 @@
 import numpy as np
+from aegis.help import analyzer
+
+
+def get_total_survivorship(container, iloc=-1):
+    y = analyzer.get_total_survivorship(container)
+    y = y.iloc[iloc]
+    return y
 
 
 def get_life_expectancy(container):
