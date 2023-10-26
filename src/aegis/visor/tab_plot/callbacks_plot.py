@@ -2,26 +2,12 @@ from dash import callback, Output, Input, ctx
 
 from aegis.help.container import Container
 from aegis.visor import funcs
-from aegis.visor.tab_plot import make_plots
 from aegis.visor.tab_plot import make_figures
 from aegis.visor.tab_plot.static import FIGURE_INFO
 from aegis.visor.tab_list.callbacks_list import SELECTION
 
 
 containers = {}
-
-funcs_dict = {
-    "life expectancy": make_plots.get_life_expectancy,
-    "intrinsic mortality": make_plots.get_intrinsic_mortality,
-    "intrinsic survivorship": make_plots.get_intrinsic_survivorship,
-    "fertility": make_plots.get_fertility,
-    "cumulative reproduction": make_plots.get_cumulative_reproduction,
-    "lifetime reproduction": make_plots.get_lifetime_reproduction,
-    "birth structure": make_plots.get_birth_structure,
-    "death structure": make_plots.get_death_structure,
-    "total survivorship": make_plots.get_total_survivorship,
-    "total mortality": make_plots.get_total_mortality,
-}
 
 
 def make_figure(id_, plot_func):
@@ -53,7 +39,7 @@ def update_scatter_plot(*_):
 
     # BUG no data saved yet on running simulations or interrupted simulations
 
-    for id_, plot_func in funcs_dict.items():
-        figures[id_] = make_figure(id_, plot_func)
+    for id_, v in FIGURE_INFO.items():
+        figures[id_] = make_figure(id_, v["plotter"])
 
     return [figures[key] for key in FIGURE_INFO.keys()]
