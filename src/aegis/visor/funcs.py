@@ -26,9 +26,9 @@ def get_config_path(filename):
 
 
 def run(filename):
-    subprocess.Popen(
-        ["python3", "-m", "aegis", "--config_path", get_config_path(filename)]
-    )
+    config_path = get_config_path(filename)
+    logging.info(f"Running a simulation at path {config_path}")
+    subprocess.Popen(["python3", "-m", "aegis", "--config_path", config_path])
 
 
 def make_config_file(filename, configs):
