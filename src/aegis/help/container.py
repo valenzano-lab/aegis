@@ -72,3 +72,12 @@ class Container:
         if path.exists():
             with open(path, "r") as file_:
                 return json.load(file_)
+
+    def get_snapshot(self, kind, index):
+        paths = sorted(
+            (self.basepath / "0" / "snapshots" / kind).glob("*"),
+            key=lambda path: int(path.stem),
+        )
+
+        if index < len(paths):
+            return pd.read_feather(paths[index])
