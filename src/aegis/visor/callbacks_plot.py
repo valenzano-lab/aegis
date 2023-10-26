@@ -5,6 +5,7 @@ from dash import callback, Output, Input, ctx
 from aegis.help.container import Container
 from aegis.visor import funcs
 from aegis.visor.static import FIGURE_INFO
+from aegis.visor.plot import plotter
 
 from aegis.visor.callbacks_results import SELECTION
 
@@ -184,128 +185,43 @@ def update_scatter_plot(*_):
                 for sim in SELECTION
             ]
 
-    # Figure: life expectancy at age 0
     id_ = "life expectancy"
-
-    def get_life_expectancy(sim):
-        phenotypes = containers[sim].get_df("phenotypes")
-        max_age = containers[sim].get_config()["MAX_LIFESPAN"]
-        pdf = phenotypes.iloc[:, :max_age]
-        survivorship = pdf.cumprod(1)
-        y = survivorship.sum(1)
-        return y
-
-    ys = [get_life_expectancy(sim) for sim in SELECTION]
+    ys = [plotter.get_life_expectancy(containers[sim]) for sim in SELECTION]
     xs = get_xs(id_, ys)
     figures[id_] = make_figure(xs, ys)
 
-    # Figure: intrinsic mortality
     id_ = "intrinsic mortality"
-
-    def get_intrinsic_mortality(sim):
-        phenotypes = containers[sim].get_df("phenotypes")
-        max_age = containers[sim].get_config()["MAX_LIFESPAN"]
-        pdf = phenotypes.iloc[-1, :max_age]
-        y = 1 - pdf
-        return y
-
-    ys = [get_intrinsic_mortality(sim) for sim in SELECTION]
+    ys = [plotter.get_intrinsic_mortality(containers[sim]) for sim in SELECTION]
     xs = get_xs(id_, ys)
     figures[id_] = make_figure(xs, ys)
 
-    # Figure: intrinsic survivorship
     id_ = "intrinsic survivorship"
-
-    def get_intrinsic_survivorship(sim):
-        phenotypes = containers[sim].get_df("phenotypes")
-        max_age = containers[sim].get_config()["MAX_LIFESPAN"]
-        pdf = phenotypes.iloc[-1, :max_age]
-        y = pdf.cumprod()
-        return y
-
-    ys = [get_intrinsic_survivorship(sim) for sim in SELECTION]
+    ys = [plotter.get_intrinsic_survivorship(containers[sim]) for sim in SELECTION]
     xs = get_xs(id_, ys)
     figures[id_] = make_figure(xs, ys)
 
-    # Figure: fertility
     id_ = "fertility"
-
-    def get_fertility(sim):
-        phenotypes = containers[sim].get_df("phenotypes")
-        max_age = containers[sim].get_config()["MAX_LIFESPAN"]
-        fertility = phenotypes.iloc[-1, max_age:]
-        y = fertility
-        return y
-
-    ys = [get_fertility(sim) for sim in SELECTION]
+    ys = [plotter.get_fertility(containers[sim]) for sim in SELECTION]
     xs = get_xs(id_, ys)
     figures[id_] = make_figure(xs, ys)
 
-    # Figure: cumulative reproduction
-    # https://besjournals.onlinelibrary.wiley.com/doi/full/10.1111/2041-210X.13289
-    # BUG fertility is 0 before maturity
     id_ = "cumulative reproduction"
-
-    def get_cumulative_reproduction(sim):
-        phenotypes = containers[sim].get_df("phenotypes")
-        max_age = containers[sim].get_config()["MAX_LIFESPAN"]
-        survivorship = phenotypes.iloc[-1, :max_age].cumprod()
-        fertility = phenotypes.iloc[-1, max_age:]
-        y = (survivorship.values * fertility.values).cumsum()
-        return y
-
-    ys = [get_cumulative_reproduction(sim) for sim in SELECTION]
+    ys = [plotter.get_cumulative_reproduction(containers[sim]) for sim in SELECTION]
     xs = get_xs(id_, ys)
     figures[id_] = make_figure(xs, ys)
 
-    # Figure: lifetime reproduction
-    # BUG fertility is 0 before maturity
     id_ = "lifetime reproduction"
-
-    def get_lifetime_reproduction(sim):
-        phenotypes = containers[sim].get_df("phenotypes")
-        max_age = containers[sim].get_config()["MAX_LIFESPAN"]
-        survivorship = phenotypes.iloc[:, :max_age].cumprod(1)
-        fertility = phenotypes.iloc[:, max_age:]
-        y = np.sum((np.array(survivorship) * np.array(fertility)), axis=1)
-        return y
-
-    ys = [get_lifetime_reproduction(sim) for sim in SELECTION]
+    ys = [plotter.get_lifetime_reproduction(containers[sim]) for sim in SELECTION]
     xs = get_xs(id_, ys)
     figures[id_] = make_figure(xs, ys)
 
-    # Figure: birth structure
     id_ = "birth structure"
-
-    def get_birth_structure(sim):
-        age_at_birth = containers[sim].get_df("age_at_birth")
-        y = age_at_birth.iloc[-1]
-        y /= y.sum()
-        return y
-
-    ys = [get_birth_structure(sim) for sim in SELECTION]
+    ys = [plotter.get_birth_structure(containers[sim]) for sim in SELECTION]
     xs = get_xs(id_, ys)
     figures[id_] = make_figure(xs, ys)
 
-    # Figure: death structure
     id_ = "death structure"
-
-    def get_death_structure(sim):
-        age_at_genetic = containers[sim].get_df("age_at_genetic")
-        age_at_overshoot = containers[sim].get_df("age_at_overshoot")
-        age_at_environment = containers[sim].get_df("age_at_environment")
-
-        t = -1
-        pseudocount = 0
-        y = (age_at_genetic.iloc[t] + pseudocount) / (
-            age_at_overshoot.iloc[t]
-            + age_at_environment.iloc[t]
-            + age_at_genetic.iloc[t]
-            + pseudocount
-        )
-        return y
-
-    ys = [get_death_structure(sim) for sim in SELECTION]
+    ys = [plotter.get_death_structure(containers[sim]) for sim in SELECTION]
     xs = get_xs(id_, ys)
     figures[id_] = make_figure(xs, ys)
 
