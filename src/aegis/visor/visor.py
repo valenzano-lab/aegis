@@ -2,9 +2,9 @@
 from dash import Dash, html, dcc, callback, Output, Input, State
 from aegis.visor.layout import app_layout
 import aegis.visor.callbacks
-import aegis.visor.callbacks_plot
-import aegis.visor.callbacks_results
-import aegis.visor.callbacks_config
+import aegis.visor.tab_plot.callbacks_plot
+import aegis.visor.tab_list.callbacks_list
+import aegis.visor.tab_config.callbacks_config
 
 
 def run():

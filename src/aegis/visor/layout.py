@@ -1,6 +1,7 @@
 from dash import html, dcc
-from aegis.visor.static import FIGURE_INFO
-from aegis.visor.layout_config import get_config_section
+from aegis.visor.tab_config.layout import get_config_layout
+from aegis.visor.tab_plot.layout import get_plot_layout
+from aegis.visor.tab_list.layout import get_list_layout
 
 
 app_layout = html.Div(
@@ -111,67 +112,10 @@ app_layout = html.Div(
                 ),
             ],
         ),
-        # CONFIG SECTION
-        get_config_section(),
-        # RESULT SECTION
-        html.Div(id="result-section", style={"display": "none"}, children=[]),
-        # FIGURE SECTION
-        html.Div(
-            id="figure-section",
-            style={"display": "none"},
-            children=[
-                html.Div(
-                    id="figure-container",
-                    children=[
-                        html.Div(
-                            [
-                                html.Div(
-                                    [
-                                        dcc.Graph(
-                                            id=figure_id,
-                                            config={"displayModeBar": False},
-                                            className="figure",
-                                        ),
-                                    ],
-                                    style={"padding-right": "20px"},
-                                ),
-                                html.Div(
-                                    children=[
-                                        html.P(
-                                            children=info["title"],
-                                            className="figure-title",
-                                        ),
-                                        html.P(
-                                            children=info["description"],
-                                            className="figure-description",
-                                        ),
-                                    ]
-                                ),
-                            ],
-                            className="figure-card",
-                        )
-                        for figure_id, info in FIGURE_INFO.items()
-                    ],
-                ),
-            ]
-            # + [
-            #     dcc.Graph(id="figurex"),
-            #     html.Div(
-            #         [
-            #             dcc.Slider(
-            #                 id="slider",
-            #                 min=1,
-            #                 max=10,
-            #                 step=1,
-            #                 value=5,
-            #                 updatemode="drag",
-            #             ),
-            #         ],
-            #         # style={"width": "400px"},
-            #     ),
-            # ],
-        ),
-        #
+        # THREE TABS
+        get_config_layout(),
+        get_list_layout(),
+        get_plot_layout(),
         # FOOTER SECTION
         html.Div(
             [

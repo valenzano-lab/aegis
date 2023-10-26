@@ -47,7 +47,7 @@ header = html.Tr(
 )
 
 
-def get_config_section():
+def get_config_layout():
     # Group parameters by domain
     subsets = {domain: [] for domain in texts_domain.keys()}
     for param in config.params.values():

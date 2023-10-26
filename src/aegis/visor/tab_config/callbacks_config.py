@@ -2,7 +2,7 @@ from dash import html, dcc, callback, Output, Input, State, ALL, MATCH
 from aegis.visor import funcs
 from aegis.help import config
 
-from aegis.visor.callbacks_results import SELECTION
+from aegis.visor.tab_list.callbacks_list import SELECTION
 
 DEFAULT_CONFIG_DICT = config.get_default_parameters()
 
