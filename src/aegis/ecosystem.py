@@ -144,7 +144,7 @@ class Ecosystem:
         self.gstruc.flipmap.evolve()
 
         # Population census
-        self.recorder.collect("cumulative_ages", self.population.ages)
+        self.recorder.collect("additive_age_structure", self.population.ages)
 
         # Record data
         self.recorder.record_pickle(self.population)

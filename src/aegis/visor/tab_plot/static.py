@@ -14,6 +14,19 @@ FIGURE_INFO = {
             # "yaxis": {"range": [0, 1]},
         },
     },
+    "total mortality": {
+        "title": "total mortality",
+        "description": dcc.Markdown(
+            """.""",
+            mathjax=True,
+        ),
+        # graph
+        "figure_layout": {
+            "xaxis_title": "age",
+            "yaxis_title": "",
+            # "yaxis": {"range": [0, 1]},
+        },
+    },
     "total survivorship": {
         "title": "total survivorship",
         "description": dcc.Markdown(

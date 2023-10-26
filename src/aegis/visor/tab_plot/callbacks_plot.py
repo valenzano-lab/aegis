@@ -20,6 +20,7 @@ funcs_dict = {
     "birth structure": make_plots.get_birth_structure,
     "death structure": make_plots.get_death_structure,
     "total survivorship": make_plots.get_total_survivorship,
+    "total mortality": make_plots.get_total_mortality,
 }
 
 

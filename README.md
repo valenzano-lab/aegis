@@ -99,7 +99,7 @@ To check if installation is successful, run `aegis -h`. If it is, the output wil
                     age_at_genetic.csv
                     age_at_overshoot.csv
                     age_at_season_shift.csv
-                    cumulative_ages.csv
+                    additive_age_structure.csv
     ```
 
     Detailed description of the content and format of output files can be found in the [wiki](https://github.com/valenzano-lab/aegis/wiki/Output).
