@@ -13,7 +13,9 @@ class Gstruc:
     Calculates phenotypes from input genomes (calls Interpreter, Phenomap and Flipmap).
     """
 
-    def __init__(self, params, BITS_PER_LOCUS, REPRODUCTION_MODE, DOMINANCE_FACTOR, THRESHOLD):
+    def __init__(
+        self, params, BITS_PER_LOCUS, REPRODUCTION_MODE, DOMINANCE_FACTOR, THRESHOLD
+    ):
         # Generate traits and save
         self.traits = {}
         self.evolvable = []
@@ -103,3 +105,6 @@ class Gstruc:
             phenotypes[:, trait.slice] = phenotypes[:, trait.slice] * (hi - lo) + lo
 
         return phenotypes
+
+    def slice_phenotype_trait(self, phenotypes, trait_name):
+        return phenotypes[:, self.traits[trait_name].slice]
