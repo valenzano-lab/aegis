@@ -24,8 +24,8 @@ class Container:
         if not self.paths["log"].is_file():
             logging.error(f"No AEGIS log found at path {self.paths['log']}")
 
-    def get_log(self):
-        if "log" not in self.data:
+    def get_log(self, reload=False):
+        if ("log" not in self.data) or reload:
             df = pd.read_csv(self.paths["log"], sep="|")
             df.columns = [x.strip() for x in df.columns]
 
@@ -37,16 +37,16 @@ class Container:
             self.data["log"] = df
         return self.data["log"]
 
-    def get_df(self, stem):
+    def get_df(self, stem, reload=False):
         file_read = stem in self.data
         file_exists = stem in self.paths
         # TODO Read also files that are not .csv
 
         if not file_exists:
             logging.error(f"File {self.paths[stem]} does not exist")
-
-        if not file_read and file_exists:
+        elif (not file_read) or reload:
             self.data[stem] = pd.read_csv(self.paths[stem])
+
         return self.data.get(stem, pd.DataFrame())
 
     def get_config(self):
