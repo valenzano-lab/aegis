@@ -7,10 +7,12 @@ def get_total_survivorship(container, iloc=-1):
     y = y.iloc[iloc]
     return y
 
+
 def get_total_mortality(container, iloc=-1):
-    y = None
+    y = analyzer.get_total_mortality(container)
+    y = y.iloc[iloc]
     return y
-    
+
 
 def get_life_expectancy(container):
     phenotypes = container.get_df("phenotypes")

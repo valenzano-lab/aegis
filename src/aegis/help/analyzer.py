@@ -1,9 +1,10 @@
 # analyze feather snapshots
 
 
-# def get_total_mortality(cont):
-#     total_survivorship = get_total_survivorship(cont)
-    # total_mortality =
+def get_total_mortality(cont):
+    total_survivorship = get_total_survivorship(cont)
+    total_mortality = -total_survivorship.pct_change(axis=1)
+    return total_mortality
 
 
 def get_total_survivorship(cont):

@@ -17,34 +17,37 @@ FIGURE_INFO = {
             # "yaxis": {"range": [0, 1]},
         },
     },
-    # "total mortality": {
-    #     "title": "total mortality",
-    #     "plotter": make_plots.get_total_mortality,
-    #     "description": dcc.Markdown(
-    #         """.""",
-    #         mathjax=True,
-    #     ),
-    #     # graph
-    #     "figure_layout": {
-    #         "xaxis_title": "age",
-    #         "yaxis_title": "",
-    #         # "yaxis": {"range": [0, 1]},
-    #     },
-    # },
-    # "total survivorship": {
-    #     "title": "total survivorship",
-    #     "plotter": make_plots.get_total_survivorship,
-    #     "description": dcc.Markdown(
-    #         """Observed expected probability to survive to a specific age (when all sources of mortality are considered). A population average.""",
-    #         mathjax=True,
-    #     ),
-    #     # graph
-    #     "figure_layout": {
-    #         "xaxis_title": "age",
-    #         "yaxis_title": "",
-    #         # "yaxis": {"range": [0, 1]},
-    #     },
-    # },
+    "total mortality": {
+        "title": "total mortality",
+        "plotter": make_plots.get_total_mortality,
+        "description": dcc.Markdown(
+            """Observed (individual-specific, heritable) mortality at a given age (all sources of mortality considered).
+            A population average.
+            Some data points are missing because mortality cannot be calculated for ages at which there are no individuals alive.
+            """,
+            mathjax=True,
+        ),
+        # graph
+        "figure_layout": {
+            "xaxis_title": "age",
+            "yaxis_title": "",
+            # "yaxis": {"range": [0, 1]},
+        },
+    },
+    "total survivorship": {
+        "title": "total survivorship",
+        "plotter": make_plots.get_total_survivorship,
+        "description": dcc.Markdown(
+            """Observed expected probability to survive to a specific age (when all sources of mortality are considered). A population average.""",
+            mathjax=True,
+        ),
+        # graph
+        "figure_layout": {
+            "xaxis_title": "age",
+            "yaxis_title": "",
+            # "yaxis": {"range": [0, 1]},
+        },
+    },
     "intrinsic survivorship": {
         "title": "intrinsic survivorship",
         "plotter": make_plots.get_intrinsic_survivorship,
