@@ -294,6 +294,8 @@ class Ecosystem:
         Killing can occur due to age, genomic death, ecological death, and season shift.
         """
 
+        assert causeofdeath in pan.causeofdeath_valid
+
         # Skip if no one to kill
         if not any(mask_kill):
             return

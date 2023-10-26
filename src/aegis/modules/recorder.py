@@ -47,17 +47,17 @@ class Recorder:
         self._collection = {
             # collected in ecosystem.reproduction
             "age_at_birth": [0] * MAX_LIFESPAN,
-            # collected in ecosystem._kill
-            "age_at_overshoot": [0] * MAX_LIFESPAN,
-            "age_at_genetic": [0] * MAX_LIFESPAN,
-            "age_at_predation": [0] * MAX_LIFESPAN,
-            "age_at_season_shift": [0] * MAX_LIFESPAN,
-            "age_at_end_of_sim": [0] * MAX_LIFESPAN,
-            "age_at_environment": [0] * MAX_LIFESPAN,
-            "age_at_disease": [0] * MAX_LIFESPAN,
             # collected in ecosystem.run_stage
             "additive_age_structure": [0] * MAX_LIFESPAN,
         }
+
+        self._collection.update(
+            {
+                f"age_at_{causeofdeath}": [0] * MAX_LIFESPAN
+                for causeofdeath in pan.causeofdeath_valid
+            }
+        )
+
         self.collection = copy.deepcopy(self._collection)
 
         # Needed for output summary
