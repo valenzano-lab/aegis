@@ -1,4 +1,4 @@
-from aegis.visor.tab_plot.setup import FIG_SETUP
+from aegis.visor.tab_plot.prep_setup import FIG_SETUP
 from aegis.visor.tab_list.callbacks_list import SELECTION
 import plotly.graph_objs as go
 
@@ -61,6 +61,24 @@ def make_hist_figure(id_, xs, ys):
     figure = go.Figure(
         data=[go.Histogram(x=y, name=sim) for y, sim in zip(ys, SELECTION)],
         layout=go.Layout({**FIG_LAYOUT, **FIG_SETUP[id_]["figure_layout"]}),
+    )
+
+    return figure
+
+
+def make_heatmap_figure(id_, xs, ys):
+    figure = go.Figure(
+        data=[
+            go.Heatmap(z=y.T, x=x, name=sim, colorscale="Electric", showscale=False)
+            for x, y, sim in zip(xs, ys, SELECTION)
+        ],
+        layout=go.Layout({**FIG_LAYOUT, **FIG_SETUP[id_]["figure_layout"]}),
+    )
+
+    figure.update_yaxes(
+        autorange="reversed",
+        # ticks="",
+        # showticklabels=False,
     )
 
     return figure

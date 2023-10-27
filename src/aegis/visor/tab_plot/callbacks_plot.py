@@ -3,7 +3,7 @@ from dash import callback, Output, Input, ctx
 from aegis.help.container import Container
 from aegis.visor import funcs
 from aegis.visor.tab_plot import prep_fig
-from aegis.visor.tab_plot.setup import FIG_SETUP
+from aegis.visor.tab_plot.prep_setup import FIG_SETUP
 from aegis.visor.tab_list.callbacks_list import SELECTION
 
 

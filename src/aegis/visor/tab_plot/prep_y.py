@@ -46,3 +46,7 @@ def get_life_expectancy(container):
 # x-axis is other
 def get_derived_allele_freq(container, iloc=-1):
     return analyzer.get_derived_allele_freq(container).iloc[iloc]
+
+
+def get_bit_states(container):
+    return analyzer.get_sorted_allele_frequencies(container)

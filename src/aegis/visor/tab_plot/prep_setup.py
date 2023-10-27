@@ -2,13 +2,31 @@ from dash import dcc
 from aegis.visor.tab_plot import prep_x, prep_y
 
 FIG_SETUP = {
+    "bit states": {
+        "title": "bit states",
+        "prep_y": prep_y.get_bit_states,
+        "prep_x": prep_x.get_stages,
+        "prep_figure": "make_heatmap_figure",
+        "description": dcc.Markdown(
+            """
+            Bit states for each site at a given stage. A population average. \n
+            This plot can only display one selected simulation at a time.
+            """,
+            mathjax=True,
+        ),
+        # graph
+        "figure_layout": {
+            "xaxis_title": "stage",
+            "yaxis_title": "site",
+        },
+    },
     "derived allele frequencies": {
         "title": "derived allele frequencies",
         "prep_y": prep_y.get_derived_allele_freq,
         "prep_x": prep_x.get_ages,
         "prep_figure": "make_hist_figure",
         "description": dcc.Markdown(
-            """.""",
+            """...""",
             mathjax=True,
         ),
         # graph

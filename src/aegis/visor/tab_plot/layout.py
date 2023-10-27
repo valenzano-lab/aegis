@@ -1,5 +1,5 @@
 from dash import html, dcc
-from aegis.visor.tab_plot.setup import FIG_SETUP
+from aegis.visor.tab_plot.prep_setup import FIG_SETUP
 
 
 def get_plot_layout():

@@ -1,7 +1,7 @@
 import numpy as np
 
 
-def get_none(*_):
+def get_none(container, **_):
     return
 
 
