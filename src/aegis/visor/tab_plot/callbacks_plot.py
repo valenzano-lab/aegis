@@ -2,44 +2,56 @@ from dash import callback, Output, Input, ctx
 
 from aegis.help.container import Container
 from aegis.visor import funcs
-from aegis.visor.tab_plot import make_figures
-from aegis.visor.tab_plot.static import FIGURE_INFO
+from aegis.visor.tab_plot import prep_fig
+from aegis.visor.tab_plot.setup import FIG_SETUP
 from aegis.visor.tab_list.callbacks_list import SELECTION
 
 
 containers = {}
 
 
-def make_figure(id_, plot_func):
-    ys = [plot_func(containers[sim]) for sim in SELECTION]
-    xs = make_figures.get_xs(id_, containers, ys)
-    figure = make_figures.make_figure(id_, xs, ys)
+def gen_fig(fig_name):
+    """Generates a figure using the figure setup"""
+
+    # Extract setup
+    fig_setup = FIG_SETUP[fig_name]
+
+    # Prepare x and y data
+    prep_x = fig_setup["prep_x"]
+    prep_y = fig_setup["prep_y"]
+    ys = [prep_y(containers[sim]) for sim in SELECTION]
+    xs = [prep_x(containers[sim], y=y) for sim, y in zip(SELECTION, ys)]
+
+    # Generate go figure
+    prep_figure = getattr(prep_fig, fig_setup["prep_figure"])
+    figure = prep_figure(fig_name, xs, ys)
+
     return figure
 
 
 @callback(
-    [Output(key, "figure") for key in FIGURE_INFO.keys()],
+    [Output(key, "figure") for key in FIG_SETUP.keys()],
     Input("plot-view-button", "n_clicks"),
     Input("reload-plots-button", "n_clicks"),
     prevent_initial_call=True,
 )
 @funcs.print_function_name
-def update_scatter_plot(*_):
+def update_plot_tab(*_):
+    """
+    Update plots whenever someone clicks on the plot button or the reload button.
+    """
     global containers
 
+    # Clear out containers if the user clicked the reload button
     triggered = ctx.triggered_id
     if triggered == "reload-plots-button":
         containers = {}
 
+    # Load selected containers
     for sim in SELECTION:
         if sim not in containers:
             containers[sim] = Container(funcs.BASE_DIR / sim)
 
-    figures = {}
-
+    # Prepare figures
     # BUG no data saved yet on running simulations or interrupted simulations
-
-    for id_, v in FIGURE_INFO.items():
-        figures[id_] = make_figure(id_, v["plotter"])
-
-    return [figures[key] for key in FIGURE_INFO.keys()]
+    return [gen_fig(fig_name) for fig_name in FIG_SETUP]

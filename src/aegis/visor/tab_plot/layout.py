@@ -1,5 +1,5 @@
 from dash import html, dcc
-from aegis.visor.tab_plot.static import FIGURE_INFO
+from aegis.visor.tab_plot.setup import FIG_SETUP
 
 
 def get_plot_layout():
@@ -37,7 +37,7 @@ def get_plot_layout():
                         ],
                         className="figure-card",
                     )
-                    for figure_id, info in FIGURE_INFO.items()
+                    for figure_id, info in FIG_SETUP.items()
                 ],
             ),
         ]

@@ -51,6 +51,40 @@ def get_death_structure(container, targetcause="genetic"):
 
 
 # ANALYZE CSVs
+# -- Genotypic
+def get_sorted_allele_frequencies(container):
+    genotypes = container.get_df("genotypes")
+    total_frequency = genotypes.sum(0)
+    return (
+        genotypes.T.assign(total=total_frequency)
+        .sort_values(by="total", ascending=False)
+        .T.iloc[:-1]
+    )
+
+
+def get_derived_allele_freq(container):
+    genotypes = container.get_df("genotypes")
+    reference = genotypes.round()
+    derived_allele_freq = (
+        genotypes.iloc[1:].reset_index(drop=True)
+        - reference.iloc[:-1].reset_index(drop=True)
+    ).abs()
+    return derived_allele_freq
+
+
+def get_mean_allele_freq(container):
+    genotypes = container.get_df("genotypes")
+    mean_allele_freq = genotypes.mean(0)
+    return mean_allele_freq
+
+
+def get_quantile_allele_freq(container, quantile):
+    genotypes = container.get_df("genotypes")
+    quantile_allele_freq = genotypes.quantile(quantile)
+    return quantile_allele_freq
+
+
+# -- Phenotypic
 def get_life_expectancy(container):
     phenotypes = container.get_df("phenotypes")
     max_age = container.get_config()["MAX_LIFESPAN"]

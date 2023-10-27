@@ -41,3 +41,8 @@ def get_lifetime_reproduction(container):
 
 def get_life_expectancy(container):
     return analyzer.get_life_expectancy(container)
+
+
+# x-axis is other
+def get_derived_allele_freq(container, iloc=-1):
+    return analyzer.get_derived_allele_freq(container).iloc[iloc]
