@@ -52,6 +52,8 @@ def get_xs(id_, containers, ys):
 
 
 def make_figure(id_, xs, ys):
+    figure_info = FIGURE_INFO[id_]
+
     figure = go.Figure(
         data=[
             go.Scatter(
@@ -63,8 +65,7 @@ def make_figure(id_, xs, ys):
             for x, y, sim in zip(xs, ys, SELECTION)
         ],
         layout=go.Layout(
-            **FIGURE_INFO[id_]["figure_layout"],
-            **fig_layout,
+            {**figure_info["figure_layout"], **fig_layout},
         ),
     )
 
@@ -72,9 +73,23 @@ def make_figure(id_, xs, ys):
     maxy = max(max(y) for y in ys) if ys else 1
 
     figure.update_layout(
-        xaxis_range=[0, 1 if maxx < 1 else maxx * 1.05],
-        yaxis_range=[0, 1 if maxy < 1 else maxy * 1.05],
         showlegend=False,
     )
+
+    figure.update_xaxes(
+        showgrid=False,
+        zeroline=False,
+        nticks=10,
+        range=[0, 1 if maxx < 1 else maxx * 1.05],
+    )
+    figure.update_yaxes(
+        showgrid=False,
+        zeroline=False,
+        nticks=10,
+        range=[0, 1.05 if maxy < 1 else maxy * 1.1],
+    )
+
+    if id_ == "birth structure":
+        figure.update_yaxes(range=[0, maxy * 1.05])
 
     return figure

@@ -14,7 +14,6 @@ FIGURE_INFO = {
         "figure_layout": {
             "xaxis_title": "age",
             "yaxis_title": "",
-            # "yaxis": {"range": [0, 1]},
         },
     },
     "total mortality": {
@@ -31,7 +30,6 @@ FIGURE_INFO = {
         "figure_layout": {
             "xaxis_title": "age",
             "yaxis_title": "",
-            # "yaxis": {"range": [0, 1]},
         },
     },
     "total survivorship": {
@@ -45,7 +43,6 @@ FIGURE_INFO = {
         "figure_layout": {
             "xaxis_title": "age",
             "yaxis_title": "",
-            # "yaxis": {"range": [0, 1]},
         },
     },
     "intrinsic survivorship": {
@@ -59,7 +56,6 @@ FIGURE_INFO = {
         "figure_layout": {
             "xaxis_title": "age",
             "yaxis_title": "",
-            # "yaxis": {"range": [0, 1]},
         },
     },
     "life expectancy": {
@@ -89,7 +85,6 @@ FIGURE_INFO = {
         "figure_layout": {
             "xaxis_title": "age",
             "yaxis_title": "",
-            # "yaxis": {"range": [0, 1]},
         },
     },
     "cumulative reproduction": {
@@ -105,7 +100,6 @@ FIGURE_INFO = {
         "figure_layout": {
             "xaxis_title": "age",
             "yaxis_title": "",
-            # "yaxis": {"range": [0, 1]},
         },
     },
     "lifetime reproduction": {
@@ -119,7 +113,6 @@ FIGURE_INFO = {
         "figure_layout": {
             "xaxis_title": "stage",
             "yaxis_title": "",
-            # "yaxis": {"range": [0, 1]},
         },
     },
     "birth structure": {
@@ -133,7 +126,6 @@ FIGURE_INFO = {
         "figure_layout": {
             "xaxis_title": "age",
             "yaxis_title": "",
-            # "yaxis": {"range": [0, 1]},
         },
     },
     "death structure": {
@@ -147,7 +139,6 @@ FIGURE_INFO = {
         "figure_layout": {
             "xaxis_title": "age",
             "yaxis_title": "",
-            # "yaxis": {"range": [0, 1]},
         },
     },
     # "total survivorship": {
