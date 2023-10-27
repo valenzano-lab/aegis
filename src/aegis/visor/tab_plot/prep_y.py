@@ -34,6 +34,13 @@ def get_death_structure(container, iloc=-1):
     return analyzer.get_death_structure(container).iloc[iloc]
 
 
+def get_causes_of_death(container, iloc=-1):
+    age_at = analyzer.get_causes_of_death(container)
+    # compute proportions
+    age_at = age_at.div(age_at.sum(1), axis=0)
+    return age_at.unstack().iloc[iloc].unstack().T
+
+
 # x-axis is stage
 def get_lifetime_reproduction(container):
     return analyzer.get_lifetime_reproduction(container)

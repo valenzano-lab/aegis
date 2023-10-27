@@ -47,6 +47,14 @@ def get_death_structure(container, targetcause="genetic"):
     return age_at_target / age_at_all
 
 
+def get_causes_of_death(container):
+    age_at = {
+        causeofdeath: container.get_df(f"age_at_{causeofdeath}").stack()
+        for causeofdeath in pan.causeofdeath_valid
+    }
+    return pd.DataFrame(age_at)
+
+
 # ANALYZE PICKLED POPULATIONS
 
 

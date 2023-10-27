@@ -20,6 +20,21 @@ FIG_SETUP = {
             "yaxis_title": "site",
         },
     },
+    "causes of death": {
+        "title": "causes of death",
+        "prep_y": prep_y.get_causes_of_death,
+        "prep_x": prep_x.get_ages,
+        "prep_figure": "make_bar_figure",
+        "description": dcc.Markdown(
+            """...""",
+            mathjax=True,
+        ),
+        # graph
+        "figure_layout": {
+            "xaxis_title": "age",
+            "yaxis_title": "",
+        },
+    },
     "derived allele frequencies": {
         "title": "derived allele frequencies",
         "prep_y": prep_y.get_derived_allele_freq,

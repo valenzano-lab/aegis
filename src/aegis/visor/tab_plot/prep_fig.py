@@ -82,3 +82,17 @@ def make_heatmap_figure(id_, xs, ys):
     )
 
     return figure
+
+
+def make_bar_figure(id_, xs, ys):
+    y = ys[0]
+    figure = go.Figure(
+        data=[go.Bar(x=y.index, y=y.loc[:, i], name=i) for i in y.columns],
+        layout=go.Layout(
+            {**FIG_LAYOUT, **FIG_SETUP[id_]["figure_layout"]},
+            barmode="stack",
+            showlegend=True,
+            # width=420,
+        ),
+    )
+    return figure
