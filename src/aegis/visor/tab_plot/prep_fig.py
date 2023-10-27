@@ -3,13 +3,14 @@ from aegis.visor.tab_list.callbacks_list import SELECTION
 import plotly.graph_objs as go
 
 FIG_LAYOUT = dict(
-    width=300,
+    width=450,
     height=300,
-    margin={"t": 0, "r": 0, "b": 0, "l": 0},
+    margin={"t": 0, "r": 150, "b": 0, "l": 0},
     plot_bgcolor="rgba(190, 189, 183, 0.0)",
     paper_bgcolor="rgba(24, 25, 27, 0)",
     font_color="white",
-    showlegend=False,
+    showlegend=True,
+    legend=dict(x=1.05, y=1),
     xaxis=dict(
         showgrid=False,
         zeroline=False,
@@ -67,11 +68,11 @@ def make_hist_figure(id_, xs, ys):
 
 
 def make_heatmap_figure(id_, xs, ys):
+    x = xs[0]
+    y = ys[0]
+    sim = next(iter(SELECTION))
     figure = go.Figure(
-        data=[
-            go.Heatmap(z=y.T, x=x, name=sim, colorscale="Electric", showscale=False)
-            for x, y, sim in zip(xs, ys, SELECTION)
-        ],
+        data=go.Heatmap(z=y.T, x=x, name=sim, colorscale="Electric", showscale=True),
         layout=go.Layout({**FIG_LAYOUT, **FIG_SETUP[id_]["figure_layout"]}),
     )
 
