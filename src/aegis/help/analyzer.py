@@ -34,8 +34,6 @@ def get_death_structure(container, targetcause="genetic"):
         for causeofdeath in pan.causeofdeath_valid
     }
 
-    print(age_at)
-
     pseudocount = 0
 
     age_at_target = age_at[targetcause] + pseudocount
@@ -94,7 +92,8 @@ def get_fertility_potential(container):
 def get_fertility(container):
     fertility_potential = get_fertility_potential(container)
     maturation_age = container.get_config()["MATURATION_AGE"]
-    fertility_potential.iloc[:, :maturation_age] = 0
+    fertility_potential = fertility_potential.T.reset_index(drop=True).T
+    fertility_potential.loc[:, range(0, maturation_age)] = 0
     y = fertility_potential
     return y
 
