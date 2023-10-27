@@ -41,7 +41,7 @@ FIG_SETUP = {
         "prep_x": prep_x.get_ages,
         "prep_figure": "make_hist_figure",
         "description": dcc.Markdown(
-            """...""",
+            """Sites with derived allele frequency of 0 are ignored.""",
             mathjax=True,
         ),
         # graph
