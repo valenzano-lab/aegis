@@ -50,18 +50,18 @@ def toggle_display(*_):
     }
     return styles[triggered]
 
-
-@callback(
-    Output("plot-view-button", "className"),
-    Output("result-view-button", "className"),
-    Input("results-exist-interval", "n_intervals"),
-)
-def block_view_buttons(_):
-    paths = funcs.get_sim_paths()
-    if paths:
-        return "view-button", "view-button"
-    else:
-        return "view-button disabled", "view-button disabled"
+# TODO what is this for
+# @callback(
+#     Output("plot-view-button", "className"),
+#     Output("result-view-button", "className"),
+#     Input("results-exist-interval", "n_intervals"),
+# )
+# def block_view_buttons(_):
+#     paths = funcs.get_sim_paths()
+#     if paths:
+#         return "view-button", "view-button"
+#     else:
+#         return "view-button disabled", "view-button disabled"
 
 
 # @callback(
