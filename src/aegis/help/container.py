@@ -81,3 +81,6 @@ class Container:
 
         if index < len(paths):
             return pd.read_feather(paths[index])
+
+    def __str__(self):
+        return self.basepath.stem
