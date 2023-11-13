@@ -33,7 +33,7 @@ class Container:
                 nums = dhm.replace("`", ":").split(":")
                 return int(nums[0]) * 24 * 60 + int(nums[1]) * 60 + int(nums[2])
 
-            df[["ETA", "t1M", "runtime"]].applymap(dhm_inverse)
+            df[["ETA", "t1M", "runtime"]].map(dhm_inverse)
             self.data["log"] = df
         return self.data["log"]
 
