@@ -9,7 +9,7 @@ def get_domains():
     return {p.domain for p in params.values()}
 
 
-def validate(pdict):
+def validate(pdict, validate_resrange=False):
     for key, val in pdict.items():
         # Validate key
         if all(key != p.key for p in params.values()):
@@ -19,10 +19,23 @@ def validate(pdict):
         params[key].validate_dtype(val)
         params[key].validate_inrange(val)
 
+        if validate_resrange:
+            params[key].validate_resrange(val)
+
 
 class Param:
     def __init__(
-        self, key, name, domain, default, info, dtype, drange, inrange=lambda x: True
+        self,
+        key,
+        name,
+        domain,
+        default,
+        info,
+        dtype,
+        drange,
+        inrange=lambda x: True,
+        resrange=lambda x: True,
+        resrange_info="",
     ):
         self.key = key
         self.name = name
@@ -32,6 +45,8 @@ class Param:
         self.dtype = dtype
         self.drange = drange
         self.inrange = inrange
+        self.resrange = resrange
+        self.resrange_info = resrange_info
 
     def convert(self, value):
         if value is None or value == "":
@@ -84,6 +99,13 @@ class Param:
             f"{self.key} is set to be '{value}' which is outside of the valid range '{self.drange}'."
         )
 
+    def validate_resrange(self, value):
+        if self.resrange(value):
+            return
+        raise ValueError(
+            f"{self.key} is set to be '{value}' which is outside of the valid server range '{self.drange}'."
+        )
+
 
 # You need the keys so you can find the param (in a list, you cannot)
 params = {
@@ -116,6 +138,8 @@ params = {
         dtype=int,
         drange="[1, inf)",
         inrange=lambda x: x >= 1,
+        resrange=lambda x: x <= 1000000,
+        resrange_info="[1,1000000]",
     ),
     "LOGGING_RATE_": Param(
         key="LOGGING_RATE_",
@@ -136,6 +160,8 @@ params = {
         dtype=int,
         drange="[0, inf)",
         inrange=lambda x: x >= 0,
+        resrange=lambda x: x >= 1000 or x == 0,
+        resrange_info="0 or [1000, inf)",
     ),
     "SNAPSHOT_RATE_": Param(
         key="SNAPSHOT_RATE_",
@@ -146,6 +172,8 @@ params = {
         dtype=int,
         drange="[0, inf)",
         inrange=lambda x: x >= 0,
+        resrange=lambda x: x >= 1000 or x == 0,
+        resrange_info="0 or [1000, inf)",
     ),
     "VISOR_RATE_": Param(
         key="VISOR_RATE_",
@@ -166,6 +194,8 @@ params = {
         dtype=int,
         drange="[0, inf)",
         inrange=lambda x: x >= 0,
+        resrange=lambda x: x >= 100 or x == 0,
+        resrange_info="0 or [100, inf)",
     ),
     "POPGENSTATS_SAMPLE_SIZE_": Param(
         key="POPGENSTATS_SAMPLE_SIZE_",
@@ -186,6 +216,8 @@ params = {
         dtype=int,
         drange="[1, inf)",
         inrange=lambda x: x >= 1,
+        resrange=lambda x: x == 1,
+        resrange_info="1",
     ),
     "MAX_POPULATION_SIZE": Param(
         key="MAX_POPULATION_SIZE",
@@ -196,6 +228,8 @@ params = {
         dtype=int,
         drange="[1, inf)",
         inrange=lambda x: x >= 1,
+        resrange=lambda x: x <= 10000,
+        resrange_info="[1,100000]",
     ),
     "OVERSHOOT_EVENT": Param(
         key="OVERSHOOT_EVENT",
@@ -253,6 +287,8 @@ params = {
         dtype=int,
         drange="[1, inf)",
         inrange=lambda x: x >= 1,
+        resrange=lambda x: x <= 100,
+        resrange_info="[1,100]",
     ),
     "MATURATION_AGE": Param(
         key="MATURATION_AGE",
@@ -273,6 +309,8 @@ params = {
         dtype=int,
         drange="[1, inf)",
         inrange=lambda x: x >= 1,
+        resrange=lambda x: x <= 10,
+        resrange_info="[1,10]",
     ),
     "HEADSUP": Param(
         key="HEADSUP",

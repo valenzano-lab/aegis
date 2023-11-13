@@ -76,7 +76,7 @@ class Panconfiguration:
             params.update(default_config_params)
             params.update(custom_config_params)
 
-            config.validate(params)
+            config.validate(params, validate_resrange=True)
 
             # for key, val in params.items():
             #     # Validate key
