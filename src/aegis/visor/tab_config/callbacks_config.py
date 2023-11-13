@@ -42,9 +42,22 @@ def run_simulation(n_clicks, filename, *values):
 @callback(
     Output("simulation-run-button", "disabled"),
     Input("config-make-text", "value"),
+    [
+        Input(f"config-{k}", "value")
+        for k, v in DEFAULT_CONFIG_DICT.items()
+        if not isinstance(v, list)
+    ],
 )
 @funcs.print_function_name
-def block_sim_button(filename):
+def block_sim_button(filename, *values):
+    for k, value in zip(DEFAULT_CONFIG_DICT, values):
+        if value != "" and value is not None:
+            param = config.params[k]
+            val = param.convert(value)
+            valid = param.resrange(val)
+            if not valid:
+                return True
+
     if filename is None or filename == "" or "." in filename:
         return True
 
