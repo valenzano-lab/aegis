@@ -428,6 +428,12 @@ button:disabled {
   color: var(--lite-black);
 }
 
+#plot-view-button.disabled 
+{
+  pointer-events: none;
+  background-color: red !important;
+}
+
 button.checklist.checked {
   background-color: var(--sec);
   color: white;

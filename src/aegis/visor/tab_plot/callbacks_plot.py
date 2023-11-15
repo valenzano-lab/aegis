@@ -1,4 +1,4 @@
-from dash import callback, Output, Input, ctx
+from dash import callback, Output, Input, ctx, ALL, State
 
 from aegis.help.container import Container
 from aegis.visor import funcs
@@ -27,6 +27,19 @@ def gen_fig(fig_name):
     figure = prep_figure(fig_name, xs, ys)
 
     return figure
+
+
+@callback(
+    Output("plot-view-button", "className"),
+    Input({"type": "selection-state", "index": ALL}, "data"),
+    State("plot-view-button", "className"),
+)
+@funcs.print_function_name
+def disable_plot_tab(data, className):
+    className = className.replace(" disabled", "")
+    if data == [] or all(not selected for filename, selected in data):
+        return className + " disabled"
+    return className
 
 
 @callback(
