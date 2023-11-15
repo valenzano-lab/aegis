@@ -227,7 +227,7 @@ h1 {
 }
 
 .config-table,
-.result-table {
+#list-table {
   border-spacing: 0px;
   font-size: 14px;
   width: 100%;
@@ -262,7 +262,7 @@ tr:nth-of-type(odd) {
 }
 
 .config-table th,
-.result-table th {
+#list-table th {
   color: var(--prim);
 }
 
@@ -384,7 +384,7 @@ table {
 table:hover {
 }
 
-.result-table {
+#list-table {
   text-align: center;
   /* border: solid black 0px; */
 }

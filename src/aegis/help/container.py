@@ -13,6 +13,7 @@ class Container:
 
     def __init__(self, basepath):
         self.basepath = pathlib.Path(basepath).absolute()
+        self.name = self.basepath.stem
         self.paths = {
             path.stem: path
             for path in self.basepath.glob("**/*")
@@ -83,4 +84,4 @@ class Container:
             return pd.read_feather(paths[index])
 
     def __str__(self):
-        return self.basepath.stem
+        return self.name

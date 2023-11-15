@@ -1,5 +1,6 @@
 from dash import html, dcc
 from aegis.help import config
+from aegis.visor import funcs
 
 # TODO change text
 texts_domain = {
@@ -47,6 +48,7 @@ header = html.Tr(
 )
 
 
+@funcs.print_function_name
 def get_config_layout():
     # Group parameters by domain
     subsets = {domain: [] for domain in texts_domain.keys()}
@@ -76,6 +78,7 @@ def get_config_layout():
     )
 
 
+@funcs.print_function_name
 def get_row(v):
     return html.Tr(
         [
@@ -110,6 +113,7 @@ def get_row(v):
     )
 
 
+@funcs.print_function_name
 def get_table(params_subset):
     return html.Table(
         className="config-table",

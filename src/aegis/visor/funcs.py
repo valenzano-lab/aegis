@@ -54,6 +54,10 @@ def get_sim_paths():
     return [p for p in BASE_DIR.iterdir() if p.is_dir()]
 
 
+def get_sims():
+    return [p.stem for p in get_sim_paths()]
+
+
 def sim_exists(filename: str) -> bool:
     paths = get_sim_paths()
     return any(path.stem == filename for path in paths)

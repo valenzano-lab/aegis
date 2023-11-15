@@ -1,15 +1,15 @@
 from dash import html, dcc
 from aegis.visor.tab_config.layout import get_config_layout
-from aegis.visor.tab_plot.layout import get_plot_layout
 from aegis.visor.tab_list.layout import get_list_layout
+from aegis.visor.tab_plot.layout import get_plot_layout
 
 
 app_layout = html.Div(
     id="main-container",
     children=[
         # checkers
-        dcc.Interval(id="results-exist-interval", interval=1000, n_intervals=0),
-        dcc.Interval(id="process-monitor-interval", interval=1000, n_intervals=0),
+        # dcc.Interval(id="results-exist-interval", interval=1000, n_intervals=0),
+        # dcc.Interval(id="process-monitor-interval", interval=1000, n_intervals=0),
         # TITLE SECTION
         html.Div(
             style={"padding": "1rem 0rem 2rem 0"},
@@ -48,9 +48,9 @@ app_layout = html.Div(
                                             },
                                         ),
                                         html.Label("list"),
-                                        # html.Button("result view", id="result-view-button"),
+                                        # html.Button("list view", id="list-view-button"),
                                     ],
-                                    id="result-view-button",
+                                    id="list-view-button",
                                     className="view-button",
                                 ),
                                 html.Div(
@@ -89,7 +89,7 @@ app_layout = html.Div(
                                     ],
                                 ),
                                 html.Div(
-                                    id="result-section-control",
+                                    id="list-section-control",
                                     style={"display": "none"},
                                     children=[],
                                 ),

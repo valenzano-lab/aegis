@@ -8,16 +8,16 @@ import subprocess
     Output("plot-section-control", "style"),
     Output("sim-section", "style"),
     Output("sim-section-control", "style"),
-    Output("result-section", "style"),
-    Output("result-section-control", "style"),
-    # Output("main-container", "className"),
-    Input("plot-view-button", "n_clicks"),
+    Output("list-section", "style"),
+    Output("list-section-control", "style"),
     Input("config-view-button", "n_clicks"),
-    Input("result-view-button", "n_clicks"),
+    Input("list-view-button", "n_clicks"),
+    Input("plot-view-button", "n_clicks"),
     prevent_initial_call=True,
 )
 @funcs.print_function_name
 def toggle_display(*_):
+    
     triggered = ctx.triggered_id.split("-")[0]
     styles = {
         "plot": [
@@ -38,7 +38,7 @@ def toggle_display(*_):
             {"display": "none"},
             # "bluish-bckg",
         ],
-        "result": [
+        "list": [
             {"display": "none"},
             {"display": "none"},
             {"display": "none"},
@@ -53,7 +53,7 @@ def toggle_display(*_):
 # TODO what is this for
 # @callback(
 #     Output("plot-view-button", "className"),
-#     Output("result-view-button", "className"),
+#     Output("list-view-button", "className"),
 #     Input("results-exist-interval", "n_intervals"),
 # )
 # def block_view_buttons(_):
@@ -76,11 +76,11 @@ def toggle_display(*_):
 #     ).stdout.decode()
 
 #     if stdout:
-#         results = [
+#         lists = [
 #             line.split("share/aegis/")[1].strip(".yml")
 #             for line in stdout.strip().split("\n")
 #         ]
-#         sims = [result for result in results]
+#         sims = [list for list in lists]
 #         print(f"Simulations running: {', '.join(sims)}")
 #         if sims:
 #             if n_clicks is None:
