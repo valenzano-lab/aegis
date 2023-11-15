@@ -9,15 +9,16 @@ DEFAULT_CONFIG_DICT = config.get_default_parameters()
     Output("config-make-text", "value"),
     Input("simulation-run-button", "n_clicks"),
     State("config-make-text", "value"),
-    [
-        State(f"config-{k}", "value")
-        for k, v in DEFAULT_CONFIG_DICT.items()
-        if not isinstance(v, list)
-    ],
+    State({"type": "config-input", "index": ALL}, "value"),
+    # [
+    #     State(f"config-{k}", "value")
+    #     for k, v in DEFAULT_CONFIG_DICT.items()
+    #     if not isinstance(v, list)
+    # ],
     prevent_initial_call=True,
 )
 @funcs.print_function_name
-def run_simulation(n_clicks, filename, *values):
+def run_simulation(n_clicks, filename, values):
     if n_clicks is None:
         return
 
@@ -38,14 +39,15 @@ def run_simulation(n_clicks, filename, *values):
 @callback(
     Output("simulation-run-button", "disabled"),
     Input("config-make-text", "value"),
-    [
-        Input(f"config-{k}", "value")
-        for k, v in DEFAULT_CONFIG_DICT.items()
-        if not isinstance(v, list)
-    ],
+    Input({"type": "config-input", "index": ALL}, "value"),
+    # [
+    #     Input(f"config-{k}", "value")
+    #     for k, v in DEFAULT_CONFIG_DICT.items()
+    #     if not isinstance(v, list)
+    # ],
 )
 @funcs.print_function_name
-def block_sim_button(filename, *values):
+def block_sim_button(filename, values):
     for k, value in zip(DEFAULT_CONFIG_DICT, values):
         if value != "" and value is not None:
             param = config.params[k]

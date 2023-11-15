@@ -89,28 +89,28 @@ def get_row(v):
 
     return html.Tr(
         [
+            # PARAMETER
             html.Td(v.get_name(), style={"padding-left": "1.2rem"}),
+            # VALUE
             html.Td(
                 children=dcc.Input(
                     type="text",
                     placeholder=str(v.default) if v.default is not None else "",
-                    id=f"config-{v.key}",
+                    # id=f"config-{v.key}",
+                    id={"type": "config-input", "index": v.key},
                     autoComplete="off",
                 ),
             ),
+            # TYPE
             html.Td(
                 children=html.Label(
                     v.dtype.__name__,
                     className=f"dtype-{v.dtype.__name__} dtype",
                 )
             ),
+            # RANGE
             html.Td(children=v.drange, className="data-range"),
-            # html.Td(
-            #     children=html.Label(
-            #         v.domain,
-            #         className=f"domain-{v.domain} domain",
-            #     ),
-            # ),
+            # DESCRIPTION
             html.Td(
                 children=[
                     v.info + ".",
