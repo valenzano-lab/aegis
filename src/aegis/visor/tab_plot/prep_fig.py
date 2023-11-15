@@ -1,5 +1,4 @@
 from aegis.visor.tab_plot.prep_setup import FIG_SETUP
-from aegis.visor.tab_list.callbacks_list import SELECTION
 import plotly.graph_objs as go
 
 FIG_LAYOUT = dict(
@@ -30,11 +29,11 @@ FIG_LAYOUT = dict(
 )
 
 
-def make_scatter_figure(id_, xs, ys):
+def make_scatter_figure(id_, xs, ys, selected_sims):
     figure = go.Figure(
         data=[
             go.Scatter(x=x, y=y, mode="markers", name=sim)
-            for x, y, sim in zip(xs, ys, SELECTION)
+            for x, y, sim in zip(xs, ys, selected_sims)
         ],
         layout=go.Layout({**FIG_LAYOUT, **FIG_SETUP[id_]["figure_layout"]}),
     )
@@ -58,19 +57,19 @@ def make_scatter_figure(id_, xs, ys):
     return figure
 
 
-def make_hist_figure(id_, xs, ys):
+def make_hist_figure(id_, xs, ys, selected_sims):
     figure = go.Figure(
-        data=[go.Histogram(x=y, name=sim) for y, sim in zip(ys, SELECTION)],
+        data=[go.Histogram(x=y, name=sim) for y, sim in zip(ys, selected_sims)],
         layout=go.Layout({**FIG_LAYOUT, **FIG_SETUP[id_]["figure_layout"]}),
     )
 
     return figure
 
 
-def make_heatmap_figure(id_, xs, ys):
+def make_heatmap_figure(id_, xs, ys, selected_sims):
     x = xs[0]
     y = ys[0]
-    sim = next(iter(SELECTION))
+    sim = next(iter(selected_sims))
     figure = go.Figure(
         data=go.Heatmap(z=y.T, x=x, name=sim, colorscale="Electric", showscale=True),
         layout=go.Layout({**FIG_LAYOUT, **FIG_SETUP[id_]["figure_layout"]}),
@@ -85,7 +84,7 @@ def make_heatmap_figure(id_, xs, ys):
     return figure
 
 
-def make_bar_figure(id_, xs, ys):
+def make_bar_figure(id_, xs, ys, selected_sims):
     y = ys[0]
     figure = go.Figure(
         data=[go.Bar(x=y.index, y=y.loc[:, i], name=i) for i in y.columns],

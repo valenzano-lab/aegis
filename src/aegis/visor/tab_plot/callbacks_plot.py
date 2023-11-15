@@ -4,13 +4,12 @@ from aegis.help.container import Container
 from aegis.visor import funcs
 from aegis.visor.tab_plot import prep_fig
 from aegis.visor.tab_plot.prep_setup import FIG_SETUP
-from aegis.visor.tab_list.callbacks_list import SELECTION
 
 
 containers = {}
 
 
-def gen_fig(fig_name):
+def gen_fig(fig_name, selected_sims):
     """Generates a figure using the figure setup"""
 
     # Extract setup
@@ -19,12 +18,12 @@ def gen_fig(fig_name):
     # Prepare x and y data
     prep_x = fig_setup["prep_x"]
     prep_y = fig_setup["prep_y"]
-    ys = [prep_y(containers[sim]) for sim in SELECTION]
-    xs = [prep_x(containers[sim], y=y) for sim, y in zip(SELECTION, ys)]
+    ys = [prep_y(containers[sim]) for sim in selected_sims]
+    xs = [prep_x(containers[sim], y=y) for sim, y in zip(selected_sims, ys)]
 
     # Generate go figure
     prep_figure = getattr(prep_fig, fig_setup["prep_figure"])
-    figure = prep_figure(fig_name, xs, ys)
+    figure = prep_figure(fig_name, xs, ys, selected_sims)
 
     return figure
 
@@ -46,10 +45,11 @@ def disable_plot_tab(data, className):
     [Output(key, "figure") for key in FIG_SETUP.keys()],
     Input("plot-view-button", "n_clicks"),
     Input("reload-plots-button", "n_clicks"),
+    State({"type": "selection-state", "index": ALL}, "data"),
     prevent_initial_call=True,
 )
 @funcs.print_function_name
-def update_plot_tab(*_):
+def update_plot_tab(n_clicks1, n_clicks2, selection_states):
     """
     Update plots whenever someone clicks on the plot button or the reload button.
     """
@@ -61,10 +61,15 @@ def update_plot_tab(*_):
         containers = {}
 
     # Load selected containers
-    for sim in SELECTION:
-        if sim not in containers:
-            containers[sim] = Container(funcs.BASE_DIR / sim)
+
+    for filename, selected in selection_states:
+        if selected and filename not in containers:
+            containers[filename] = Container(funcs.BASE_DIR / filename)
+
+    selected_sims = [filename for filename, selected in selection_states if selected]
+
+    print(selected_sims)
 
     # Prepare figures
     # BUG no data saved yet on running simulations or interrupted simulations
-    return [gen_fig(fig_name) for fig_name in FIG_SETUP]
+    return [gen_fig(fig_name, selected_sims) for fig_name in FIG_SETUP]

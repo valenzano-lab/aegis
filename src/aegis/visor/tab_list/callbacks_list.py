@@ -1,11 +1,7 @@
-from dash import html, dcc, callback, Output, Input, State, ALL, MATCH, ctx
-
+from dash import callback, Output, Input, State, ALL, MATCH, ctx
 from aegis.visor import funcs
 import subprocess
-
 from aegis.visor.tab_list.layout import make_table
-
-SELECTION = set()
 
 
 # # DELETE

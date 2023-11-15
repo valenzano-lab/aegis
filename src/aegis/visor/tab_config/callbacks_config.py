@@ -2,8 +2,6 @@ from dash import html, dcc, callback, Output, Input, State, ALL, MATCH
 from aegis.visor import funcs
 from aegis.help import config
 
-from aegis.visor.tab_list.callbacks_list import SELECTION
-
 DEFAULT_CONFIG_DICT = config.get_default_parameters()
 
 
@@ -30,8 +28,6 @@ def run_simulation(n_clicks, filename, *values):
         if not isinstance(v, list)
     }
     funcs.make_config_file(filename, custom_config)
-
-    SELECTION.add(filename)
 
     # run simulation
     funcs.run(filename)
