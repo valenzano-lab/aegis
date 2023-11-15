@@ -8,8 +8,11 @@ import aegis.visor.tab_list.callbacks_list
 
 
 def run():
-
-    app = Dash(__name__, suppress_callback_exceptions=True)
+    app = Dash(
+        __name__,
+        suppress_callback_exceptions=True,
+        update_title=None,
+    )
     app._favicon = "favicon.ico"
     app.title = "AEGIS visualizer"
     app.layout = app_layout
