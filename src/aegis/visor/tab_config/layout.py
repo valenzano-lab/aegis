@@ -80,6 +80,13 @@ def get_config_layout():
 
 @funcs.print_function_name
 def get_row(v):
+    if v.resrange_info:
+        resrange_info_message = (
+            f"Allowed parameter range for the server is {v.resrange_info}."
+        )
+    else:
+        resrange_info_message = ""
+
     return html.Tr(
         [
             html.Td(v.get_name(), style={"padding-left": "1.2rem"}),
@@ -105,7 +112,13 @@ def get_row(v):
             #     ),
             # ),
             html.Td(
-                v.info,
+                children=[
+                    v.info + ".",
+                    html.P(
+                        resrange_info_message,
+                        className="resrange_info_message",
+                    ),
+                ],
                 className="td-info",
                 style={"padding-right": "0.8rem"},
             ),

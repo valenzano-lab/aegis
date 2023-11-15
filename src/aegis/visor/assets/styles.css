@@ -280,6 +280,12 @@ tr:nth-of-type(odd) {
   color: var(--offwhite);
 }
 
+.resrange_info_message {
+  font-style: italic;
+  margin: 0;
+  color: var(--litelite-black);
+}
+
 label,
 input,
 button {
@@ -428,8 +434,7 @@ button:disabled {
   color: var(--lite-black);
 }
 
-#plot-view-button.disabled 
-{
+#plot-view-button.disabled {
   pointer-events: none;
   background-color: red !important;
 }
