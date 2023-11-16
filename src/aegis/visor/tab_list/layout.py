@@ -81,7 +81,9 @@ def make_table_row(
                         "index": filename,
                     },
                     value=filename,
-                ),
+                )
+                if filename != "default"
+                else None,
                 style={"padding-right": "1rem"},
             ),
         ],
