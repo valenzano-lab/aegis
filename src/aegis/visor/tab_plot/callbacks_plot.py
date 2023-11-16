@@ -7,8 +7,6 @@ from aegis.visor.tab_plot import prep_fig
 from aegis.visor.tab_plot.prep_setup import FIG_SETUP
 
 
-
-
 def gen_fig(fig_name, selected_sims, containers):
     """Generates a figure using the figure setup"""
 
@@ -46,7 +44,6 @@ def disable_plot_tab(data, className):
     Input("plot-view-button", "n_clicks"),
     Input("reload-plots-button", "n_clicks"),
     State({"type": "selection-state", "index": ALL}, "data"),
-    prevent_initial_call=True,
 )
 @funcs.print_function_name
 def update_plot_tab(n_clicks1, n_clicks2, selection_states):
@@ -54,8 +51,11 @@ def update_plot_tab(n_clicks1, n_clicks2, selection_states):
     Update plots whenever someone clicks on the plot button or the reload button.
     """
 
-    containers = {}
+    # If initial call, run the function so that the figures get initialized
+    if ctx.triggered_id is None:  # if initial call
+        selection_states = [["default", True]]
 
+    containers = {}
     for filename, selected in selection_states:
         if selected and filename not in containers:
             containers[filename] = Container(funcs.BASE_DIR / filename)
