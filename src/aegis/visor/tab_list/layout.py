@@ -5,13 +5,13 @@ from aegis.help.container import Container
 
 
 @funcs.print_function_name
-def make_table_row(container, selection_state):
-    if len(container.get_log()) > 0:
-        logline = container.get_log().iloc[-1].to_dict()
+def make_table_row(
+    selection_state, sim_data, log, input_summary, output_summary, basepath, filename
+):
+    if len(log) > 0:
+        logline = log.iloc[-1].to_dict()
     else:
         logline = {"ETA": None, "stage": None, "stg/min": None}
-    input_summary = container.get_input_summary()
-    output_summary = container.get_output_summary()
 
     if output_summary is None:
         status = ["not finished", "not extinct"]
@@ -36,8 +36,6 @@ def make_table_row(container, selection_state):
         else None
     )
 
-    filename = container.basepath.stem
-    basepath = container.basepath
     extinct = status[1]
     eta = logline["ETA"]
 
@@ -47,6 +45,10 @@ def make_table_row(container, selection_state):
             dcc.Store(
                 {"type": "selection-state", "index": filename},
                 data=(filename, selection_state),
+            ),
+            dcc.Store(
+                {"type": "sim-data", "index": filename},
+                data=sim_data,
             ),
             html.Td(
                 filename,
@@ -88,10 +90,9 @@ def make_table_row(container, selection_state):
 
 
 @funcs.print_function_name
-def make_table(selection_states={}):
+def make_table(selection_states={}, sim_data=None):
     # Get data from folders
     paths = funcs.get_sim_paths()
-    containers = [Container(path) for path in paths]
 
     # Make table
     # - specify table header
@@ -110,11 +111,19 @@ def make_table(selection_states={}):
     table = [table_header]
 
     # - add table rows
-    for container in containers:
+    for path in paths:
+        container = Container(path)
         filename = container.basepath.stem
         selection_state = selection_states.get(filename, False)
-        print(selection_state)
-        element = make_table_row(container, selection_state=selection_state)
+        element = make_table_row(
+            selection_state=selection_state,
+            sim_data=sim_data,
+            log=container.get_log(),
+            input_summary=container.get_input_summary(),
+            output_summary=container.get_output_summary(),
+            basepath=container.basepath,
+            filename=filename,
+        )
         table.append(element)
 
     return html.Table(children=table, id="list-table")

@@ -85,3 +85,6 @@ class Container:
 
     def __str__(self):
         return self.name
+
+    def get_json(self):
+        return json.dumps(self)

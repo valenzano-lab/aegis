@@ -1,15 +1,15 @@
 from dash import callback, Output, Input, ctx, ALL, State
 
+import logging
 from aegis.help.container import Container
 from aegis.visor import funcs
 from aegis.visor.tab_plot import prep_fig
 from aegis.visor.tab_plot.prep_setup import FIG_SETUP
 
 
-containers = {}
 
 
-def gen_fig(fig_name, selected_sims):
+def gen_fig(fig_name, selected_sims, containers):
     """Generates a figure using the figure setup"""
 
     # Extract setup
@@ -53,23 +53,16 @@ def update_plot_tab(n_clicks1, n_clicks2, selection_states):
     """
     Update plots whenever someone clicks on the plot button or the reload button.
     """
-    global containers
 
-    # Clear out containers if the user clicked the reload button
-    triggered = ctx.triggered_id
-    if triggered == "reload-plots-button":
-        containers = {}
-
-    # Load selected containers
+    containers = {}
 
     for filename, selected in selection_states:
         if selected and filename not in containers:
             containers[filename] = Container(funcs.BASE_DIR / filename)
 
     selected_sims = [filename for filename, selected in selection_states if selected]
-
-    print(selected_sims)
+    logging.info("Plotting: " + ", ".join(selected_sims))
 
     # Prepare figures
     # BUG no data saved yet on running simulations or interrupted simulations
-    return [gen_fig(fig_name, selected_sims) for fig_name in FIG_SETUP]
+    return [gen_fig(fig_name, selected_sims, containers) for fig_name in FIG_SETUP]
