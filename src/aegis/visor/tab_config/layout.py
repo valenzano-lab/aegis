@@ -99,6 +99,7 @@ def get_row(v):
                     # id=f"config-{v.key}",
                     id={"type": "config-input", "index": v.key},
                     autoComplete="off",
+                    className="config-input-class",
                 ),
             ),
             # TYPE

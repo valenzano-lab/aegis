@@ -1,4 +1,4 @@
-from dash import html, dcc, callback, Output, Input, State, ALL, MATCH
+from dash import html, dcc, callback, Output, Input, State, ALL, MATCH, ctx
 from aegis.visor import funcs
 from aegis.help import config
 
@@ -63,3 +63,45 @@ def block_sim_button(filename, values):
     if sim_exists:
         return True
     return False
+
+
+@callback(
+    # Output("simulation-run-button", "disabled"),
+    # Input("config-make-text", "value"),
+    Output({"type": "config-input", "index": MATCH}, "className"),
+    Input({"type": "config-input", "index": MATCH}, "value"),
+    State({"type": "config-input", "index": MATCH}, "className"),
+    prevent_initial_call=True,
+)
+@funcs.print_function_name
+def block_config_input(value, className):
+    print(className, "a")
+    if ctx.triggered_id is None:
+        return className
+
+    param = config.params[ctx.triggered_id["index"]]
+
+    className = className.replace(" disabled", "")
+
+    inside_range = param.resrange(param.convert(value))
+    if not inside_range:
+        className += " disabled"
+
+    print(className, "a")
+    return className
+
+    # for k, value in zip(DEFAULT_CONFIG_DICT, values):
+    #     if value != "" and value is not None:
+    #         param = config.params[k]
+    #         val = param.convert(value)
+    #         valid = param.resrange(val)
+    #         if not valid:
+    #             return True
+
+    # if filename is None or filename == "" or "." in filename:
+    #     return True
+
+    # sim_exists = funcs.sim_exists(filename)
+    # if sim_exists:
+    #     return True
+    # return False

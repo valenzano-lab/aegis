@@ -157,6 +157,12 @@ button:active {
   margin: 3px 0;
 }
 
+.config-input-class.disabled {
+  /* color:red !important; */
+  background-color: red;
+  border: none;
+}
+
 .dropdown-div {
   display: flex;
 }
