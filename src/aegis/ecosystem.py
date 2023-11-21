@@ -154,6 +154,9 @@ class Ecosystem:
             self.population.genomes, self._get_evaluation
         )  # TODO defers calculation of mutation rates; hacky
 
+        # Memory use
+        self.recorder.record_memory_use()
+
     ###############
     # STAGE LOGIC #
     ###############

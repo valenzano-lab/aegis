@@ -4,6 +4,7 @@ import json
 import time
 import copy
 import pickle
+import psutil
 
 from aegis.panconfiguration import pan
 from aegis.modules.popgenstats import PopgenStats
@@ -63,6 +64,10 @@ class Recorder:
         # Needed for output summary
         self.extinct = False
 
+        # Memory utilization
+        self.memory_use = []
+        self.psutil_process = psutil.Process()
+
         # PopgenStats
         self.popgenstats = PopgenStats()
 
@@ -85,6 +90,12 @@ class Recorder:
     # ===============================
     # RECORDING METHOD I. (snapshots)
     # ===============================
+
+    def record_memory_use(self):
+        memory_use = self.psutil_process.memory_info()[0] / float(2**20)
+        self.memory_use.append(memory_use)
+        if len(self.memory_use) > 1000:
+            self.memory_use = [np.median(self.memory_use)]
 
     def record_visor(self, population):
         """Record data that is needed by visor."""
@@ -194,6 +205,7 @@ class Recorder:
             "time_start": pan.time_start,
             "time_end": time.time(),
             "jupyter_path": str(pan.output_path.absolute()),
+            "memory_use": np.median(self.memory_use),
         }
         with open(self.paths["output_summary"] / "output_summary.json", "w") as f:
             json.dump(summary, f, indent=4)

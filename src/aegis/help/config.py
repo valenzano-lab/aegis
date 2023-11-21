@@ -1,4 +1,5 @@
 import logging
+import numpy as np
 
 
 def get_default_parameters():
@@ -36,6 +37,7 @@ class Param:
         inrange=lambda x: True,
         resrange=lambda x: True,
         resrange_info="",
+        evalrange=None,
     ):
         self.key = key
         self.name = name
@@ -47,6 +49,7 @@ class Param:
         self.inrange = inrange
         self.resrange = resrange
         self.resrange_info = resrange_info
+        self.evalrange = evalrange
 
     def convert(self, value):
         if value is None or value == "":
@@ -106,6 +109,11 @@ class Param:
             f"{self.key} is set to be '{value}' which is outside of the valid server range '{self.drange}'."
         )
 
+    def generate_full_evalrange(self):
+        if self.evalrange is not None:
+            n_datapoints = 10
+            return np.linspace(self.evalrange[0], self.evalrange[1], n_datapoints)
+
 
 # You need the keys so you can find the param (in a list, you cannot)
 params = {
@@ -140,6 +148,7 @@ params = {
         inrange=lambda x: x >= 1,
         resrange=lambda x: x <= 1000000,
         resrange_info="[1,1000000]",
+        evalrange=[1, 10000000],
     ),
     "LOGGING_RATE_": Param(
         key="LOGGING_RATE_",
@@ -150,6 +159,7 @@ params = {
         dtype=int,
         drange="[0, inf)",
         inrange=lambda x: x >= 0,
+        evalrange=[1, 10000],
     ),
     "PICKLE_RATE_": Param(
         key="PICKLE_RATE_",
@@ -162,6 +172,7 @@ params = {
         inrange=lambda x: x >= 0,
         resrange=lambda x: x >= 1000 or x == 0,
         resrange_info="0 or [1000, inf)",
+        evalrange=[1, 10000],
     ),
     "SNAPSHOT_RATE_": Param(
         key="SNAPSHOT_RATE_",
@@ -174,6 +185,7 @@ params = {
         inrange=lambda x: x >= 0,
         resrange=lambda x: x >= 1000 or x == 0,
         resrange_info="0 or [1000, inf)",
+        evalrange=[1, 10000],
     ),
     "VISOR_RATE_": Param(
         key="VISOR_RATE_",
@@ -184,6 +196,7 @@ params = {
         dtype=int,
         drange="[0, inf)",
         inrange=lambda x: x >= 0,
+        evalrange=[1, 10000],
     ),
     "POPGENSTATS_RATE_": Param(
         key="POPGENSTATS_RATE_",
@@ -196,6 +209,7 @@ params = {
         inrange=lambda x: x >= 0,
         resrange=lambda x: x >= 100 or x == 0,
         resrange_info="0 or [100, inf)",
+        evalrange=[1, 10000],
     ),
     "POPGENSTATS_SAMPLE_SIZE_": Param(
         key="POPGENSTATS_SAMPLE_SIZE_",
@@ -230,6 +244,7 @@ params = {
         inrange=lambda x: x >= 1,
         resrange=lambda x: x <= 10000,
         resrange_info="[1,100000]",
+        evalrange=[1, 1000000],
     ),
     "OVERSHOOT_EVENT": Param(
         key="OVERSHOOT_EVENT",
@@ -289,6 +304,7 @@ params = {
         inrange=lambda x: x >= 1,
         resrange=lambda x: x <= 100,
         resrange_info="[1,100]",
+        evalrange=[15, 100],
     ),
     "MATURATION_AGE": Param(
         key="MATURATION_AGE",
@@ -299,6 +315,7 @@ params = {
         dtype=int,
         drange="[1, inf)",
         inrange=lambda x: x >= 1,
+        evalrange=[0, 50],
     ),
     "BITS_PER_LOCUS": Param(
         key="BITS_PER_LOCUS",
@@ -311,6 +328,7 @@ params = {
         inrange=lambda x: x >= 1,
         resrange=lambda x: x <= 10,
         resrange_info="[1,10]",
+        evalrange=[1, 100],
     ),
     "HEADSUP": Param(
         key="HEADSUP",
@@ -341,6 +359,7 @@ params = {
         dtype=float,
         drange="[0, inf)",
         inrange=lambda x: x >= 0,
+        evalrange=[0, 1],
     ),
     "MUTATION_RATIO": Param(
         key="MUTATION_RATIO",
@@ -593,6 +612,7 @@ params = {
         info="Maximum fertility",
         dtype=float,
         drange="",
+        evalrange=[0.5, 1],
     ),
     "G_repr_initial": Param(
         key="G_repr_initial",
