@@ -10,7 +10,7 @@ setuptools.setup(
     author="Martin Bagic, Dario Valenzano",
     author_email="martin.bagic@outlook.com, Dario.Valenzano@leibniz-fli.de",
     url="https://github.com/valenzano-lab/aegis",
-    packages=["aegis", "aegis.help", "aegis.modules", "aegis.parameters", "aegis.visor"],
+    packages=["aegis", "aegis.help", "aegis.modules", "aegis.visor"],
     package_dir={"": "src"},
     include_package_data=True,
     python_requires=">=3.6",
