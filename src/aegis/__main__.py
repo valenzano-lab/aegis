@@ -26,6 +26,12 @@ def parse():
         help="path to pickle file",
         default="",
     )
+    parser.add_argument(
+        "--overwrite",
+        type=bool,
+        help="overwrite old data with new simulation",
+        default=False,
+    )
 
     # Parse arguments
     args = parser.parse_args()
@@ -34,19 +40,18 @@ def parse():
     config_path = pathlib.Path(args.config_path).absolute() if args.config_path else ""
     pickle_path = pathlib.Path(args.pickle_path).absolute() if args.pickle_path else ""
 
-    return config_path, pickle_path
+    return config_path, pickle_path, args.overwrite
 
 
 def main():
     from aegis.ecosystem import Ecosystem
     from aegis.panconfiguration import pan
 
-    config_path, pickle_path = parse()
+    config_path, pickle_path, overwrite = parse()
 
     if config_path:
-
         # Initialize pan
-        pan.init(config_path)
+        pan.init(config_path, overwrite)
 
         # Create ecosystems
         if not pickle_path:

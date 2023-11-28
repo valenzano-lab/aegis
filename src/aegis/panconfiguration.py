@@ -49,10 +49,19 @@ class Panconfiguration:
     def __init__(self):
         pass
 
-    def init(self, custom_config_path):
+    def init(self, custom_config_path, overwrite):
         self.here = pathlib.Path(__file__).absolute().parent
         self.stage = 1
         self.time_start = time.time()
+
+        # Output directory
+        self.output_path = custom_config_path.parent / custom_config_path.stem
+        if self.output_path.exists() and self.output_path.is_dir():
+            if overwrite:
+                shutil.rmtree(self.output_path)  # Delete previous directory if existing
+            else:
+                raise Exception(f"--overwrite is set to False but {self.output_path} already exists")
+        self.output_path.mkdir(parents=True, exist_ok=True)
 
         # TODO unnest functions
 
@@ -110,12 +119,6 @@ class Panconfiguration:
             else params["RANDOM_SEED_"]
         )
         self.rng = np.random.default_rng(self.random_seed)
-
-        # Output directory
-        self.output_path = custom_config_path.parent / custom_config_path.stem
-        if self.output_path.exists() and self.output_path.is_dir():
-            shutil.rmtree(self.output_path)  # Delete previous directory if existing
-        self.output_path.mkdir(parents=True, exist_ok=True)
 
         # Progress log
         self.progress_path = self.output_path / "progress.log"
