@@ -300,6 +300,16 @@ params = {
         drange="[1, inf)",
         inrange=lambda x: x >= 1,
     ),
+    "MENOPAUSE": Param(
+        key="MENOPAUSE",
+        name="",
+        domain="genetics",
+        default=0,
+        info="Age at which reproduction is not longer possible",
+        dtype=int,
+        drange="[0, inf)",
+        inrange=lambda x: x >= 0,
+    ),
     "BITS_PER_LOCUS": Param(
         key="BITS_PER_LOCUS",
         name="",

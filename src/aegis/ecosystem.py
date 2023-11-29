@@ -213,13 +213,20 @@ class Ecosystem:
     def reproduction(self):
         """Generate offspring of reproducing individuals."""
 
-        # Check if mature
-        mask_mature = self.population.ages >= self._get_param("MATURATION_AGE")
-        if not any(mask_mature):
+        # Check if fertile
+        mask_fertile = self.population.ages > self._get_param(
+            "MATURATION_AGE"
+        )  # Check if mature
+        if self._get_param("MENOPAUSE") > 0:
+            mask_menopausal = self.population.ages >= self._get_param(
+                "MENOPAUSE"
+            )  # Check if menopausal
+            mask_fertile = (mask_fertile) & (~mask_menopausal)
+        if not any(mask_fertile):
             return
 
         # Check if reproducing
-        probs_repr = self._get_evaluation("repr", part=mask_mature)
+        probs_repr = self._get_evaluation("repr", part=mask_fertile)
         mask_repr = pan.rng.random(len(probs_repr), dtype=np.float32) < probs_repr
 
         # Forgo if not at least two available parents
