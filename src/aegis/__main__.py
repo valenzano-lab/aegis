@@ -51,7 +51,7 @@ def main():
 
     if config_path:
         # Initialize pan
-        pan.init(config_path, overwrite)
+        pan.init(config_path, overwrite, running_on_server=False)
 
         # Create ecosystems
         if not pickle_path:

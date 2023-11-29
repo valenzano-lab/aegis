@@ -49,7 +49,7 @@ class Panconfiguration:
     def __init__(self):
         pass
 
-    def init(self, custom_config_path, overwrite):
+    def init(self, custom_config_path, overwrite, running_on_server=False):
         self.here = pathlib.Path(__file__).absolute().parent
         self.stage = 1
         self.time_start = time.time()
@@ -85,7 +85,7 @@ class Panconfiguration:
             params.update(default_config_params)
             params.update(custom_config_params)
 
-            config.validate(params, validate_resrange=True)
+            config.validate(params, validate_resrange=running_on_server)
 
             # for key, val in params.items():
             #     # Validate key
