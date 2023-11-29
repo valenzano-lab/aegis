@@ -4,6 +4,8 @@ import json
 import time
 import copy
 import pickle
+import psutil
+import subprocess
 
 from aegis.panconfiguration import pan
 from aegis.modules.popgenstats import PopgenStats
@@ -24,6 +26,7 @@ class Recorder:
 
     def __init__(self, ecosystem_id, MAX_LIFESPAN, gstruc_shape):
         # Define output paths and make necessary directories
+        print(pan.output_path)
         opath = pan.output_path / str(ecosystem_id)
         self.paths = {
             "BASE_DIR": opath,
@@ -63,6 +66,10 @@ class Recorder:
         # Needed for output summary
         self.extinct = False
 
+        # Memory utilization
+        self.memory_use = []
+        self.psutil_process = psutil.Process()
+
         # PopgenStats
         self.popgenstats = PopgenStats()
 
@@ -85,6 +92,12 @@ class Recorder:
     # ===============================
     # RECORDING METHOD I. (snapshots)
     # ===============================
+
+    def record_memory_use(self):
+        memory_use = self.psutil_process.memory_info()[0] / float(2**20)
+        self.memory_use.append(memory_use)
+        if len(self.memory_use) > 1000:
+            self.memory_use = [np.median(self.memory_use)]
 
     def record_visor(self, population):
         """Record data that is needed by visor."""
@@ -187,13 +200,27 @@ class Recorder:
         with open(self.paths["phenomap"] / "phenomap.csv", "w") as f:
             np.savetxt(f, map_, delimiter=",", fmt="%f")
 
+    @staticmethod
+    def get_folder_size_with_du(folder_path):
+        result = subprocess.run(
+            ["du", "-sh", folder_path], stdout=subprocess.PIPE, text=True
+        )
+        return result.stdout.split()[0]
+
     def record_output_summary(self):
+        try:
+            storage_use = self.get_folder_size_with_du(pan.output_path)
+        except:
+            storage_use = ""
+
         summary = {
             "extinct": self.extinct,
             "random_seed": pan.random_seed,
             "time_start": pan.time_start,
-            "time_end": time.time(),
+            "runtime": time.time() - pan.time_start,
             "jupyter_path": str(pan.output_path.absolute()),
+            "memory_use": np.median(self.memory_use),
+            "storage_use": storage_use,
         }
         with open(self.paths["output_summary"] / "output_summary.json", "w") as f:
             json.dump(summary, f, indent=4)
