@@ -4,7 +4,8 @@ import statistics
 import itertools
 import logging
 import numpy as np
-from aegis.panconfiguration import pan
+
+POPGENSTATS_SAMPLE_SIZE_ = None
 
 
 class PopgenStats:
@@ -29,9 +30,7 @@ class PopgenStats:
         # Data to process
         self.genomes = self.make_3D(input_genomes)
         self.gsample = self.get_genomes_sample()
-        self.nsample = (
-            0 if self.gsample is None else len(self.gsample)
-        )  # TODO correct for ploidy?
+        self.nsample = 0 if self.gsample is None else len(self.gsample)  # TODO correct for ploidy?
 
         # Statistics on population
         self.n = self.get_n()
@@ -56,9 +55,7 @@ class PopgenStats:
             self.theta_w = self.get_theta_w()
             self.theta_pi = self.get_theta_pi()
             self.tajimas_d = self.get_tajimas_d()
-            self.sfs = self.get_sfs(
-                self.reference_genome_gsample
-            )  # Uses reference genome calculated from sample
+            self.sfs = self.get_sfs(self.reference_genome_gsample)  # Uses reference genome calculated from sample
             self.theta_h = self.get_theta_h()
             self.fayandwu_h = self.get_fayandwu_h()
         else:
@@ -194,9 +191,7 @@ class PopgenStats:
             #                                     [3, 3, 3, 3],
             #                                     [4, 4, 4, 4]]
             genomes = (
-                self.genomes.reshape(-1, 2)
-                .transpose()
-                .reshape(self.genomes.shape[0] * 2, self.genomes.shape[1], -1)
+                self.genomes.reshape(-1, 2).transpose().reshape(self.genomes.shape[0] * 2, self.genomes.shape[1], -1)
             )
         else:
             genomes = self.genomes
@@ -208,10 +203,10 @@ class PopgenStats:
             return None
 
         # Sample genomes
-        if 0 < pan.POPGENSTATS_SAMPLE_SIZE_ <= genomes.shape[0]:
+        if 0 < POPGENSTATS_SAMPLE_SIZE_ <= genomes.shape[0]:
             indices = np.random.choice(
                 range(genomes.shape[0]),
-                pan.POPGENSTATS_SAMPLE_SIZE_,
+                POPGENSTATS_SAMPLE_SIZE_,
                 replace=False,
             )
             return genomes[indices]
@@ -243,15 +238,10 @@ class PopgenStats:
         len_pop = self.genomes.shape[0]
 
         # Genotype = Sum of alleles at a position -> [0, 1, 2]
-        genotypes_raw = (
-            self.genomes.reshape(-1, 2).sum(1).reshape(len_pop, -1).transpose()
-        )
+        genotypes_raw = self.genomes.reshape(-1, 2).sum(1).reshape(len_pop, -1).transpose()
 
         # Counts the frequencies of 0, 1 and 2 across the population
-        genotype_freqs = (
-            np.array([np.bincount(x, minlength=3) for x in genotypes_raw]).reshape(-1)
-            / len_pop
-        )
+        genotype_freqs = np.array([np.bincount(x, minlength=3) for x in genotypes_raw]).reshape(-1) / len_pop
 
         return genotype_freqs
 
@@ -333,9 +323,7 @@ class PopgenStats:
 
             return segr_sites
 
-        pre_segr_sites = (
-            genomes.reshape(-1, 2).transpose().reshape(genomes.shape[0] * 2, -1).sum(0)
-        )
+        pre_segr_sites = genomes.reshape(-1, 2).transpose().reshape(genomes.shape[0] * 2, -1).sum(0)
         segr_sites = (
             ((genomes.shape[1] * genomes.shape[2]) // 2)
             - (pre_segr_sites == genomes.shape[0] * 2).sum()
@@ -357,12 +345,7 @@ class PopgenStats:
 
         # Aligns chromosomes and count pairwise differences
         genomes_sample_flat = self.gsample.reshape(self.nsample, -1)
-        diffs = np.array(
-            [
-                (genomes_sample_flat[i[0]] != genomes_sample_flat[i[1]]).sum()
-                for i in combs
-            ]
-        )
+        diffs = np.array([(genomes_sample_flat[i[0]] != genomes_sample_flat[i[1]]).sum() for i in combs])
         total_diffs = diffs.sum()
         ncomparisons = diffs.size
 
@@ -378,17 +361,13 @@ class PopgenStats:
         segr_sites = self.segregating_sites_gsample
 
         if segr_sites == 0:
-            logging.info(
-                "Cannot compute Tajima's D because there are no segregating sites"
-            )
+            logging.info("Cannot compute Tajima's D because there are no segregating sites")
             return
 
         a_1 = self.harmonic(self.nsample - 1)
         a_2 = self.harmonic_sq(self.nsample - 1)
         b_1 = (self.nsample + 1) / (3 * (self.nsample - 1))
-        b_2 = (2 * (self.nsample**2 + self.nsample + 3)) / (
-            9 * self.nsample * (self.nsample - 1)
-        )
+        b_2 = (2 * (self.nsample**2 + self.nsample + 3)) / (9 * self.nsample * (self.nsample - 1))
         c_1 = b_1 - (1 / a_1)
         c_2 = b_2 - ((self.nsample + 2) / (a_1 * self.nsample)) + (a_2 / (a_1**2))
         e_1 = c_1 / a_1
@@ -402,19 +381,14 @@ class PopgenStats:
         pre_sfs = self.gsample.reshape(self.nsample, -1).sum(0)
         pre_sfs[np.nonzero(reference_genome)] -= self.nsample
         pre_sfs = np.abs(pre_sfs)
-        sfs = np.bincount(pre_sfs, minlength=self.nsample + 1)[
-            :-1
-        ]  # TODO what if len(genomes) < sample_size
+        sfs = np.bincount(pre_sfs, minlength=self.nsample + 1)[:-1]  # TODO what if len(genomes) < sample_size
         return sfs
 
     def get_theta_h(self):
         """Returns Fay and Wu's estimator theta_h"""
         # sum from i=1 to i=n-1: ( (2 * S_i * i^2) / (n * (n-1)) )
         sfs = self.sfs
-        t_h = (
-            (2 * sfs * (np.arange(self.nsample) ** 2))
-            / (self.nsample * (self.nsample - 1))
-        ).sum()
+        t_h = ((2 * sfs * (np.arange(self.nsample) ** 2)) / (self.nsample * (self.nsample - 1))).sum()
         return t_h
 
     def get_fayandwu_h(self):

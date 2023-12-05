@@ -1,8 +1,10 @@
 import numpy as np
-from aegis.panconfiguration import other
+from aegis.pan import other
+
+RECOMBINATION_RATE = None
 
 
-def recombine(RECOMBINATION_RATE, genomes):
+def do(genomes):
     """Return recombined chromatids."""
 
     if RECOMBINATION_RATE == 0:

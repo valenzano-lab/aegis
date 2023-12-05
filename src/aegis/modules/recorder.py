@@ -7,9 +7,16 @@ import pickle
 import psutil
 import subprocess
 
-from aegis.panconfiguration import pan
+from aegis import pan
 from aegis.modules.popgenstats import PopgenStats
 from aegis.help.config import causeofdeath_valid
+
+POPGENSTATS_RATE_ = None
+VISOR_RATE_ = None
+LOGGING_RATE_ = None
+PICKLE_RATE_ = None
+SNAPSHOT_RATE_ = None
+random_seed = None
 
 
 class Recorder:
@@ -25,10 +32,10 @@ class Recorder:
 
     # TODO add headers to csv's
 
-    def __init__(self, ecosystem_id, MAX_LIFESPAN, gstruc_shape):
+    def __init__(self, MAX_LIFESPAN, gstruc_shape):
         # Define output paths and make necessary directories
         print(pan.output_path)
-        opath = pan.output_path / str(ecosystem_id)
+        opath = pan.output_path
         self.paths = {
             "BASE_DIR": opath,
             "snapshots_genotypes": opath / "snapshots" / "genotypes",
@@ -49,9 +56,7 @@ class Recorder:
 
         # Initialize collection
         self._collection = {
-            # collected in ecosystem.reproduction
             "age_at_birth": [0] * MAX_LIFESPAN,
-            # collected in ecosystem.run_stage
             "additive_age_structure": [0] * MAX_LIFESPAN,
         }
 
@@ -95,7 +100,7 @@ class Recorder:
 
     def record_visor(self, population):
         """Record data that is needed by visor."""
-        if pan.skip(pan.VISOR_RATE_) or len(population) == 0:
+        if pan.skip(VISOR_RATE_) or len(population) == 0:
             return
 
         # genotypes.csv | Record allele frequency
@@ -112,7 +117,7 @@ class Recorder:
 
     def record_snapshots(self, population):
         """Record demographic, genetic and phenotypic data from the current population."""
-        if pan.skip(pan.SNAPSHOT_RATE_) or len(population) == 0:
+        if pan.skip(SNAPSHOT_RATE_) or len(population) == 0:
             return
 
         # genotypes
@@ -138,7 +143,7 @@ class Recorder:
         """Record population size in popgenstats, and record popgen statistics."""
         self.popgenstats.record_pop_size_history(genomes)
 
-        if pan.skip(pan.POPGENSTATS_RATE_) or len(genomes) == 0:
+        if pan.skip(POPGENSTATS_RATE_) or len(genomes) == 0:
             return
 
         mutation_rates = mutation_rate_func("muta")
@@ -159,7 +164,7 @@ class Recorder:
                 np.savetxt(f, [array], delimiter=",", fmt="%1.3e")
 
     def record_pickle(self, population):
-        if pan.skip(pan.PICKLE_RATE_) and not pan.stage == 1:  # Also records the pickle before the first stage
+        if pan.skip(PICKLE_RATE_) and not pan.stage == 1:  # Also records the pickle before the first stage
             return
 
         with open(self.paths["pickles"] / str(pan.stage), "wb") as f:
@@ -205,7 +210,7 @@ class Recorder:
 
         summary = {
             "extinct": self.extinct,
-            "random_seed": pan.random_seed,
+            "random_seed": random_seed,
             "time_start": pan.time_start,
             "runtime": time.time() - pan.time_start,
             "jupyter_path": str(pan.output_path.absolute()),
@@ -218,14 +223,10 @@ class Recorder:
     def record_input_summary(self):
         summary = {
             # "extinct": self.extinct,
-            "random_seed": pan.random_seed,
+            "random_seed": random_seed,
             "time_start": pan.time_start,
             # "time_end": time.time(),
             "jupyter_path": str(pan.output_path.absolute()),
         }
         with open(self.paths["input_summary"] / "input_summary.json", "w") as f:
             json.dump(summary, f, indent=4)
-
-    # def record_jupyter_path(self):
-    #     with open(pan.here / "help/paths.txt", "a") as f:
-    #         f.write(str(pan.output_path.absolute()) + "\n")

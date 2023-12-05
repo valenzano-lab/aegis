@@ -27,7 +27,7 @@ def _get_order(n_gametes=None, order=None):
     return order
 
 
-def assort(genomes, order=None):
+def do(genomes, order=None):
     """Return assorted chromatids."""
 
     if order is None:

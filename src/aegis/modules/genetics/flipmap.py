@@ -1,35 +1,35 @@
+"""Modifier of fitness landscape
+
+Modifies topology of fitness landscape over time by changing the interpretation of zeros and ones in genomes.
+"""
 import numpy as np
 
-from aegis.panconfiguration import pan
+from aegis import pan
 from aegis.help import other
 
 
-class Flipmap:
-    """Modifier of fitness landscape
+FLIPMAP_CHANGE_RATE = None
+dummy = None
+map_ = None
 
-    Modifies topology of fitness landscape over time by changing the interpretation of zeros and ones in genomes.
-    """
 
-    def __init__(self, gstruc_shape, FLIPMAP_CHANGE_RATE):
-        self.FLIPMAP_CHANGE_RATE = FLIPMAP_CHANGE_RATE
-        if FLIPMAP_CHANGE_RATE == 0:
-            self.dummy = True
-        else:
-            self.dummy = False
-            self.map_ = np.zeros(gstruc_shape, dtype=np.bool_)
-            self.FLIPMAP_CHANGE_RATE = FLIPMAP_CHANGE_RATE
+def init(self, gstruc_shape):
+    if FLIPMAP_CHANGE_RATE == 0:
+        self.dummy = True
+    else:
+        self.dummy = False
+        self.map_ = np.zeros(gstruc_shape, dtype=np.bool_)
 
-    def __call__(self, genomes):
-        """Return the genomes reinterpreted"""
-        return genomes if self.dummy else np.logical_xor(self.map_, genomes)
 
-    def evolve(self):
-        """Modify the flipmap"""
-        if self.dummy:
-            return
+def do(genomes):
+    """Return the genomes reinterpreted"""
+    return genomes if dummy else np.logical_xor(map_, genomes)
 
-        if pan.stage % self.FLIPMAP_CHANGE_RATE > 0:
-            return
 
-        indices = tuple(other.rng.integers(self.map_.shape))
-        self.map_[indices] = ~self.map_[indices]
+def evolve():
+    """Modify the flipmap"""
+    if dummy or (pan.stage % FLIPMAP_CHANGE_RATE > 0):
+        return
+
+    indices = tuple(other.rng.integers(map_.shape))
+    map_[indices] = ~map_[indices]

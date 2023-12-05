@@ -1,45 +1,51 @@
+"""Disease manager
+
+Disease status:
+    0 .. susceptible
+    1 .. infected
+    -1 .. dead
+"""
+
 import math
 from aegis.help import other
 
+BACKGROUND_INFECTIVITY = None
+TRANSMISSIBILITY = None
+RECOVERY_RATE = None
+FATALITY_RATE = None
 
-class Disease:
-    """Disease manager
 
-    Disease status:
-        0 .. susceptible
-        1 .. infected
-        -1 .. dead
+def init(module, BACKGROUND_INFECTIVITY, TRANSMISSIBILITY, RECOVERY_RATE, FATALITY_RATE):
+    module.BACKGROUND_INFECTIVITY = BACKGROUND_INFECTIVITY
+    module.TRANSMISSIBILITY = TRANSMISSIBILITY
+    module.RECOVERY_RATE = RECOVERY_RATE
+    module.FATALITY_RATE = FATALITY_RATE
+
+
+def get_infection_probability(infection_density):
+    return BACKGROUND_INFECTIVITY - 0.5 + 1 / (1 + math.exp(-TRANSMISSIBILITY * infection_density))
+
+
+def kill(population):
     """
+    First try infecting susceptible.
+    """
+    probs = other.rng.random(len(population), dtype=float)
 
-    def __init__(self, BACKGROUND_INFECTIVITY, TRANSMISSIBILITY, RECOVERY_RATE, FATALITY_RATE):
-        self.BACKGROUND_INFECTIVITY = BACKGROUND_INFECTIVITY
-        self.TRANSMISSIBILITY = TRANSMISSIBILITY
-        self.RECOVERY_RATE = RECOVERY_RATE
-        self.FATALITY_RATE = FATALITY_RATE
+    # current status
+    infected = population.disease == 1
+    susceptible = population.disease == 0
 
-    def infection_probability(self, infection_density):
-        return self.BACKGROUND_INFECTIVITY - 0.5 + 1 / (1 + math.exp(-self.TRANSMISSIBILITY * infection_density))
+    # compute infection probability
+    infection_density = infected.sum() / len(population)
+    infection_probability = get_infection_probability(infection_density=infection_density)
 
-    def __call__(self, population):
-        """
-        First try infecting susceptible.
-        """
-        probs = other.rng.random(len(population), dtype=float)
+    # recoveries from old infections
+    population.disease[infected & (probs < RECOVERY_RATE)] = 0
 
-        # current status
-        infected = population.disease == 1
-        susceptible = population.disease == 0
+    # fatalities
+    # overrides recoveries
+    population.disease[infected & (probs < FATALITY_RATE)] = -1
 
-        # compute infection probability
-        infection_density = infected.sum() / len(population)
-        infection_probability = self.infection_probability(infection_density=infection_density)
-
-        # recoveries from old infections
-        population.disease[infected & (probs < self.RECOVERY_RATE)] = 0
-
-        # fatalities
-        # overrides recoveries
-        population.disease[infected & (probs < self.FATALITY_RATE)] = -1
-
-        # new infections
-        population.disease[susceptible & (probs < infection_probability)] = 1
+    # new infections
+    population.disease[susceptible & (probs < infection_probability)] = 1

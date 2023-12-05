@@ -1,8 +1,8 @@
 import numpy as np
 from aegis.modules.genetics.trait import Trait
-from aegis.modules.genetics.interpreter import Interpreter
-from aegis.modules.genetics.phenomap import Phenomap
-from aegis.modules.genetics.flipmap import Flipmap
+from aegis.modules.genetics import interpreter
+from aegis.modules.genetics import phenomap
+from aegis.modules.genetics import flipmap
 from aegis.help import other
 
 
@@ -13,7 +13,7 @@ class Gstruc:
     Calculates phenotypes from input genomes (calls Interpreter, Phenomap and Flipmap).
     """
 
-    def __init__(self, params, BITS_PER_LOCUS, REPRODUCTION_MODE, DOMINANCE_FACTOR, THRESHOLD):
+    def __init__(self, params, BITS_PER_LOCUS, REPRODUCTION_MODE):
         # Generate traits and save
         self.traits = {}
         self.evolvable = []
@@ -34,21 +34,9 @@ class Gstruc:
         }[REPRODUCTION_MODE]
 
         self.bits_per_locus = BITS_PER_LOCUS
-
         self.shape = (self.ploidy, self.length, self.bits_per_locus)
-
-        self.phenomap = Phenomap(params["PHENOMAP_SPECS"], self, params["PHENOMAP_METHOD"])
-
-        self.interpreter = Interpreter(
-            BITS_PER_LOCUS=BITS_PER_LOCUS,
-            DOMINANCE_FACTOR=DOMINANCE_FACTOR,
-            THRESHOLD=THRESHOLD,
-        )
-
-        self.flipmap = Flipmap(
-            gstruc_shape=self.shape,
-            FLIPMAP_CHANGE_RATE=params["FLIPMAP_CHANGE_RATE"],
-        )
+        phenomap.init(phenomap, self)
+        flipmap.init(flipmap, self.shape)
 
     def __getitem__(self, name):
         """Return a Trait instance called {name}."""
@@ -81,17 +69,17 @@ class Gstruc:
     def get_phenotype(self, genomes):
         """Translate genomes into an array of phenotypes probabilities."""
         # Apply the flipmap
-        envgenomes = self.flipmap(genomes)
+        envgenomes = flipmap.do(genomes)
 
         # Apply the interpreter functions
         interpretome = np.zeros(shape=(envgenomes.shape[0], envgenomes.shape[2]), dtype=np.float32)
         for trait in self.evolvable:
             loci = envgenomes[:, :, trait.slice]  # fetch
-            probs = self.interpreter(loci, trait.interpreter)  # interpret
+            probs = interpreter.do(loci, trait.interpreter)  # interpret
             interpretome[:, trait.slice] += probs  # add back
 
         # Apply phenomap
-        phenotypes = self.phenomap.calc(interpretome)
+        phenotypes = phenomap.calc(interpretome)
 
         # Apply lo and hi bound
         for trait in self.evolvable:

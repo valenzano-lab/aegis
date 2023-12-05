@@ -3,7 +3,7 @@
 import pytest
 import numpy as np
 from aegis.modules import popgenstats
-from aegis.panconfiguration import pan
+from aegis.pan import pan
 
 pan.POPGENSTATS_SAMPLE_SIZE_ = 0
 

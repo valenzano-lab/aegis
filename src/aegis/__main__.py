@@ -45,7 +45,7 @@ def parse():
 
 def main():
     from aegis.ecosystem import Ecosystem
-    from aegis.panconfiguration import pan
+    from aegis import pan
 
     config_path, pickle_path, overwrite = parse()
 
@@ -53,38 +53,26 @@ def main():
         # Initialize pan
         pan.init(config_path, overwrite, running_on_server=False)
 
-        # Create ecosystems
+        # Create ecosystem
         if not pickle_path:
-            ecosystems = [Ecosystem(i) for i in range(len(pan.params_list))]
+            ecosystem = Ecosystem()
         else:
-            # TODO fix for multiple populations
             with open(pickle_path, "rb") as file_:
                 population = pickle.load(file_)
-            ecosystem = Ecosystem(0, population)
-            ecosystems = [ecosystem]
+                ecosystem = Ecosystem(population)
 
         # Record input summary
-        for ecosystem in ecosystems:
-            ecosystem.recorder.record_input_summary()
+        ecosystem.recorder.record_input_summary()
 
         # Run simulation
         while pan.stage <= pan.STAGES_PER_SIMULATION_:
             pan._log_progress()
-            for ecosystem in ecosystems:
-                ecosystem.run_stage()
+            ecosystem.run_stage()
             pan.stage += 1
 
         # Record output summary
-        for ecosystem in ecosystems:
-            ecosystem.recorder.record_output_summary()
-
-        # ecosystem.recorder.record_jupyter_path()  # TODO record for every ecosystem
-
+        ecosystem.recorder.record_output_summary()
         logging.info("Simulation is successfully finished")
-        # logging.info("Custom jupyter path = %s", str(pan.output_path.absolute()))
-        # logging.info(
-        # "Run visor by executing: python3 -m notebook %s", str(pan.here / "help")
-        # )
     else:
         visor.run()
 
