@@ -11,20 +11,14 @@ class Disease:
         -1 .. dead
     """
 
-    def __init__(
-        self, BACKGROUND_INFECTIVITY, TRANSMISSIBILITY, RECOVERY_RATE, FATALITY_RATE
-    ):
+    def __init__(self, BACKGROUND_INFECTIVITY, TRANSMISSIBILITY, RECOVERY_RATE, FATALITY_RATE):
         self.BACKGROUND_INFECTIVITY = BACKGROUND_INFECTIVITY
         self.TRANSMISSIBILITY = TRANSMISSIBILITY
         self.RECOVERY_RATE = RECOVERY_RATE
         self.FATALITY_RATE = FATALITY_RATE
 
     def infection_probability(self, infection_density):
-        return (
-            self.BACKGROUND_INFECTIVITY
-            - 0.5
-            + 1 / (1 + math.exp(-self.TRANSMISSIBILITY * infection_density))
-        )
+        return self.BACKGROUND_INFECTIVITY - 0.5 + 1 / (1 + math.exp(-self.TRANSMISSIBILITY * infection_density))
 
     def __call__(self, population):
         """
@@ -38,9 +32,7 @@ class Disease:
 
         # compute infection probability
         infection_density = infected.sum() / len(population)
-        infection_probability = self.infection_probability(
-            infection_density=infection_density
-        )
+        infection_probability = self.infection_probability(infection_density=infection_density)
 
         # recoveries from old infections
         population.disease[infected & (probs < self.RECOVERY_RATE)] = 0

@@ -116,28 +116,22 @@ class Phenomap:
         last = float(decoded[0]) if decoded else first
 
         if n == 1 and last != first:
-            raise ValueError(
-                f"Pattern '{pattern}' contains two values but there is only one target locus"
-            )
+            raise ValueError(f"Pattern '{pattern}' contains two values but there is only one target locus")
 
         return np.linspace(first, last, n)
 
     @staticmethod
     def unfold_specs(PHENOMAP_SPECS, gstruc):
         for trait1, scope1, trait2, scope2, pattern2 in PHENOMAP_SPECS:
-
-            assert (trait1 is None and scope1 is None) or (
-                trait1 is not None and scope2 is not None
-            )
+            assert (trait1 is None and scope1 is None) or (trait1 is not None and scope2 is not None)
 
             # If no scope given, whole trait is affected
             if scope2 is None:
-                scope2 = f"{gstruc[trait2].start + 1}-{gstruc[trait2].end}"  # Note that PHENOMAP_SPECS scope is interpreted as a 1-indexed inclusive interval
+                scope2 = f"{gstruc[trait2].start + 1}-{gstruc[trait2].end}"
+                # Note that PHENOMAP_SPECS scope is interpreted as a 1-indexed inclusive interval
 
             pos2 = gstruc[trait2].start
-            loci2 = (
-                Phenomap.decode_scope(scope2) + pos2 - 1
-            )  # -1 because the PHENOMAP_SPECS is 1-indexed
+            loci2 = Phenomap.decode_scope(scope2) + pos2 - 1  # -1 because the PHENOMAP_SPECS is 1-indexed
             weights = Phenomap.decode_pattern(pattern2, len(loci2))
 
             if trait1 is None:

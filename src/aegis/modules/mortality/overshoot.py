@@ -59,9 +59,7 @@ class Overshoot:
         The probability of dying increases each consecutive stage of overcrowding.
         The probability of dying resets to the base value once the population dips under the maximum allowed size.
         """
-        surv_probability = (
-            1 - self.OVERSHOOT_MORTALITY
-        ) ** self.consecutive_overshoot_n
+        surv_probability = (1 - self.OVERSHOOT_MORTALITY) ** self.consecutive_overshoot_n
         random_probabilities = pan.rng.random(n, dtype=np.float32)
         mask = random_probabilities > surv_probability
         return mask

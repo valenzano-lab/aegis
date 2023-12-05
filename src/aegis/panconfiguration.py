@@ -25,6 +25,28 @@ def get_dhm(timediff):
     return f"{d}`{h:02}:{m:02}"
 
 
+def get_params(custom_config_path, running_on_server):
+    """Fetch and validate input parameters."""
+    # Read config parameters from the custom config file
+    with open(custom_config_path, "r") as f:
+        custom_config_params = yaml.safe_load(f)
+
+    if custom_config_params is None:  # If config file is empty
+        custom_config_params = {}
+
+    # Read config parameters from the default config file
+    default_config_params = config.get_default_parameters()
+
+    # Fuse
+    params = {}
+    params.update(default_config_params)
+    params.update(custom_config_params)
+
+    config.validate(params, validate_resrange=running_on_server)
+
+    return params
+
+
 class Panconfiguration:
     """Universal configuration
 
@@ -63,43 +85,8 @@ class Panconfiguration:
                 raise Exception(f"--overwrite is set to False but {self.output_path} already exists")
         self.output_path.mkdir(parents=True, exist_ok=True)
 
-        # TODO unnest functions
-
-        def read_yml(path):
-            with open(path, "r") as f:
-                return yaml.safe_load(f)
-
-        def get_params(custom_config_path):
-            """Fetch and validate input parameters."""
-            # Read config parameters from the custom config file
-            custom_config_params = read_yml(custom_config_path)
-
-            if custom_config_params is None:  # If config file is empty
-                custom_config_params = {}
-
-            # Read config parameters from the default config file
-            default_config_params = config.get_default_parameters()
-
-            # Fuse
-            params = {}
-            params.update(default_config_params)
-            params.update(custom_config_params)
-
-            config.validate(params, validate_resrange=running_on_server)
-
-            # for key, val in params.items():
-            #     # Validate key
-            #     if all(key != p.key for p in parameters.params.values()):
-            #         raise ValueError(f"'{key}' is not a valid parameter name")
-
-            #     # Validate value type and range
-            #     parameters.params[key].validate_dtype(val)
-            #     parameters.params[key].validate_inrange(val)
-
-            return params
-
         # Get parameters
-        params = get_params(custom_config_path)
+        params = get_params(custom_config_path, running_on_server=running_on_server)
         self.params_list = (params,)
 
         # Simulation-wide parameters
@@ -113,11 +100,7 @@ class Panconfiguration:
         self.POPGENSTATS_SAMPLE_SIZE_ = params["POPGENSTATS_SAMPLE_SIZE_"]
 
         # Random number generator
-        self.random_seed = (
-            np.random.randint(1, 10**6)
-            if params["RANDOM_SEED_"] is None
-            else params["RANDOM_SEED_"]
-        )
+        self.random_seed = np.random.randint(1, 10**6) if params["RANDOM_SEED_"] is None else params["RANDOM_SEED_"]
         self.rng = np.random.default_rng(self.random_seed)
 
         # Progress log

@@ -1,6 +1,6 @@
 class Season:
     """Season tracker
-    
+
     Enables non-overlapping generations by tracking seasons.
     """
 

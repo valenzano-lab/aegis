@@ -1,6 +1,6 @@
 import pytest
 import numpy as np
-from aegis.modules.reproducer import Reproducer
+from aegis.modules.reproduction.reproducer import Reproducer
 
 reproducer = Reproducer(0.5, 0.1, "sexual", "by_bit")
 

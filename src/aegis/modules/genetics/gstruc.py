@@ -1,8 +1,8 @@
 import numpy as np
-from aegis.modules.trait import Trait
-from aegis.modules.interpreter import Interpreter
-from aegis.modules.phenomap import Phenomap
-from aegis.modules.flipmap import Flipmap
+from aegis.modules.genetics.trait import Trait
+from aegis.modules.genetics.interpreter import Interpreter
+from aegis.modules.genetics.phenomap import Phenomap
+from aegis.modules.genetics.flipmap import Flipmap
 from aegis.panconfiguration import pan
 
 
@@ -13,9 +13,7 @@ class Gstruc:
     Calculates phenotypes from input genomes (calls Interpreter, Phenomap and Flipmap).
     """
 
-    def __init__(
-        self, params, BITS_PER_LOCUS, REPRODUCTION_MODE, DOMINANCE_FACTOR, THRESHOLD
-    ):
+    def __init__(self, params, BITS_PER_LOCUS, REPRODUCTION_MODE, DOMINANCE_FACTOR, THRESHOLD):
         # Generate traits and save
         self.traits = {}
         self.evolvable = []
@@ -39,9 +37,7 @@ class Gstruc:
 
         self.shape = (self.ploidy, self.length, self.bits_per_locus)
 
-        self.phenomap = Phenomap(
-            params["PHENOMAP_SPECS"], self, params["PHENOMAP_METHOD"]
-        )
+        self.phenomap = Phenomap(params["PHENOMAP_SPECS"], self, params["PHENOMAP_METHOD"])
 
         self.interpreter = Interpreter(
             BITS_PER_LOCUS=BITS_PER_LOCUS,
@@ -88,9 +84,7 @@ class Gstruc:
         envgenomes = self.flipmap(genomes)
 
         # Apply the interpreter functions
-        interpretome = np.zeros(
-            shape=(envgenomes.shape[0], envgenomes.shape[2]), dtype=np.float32
-        )
+        interpretome = np.zeros(shape=(envgenomes.shape[0], envgenomes.shape[2]), dtype=np.float32)
         for trait in self.evolvable:
             loci = envgenomes[:, :, trait.slice]  # fetch
             probs = self.interpreter(loci, trait.interpreter)  # interpret

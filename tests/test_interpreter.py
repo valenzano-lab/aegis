@@ -1,6 +1,6 @@
 import pytest
 import numpy as np
-from aegis.modules.interpreter import Interpreter
+from aegis.modules.genetics.interpreter import Interpreter
 
 
 e = Interpreter.exp_base

@@ -10,7 +10,6 @@ class Flipmap:
     """
 
     def __init__(self, gstruc_shape, FLIPMAP_CHANGE_RATE):
-
         if FLIPMAP_CHANGE_RATE == 0:
             self.dummy = True
         else:

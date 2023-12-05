@@ -327,6 +327,16 @@ params = {
         drange="[0, inf)",
         inrange=lambda x: x >= 0,
     ),
+    "GENOME_FREE": Param(
+        key="GENOME_FREE",
+        name="",
+        domain="genetics",
+        default=False,
+        info="Do not simulate genetics",
+        dtype=bool,
+        drange="",
+        inrange=lambda x: True,
+    ),
     "BITS_PER_LOCUS": Param(
         key="BITS_PER_LOCUS",
         name="",

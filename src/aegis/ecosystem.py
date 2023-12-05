@@ -1,15 +1,15 @@
 import numpy as np
 import logging
 
-from aegis.modules.reproducer import Reproducer
-from aegis.modules.overshoot import Overshoot
+from aegis.modules.reproduction.reproducer import Reproducer
+from aegis.modules.mortality.overshoot import Overshoot
 from aegis.modules.recorder import Recorder
-from aegis.modules.season import Season
-from aegis.modules.gstruc import Gstruc
+from aegis.modules.mortality.season import Season
+from aegis.modules.genetics.gstruc import Gstruc
 from aegis.modules.population import Population
-from aegis.modules.environment import Environment
-from aegis.modules.disease import Disease
-from aegis.modules.predation import Predation
+from aegis.modules.mortality.environment import Environment
+from aegis.modules.mortality.disease import Disease
+from aegis.modules.mortality.predation import Predation
 
 from aegis.panconfiguration import pan
 
@@ -76,9 +76,7 @@ class Ecosystem:
 
         # Initialize environmental hazards
         self.environment = Environment(
-            ENVIRONMENT_HAZARD_AMPLITUDE=self._get_param(
-                "ENVIRONMENT_HAZARD_AMPLITUDE"
-            ),
+            ENVIRONMENT_HAZARD_AMPLITUDE=self._get_param("ENVIRONMENT_HAZARD_AMPLITUDE"),
             ENVIRONMENT_HAZARD_OFFSET=self._get_param("ENVIRONMENT_HAZARD_OFFSET"),
             ENVIRONMENT_HAZARD_PERIOD=self._get_param("ENVIRONMENT_HAZARD_PERIOD"),
             ENVIRONMENT_HAZARD_SHAPE=self._get_param("ENVIRONMENT_HAZARD_SHAPE"),
@@ -101,20 +99,19 @@ class Ecosystem:
         else:
             num = self._get_param("MAX_POPULATION_SIZE")
             HEADSUP = self._get_param("HEADSUP")
-            headsup = (
-                HEADSUP + self._get_param("MATURATION_AGE") if HEADSUP > -1 else None
-            )
+            headsup = HEADSUP + self._get_param("MATURATION_AGE") if HEADSUP > -1 else None
 
-            genomes = self.gstruc.initialize_genomes(num, headsup)
+            genomes = self.gstruc.initialize_genomes(
+                n=num,
+                headsup=headsup,
+            )
             ages = np.zeros(num, dtype=np.int32)
             births = np.zeros(num, dtype=np.int32)
             birthdays = np.zeros(num, dtype=np.int32)
             phenotypes = self.gstruc.get_phenotype(genomes)
             disease = np.zeros(num, dtype=np.int32)
 
-            self.population = Population(
-                genomes, ages, births, birthdays, phenotypes, disease
-            )
+            self.population = Population(genomes, ages, births, birthdays, phenotypes, disease)
 
     ##############
     # MAIN LOGIC #
@@ -217,13 +214,9 @@ class Ecosystem:
         """Generate offspring of reproducing individuals."""
 
         # Check if fertile
-        mask_fertile = self.population.ages > self._get_param(
-            "MATURATION_AGE"
-        )  # Check if mature
+        mask_fertile = self.population.ages > self._get_param("MATURATION_AGE")  # Check if mature
         if self._get_param("MENOPAUSE") > 0:
-            mask_menopausal = self.population.ages >= self._get_param(
-                "MENOPAUSE"
-            )  # Check if menopausal
+            mask_menopausal = self.population.ages >= self._get_param("MENOPAUSE")  # Check if menopausal
             mask_fertile = (mask_fertile) & (~mask_menopausal)
         if not any(mask_fertile):
             return
@@ -320,11 +313,7 @@ class Ecosystem:
 
     def __len__(self):
         """Return the number of living individuals and saved eggs."""
-        return (
-            len(self.population) + len(self.eggs)
-            if self.eggs is not None
-            else len(self.population)
-        )
+        return len(self.population) + len(self.eggs) if self.eggs is not None else len(self.population)
 
     def _get_param(self, param):
         """Get parameter value for this specific ecosystem."""

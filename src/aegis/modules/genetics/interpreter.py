@@ -24,9 +24,7 @@ class Interpreter:
         # Parameters for the binary switch interpreter
         self.binary_switch_weights = 2 ** np.arange(BITS_PER_LOCUS)[::-1]
         self.binary_switch_weights[-1] = 0  # Switch bit does not add to locus value
-        self.binary_switch_weights = (
-            self.binary_switch_weights / self.binary_switch_weights.sum()
-        )
+        self.binary_switch_weights = self.binary_switch_weights / self.binary_switch_weights.sum()
         # e.g. when BITS_PER_LOCUS is 4, binary_switch_weights are [4/7, 2/7, 1/7, 0]
 
         # Parameters for the linear interpreter
@@ -97,9 +95,7 @@ class Interpreter:
         """
         sums = loci.mean(2)
         rand_values = pan.rng.random(loci.shape[:-1], dtype=np.float32) < 0.5
-        return np.select(
-            [sums == 0, (sums > 0) & (sums < 1), sums == 1], [0, rand_values, 1]
-        )
+        return np.select([sums == 0, (sums > 0) & (sums < 1), sums == 1], [0, rand_values, 1])
 
     def _binary_switch(self, loci):
         """Interpret first n-1 bits as a binary number if the last bit is 1.
@@ -108,9 +104,7 @@ class Interpreter:
         Position-dependent.
         """
         where_on = loci[:, :, -1] == 1  # Loci which are turned on
-        values = np.zeros(
-            loci.shape[:-1], dtype=np.float32
-        )  # Initialize output array with zeros
+        values = np.zeros(loci.shape[:-1], dtype=np.float32)  # Initialize output array with zeros
         values[where_on] = loci[where_on].dot(
             self.binary_switch_weights
         )  # If the locus is turned on, make the value in the output array be the binary value

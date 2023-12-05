@@ -18,11 +18,7 @@ class Environment:
         self.ENVIRONMENT_HAZARD_SHAPE = ENVIRONMENT_HAZARD_SHAPE
         self.func = getattr(self, ENVIRONMENT_HAZARD_SHAPE)
 
-        if (
-            ENVIRONMENT_HAZARD_SHAPE == "flat"
-            and ENVIRONMENT_HAZARD_AMPLITUDE > 0
-            and ENVIRONMENT_HAZARD_OFFSET > 0
-        ):
+        if ENVIRONMENT_HAZARD_SHAPE == "flat" and ENVIRONMENT_HAZARD_AMPLITUDE > 0 and ENVIRONMENT_HAZARD_OFFSET > 0:
             logging.info(
                 "Note that under flat environmental hazard, amplitude and offset have the same effects; the total environmental mortality is simply their sum."
             )
@@ -34,35 +30,23 @@ class Environment:
         return self.ENVIRONMENT_HAZARD_AMPLITUDE
 
     def sinusoidal(self, stage):
-        return self.ENVIRONMENT_HAZARD_AMPLITUDE * math.sin(
-            2 * math.pi * stage / self.ENVIRONMENT_HAZARD_PERIOD
-        )
+        return self.ENVIRONMENT_HAZARD_AMPLITUDE * math.sin(2 * math.pi * stage / self.ENVIRONMENT_HAZARD_PERIOD)
 
     def triangle(self, stage):
         return self.ENVIRONMENT_HAZARD_AMPLITUDE * (
             1
             - 4
-            * abs(
-                round(stage / self.ENVIRONMENT_HAZARD_PERIOD - 0.5)
-                - (stage / self.ENVIRONMENT_HAZARD_PERIOD - 0.5)
-            )
+            * abs(round(stage / self.ENVIRONMENT_HAZARD_PERIOD - 0.5) - (stage / self.ENVIRONMENT_HAZARD_PERIOD - 0.5))
         )
 
     def square(self, stage):
         return self.ENVIRONMENT_HAZARD_AMPLITUDE * (
-            1
-            if (stage % self.ENVIRONMENT_HAZARD_PERIOD)
-            < (self.ENVIRONMENT_HAZARD_PERIOD / 2)
-            else -1
+            1 if (stage % self.ENVIRONMENT_HAZARD_PERIOD) < (self.ENVIRONMENT_HAZARD_PERIOD / 2) else -1
         )
 
     def sawtooth(self, stage):
         return self.ENVIRONMENT_HAZARD_AMPLITUDE * (
-            2
-            * (
-                stage / self.ENVIRONMENT_HAZARD_PERIOD
-                - math.floor(stage / self.ENVIRONMENT_HAZARD_PERIOD + 0.5)
-            )
+            2 * (stage / self.ENVIRONMENT_HAZARD_PERIOD - math.floor(stage / self.ENVIRONMENT_HAZARD_PERIOD + 0.5))
         )
 
     def ramp(self, stage):
