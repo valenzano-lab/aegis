@@ -6,6 +6,7 @@ import logging
 import yaml
 
 from aegis.help import config
+from aegis.help import other
 
 
 logging.basicConfig(
@@ -101,7 +102,7 @@ class Panconfiguration:
 
         # Random number generator
         self.random_seed = np.random.randint(1, 10**6) if params["RANDOM_SEED_"] is None else params["RANDOM_SEED_"]
-        self.rng = np.random.default_rng(self.random_seed)
+        other.rng = np.random.default_rng(self.random_seed)
 
         # Progress log
         self.progress_path = self.output_path / "progress.log"

@@ -3,7 +3,7 @@ from aegis.modules.genetics.trait import Trait
 from aegis.modules.genetics.interpreter import Interpreter
 from aegis.modules.genetics.phenomap import Phenomap
 from aegis.modules.genetics.flipmap import Flipmap
-from aegis.panconfiguration import pan
+from aegis.help import other
 
 
 class Gstruc:
@@ -62,7 +62,7 @@ class Gstruc:
         """
 
         # Initial genomes with a trait.initial fraction of 1's
-        genomes = pan.rng.random(size=(n, *self.shape), dtype=np.float32)
+        genomes = other.rng.random(size=(n, *self.shape), dtype=np.float32)
 
         for trait in self.evolvable:
             genomes[:, :, trait.slice] = genomes[:, :, trait.slice] <= trait.initial

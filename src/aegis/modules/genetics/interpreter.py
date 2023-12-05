@@ -1,6 +1,6 @@
 import numpy as np
 
-from aegis.panconfiguration import pan
+from aegis.help import other
 
 
 class Interpreter:
@@ -94,7 +94,7 @@ class Interpreter:
         Position-independent.
         """
         sums = loci.mean(2)
-        rand_values = pan.rng.random(loci.shape[:-1], dtype=np.float32) < 0.5
+        rand_values = other.rng.random(loci.shape[:-1], dtype=np.float32) < 0.5
         return np.select([sums == 0, (sums > 0) & (sums < 1), sums == 1], [0, rand_values, 1])
 
     def _binary_switch(self, loci):

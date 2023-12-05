@@ -1,5 +1,5 @@
 import math
-from aegis.panconfiguration import pan
+from aegis.help import other
 
 
 class Disease:
@@ -24,7 +24,7 @@ class Disease:
         """
         First try infecting susceptible.
         """
-        probs = pan.rng.random(len(population), dtype=float)
+        probs = other.rng.random(len(population), dtype=float)
 
         # current status
         infected = population.disease == 1

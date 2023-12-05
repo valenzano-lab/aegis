@@ -1,5 +1,5 @@
 import numpy as np
-from aegis.panconfiguration import pan
+from aegis.help import other
 
 
 def _get_order(n_gametes=None, order=None):
@@ -7,7 +7,7 @@ def _get_order(n_gametes=None, order=None):
     # Extract parent indices twice, and shuffle
     if order is None:
         order = np.repeat(np.arange(n_gametes), 2)
-        pan.rng.shuffle(order)
+        other.rng.shuffle(order)
 
     # Check for selfing (selfing when pair contains equal parent indices)
     selfed = (order[::2] == order[1::2]).nonzero()[0] * 2

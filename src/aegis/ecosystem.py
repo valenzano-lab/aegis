@@ -12,6 +12,7 @@ from aegis.modules.mortality.disease import Disease
 from aegis.modules.mortality.predation import Predation
 
 from aegis.panconfiguration import pan
+from aegis.help import other
 
 
 class Ecosystem:
@@ -167,7 +168,7 @@ class Ecosystem:
     def env_survival(self):
         """Impose environmental hazard death; i.e. death due to abiotic and cyclical factors such as temperature."""
         hazard = self.environment(pan.stage)
-        mask_kill = pan.rng.random(len(self.population), dtype=np.float32) < hazard
+        mask_kill = other.rng.random(len(self.population), dtype=np.float32) < hazard
         self._kill(mask_kill=mask_kill, causeofdeath="environment")
 
     def eco_survival(self):
@@ -178,7 +179,7 @@ class Ecosystem:
     def gen_survival(self):
         """Impose genomic death, i.e. death that arises with probability encoded in the genome."""
         probs_surv = self._get_evaluation("surv")
-        mask_surv = pan.rng.random(len(probs_surv), dtype=np.float32) < probs_surv
+        mask_surv = other.rng.random(len(probs_surv), dtype=np.float32) < probs_surv
         self._kill(mask_kill=~mask_surv, causeofdeath="genetic")
 
     def dis_survival(self):
@@ -190,7 +191,7 @@ class Ecosystem:
     def pred_survival(self):
         """Impose predation death"""
         probs_kill = self.predation(len(self))
-        mask_kill = pan.rng.random(len(self), dtype=np.float32) < probs_kill
+        mask_kill = other.rng.random(len(self), dtype=np.float32) < probs_kill
         self._kill(mask_kill=mask_kill, causeofdeath="predation")
 
     def season_step(self):
@@ -223,7 +224,7 @@ class Ecosystem:
 
         # Check if reproducing
         probs_repr = self._get_evaluation("repr", part=mask_fertile)
-        mask_repr = pan.rng.random(len(probs_repr), dtype=np.float32) < probs_repr
+        mask_repr = other.rng.random(len(probs_repr), dtype=np.float32) < probs_repr
 
         # Forgo if not at least two available parents
         if np.count_nonzero(mask_repr) < 2:

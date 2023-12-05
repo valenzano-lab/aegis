@@ -1,5 +1,3 @@
-import numpy as np
-
 from aegis.modules.reproduction.recombination import recombine
 from aegis.modules.reproduction.assortment import assort
 from aegis.modules.reproduction.mutation import _mutate_by_bit, _mutate_by_index

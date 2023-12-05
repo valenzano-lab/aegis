@@ -1,6 +1,7 @@
 import numpy as np
 
 from aegis.panconfiguration import pan
+from aegis.help import other
 
 
 class Flipmap:
@@ -26,5 +27,5 @@ class Flipmap:
         if self.dummy or pan.skip(self.FLIPMAP_CHANGE_RATE):
             return
 
-        indices = tuple(pan.rng.integers(self.map_.shape))
+        indices = tuple(other.rng.integers(self.map_.shape))
         self.map_[indices] = ~self.map_[indices]
