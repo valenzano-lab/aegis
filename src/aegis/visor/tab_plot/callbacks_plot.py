@@ -31,7 +31,7 @@ def gen_fig(fig_name, selected_sims, containers):
     Input({"type": "selection-state", "index": ALL}, "data"),
     State("plot-view-button", "className"),
 )
-@funcs.print_function_name
+@funcs.log_debug
 def disable_plot_tab(data, className):
     className = className.replace(" disabled", "")
     if data == [] or all(not selected for filename, selected in data):
@@ -45,7 +45,7 @@ def disable_plot_tab(data, className):
     Input("reload-plots-button", "n_clicks"),
     State({"type": "selection-state", "index": ALL}, "data"),
 )
-@funcs.print_function_name
+@funcs.log_debug
 def update_plot_tab(n_clicks1, n_clicks2, selection_states):
     """
     Update plots whenever someone clicks on the plot button or the reload button.

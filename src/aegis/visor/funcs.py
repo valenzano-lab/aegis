@@ -8,7 +8,6 @@ import logging
 
 from aegis.help import config
 
-logging.basicConfig(level=logging.INFO)
 
 BASE_DIR = pathlib.Path(platformdirs.user_data_dir("aegis", "aegis"))
 BASE_DIR.mkdir(parents=True, exist_ok=True)
@@ -42,9 +41,24 @@ def make_config_file(filename, configs):
         yaml.dump(configs, file_)
 
 
-def print_function_name(func):
+# def log_debug(func):
+#     def wrapper(*args, **kwargs):
+#         print(f"Executing function: {func.__name__}")
+#         return func(*args, **kwargs)
+#     return wrapper
+
+
+def log_debug(func):
     def wrapper(*args, **kwargs):
-        print(f"Executing function: {func.__name__}")
+        logging.debug(f"executing function: {func.__name__}")
+        return func(*args, **kwargs)
+
+    return wrapper
+
+
+def log_info(func):
+    def wrapper(*args, **kwargs):
+        logging.info(f"executing function: {func.__name__}")
         return func(*args, **kwargs)
 
     return wrapper

@@ -9,7 +9,7 @@ from aegis.help import config
 
 
 logging.basicConfig(
-    format="%(asctime)s : %(message)s",
+    format="%(asctime)s %(levelname)s %(module)s -- %(message)s",
     datefmt="%d/%m/%Y %I:%M:%S",
     level=logging.INFO,
 )

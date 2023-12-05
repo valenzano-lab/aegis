@@ -15,7 +15,7 @@ import subprocess
     Input("plot-view-button", "n_clicks"),
     prevent_initial_call=True,
 )
-@funcs.print_function_name
+@funcs.log_debug
 def toggle_display(*_):
     
     triggered = ctx.triggered_id.split("-")[0]
@@ -69,7 +69,7 @@ def toggle_display(*_):
 #     Input("process-monitor-interval", "n_intervals"),
 #     State("reload-plots-button", "n_clicks"),
 # )
-# @funcs.print_function_name
+# @funcs.log_debug
 # def monitor_processes(_, n_clicks):
 #     stdout = subprocess.run(
 #         ['ps aux | grep "\-\-config_path"'], shell=True, capture_output=True

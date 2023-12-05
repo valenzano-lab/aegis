@@ -17,7 +17,7 @@ DEFAULT_CONFIG_DICT = config.get_default_parameters()
     # ],
     prevent_initial_call=True,
 )
-@funcs.print_function_name
+@funcs.log_debug
 def run_simulation(n_clicks, filename, values):
     if n_clicks is None:
         return
@@ -46,7 +46,7 @@ def run_simulation(n_clicks, filename, values):
     #     if not isinstance(v, list)
     # ],
 )
-@funcs.print_function_name
+@funcs.log_debug
 def block_sim_button(filename, values):
     for k, value in zip(DEFAULT_CONFIG_DICT, values):
         if value != "" and value is not None:
@@ -73,7 +73,7 @@ def block_sim_button(filename, values):
     State({"type": "config-input", "index": MATCH}, "className"),
     prevent_initial_call=True,
 )
-@funcs.print_function_name
+@funcs.log_debug
 def block_config_input(value, className):
     print(className, "a")
     if ctx.triggered_id is None:
