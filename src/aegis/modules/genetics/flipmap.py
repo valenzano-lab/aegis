@@ -11,6 +11,7 @@ class Flipmap:
     """
 
     def __init__(self, gstruc_shape, FLIPMAP_CHANGE_RATE):
+        self.FLIPMAP_CHANGE_RATE = FLIPMAP_CHANGE_RATE
         if FLIPMAP_CHANGE_RATE == 0:
             self.dummy = True
         else:
@@ -24,7 +25,10 @@ class Flipmap:
 
     def evolve(self):
         """Modify the flipmap"""
-        if self.dummy or pan.skip(self.FLIPMAP_CHANGE_RATE):
+        if self.dummy:
+            return
+
+        if pan.stage % self.FLIPMAP_CHANGE_RATE > 0:
             return
 
         indices = tuple(other.rng.integers(self.map_.shape))

@@ -1,6 +1,16 @@
 import logging
 import numpy as np
 
+causeofdeath_valid = (
+    "max_lifespan",
+    "environment",
+    "overshoot",
+    "genetic",
+    "disease",
+    "predation",
+    "season_shift",
+)
+
 
 def get_default_parameters():
     return {p.key: p.default for p in params.values()}
@@ -62,9 +72,7 @@ class Param:
     def valid(self, value):
         # Not valid if wrong data type
         if not isinstance(value, self.dtype):
-            logging.error(
-                f"Value {value} is not of valid type {self.dtype} but of type {type(value)}"
-            )
+            logging.error(f"Value {value} is not of valid type {self.dtype} but of type {type(value)}")
             return False
 
         # Not valid if not in range
@@ -98,9 +106,7 @@ class Param:
     def validate_inrange(self, value):
         if self.inrange(value):
             return
-        raise ValueError(
-            f"{self.key} is set to be '{value}' which is outside of the valid range '{self.drange}'."
-        )
+        raise ValueError(f"{self.key} is set to be '{value}' which is outside of the valid range '{self.drange}'.")
 
     def validate_resrange(self, value):
         if self.resrange(value):
@@ -469,8 +475,7 @@ params = {
         info="",
         dtype=str,
         drange="{sinusoidal, flat, triangle, square, sawtooth, ramp}",
-        inrange=lambda x: x
-        in {"sinusoidal", "flat", "triangle", "square", "sawtooth", "ramp"},
+        inrange=lambda x: x in {"sinusoidal", "flat", "triangle", "square", "sawtooth", "ramp"},
     ),
     "BACKGROUND_INFECTIVITY": Param(
         key="BACKGROUND_INFECTIVITY",

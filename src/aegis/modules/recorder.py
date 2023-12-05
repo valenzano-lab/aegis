@@ -9,6 +9,7 @@ import subprocess
 
 from aegis.panconfiguration import pan
 from aegis.modules.popgenstats import PopgenStats
+from aegis.help.config import causeofdeath_valid
 
 
 class Recorder:
@@ -54,12 +55,7 @@ class Recorder:
             "additive_age_structure": [0] * MAX_LIFESPAN,
         }
 
-        self._collection.update(
-            {
-                f"age_at_{causeofdeath}": [0] * MAX_LIFESPAN
-                for causeofdeath in pan.causeofdeath_valid
-            }
-        )
+        self._collection.update({f"age_at_{causeofdeath}": [0] * MAX_LIFESPAN for causeofdeath in causeofdeath_valid})
 
         self.collection = copy.deepcopy(self._collection)
 
@@ -80,9 +76,7 @@ class Recorder:
                 np.savetxt(f, [array], delimiter=",", fmt="%i")
 
         with open(self.paths["visor"] / "genotypes.csv", "ab") as f:
-            array = np.arange(
-                gstruc_shape[0] * gstruc_shape[1] * gstruc_shape[2]
-            )  # (ploidy, length, bits_per_locus)
+            array = np.arange(gstruc_shape[0] * gstruc_shape[1] * gstruc_shape[2])  # (ploidy, length, bits_per_locus)
             np.savetxt(f, [array], delimiter=",", fmt="%i")
 
         with open(self.paths["visor"] / "phenotypes.csv", "ab") as f:
@@ -165,9 +159,7 @@ class Recorder:
                 np.savetxt(f, [array], delimiter=",", fmt="%1.3e")
 
     def record_pickle(self, population):
-        if (
-            pan.skip(pan.PICKLE_RATE_) and not pan.stage == 1
-        ):  # Also records the pickle before the first stage
+        if pan.skip(pan.PICKLE_RATE_) and not pan.stage == 1:  # Also records the pickle before the first stage
             return
 
         with open(self.paths["pickles"] / str(pan.stage), "wb") as f:
@@ -202,9 +194,7 @@ class Recorder:
 
     @staticmethod
     def get_folder_size_with_du(folder_path):
-        result = subprocess.run(
-            ["du", "-sh", folder_path], stdout=subprocess.PIPE, text=True
-        )
+        result = subprocess.run(["du", "-sh", folder_path], stdout=subprocess.PIPE, text=True)
         return result.stdout.split()[0]
 
     def record_output_summary(self):

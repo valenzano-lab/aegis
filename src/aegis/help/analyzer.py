@@ -1,5 +1,5 @@
 import pandas as pd
-from aegis.panconfiguration import pan
+from aegis.help.config import causeofdeath_valid
 
 
 # ANALYZE FEATHER SNAPSHOTS
@@ -31,7 +31,7 @@ def get_birth_structure(container):
 def get_death_structure(container, targetcause="genetic"):
     age_at = {
         causeofdeath: container.get_df(f"age_at_{causeofdeath}")
-        for causeofdeath in pan.causeofdeath_valid
+        for causeofdeath in causeofdeath_valid
     }
 
     pseudocount = 0
@@ -50,7 +50,7 @@ def get_death_structure(container, targetcause="genetic"):
 def get_causes_of_death(container):
     age_at = {
         causeofdeath: container.get_df(f"age_at_{causeofdeath}").stack()
-        for causeofdeath in pan.causeofdeath_valid
+        for causeofdeath in causeofdeath_valid
     }
     return pd.DataFrame(age_at)
 

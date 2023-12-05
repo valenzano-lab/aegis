@@ -12,6 +12,7 @@ from aegis.modules.mortality.disease import Disease
 from aegis.modules.mortality.predation import Predation
 
 from aegis.panconfiguration import pan
+from aegis.help.config import causeofdeath_valid
 from aegis.help import other
 
 
@@ -298,7 +299,7 @@ class Ecosystem:
         Killing can occur due to age, genomic death, ecological death, and season shift.
         """
 
-        assert causeofdeath in pan.causeofdeath_valid
+        assert causeofdeath in causeofdeath_valid
 
         # Skip if no one to kill
         if not any(mask_kill):

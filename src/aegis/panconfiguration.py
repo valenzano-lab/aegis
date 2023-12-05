@@ -55,16 +55,6 @@ class Panconfiguration:
     Wraps also some other useful helper functions.
     """
 
-    causeofdeath_valid = (
-        "max_lifespan",
-        "environment",
-        "overshoot",
-        "genetic",
-        "disease",
-        "predation",
-        "season_shift",
-    )
-
     def skip(self, rate):
         """Should you skip an action performed at a certain rate"""
         return (rate <= 0) or (self.stage % rate > 0)
