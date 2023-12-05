@@ -56,9 +56,10 @@ def update_plot_tab(n_clicks1, n_clicks2, selection_states):
         selection_states = [["default", True]]
 
     containers = {}
+    base_dir = funcs.get_base_dir()
     for filename, selected in selection_states:
         if selected and filename not in containers:
-            containers[filename] = Container(funcs.BASE_DIR / filename)
+            containers[filename] = Container(base_dir / filename)
 
     selected_sims = [filename for filename, selected in selection_states if selected]
     logging.info("Plotting: " + ", ".join(selected_sims))

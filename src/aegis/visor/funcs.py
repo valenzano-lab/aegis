@@ -1,7 +1,6 @@
 import platformdirs
 import subprocess
 
-import time
 import pathlib
 import yaml
 import logging
@@ -9,10 +8,12 @@ import logging
 from aegis.help import config
 
 
-BASE_DIR = pathlib.Path(platformdirs.user_data_dir("aegis", "aegis"))
-BASE_DIR.mkdir(parents=True, exist_ok=True)
+def get_here():
+    return pathlib.Path(__file__).absolute().parent
 
-HERE = pathlib.Path(__file__).absolute().parent
+
+def get_base_dir():
+    return pathlib.Path(platformdirs.user_data_dir("aegis", "aegis"))
 
 
 def read_yml(path):
@@ -21,7 +22,7 @@ def read_yml(path):
 
 
 def get_config_path(filename):
-    return BASE_DIR / f"{filename}.yml"
+    return get_base_dir() / f"{filename}.yml"
 
 
 def run(filename):
@@ -41,13 +42,6 @@ def make_config_file(filename, configs):
         yaml.dump(configs, file_)
 
 
-# def log_debug(func):
-#     def wrapper(*args, **kwargs):
-#         print(f"Executing function: {func.__name__}")
-#         return func(*args, **kwargs)
-#     return wrapper
-
-
 def log_debug(func):
     def wrapper(*args, **kwargs):
         logging.debug(f"executing function: {func.__name__}")
@@ -65,7 +59,8 @@ def log_info(func):
 
 
 def get_sim_paths():
-    return [p for p in BASE_DIR.iterdir() if p.is_dir()]
+    base_dir = get_base_dir()
+    return [p for p in base_dir.iterdir() if p.is_dir()]
 
 
 def get_sims():

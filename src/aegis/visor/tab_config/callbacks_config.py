@@ -2,19 +2,12 @@ from dash import html, dcc, callback, Output, Input, State, ALL, MATCH, ctx
 from aegis.visor import funcs
 from aegis.help import config
 
-DEFAULT_CONFIG_DICT = config.get_default_parameters()
-
 
 @callback(
     Output("config-make-text", "value"),
     Input("simulation-run-button", "n_clicks"),
     State("config-make-text", "value"),
     State({"type": "config-input", "index": ALL}, "value"),
-    # [
-    #     State(f"config-{k}", "value")
-    #     for k, v in DEFAULT_CONFIG_DICT.items()
-    #     if not isinstance(v, list)
-    # ],
     prevent_initial_call=True,
 )
 @funcs.log_debug
@@ -23,9 +16,10 @@ def run_simulation(n_clicks, filename, values):
         return
 
     # make config file
+    default_config = config.get_default_parameters()
     custom_config = {
         k: val
-        for (k, v), val in zip(DEFAULT_CONFIG_DICT.items(), values)
+        for (k, v), val in zip(default_config.items(), values)
         if not isinstance(v, list)
     }
     funcs.make_config_file(filename, custom_config)
@@ -40,15 +34,11 @@ def run_simulation(n_clicks, filename, values):
     Output("simulation-run-button", "disabled"),
     Input("config-make-text", "value"),
     Input({"type": "config-input", "index": ALL}, "value"),
-    # [
-    #     Input(f"config-{k}", "value")
-    #     for k, v in DEFAULT_CONFIG_DICT.items()
-    #     if not isinstance(v, list)
-    # ],
 )
 @funcs.log_debug
 def block_sim_button(filename, values):
-    for k, value in zip(DEFAULT_CONFIG_DICT, values):
+    default_config = config.get_default_parameters()
+    for k, value in zip(default_config, values):
         if value != "" and value is not None:
             param = config.params[k]
             val = param.convert(value)
@@ -89,19 +79,3 @@ def block_config_input(value, className):
 
     print(className, "a")
     return className
-
-    # for k, value in zip(DEFAULT_CONFIG_DICT, values):
-    #     if value != "" and value is not None:
-    #         param = config.params[k]
-    #         val = param.convert(value)
-    #         valid = param.resrange(val)
-    #         if not valid:
-    #             return True
-
-    # if filename is None or filename == "" or "." in filename:
-    #     return True
-
-    # sim_exists = funcs.sim_exists(filename)
-    # if sim_exists:
-    #     return True
-    # return False
