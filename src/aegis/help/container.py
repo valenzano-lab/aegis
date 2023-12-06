@@ -15,11 +15,12 @@ class Container:
         self.basepath = pathlib.Path(basepath).absolute()
         self.name = self.basepath.stem
         self.paths = {
-            path.stem: path
-            for path in self.basepath.glob("**/*")
-            if path.is_file() and path.suffix == ".csv"
+            path.stem: path for path in self.basepath.glob("**/*") if path.is_file() and path.suffix == ".csv"
         }
         self.paths["log"] = self.basepath / "progress.log"
+        self.paths["output_summary"] = self.basepath / "output_summary.json"
+        self.paths["input_summary"] = self.basepath / "input_summary.json"
+        self.paths["snapshots"] = self.basepath / "snapshots"
         self.data = {}
 
         if not self.paths["log"].is_file():
@@ -33,6 +34,7 @@ class Container:
             def dhm_inverse(dhm):
                 nums = dhm.replace("`", ":").split(":")
                 return int(nums[0]) * 24 * 60 + int(nums[1]) * 60 + int(nums[2])
+
             # TODO resolve deprecated function
             try:
                 df[["ETA", "t1M", "runtime"]].map(dhm_inverse)
@@ -66,20 +68,18 @@ class Container:
         return json
 
     def get_output_summary(self):
-        path = self.basepath / "0" / "output_summary.json"
-        if path.exists():
-            with open(path, "r") as file_:
+        if self.paths["output_summary"].exists():
+            with open(self.paths["output_summary"], "r") as file_:
                 return json.load(file_)
 
     def get_input_summary(self):
-        path = self.basepath / "0" / "input_summary.json"
-        if path.exists():
-            with open(path, "r") as file_:
+        if self.paths["input_summary"].exists():
+            with open(self.paths["input_summary"], "r") as file_:
                 return json.load(file_)
 
     def get_snapshot(self, kind, index):
         paths = sorted(
-            (self.basepath / "0" / "snapshots" / kind).glob("*"),
+            (self.paths["snapshots"] / kind).glob("*"),
             key=lambda path: int(path.stem),
         )
 
