@@ -1,0 +1,437 @@
+@font-face {
+  font-family: "Quicksand";
+  src: url("Quicksand.ttf") format("truetype");
+}
+
+@font-face {
+  font-family: "Inter";
+  src: url("Inter.ttf") format("truetype");
+}
+
+:root {
+  /* old */
+  --mid-black: rgb(24, 25, 27);
+
+  --prim: rgb(39, 66, 130);
+  --sec: rgb(29, 124, 219);
+
+  /* background */
+
+  /* text */
+  --text: rgb(50, 50, 50);
+  --white: rgb(190, 189, 183);
+  --gray: rgb(65, 69, 71);
+
+  /* table */
+  --th-bckg: rgb(200, 200, 200);
+  --tr1-bckg: rgb(220, 220, 220);
+  --tr2-bckg: rgb(225, 225, 225);
+
+  /* variants */
+  --prim-90: rgba(var(--prim), 0.9);
+
+  /* colorful */
+
+  /* meaning */
+  --disabled: rgb(100, 0, 0);
+}
+
+/* GENERAL */
+
+/* config tab */
+.config-domain {
+  text-transform: uppercase;
+  font-weight: 700;
+  color: var(--white);
+}
+
+.config-domain-desc {
+  color: var(--white);
+}
+
+/* table */
+td,
+th {
+  -webkit-touch-callout: none;
+  /* iOS Safari */
+  -webkit-user-select: none;
+  /* Safari */
+  -khtml-user-select: none;
+  /* Konqueror HTML */
+  -moz-user-select: none;
+  /* Old versions of Firefox */
+  -ms-user-select: none;
+  /* Internet Explorer/Edge */
+  user-select: none;
+  /* Non-prefixed version, currently supported by Chrome, Edge, Opera and Firefox */
+}
+
+td {
+  color: var(--white);
+}
+
+td,
+th {
+  padding-left: 0.5rem;
+  padding-right: 0.5rem;
+  font-family: Inter;
+}
+
+td {
+  height: 2rem;
+  padding-top: 0.5rem;
+  padding-bottom: 0.5rem;
+}
+
+th {
+  padding-top: 0.8rem;
+  padding-bottom: 0.8rem;
+  margin-top: 1.5rem;
+  background-color: rgb(116, 170, 186);
+}
+
+tr {
+  background-color: rgb(168, 192, 204);
+}
+
+tr:nth-of-type(odd) {
+  background-color: rgb(128, 169, 190);
+}
+
+.config-table th,
+#list-table th {
+  color: var(--prim);
+}
+
+.config-table th {
+  text-align: left;
+}
+
+.config-table,
+#list-table {
+  border-spacing: 0px;
+  font-size: 14px;
+  width: 100%;
+}
+
+.resrange_info_message {
+  font-style: italic;
+  margin: 0;
+  color: var(--gray);
+}
+
+label.dtype-str,
+label.domain-recording {
+  color: rgb(212, 116, 116);
+  background-color: rgba(255, 195, 195, 0.03);
+}
+
+label.dtype-int {
+  color: rgb(147, 187, 53);
+  background-color: rgba(226, 255, 173, 0.03);
+}
+
+label.dtype-float {
+  color: rgb(200, 144, 13);
+  background-color: rgba(255, 255, 167, 0.03);
+}
+
+label.dtype-bool {
+  color: rgb(53, 178, 187);
+  background-color: rgba(179, 235, 255, 0.03);
+}
+
+label.domain-ecology {
+  color: rgb(86, 176, 45);
+  background-color: rgba(212, 255, 199, 0.03);
+}
+
+label.domain-initialization {
+  color: rgb(103, 129, 231);
+  background-color: rgba(189, 193, 255, 0.03);
+}
+
+label.domain-genetics {
+  color: rgb(147, 104, 217);
+  background-color: rgba(229, 180, 255, 0.03);
+}
+
+label.domain-computation {
+  color: rgb(217, 89, 196);
+  background-color: rgba(255, 192, 238, 0.03);
+}
+
+table {
+  border-radius: 10px;
+  margin-bottom: 2rem;
+}
+
+#list-table {
+  text-align: center;
+}
+
+th:first-of-type {
+  border-top-left-radius: 10px;
+}
+
+th:last-of-type {
+  border-top-right-radius: 10px;
+}
+
+tr:last-of-type td:first-of-type {
+  border-bottom-left-radius: 10px;
+}
+
+tr:last-of-type td:last-of-type {
+  border-bottom-right-radius: 10px;
+}
+
+.domain,
+.dtype {
+  font-family: Quicksand;
+  font-weight: 600;
+}
+
+.config-table td.td-info {
+  font-size: 14px;
+}
+
+th.valid-values {
+  width: 100px;
+}
+
+/* -- table */
+/* input */
+
+input {
+  font-family: Quicksand;
+  font-weight: 700;
+}
+
+input:focus {
+  outline: 2px solid var(--prim) !important;
+}
+
+label,
+input {
+  padding: 0.3rem 0.5rem;
+  font-size: 14px;
+  border: none;
+}
+
+label,
+input {
+  border-radius: 6px;
+}
+
+label {
+  padding: 0.25rem 0.5rem;
+}
+
+input {
+  border: 0px solid;
+  margin: 0.2rem;
+}
+
+input:placeholder-shown {
+  background-color: var(--mid-black);
+  color: var(--gray);
+}
+
+input::placeholder {
+  color: var(--gray);
+  font-weight: bold;
+}
+
+input:hover {
+  background-color: var(--prim);
+}
+
+input:not(:placeholder-shown) {
+  background-color: var(--prim);
+  color: var(--mid-black);
+}
+
+/* -- input */
+/* button */
+
+button {
+  font-family: Quicksand;
+  font-weight: 700;
+  padding: 0.3rem 0.5rem;
+  font-size: 14px;
+  border: none;
+}
+button:disabled {
+  cursor: not-allowed;
+  background-color: var(--mid-black);
+  color: var(--gray);
+}
+
+#plot-view-button.disabled {
+  pointer-events: none;
+  background-color: red !important;
+}
+
+button.checklist.checked {
+  background-color: var(--sec);
+  color: white;
+}
+
+button.checklist.checked:hover {
+  background-color: rgb(18, 87, 157);
+  color: white;
+}
+
+button.checklist.checked:active {
+  background-color: rgb(14, 68, 122);
+  color: var(--white);
+}
+
+.view-button label:hover {
+  cursor: pointer;
+}
+
+.view-button {
+  height: 2rem;
+  padding: 0.3rem 0.6rem;
+  display: flex;
+  white-space: nowrap;
+  font-weight: bold;
+}
+
+.view-button:first-of-type {
+  border-radius: 10px 0 0 10px;
+}
+
+.view-button:last-of-type {
+  border-radius: 0 10px 10px 0;
+}
+
+.view-button label {
+  font-size: 14px;
+  margin: 2px 0;
+}
+
+button,
+.view-button {
+  background-color: var(--prim);
+  color: var(--mid-black);
+  font-weight: bold;
+  cursor: pointer;
+}
+
+button {
+  border-radius: 1rem;
+}
+
+button:hover,
+.view-button:hover {
+  cursor: pointer;
+  background-color: var(--mid-black);
+  color: var(--prim);
+}
+
+button:active {
+  background-color: var(--mid-black);
+  color: var(--prim);
+}
+
+/* -- button */
+/* plot tab */
+
+/* OTHER */
+
+body {
+  font-family: Quicksand;
+  margin: 0;
+  background-color: #f1f1f1;
+}
+
+#main-container {
+  padding: 0 10%;
+}
+
+.svg-plot {
+  width: 26px;
+  height: 26px;
+  margin: 3px 0;
+}
+
+.config-input-class.disabled {
+  background-color: var(--disabled);
+  border: none;
+}
+
+.dropdown-div {
+  display: flex;
+}
+
+.plot-div {
+  display: flex;
+  flex-direction: row;
+  width: 2000px;
+}
+
+#landing-section {
+  display: flex;
+  flex-direction: column;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+#figure-container {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.figure-card {
+  padding: 30px 15px 30px 15px;
+  margin: 0 15px 15px 0;
+  min-height: 100px;
+  display: flex;
+  width: 100%;
+  background-color: var(--mid-black);
+  color: var(--white);
+  border-radius: 16px;
+}
+
+.figure-card:hover {
+  box-shadow: 0 0 10px rgb(228, 178, 104, 0.1);
+  transition: box-shadow 0.1s ease;
+}
+
+h1 {
+  color: var(--prim);
+  font-weight: black;
+  margin: 0 2rem 0 0;
+}
+
+.material-symbols-rounded {
+  font-variation-settings: "FILL" 0, "wght" 400, "GRAD" 0, "opsz" 24;
+}
+
+.title-section {
+  display: flex;
+  flex-direction: row;
+  padding-top: 1rem;
+}
+
+.figure-title {
+  font-weight: bold;
+}
+
+.footer-p {
+  font-size: 12px;
+}
+
+.control-element {
+  height: 2.6rem;
+  border-radius: 10px;
+  padding: 0 1rem;
+  margin: 0 0.2rem;
+}
+
+text.xtitle {
+  fill: white !important;
+}
