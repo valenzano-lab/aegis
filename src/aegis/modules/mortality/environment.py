@@ -2,64 +2,62 @@
 import math
 import logging
 
-ENVIRONMENT_HAZARD_AMPLITUDE = None
-ENVIRONMENT_HAZARD_OFFSET = None
-ENVIRONMENT_HAZARD_PERIOD = None
-ENVIRONMENT_HAZARD_SHAPE = None
-func = None
+from aegis import cnf
+
+func = None  # defined below
 
 
 def get_hazard(stage):
-    return func(stage) + ENVIRONMENT_HAZARD_OFFSET
+    return func(stage) + cnf.ENVIRONMENT_HAZARD_OFFSET
 
 
 def flat():
-    return ENVIRONMENT_HAZARD_AMPLITUDE
+    return cnf.ENVIRONMENT_HAZARD_AMPLITUDE
 
 
 def sinusoidal(stage):
-    return ENVIRONMENT_HAZARD_AMPLITUDE * math.sin(2 * math.pi * stage / ENVIRONMENT_HAZARD_PERIOD)
+    return cnf.ENVIRONMENT_HAZARD_AMPLITUDE * math.sin(2 * math.pi * stage / cnf.ENVIRONMENT_HAZARD_PERIOD)
 
 
 def triangle(stage):
-    return ENVIRONMENT_HAZARD_AMPLITUDE * (
-        1 - 4 * abs(round(stage / ENVIRONMENT_HAZARD_PERIOD - 0.5) - (stage / ENVIRONMENT_HAZARD_PERIOD - 0.5))
+    return cnf.ENVIRONMENT_HAZARD_AMPLITUDE * (
+        1 - 4 * abs(round(stage / cnf.ENVIRONMENT_HAZARD_PERIOD - 0.5) - (stage / cnf.ENVIRONMENT_HAZARD_PERIOD - 0.5))
     )
 
 
 def square(stage):
-    return ENVIRONMENT_HAZARD_AMPLITUDE * (
-        1 if (stage % ENVIRONMENT_HAZARD_PERIOD) < (ENVIRONMENT_HAZARD_PERIOD / 2) else -1
+    return cnf.ENVIRONMENT_HAZARD_AMPLITUDE * (
+        1 if (stage % cnf.ENVIRONMENT_HAZARD_PERIOD) < (cnf.ENVIRONMENT_HAZARD_PERIOD / 2) else -1
     )
 
 
 def sawtooth(stage):
-    return ENVIRONMENT_HAZARD_AMPLITUDE * (
-        2 * (stage / ENVIRONMENT_HAZARD_PERIOD - math.floor(stage / ENVIRONMENT_HAZARD_PERIOD + 0.5))
+    return cnf.ENVIRONMENT_HAZARD_AMPLITUDE * (
+        2 * (stage / cnf.ENVIRONMENT_HAZARD_PERIOD - math.floor(stage / cnf.ENVIRONMENT_HAZARD_PERIOD + 0.5))
     )
 
 
 def ramp(stage):
-    return ENVIRONMENT_HAZARD_AMPLITUDE * (stage % ENVIRONMENT_HAZARD_PERIOD) / ENVIRONMENT_HAZARD_PERIOD
+    return cnf.ENVIRONMENT_HAZARD_AMPLITUDE * (stage % cnf.ENVIRONMENT_HAZARD_PERIOD) / cnf.ENVIRONMENT_HAZARD_PERIOD
 
 
-def init(
-    self,
-    ENVIRONMENT_HAZARD_AMPLITUDE,
-    ENVIRONMENT_HAZARD_OFFSET,
-    ENVIRONMENT_HAZARD_PERIOD,
-    ENVIRONMENT_HAZARD_SHAPE,
+func = {
+    "flat": flat,
+    "sinusoidal": sinusoidal,
+    "triangle": triangle,
+    "square": square,
+    "sawtooth": sawtooth,
+    "ramp": ramp,
+}[cnf.ENVIRONMENT_HAZARD_SHAPE]
+
+if (
+    cnf.ENVIRONMENT_HAZARD_SHAPE == "flat"
+    and cnf.ENVIRONMENT_HAZARD_AMPLITUDE > 0
+    and cnf.ENVIRONMENT_HAZARD_OFFSET > 0
 ):
-    self.ENVIRONMENT_HAZARD_AMPLITUDE = ENVIRONMENT_HAZARD_AMPLITUDE
-    self.ENVIRONMENT_HAZARD_OFFSET = ENVIRONMENT_HAZARD_OFFSET
-    self.ENVIRONMENT_HAZARD_PERIOD = ENVIRONMENT_HAZARD_PERIOD
-    self.ENVIRONMENT_HAZARD_SHAPE = ENVIRONMENT_HAZARD_SHAPE
-    self.func = getattr(self, ENVIRONMENT_HAZARD_SHAPE)
-
-    if ENVIRONMENT_HAZARD_SHAPE == "flat" and ENVIRONMENT_HAZARD_AMPLITUDE > 0 and ENVIRONMENT_HAZARD_OFFSET > 0:
-        logging.info(
-            """
-            Note that under flat environmental hazard, amplitude and offset have the same effects;
-            the total environmental mortality is simply their sum.
-            """
-        )
+    logging.info(
+        """
+        Note that under flat cnf.environmental hazard, amplitude and offset have the same effects;
+        the total cnf.environmental mortality is simply their sum.
+        """
+    )

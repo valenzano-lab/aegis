@@ -4,37 +4,26 @@ Transforms bool array into an array of numbers.
 These numbers can be loosely understood as gene activity.
 """
 import numpy as np
+from aegis import cnf
+from aegis import pan
 
-from aegis.help import other
 
 exp_base = 0.5  # Important for _exp
 binary_exp_base = 0.98  # Important for _binary_exp
 
-BITS_PER_LOCUS = None
-BITS_PER_LOCUS = None
-THRESHOLD = None
-binary_weights = None
-binary_switch_weights = None
-linear_weights = None
+# Parameters for the binary interpreter
+binary_weights = 2 ** np.arange(cnf.BITS_PER_LOCUS)[::-1]
+binary_weights = binary_weights / binary_weights.sum()
 
+# Parameters for the binary switch interpreter
+binary_switch_weights = 2 ** np.arange(cnf.BITS_PER_LOCUS)[::-1]
+binary_switch_weights[-1] = 0  # Switch bit does not add to locus value
+binary_switch_weights = binary_switch_weights / binary_switch_weights.sum()
+# e.g. when BITS_PER_LOCUS is 4, binary_switch_weights are [4/7, 2/7, 1/7, 0]
 
-def init(self, BITS_PER_LOCUS, DOMINANCE_FACTOR, THRESHOLD):
-    self.DOMINANCE_FACTOR = DOMINANCE_FACTOR
-    self.THRESHOLD = THRESHOLD
-
-    # Parameters for the binary interpreter
-    self.binary_weights = 2 ** np.arange(BITS_PER_LOCUS)[::-1]
-    self.binary_weights = self.binary_weights / self.binary_weights.sum()
-
-    # Parameters for the binary switch interpreter
-    self.binary_switch_weights = 2 ** np.arange(BITS_PER_LOCUS)[::-1]
-    self.binary_switch_weights[-1] = 0  # Switch bit does not add to locus value
-    self.binary_switch_weights = self.binary_switch_weights / self.binary_switch_weights.sum()
-    # e.g. when BITS_PER_LOCUS is 4, binary_switch_weights are [4/7, 2/7, 1/7, 0]
-
-    # Parameters for the linear interpreter
-    self.linear_weights = np.arange(BITS_PER_LOCUS)[::-1] + 1
-    self.linear_weights = self.linear_weights / self.linear_weights.sum()
+# Parameters for the linear interpreter
+linear_weights = np.arange(cnf.BITS_PER_LOCUS)[::-1] + 1
+linear_weights = linear_weights / linear_weights.sum()
 
 
 def _diploid_to_haploid(loci):
@@ -52,10 +41,10 @@ def _diploid_to_haploid(loci):
     mask = zygosity == 0.5
 
     # correct heterozygous with DOMINANCE_FACTOR
-    if isinstance(DOMINANCE_FACTOR, list):
-        zygosity[mask] = DOMINANCE_FACTOR[mask]
+    if isinstance(cnf.DOMINANCE_FACTOR, list):
+        zygosity[mask] = cnf.DOMINANCE_FACTOR[mask]
     else:
-        zygosity[mask] = DOMINANCE_FACTOR
+        zygosity[mask] = cnf.DOMINANCE_FACTOR
 
     return zygosity
 
@@ -72,7 +61,7 @@ def _threshold(loci):
     """Penna interpreter
     Cares only about the first bit of the locus.
     """
-    return (~loci[:, :, 0]).cumsum(-1) < THRESHOLD
+    return (~loci[:, :, 0]).cumsum(-1) < cnf.THRESHOLD
 
 
 def _linear(loci):
@@ -96,7 +85,7 @@ def _switch(loci):
     Position-independent.
     """
     sums = loci.mean(2)
-    rand_values = other.rng.random(loci.shape[:-1], dtype=np.float32) < 0.5
+    rand_values = pan.rng.random(loci.shape[:-1], dtype=np.float32) < 0.5
     return np.select([sums == 0, (sums > 0) & (sums < 1), sums == 1], [0, rand_values, 1])
 
 
@@ -144,7 +133,7 @@ def _binary_exp(loci):
     return binary_exp_base**binary
 
 
-def do(loci, interpreter_kind):
+def call(loci, interpreter_kind):
     """Exposed method"""
     method = {
         "const1": _const1,

@@ -1,12 +1,18 @@
 import numpy as np
-from aegis.help import other
+from aegis import pan
+from aegis import cnf
 
 
-def _mutate_by_bit(rate_0to1, rate_1to0, genomes, muta_prob, random_probabilities=None):
+rate_0to1 = cnf.MUTATION_RATIO / (1 + cnf.MUTATION_RATIO)
+rate_1to0 = 1 / (1 + cnf.MUTATION_RATIO)
+_mutate = None  # defined below
+
+
+def _mutate_by_bit(genomes, muta_prob, random_probabilities=None):
     """Induce germline mutations."""
 
     if random_probabilities is None:
-        random_probabilities = other.rng.random(genomes.shape, dtype=np.float32)
+        random_probabilities = pan.rng.random(genomes.shape, dtype=np.float32)
 
     # Broadcast to fit [individual, chromatid, locus, bit] shape
     mutation_probabilities = muta_prob[:, None, None, None]
@@ -24,7 +30,7 @@ def _mutate_by_bit(rate_0to1, rate_1to0, genomes, muta_prob, random_probabilitie
     return genomes
 
 
-def _mutate_by_index(rate_0to1, rate_1to0, genomes, muta_prob):
+def _mutate_by_index(genomes, muta_prob):
     """Alternative faster method for introducing mutations.
 
     Instead of generating a random probability for every bit in the array of genomes,
@@ -61,3 +67,12 @@ def _mutate_by_index(rate_0to1, rate_1to0, genomes, muta_prob):
     genomes[tuple(mutation_indices[:, bits0_indices.T])] = True
 
     return genomes
+
+
+# Set mutation method
+if cnf.MUTATION_METHOD == "by_index":
+    _mutate = _mutate_by_index
+elif cnf.MUTATION_METHOD == "by_bit":
+    _mutate = _mutate_by_bit
+else:
+    raise ValueError("MUTATION_METHOD must be 'by_index' or 'by_bit'")

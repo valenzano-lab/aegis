@@ -1,26 +1,13 @@
-"""Universal configuration
-
-Contains simulation-wide parameters (parameters that affect the whole simulation and not just one ecosystem).
-Wraps also some other useful helper functions.
-"""
-
 import pathlib
 import time
 import numpy as np
 import shutil
 import logging
+import argparse
 import yaml
 
-from aegis.help import config
-from aegis.help import other
-
-from aegis.modules import popgenstats
-from aegis.modules import recorder
-
-from aegis.modules.genetics import phenomap
-from aegis.modules.genetics import interpreter
-from aegis.modules.genetics import flipmap
-
+from aegis import cnf
+from aegis.help.config import get_default_parameters, validate
 
 logging.basicConfig(
     format="%(asctime)s %(levelname)s %(module)s -- %(message)s",
@@ -28,111 +15,42 @@ logging.basicConfig(
     level=logging.DEBUG,
 )
 
-stage = 1
-time_start = time.time()
-here = pathlib.Path(__file__).absolute().parent
 
-
-def init(custom_config_path, overwrite, running_on_server=False):
-    global output_path
-    global progress_path
-    global params
-    global LOGGING_RATE_
-    global STAGES_PER_SIMULATION_
-
-    # Output directory
-    output_path = custom_config_path.parent / custom_config_path.stem
-    if output_path.exists() and output_path.is_dir():
-        if overwrite:
-            shutil.rmtree(output_path)  # Delete previous directory if existing
-        else:
-            raise Exception(f"--overwrite is set to False but {output_path} already exists")
-    output_path.mkdir(parents=True, exist_ok=True)
-
-    # Get parameters
-    params = get_params(custom_config_path, running_on_server=running_on_server)
-
-    # Simulation-wide parameters
-    STAGES_PER_SIMULATION_ = params["STAGES_PER_SIMULATION_"]
-    LOGGING_RATE_ = params["LOGGING_RATE_"]
-    recorder.PICKLE_RATE_ = params["PICKLE_RATE_"]
-    recorder.SNAPSHOT_RATE_ = params["SNAPSHOT_RATE_"]
-    recorder.VISOR_RATE_ = params["VISOR_RATE_"]
-    recorder.POPGENSTATS_RATE_ = params["POPGENSTATS_RATE_"]
-    popgenstats.POPGENSTATS_SAMPLE_SIZE_ = params["POPGENSTATS_SAMPLE_SIZE_"]
-
-    # Init phenomap (partial)
-    phenomap.PHENOMAP_SPECS = params["PHENOMAP_SPECS"]
-    phenomap.PHENOMAP_METHOD = params["PHENOMAP_METHOD"]
-
-    # Init interpreter
-    interpreter.init(
-        interpreter,
-        BITS_PER_LOCUS=params["BITS_PER_LOCUS"],
-        DOMINANCE_FACTOR=params["DOMINANCE_FACTOR"],
-        THRESHOLD=params["THRESHOLD"],
+def parse():
+    # Define parser
+    parser = argparse.ArgumentParser(description="Aging of Evolving Genomes in Silico")
+    parser.add_argument(
+        "-c",
+        "--config_path",
+        type=str,
+        help="path to config file",
+        default="",
+    )
+    parser.add_argument(
+        "-p",
+        "--pickle_path",
+        type=str,
+        help="path to pickle file",
+        default="",
+    )
+    parser.add_argument(
+        "--overwrite",
+        type=bool,
+        help="overwrite old data with new simulation",
+        default=False,
     )
 
-    # Init flipmap (partial)
-    flipmap.FLIPMAP_CHANGE_RATE = params["FLIPMAP_CHANGE_RATE"]
+    # Parse arguments
+    args = parser.parse_args()
 
-    # Random number generator
-    recorder.random_seed = np.random.randint(1, 10**6) if params["RANDOM_SEED_"] is None else params["RANDOM_SEED_"]
-    other.rng = np.random.default_rng(recorder.random_seed)
+    # Decision tree
+    config_path = pathlib.Path(args.config_path).absolute() if args.config_path else ""
+    pickle_path = pathlib.Path(args.pickle_path).absolute() if args.pickle_path else ""
 
-    # Progress log
-    progress_path = output_path / "progress.log"
-    content = ("stage", "ETA", "t1M", "runtime", "stg/min")
-    with open(progress_path, "wb") as f:
-        np.savetxt(f, [content], fmt="%-10s", delimiter="| ")
+    return config_path, pickle_path, args.overwrite
 
 
-def skip(rate):
-    """Should you skip an action performed at a certain rate"""
-    return (rate <= 0) or (stage % rate > 0)
-
-
-def _log_progress():
-    """Record some information about the time and speed of simulation."""
-
-    if skip(LOGGING_RATE_):
-        return
-
-    logging.info("%8s / %s", stage, STAGES_PER_SIMULATION_)
-
-    # Get time estimations
-    time_diff = time.time() - time_start
-
-    seconds_per_100 = time_diff / stage * 100
-    eta = (STAGES_PER_SIMULATION_ - stage) / 100 * seconds_per_100
-
-    stages_per_min = int(stage / (time_diff / 60))
-
-    runtime = get_dhm(time_diff)
-    time_per_1M = get_dhm(time_diff / stage * 1000000)
-    eta = get_dhm(eta)
-
-    # Save time estimations
-    content = (stage, eta, time_per_1M, runtime, stages_per_min)
-    with open(progress_path, "ab") as f:
-        np.savetxt(f, [content], fmt="%-10s", delimiter="| ")
-
-
-# Static methods
-
-
-def get_dhm(timediff):
-    """Format time in a human-readable format."""
-    d = int(timediff / 86400)
-    timediff %= 86400
-    h = int(timediff / 3600)
-    timediff %= 3600
-    m = int(timediff / 60)
-    return f"{d}`{h:02}:{m:02}"
-
-
-def get_params(custom_config_path, running_on_server):
-    """Fetch and validate input parameters."""
+def set_up_cnf(custom_config_path, running_on_server):
     # Read config parameters from the custom config file
     with open(custom_config_path, "r") as f:
         custom_config_params = yaml.safe_load(f)
@@ -141,13 +59,65 @@ def get_params(custom_config_path, running_on_server):
         custom_config_params = {}
 
     # Read config parameters from the default config file
-    default_config_params = config.get_default_parameters()
+    default_config_params = get_default_parameters()
 
     # Fuse
     params = {}
     params.update(default_config_params)
     params.update(custom_config_params)
 
-    config.validate(params, validate_resrange=running_on_server)
+    validate(params, validate_resrange=running_on_server)
 
-    return params
+    for k, v in params.items():
+        setattr(cnf, k, v)
+
+
+def skip(rate):
+    """Should you skip an action performed at a certain rate"""
+    return (rate <= 0) or (stage % rate > 0)
+
+
+# Decorators
+def profile_time(func):
+    def wrapper(*args, **kwargs):
+        start_time = time.time()
+        result = func(*args, **kwargs)
+        end_time = time.time()
+        execution_time = (end_time - start_time) * 1000
+        print(f"{func.__name__} took {execution_time:.6f} ms to execute")
+        return result
+
+    return wrapper
+
+
+# INITIALIZE
+
+stage = 1
+time_start = time.time()
+here = pathlib.Path(__file__).absolute().parent
+config_path, pickle_path, overwrite = parse()
+
+
+if config_path:
+    set_up_cnf(config_path, running_on_server=False)
+    # Output directory
+    output_path = config_path.parent / config_path.stem
+    if output_path.exists() and output_path.is_dir():
+        if overwrite:
+            shutil.rmtree(output_path)  # Delete previous directory if existing
+        else:
+            raise Exception(f"--overwrite is set to False but {output_path} already exists")
+    output_path.mkdir(parents=True, exist_ok=True)
+
+    # Set up progress log
+    progress_path = output_path / "progress.log"
+    content = ("stage", "ETA", "t1M", "runtime", "stg/min")
+    with open(progress_path, "wb") as f:
+        np.savetxt(f, [content], fmt="%-10s", delimiter="| ")
+
+    # Set up random number generator
+    random_seed = np.random.randint(1, 10**6) if cnf.RANDOM_SEED_ is None else cnf.RANDOM_SEED_
+    rng = np.random.default_rng(random_seed)
+
+    # Set up season
+    season_countdown = float("inf") if cnf.STAGES_PER_SEASON == 0 else cnf.STAGES_PER_SEASON

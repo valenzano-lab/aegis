@@ -1,16 +1,14 @@
 import numpy as np
-import logging
 
-from aegis.modules.reproduction import reproduction
-from aegis.modules.recorder import Recorder
-from aegis.modules.genetics.gstruc import Gstruc
-from aegis.modules.genetics import phenomap, flipmap
-from aegis.modules.population import Population
-from aegis.modules.mortality import disease, environment, overshoot, predation, season
-
+from aegis import cnf
 from aegis import pan
+
 from aegis.help.config import causeofdeath_valid
-from aegis.help import other
+from aegis.modules import recorder
+from aegis.modules.genetics import gstruc, phenomap, flipmap, phenotyper
+from aegis.modules.population import Population
+from aegis.modules.mortality import disease, environment, overshoot, predation
+from aegis.modules.reproduction import recombination, assortment, mutation
 
 
 class Ecosystem:
@@ -25,67 +23,10 @@ class Ecosystem:
         # Initialize ecosystem variables
         self.max_uid = 0  # ID of the most recently born individual
 
-        # Initialize genome structure
-        self.gstruc = Gstruc(
-            pan.params,
-            BITS_PER_LOCUS=self._get_param("BITS_PER_LOCUS"),
-            REPRODUCTION_MODE=self._get_param("REPRODUCTION_MODE"),
-        )  # TODO You should not pass all parameters
-
         # Initialize recorder
-        self.recorder = Recorder(
-            MAX_LIFESPAN=self._get_param("MAX_LIFESPAN"),
-            gstruc_shape=self.gstruc.shape,
-        )
 
         if phenomap.map_ is not None:
-            self.recorder.record_phenomap(phenomap.map_)
-
-        # Initialize reproducer
-        reproduction.init(
-            reproduction,
-            RECOMBINATION_RATE=self._get_param("RECOMBINATION_RATE"),
-            MUTATION_RATIO=self._get_param("MUTATION_RATIO"),
-            REPRODUCTION_MODE=self._get_param("REPRODUCTION_MODE"),
-            MUTATION_METHOD=self._get_param("MUTATION_METHOD"),
-        )
-
-        # Initialize season
-        season.init(season, STAGES_PER_SEASON=self._get_param("STAGES_PER_SEASON"))
-
-        # Initialize overshoot
-        overshoot.init(
-            overshoot,
-            OVERSHOOT_EVENT=self._get_param("OVERSHOOT_EVENT"),
-            MAX_POPULATION_SIZE=self._get_param("MAX_POPULATION_SIZE"),
-            CLIFF_SURVIVORSHIP=self._get_param("CLIFF_SURVIVORSHIP"),
-            OVERSHOOT_MORTALITY=self._get_param("OVERSHOOT_MORTALITY"),
-        )
-
-        # Initialize predation module
-        predation.init(
-            predation,
-            PREDATION_RATE=self._get_param("PREDATION_RATE"),
-            PREDATOR_GROWTH=self._get_param("PREDATOR_GROWTH"),
-        )
-
-        # Initialize environmental hazards
-        environment.init(
-            environment,
-            ENVIRONMENT_HAZARD_AMPLITUDE=self._get_param("ENVIRONMENT_HAZARD_AMPLITUDE"),
-            ENVIRONMENT_HAZARD_OFFSET=self._get_param("ENVIRONMENT_HAZARD_OFFSET"),
-            ENVIRONMENT_HAZARD_PERIOD=self._get_param("ENVIRONMENT_HAZARD_PERIOD"),
-            ENVIRONMENT_HAZARD_SHAPE=self._get_param("ENVIRONMENT_HAZARD_SHAPE"),
-        )
-
-        # Initialize disease
-        disease.init(
-            disease,
-            BACKGROUND_INFECTIVITY=self._get_param("BACKGROUND_INFECTIVITY"),
-            TRANSMISSIBILITY=self._get_param("TRANSMISSIBILITY"),
-            RECOVERY_RATE=self._get_param("RECOVERY_RATE"),
-            FATALITY_RATE=self._get_param("FATALITY_RATE"),
-        )
+            recorder.record_phenomap(phenomap.map_)
 
         # Initialize eggs
         self.eggs = None
@@ -94,19 +35,12 @@ class Ecosystem:
         if population is not None:
             self.population = population
         else:
-            num = self._get_param("MAX_POPULATION_SIZE")
-            HEADSUP = self._get_param("HEADSUP")
-            headsup = HEADSUP + self._get_param("MATURATION_AGE") if HEADSUP > -1 else None
-
-            genomes = self.gstruc.initialize_genomes(
-                n=num,
-                headsup=headsup,
-            )
-            ages = np.zeros(num, dtype=np.int32)
-            births = np.zeros(num, dtype=np.int32)
-            birthdays = np.zeros(num, dtype=np.int32)
-            phenotypes = self.gstruc.get_phenotype(genomes)
-            disease_ = np.zeros(num, dtype=np.int32)
+            genomes = gstruc.initialize_genomes()
+            ages = np.zeros(cnf.MAX_POPULATION_SIZE, dtype=np.int32)
+            births = np.zeros(cnf.MAX_POPULATION_SIZE, dtype=np.int32)
+            birthdays = np.zeros(cnf.MAX_POPULATION_SIZE, dtype=np.int32)
+            phenotypes = phenotyper.get(genomes)
+            disease_ = np.zeros(cnf.MAX_POPULATION_SIZE, dtype=np.int32)
 
             self.population = Population(genomes, ages, births, birthdays, phenotypes, disease_)
 
@@ -119,7 +53,7 @@ class Ecosystem:
 
         # If extinct (no living individuals nor eggs left), do nothing
         if len(self) == 0:
-            self.recorder.extinct = True
+            recorder.extinct = True
             return
 
         # If no living individuals
@@ -138,18 +72,18 @@ class Ecosystem:
         flipmap.evolve()
 
         # Population census
-        self.recorder.collect("additive_age_structure", self.population.ages)
+        recorder.collect("additive_age_structure", self.population.ages)
 
         # Record data
-        self.recorder.record_pickle(self.population)
-        self.recorder.record_snapshots(self.population)
-        self.recorder.record_visor(self.population)
-        self.recorder.record_popgenstats(
+        recorder.record_pickle(self.population)
+        recorder.record_snapshots(self.population)
+        recorder.record_visor(self.population)
+        recorder.record_popgenstats(
             self.population.genomes, self._get_evaluation
         )  # TODO defers calculation of mutation rates; hacky
 
         # Memory use
-        self.recorder.record_memory_use()
+        recorder.record_memory_use()
 
     ###############
     # STAGE LOGIC #
@@ -158,13 +92,13 @@ class Ecosystem:
     def age(self):
         """Increase age of all by one and kill those that surpass max lifespan."""
         self.population.ages += 1
-        mask_kill = self.population.ages >= self._get_param("MAX_LIFESPAN")
+        mask_kill = self.population.ages >= cnf.MAX_LIFESPAN
         self._kill(mask_kill=mask_kill, causeofdeath="max_lifespan")
 
     def env_survival(self):
         """Impose environmental hazard death; i.e. death due to abiotic and cyclical factors such as temperature."""
         hazard = environment.get_hazard(pan.stage)
-        mask_kill = other.rng.random(len(self.population), dtype=np.float32) < hazard
+        mask_kill = pan.rng.random(len(self.population), dtype=np.float32) < hazard
         self._kill(mask_kill=mask_kill, causeofdeath="environment")
 
     def eco_survival(self):
@@ -175,7 +109,7 @@ class Ecosystem:
     def gen_survival(self):
         """Impose genomic death, i.e. death that arises with probability encoded in the genome."""
         probs_surv = self._get_evaluation("surv")
-        mask_surv = other.rng.random(len(probs_surv), dtype=np.float32) < probs_surv
+        mask_surv = pan.rng.random(len(probs_surv), dtype=np.float32) < probs_surv
         self._kill(mask_kill=~mask_surv, causeofdeath="genetic")
 
     def dis_survival(self):
@@ -187,23 +121,23 @@ class Ecosystem:
     def pred_survival(self):
         """Impose predation death"""
         probs_kill = predation.call(len(self))
-        mask_kill = other.rng.random(len(self), dtype=np.float32) < probs_kill
+        mask_kill = pan.rng.random(len(self), dtype=np.float32) < probs_kill
         self._kill(mask_kill=mask_kill, causeofdeath="predation")
 
     def season_step(self):
         """Let one time unit pass in the season.
         Kill the population if the season is over, and hatch the saved eggs."""
-        season.tick()
-        if season.is_over():
+        pan.season_countdown -= 1
+        if pan.season_countdown == 0:
             # Kill all living
             mask_kill = np.ones(len(self.population), dtype=np.bool_)
             self._kill(mask_kill, "season_shift")
 
             # Hatch eggs and restart season
             self._hatch_eggs()
-            season.restart()
+            pan.season_countdown += cnf.STAGES_PER_SEASON
 
-        elif season.not_applicable():
+        elif pan.season_countdown == float("inf"):
             # Add newborns to population
             self._hatch_eggs()
 
@@ -211,16 +145,16 @@ class Ecosystem:
         """Generate offspring of reproducing individuals."""
 
         # Check if fertile
-        mask_fertile = self.population.ages > self._get_param("MATURATION_AGE")  # Check if mature
-        if self._get_param("MENOPAUSE") > 0:
-            mask_menopausal = self.population.ages >= self._get_param("MENOPAUSE")  # Check if menopausal
+        mask_fertile = self.population.ages > cnf.MATURATION_AGE  # Check if mature
+        if cnf.MENOPAUSE > 0:
+            mask_menopausal = self.population.ages >= cnf.MENOPAUSE  # Check if menopausal
             mask_fertile = (mask_fertile) & (~mask_menopausal)
         if not any(mask_fertile):
             return
 
         # Check if reproducing
         probs_repr = self._get_evaluation("repr", part=mask_fertile)
-        mask_repr = other.rng.random(len(probs_repr), dtype=np.float32) < probs_repr
+        mask_repr = pan.rng.random(len(probs_repr), dtype=np.float32) < probs_repr
 
         # Forgo if not at least two available parents
         if np.count_nonzero(mask_repr) < 2:
@@ -228,15 +162,20 @@ class Ecosystem:
 
         # Count ages at reproduction
         ages_repr = self.population.ages[mask_repr]
-        self.recorder.collect("age_at_birth", ages_repr)
+        recorder.collect("age_at_birth", ages_repr)
 
         # Increase births statistics
         self.population.births += mask_repr
 
         # Generate offspring genomes
-        parents = self.population.genomes[mask_repr]
+        genomes = self.population.genomes[mask_repr]  # parental genomes
         muta_prob = self._get_evaluation("muta", part=mask_repr)[mask_repr]
-        genomes = reproduction.do(parents, muta_prob)
+
+        if cnf.REPRODUCTION_MODE == "sexual":
+            genomes = recombination.do(genomes)
+            genomes, _ = assortment.do(genomes)
+
+        genomes = mutation._mutate(genomes, muta_prob)
 
         # Get eggs
         n = len(genomes)
@@ -245,7 +184,7 @@ class Ecosystem:
             ages=np.zeros(n, dtype=np.int32),
             births=np.zeros(n, dtype=np.int32),
             birthdays=np.zeros(n, dtype=np.int32) + pan.stage,
-            phenotypes=self.gstruc.get_phenotype(genomes),
+            phenotypes=phenotyper.get(genomes),
             disease=np.zeros(n, dtype=np.int32),
         )
 
@@ -271,7 +210,7 @@ class Ecosystem:
             which_individuals = which_individuals[part]
 
         # first scenario
-        trait = self.gstruc[attr]
+        trait = gstruc.traits[attr]
         if not trait.evolvable:
             probs = trait.initial
 
@@ -303,7 +242,7 @@ class Ecosystem:
         # Count ages at death
         if causeofdeath != "max_lifespan":
             ages_death = self.population.ages[mask_kill]
-            self.recorder.collect(f"age_at_{causeofdeath}", ages_death)
+            recorder.collect(f"age_at_{causeofdeath}", ages_death)
 
         # Retain survivors
         self.population *= ~mask_kill
@@ -311,7 +250,3 @@ class Ecosystem:
     def __len__(self):
         """Return the number of living individuals and saved eggs."""
         return len(self.population) + len(self.eggs) if self.eggs is not None else len(self.population)
-
-    def _get_param(self, param):
-        """Get parameter value for this specific ecosystem."""
-        return pan.params[param]

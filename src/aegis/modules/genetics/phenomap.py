@@ -10,64 +10,9 @@ Phenotypic values can loosely be understood as levels of final quantitative trai
 """
 import numpy as np
 import pandas as pd
-
-map_ = None
-trios = None
-_by_loop_loc1 = None
-_by_loop_loc2 = None
-_by_loop_weights = None
-_by_loop_loc_self = None
-
-PHENOMAP_SPECS = None
-PHENOMAP_METHOD = None
-
-
-def init(self, gstruc):
-    """Initialize class.
-
-    Arguments:
-        PHENOMAP_SPECS: A list of triples (A, B, C) where A is the locus which affects trait B with strength C
-        gstruc_length: The length of genome, i.e. number of loci
-    """
-
-    if PHENOMAP_SPECS == []:
-        self.map_ = None
-        self.calc = _by_dummy
-        return
-
-    self.trios = list(unfold_specs(PHENOMAP_SPECS, gstruc))
-
-    self.map_ = np.diag([1.0] * gstruc.length)
-    for locus1, locus2, weight in self.trios:
-        self.map_[locus1, locus2] = weight
-
-    if PHENOMAP_METHOD == "by_dot":
-        self.calc = _by_dot
-
-    elif PHENOMAP_METHOD == "by_loop":
-        self.calc = _by_loop
-
-    # Variables for Phenomap._by_loop
-    _ = np.array(list(zip(*self.trios)))
-    self._by_loop_loc1 = _[0].astype(int)
-    self._by_loop_loc2 = _[1].astype(int)
-    self._by_loop_weights = _[2]
-    self._by_loop_loc_self = self._by_loop_loc1[
-        self._by_loop_loc1 == self._by_loop_loc2
-    ]  # Loci that affect themselves; i.e. change the baseline weight from 1 to something else
-
-
-def calc(_):
-    """Translate interpreted values into phenotypic values.
-
-    Arguments:
-        probs: A numpy array of numbers calculated by interpreting genomes using Interpreter
-
-    Returns:
-        A numpy array of probabilities of events encoded by traits (probabilities to survive, to reproduce, to mutate, ...)
-    """
-    # Replaced upon initialization
-    pass
+from aegis import cnf
+from aegis.modules.genetics.gstruc import traits as traits_
+from aegis.modules.genetics.gstruc import length as length_
 
 
 def _by_dummy(probs):
@@ -136,24 +81,49 @@ def decode_pattern(pattern, n):
     return np.linspace(first, last, n)
 
 
-def unfold_specs(PHENOMAP_SPECS, gstruc):
-    for trait1, scope1, trait2, scope2, pattern2 in PHENOMAP_SPECS:
+def unfold_specs():
+    for trait1, scope1, trait2, scope2, pattern2 in cnf.PHENOMAP_SPECS:
         assert (trait1 is None and scope1 is None) or (trait1 is not None and scope2 is not None)
 
         # If no scope given, whole trait is affected
         if scope2 is None:
-            scope2 = f"{gstruc[trait2].start + 1}-{gstruc[trait2].end}"
+            scope2 = f"{traits_[trait2].start + 1}-{traits_[trait2].end}"
             # Note that PHENOMAP_SPECS scope is interpreted as a 1-indexed inclusive interval
 
-        pos2 = gstruc[trait2].start
+        pos2 = traits_[trait2].start
         loci2 = decode_scope(scope2) + pos2 - 1  # -1 because the PHENOMAP_SPECS is 1-indexed
         weights = decode_pattern(pattern2, len(loci2))
 
         if trait1 is None:
             loci1 = loci2
         else:
-            pos1 = gstruc[trait1].start
+            pos1 = traits_[trait1].start
             loci1 = [scope1 + pos1 - 1] * len(loci2)
 
         for locus1, locus2, weight in zip(loci1, loci2, weights):
             yield locus1, locus2, weight
+
+
+if cnf.PHENOMAP_SPECS == []:
+    map_ = None
+    call = _by_dummy
+else:
+    trios = list(unfold_specs())
+
+    map_ = np.diag([1.0] * length_)
+    for locus1, locus2, weight in trios:
+        map_[locus1, locus2] = weight
+
+    call = {
+        "by_dot": _by_dot,
+        "by_loop": _by_loop,
+    }[cnf.PHENOMAP_METHOD]
+
+    # Variables for Phenomap._by_loop
+    _ = np.array(list(zip(*trios)))
+    _by_loop_loc1 = _[0].astype(int)
+    _by_loop_loc2 = _[1].astype(int)
+    _by_loop_weights = _[2]
+    _by_loop_loc_self = _by_loop_loc1[
+        _by_loop_loc1 == _by_loop_loc2
+    ]  # Loci that affect themselves; i.e. change the baseline weight from 1 to something else

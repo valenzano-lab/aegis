@@ -1,13 +1,12 @@
 import numpy as np
-from aegis.pan import other
-
-RECOMBINATION_RATE = None
+from aegis import pan
+from aegis import cnf
 
 
 def do(genomes):
     """Return recombined chromatids."""
 
-    if RECOMBINATION_RATE == 0:
+    if cnf.RECOMBINATION_RATE == 0:
         return genomes
 
     # Recombine two chromatids but pass only one;
@@ -24,9 +23,9 @@ def do(genomes):
 
     # Make choice array: when to take recombined and when to take original loci
     # -1 means synapse; +1 means clear
-    rr = RECOMBINATION_RATE / 2  # / 2 because you are generating two random vectors (fwd and bkd)
-    reco_fwd = (other.rng.random(chromatid1.shape, dtype=np.float32) < rr) * -2 + 1
-    reco_bkd = (other.rng.random(chromatid2.shape, dtype=np.float32) < rr) * -2 + 1
+    rr = cnf.RECOMBINATION_RATE / 2  # / 2 because you are generating two random vectors (fwd and bkd)
+    reco_fwd = (pan.rng.random(chromatid1.shape, dtype=np.float32) < rr) * -2 + 1
+    reco_bkd = (pan.rng.random(chromatid2.shape, dtype=np.float32) < rr) * -2 + 1
 
     # Propagate synapse
     reco_fwd_cum = np.cumprod(reco_fwd, axis=1)

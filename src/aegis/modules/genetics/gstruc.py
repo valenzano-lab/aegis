@@ -1,92 +1,137 @@
+"""Genome structure
+
+Contains information about ploidy, number of loci, and number of bits per locus.
+Calculates phenotypes from input genomes (calls Interpreter, Phenomap and Flipmap).
+"""
 import numpy as np
-from aegis.modules.genetics.trait import Trait
-from aegis.modules.genetics import interpreter
-from aegis.modules.genetics import phenomap
-from aegis.modules.genetics import flipmap
-from aegis.help import other
+from aegis import pan
+from aegis import cnf
 
 
-class Gstruc:
-    """Genome structure
+class Trait:
+    """Genetic trait
 
-    Contains information about ploidy, number of loci, and number of bits per locus.
-    Calculates phenotypes from input genomes (calls Interpreter, Phenomap and Flipmap).
+    Contains data on traits encoded in the genome.
     """
 
-    def __init__(self, params, BITS_PER_LOCUS, REPRODUCTION_MODE):
-        # Generate traits and save
-        self.traits = {}
-        self.evolvable = []
-        self.length = 0
+    legal = ("surv", "repr", "neut", "muta")
 
-        for name in Trait.legal:
-            trait = Trait(name, params, self.length)
-            self.traits[name] = trait
-            self.length += trait.length
-            if trait.evolvable:
-                self.evolvable.append(trait)
+    def __init__(self, name, start):
+        def get(key):
+            return getattr(cnf, f"G_{name}_{key}")
 
-        # Infer ploidy
-        self.ploidy = {
-            "sexual": 2,
-            "asexual": 1,
-            "asexual_diploid": 2,
-        }[REPRODUCTION_MODE]
+        self.name = name
 
-        self.bits_per_locus = BITS_PER_LOCUS
-        self.shape = (self.ploidy, self.length, self.bits_per_locus)
-        phenomap.init(phenomap, self)
-        flipmap.init(flipmap, self.shape)
+        # Attributes set by the configuration files
+        self.evolvable = get("evolvable")
+        self.agespecific = get("agespecific")
+        self.interpreter = get("interpreter")
+        self.lo = get("lo")
+        self.hi = get("hi")
+        self.initial = get("initial")
 
-    def __getitem__(self, name):
-        """Return a Trait instance called {name}."""
-        return self.traits[name]
+        # Determine the number of loci encoding the trait
+        if self.evolvable:
+            if self.agespecific is True:  # one locus per age
+                self.length = cnf.MAX_LIFESPAN
+            else:  # one locus for all ages
+                self.length = self.agespecific
+        else:  # no loci for a constant trait
+            self.length = 0
 
-    def initialize_genomes(self, n, headsup=None):
-        """Return n initialized genomes.
+        self._validate()
 
-        Different sections of genome are initialized with a different ratio of ones and zeros
-        depending on the G_{}_initial parameter.
-        """
+        # Infer positions in the genome
+        self.start = start
+        self.end = self.start + self.length
+        self.slice = slice(self.start, self.end)
 
-        # Initial genomes with a trait.initial fraction of 1's
-        genomes = other.rng.random(size=(n, *self.shape), dtype=np.float32)
+    def _validate(self):
+        """Check whether input parameters are legal."""
+        if not isinstance(self.evolvable, bool):
+            raise TypeError
 
-        for trait in self.evolvable:
-            genomes[:, :, trait.slice] = genomes[:, :, trait.slice] <= trait.initial
+        if not 0 <= self.initial <= 1:
+            raise ValueError
 
-        genomes = genomes.astype(np.bool_)
+        if self.evolvable:
+            # if not isinstance(self.agespecific, bool):
+            #     raise TypeError
 
-        # Guarantee survival and reproduction values up to a certain age
-        if headsup is not None:
-            surv_start = self["surv"].start
-            repr_start = self["repr"].start
-            genomes[:, :, surv_start : surv_start + headsup] = True
-            genomes[:, :, repr_start : repr_start + headsup] = True
+            if self.interpreter not in (
+                "uniform",
+                "exp",
+                "binary",
+                "binary_exp",
+                "binary_switch",
+                "switch",
+                "linear",
+                "single_bit",
+                "const1",
+                "threshold",
+            ):
+                raise ValueError(f"{self.interpreter} is not a valid interpreter type")
 
-        return genomes
+            if not 0 <= self.lo <= 1:
+                raise ValueError
 
-    def get_phenotype(self, genomes):
-        """Translate genomes into an array of phenotypes probabilities."""
-        # Apply the flipmap
-        envgenomes = flipmap.do(genomes)
+            if not 0 <= self.hi <= 1:
+                raise ValueError
 
-        # Apply the interpreter functions
-        interpretome = np.zeros(shape=(envgenomes.shape[0], envgenomes.shape[2]), dtype=np.float32)
-        for trait in self.evolvable:
-            loci = envgenomes[:, :, trait.slice]  # fetch
-            probs = interpreter.do(loci, trait.interpreter)  # interpret
-            interpretome[:, trait.slice] += probs  # add back
+    def __len__(self):
+        """Return number of loci used to encode the trait."""
+        return self.length
 
-        # Apply phenomap
-        phenotypes = phenomap.calc(interpretome)
+    def __str__(self):
+        return self.name
 
-        # Apply lo and hi bound
-        for trait in self.evolvable:
-            lo, hi = trait.lo, trait.hi
-            phenotypes[:, trait.slice] = phenotypes[:, trait.slice] * (hi - lo) + lo
 
-        return phenotypes
+# Generate traits and save
+traits = {}
+evolvable = []
+length = 0
 
-    def slice_phenotype_trait(self, phenotypes, trait_name):
-        return phenotypes[:, self.traits[trait_name].slice]
+for name in Trait.legal:
+    trait = Trait(name, length)
+    traits[name] = trait
+    length += trait.length
+    if trait.evolvable:
+        evolvable.append(trait)
+
+# Infer ploidy
+ploidy = {
+    "sexual": 2,
+    "asexual": 1,
+    "asexual_diploid": 2,
+}[cnf.REPRODUCTION_MODE]
+
+
+shape = (ploidy, length, cnf.BITS_PER_LOCUS)
+
+
+def initialize_genomes():
+    """Return n initialized genomes.
+
+    Different sections of genome are initialized with a different ratio of ones and zeros
+    depending on the G_{}_initial parameter.
+    """
+
+    n = cnf.MAX_POPULATION_SIZE
+    headsup = cnf.HEADSUP + cnf.MATURATION_AGE if cnf.HEADSUP > -1 else None
+
+    # Initial genomes with a trait.initial fraction of 1's
+    genomes = pan.rng.random(size=(n, *shape), dtype=np.float32)
+
+    for trait in evolvable:
+        genomes[:, :, trait.slice] = genomes[:, :, trait.slice] <= trait.initial
+
+    genomes = genomes.astype(np.bool_)
+
+    # Guarantee survival and reproduction values up to a certain age
+    if headsup is not None:
+        surv_start = traits["surv"].start
+        repr_start = traits["repr"].start
+        genomes[:, :, surv_start : surv_start + headsup] = True
+        genomes[:, :, repr_start : repr_start + headsup] = True
+
+    return genomes
