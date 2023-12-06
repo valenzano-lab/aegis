@@ -1,6 +1,6 @@
 from dash import html, dcc
 from aegis.help import config
-from aegis.visor import funcs
+from visor import funcs
 
 # TODO change text
 texts_domain = {

@@ -1,8 +1,8 @@
 from dash import callback, Output, Input, State, ALL, MATCH, ctx
 import subprocess
 import logging
-from aegis.visor import funcs
-from aegis.visor.tab_list.layout import make_table
+from visor import funcs
+from visor.tab_list.layout import make_table
 
 
 # SHOW SIMS

@@ -1,7 +1,7 @@
 from dash import html, dcc
-from aegis.visor.tab_config.layout import get_config_layout
-from aegis.visor.tab_list.layout import get_list_layout
-from aegis.visor.tab_plot.layout import get_plot_layout
+from visor.tab_config.layout import get_config_layout
+from visor.tab_list.layout import get_list_layout
+from visor.tab_plot.layout import get_plot_layout
 
 
 app_layout = html.Div(

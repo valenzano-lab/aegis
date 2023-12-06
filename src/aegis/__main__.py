@@ -4,7 +4,7 @@ import logging
 import pickle
 
 from aegis import cnf
-from aegis.visor import visor
+from visor import visor
 from aegis import pan
 from aegis import var
 
