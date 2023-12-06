@@ -1,5 +1,5 @@
 import numpy as np
-from aegis import pan
+from aegis import var
 from aegis import cnf
 
 
@@ -24,8 +24,8 @@ def do(genomes):
     # Make choice array: when to take recombined and when to take original loci
     # -1 means synapse; +1 means clear
     rr = cnf.RECOMBINATION_RATE / 2  # / 2 because you are generating two random vectors (fwd and bkd)
-    reco_fwd = (pan.rng.random(chromatid1.shape, dtype=np.float32) < rr) * -2 + 1
-    reco_bkd = (pan.rng.random(chromatid2.shape, dtype=np.float32) < rr) * -2 + 1
+    reco_fwd = (var.rng.random(chromatid1.shape, dtype=np.float32) < rr) * -2 + 1
+    reco_bkd = (var.rng.random(chromatid2.shape, dtype=np.float32) < rr) * -2 + 1
 
     # Propagate synapse
     reco_fwd_cum = np.cumprod(reco_fwd, axis=1)

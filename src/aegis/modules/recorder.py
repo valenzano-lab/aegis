@@ -20,6 +20,7 @@ import logging
 
 from aegis import cnf
 from aegis import pan
+from aegis import var
 from aegis.modules.popgenstats import PopgenStats
 from aegis.help.config import causeofdeath_valid
 from aegis.modules.genetics.gstruc import shape as shape_
@@ -41,22 +42,22 @@ def _log_progress():
     if pan.skip(cnf.LOGGING_RATE_):
         return
 
-    logging.info("%8s / %s", pan.stage, cnf.STAGES_PER_SIMULATION_)
+    logging.info("%8s / %s", var.stage, cnf.STAGES_PER_SIMULATION_)
 
     # Get time estimations
     time_diff = time.time() - pan.time_start
 
-    seconds_per_100 = time_diff / pan.stage * 100
-    eta = (cnf.STAGES_PER_SIMULATION_ - pan.stage) / 100 * seconds_per_100
+    seconds_per_100 = time_diff / var.stage * 100
+    eta = (cnf.STAGES_PER_SIMULATION_ - var.stage) / 100 * seconds_per_100
 
-    stages_per_min = int(pan.stage / (time_diff / 60))
+    stages_per_min = int(var.stage / (time_diff / 60))
 
     runtime = get_dhm(time_diff)
-    time_per_1M = get_dhm(time_diff / pan.stage * 1000000)
+    time_per_1M = get_dhm(time_diff / var.stage * 1000000)
     eta = get_dhm(eta)
 
     # Save time estimations
-    content = (pan.stage, eta, time_per_1M, runtime, stages_per_min)
+    content = (var.stage, eta, time_per_1M, runtime, stages_per_min)
     with open(pan.progress_path, "ab") as f:
         np.savetxt(f, [content], fmt="%-10s", delimiter="| ")
 
@@ -153,20 +154,20 @@ def record_snapshots(population):
     df_gen = pd.DataFrame(np.array(population.genomes.reshape(len(population), -1)))
     df_gen.reset_index(drop=True, inplace=True)
     df_gen.columns = [str(c) for c in df_gen.columns]
-    df_gen.to_feather(paths["snapshots_genotypes"] / f"{pan.stage}.feather")
+    df_gen.to_feather(paths["snapshots_genotypes"] / f"{var.stage}.feather")
 
     # phenotypes
     df_phe = pd.DataFrame(np.array(population.phenotypes))
     df_phe.reset_index(drop=True, inplace=True)
     df_phe.columns = [str(c) for c in df_phe.columns]
-    df_phe.to_feather(paths["snapshots_phenotypes"] / f"{pan.stage}.feather")
+    df_phe.to_feather(paths["snapshots_phenotypes"] / f"{var.stage}.feather")
 
     # demography
     dem_attrs = ["ages", "births", "birthdays"]
     demo = {attr: getattr(population, attr) for attr in dem_attrs}
     df_dem = pd.DataFrame(demo, columns=dem_attrs)
     df_dem.reset_index(drop=True, inplace=True)
-    df_dem.to_feather(paths["snapshots_demography"] / f"{pan.stage}.feather")
+    df_dem.to_feather(paths["snapshots_demography"] / f"{var.stage}.feather")
 
 
 def record_popgenstats(genomes, mutation_rate_func):
@@ -195,10 +196,10 @@ def record_popgenstats(genomes, mutation_rate_func):
 
 
 def record_pickle(population):
-    if pan.skip(cnf.PICKLE_RATE_) and not pan.stage == 1:  # Also records the pickle before the first stage
+    if pan.skip(cnf.PICKLE_RATE_) and not var.stage == 1:  # Also records the pickle before the first stage
         return
 
-    with open(paths["pickles"] / str(pan.stage), "wb") as f:
+    with open(paths["pickles"] / str(var.stage), "wb") as f:
         pickle.dump(population, f)
 
 

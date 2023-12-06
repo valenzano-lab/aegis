@@ -6,7 +6,7 @@ import logging
 import argparse
 import yaml
 
-from aegis import cnf
+from aegis import cnf, var
 from aegis.help.config import get_default_parameters, validate
 
 logging.basicConfig(
@@ -52,11 +52,13 @@ def parse():
 
 def set_up_cnf(custom_config_path, running_on_server):
     # Read config parameters from the custom config file
-    with open(custom_config_path, "r") as f:
-        custom_config_params = yaml.safe_load(f)
-
-    if custom_config_params is None:  # If config file is empty
+    if custom_config_path == "":
         custom_config_params = {}
+    else:
+        with open(custom_config_path, "r") as f:
+            custom_config_params = yaml.safe_load(f)
+        if custom_config_params is None:  # If config file is empty
+            custom_config_params = {}
 
     # Read config parameters from the default config file
     default_config_params = get_default_parameters()
@@ -74,7 +76,7 @@ def set_up_cnf(custom_config_path, running_on_server):
 
 def skip(rate):
     """Should you skip an action performed at a certain rate"""
-    return (rate <= 0) or (stage % rate > 0)
+    return (rate <= 0) or (var.stage % rate > 0)
 
 
 # Decorators
@@ -92,7 +94,6 @@ def profile_time(func):
 
 # INITIALIZE
 
-stage = 1
 time_start = time.time()
 here = pathlib.Path(__file__).absolute().parent
 config_path, pickle_path, overwrite = parse()
@@ -117,7 +118,7 @@ if config_path:
 
     # Set up random number generator
     random_seed = np.random.randint(1, 10**6) if cnf.RANDOM_SEED_ is None else cnf.RANDOM_SEED_
-    rng = np.random.default_rng(random_seed)
+    var.rng = np.random.default_rng(random_seed)
 
     # Set up season
     season_countdown = float("inf") if cnf.STAGES_PER_SEASON == 0 else cnf.STAGES_PER_SEASON

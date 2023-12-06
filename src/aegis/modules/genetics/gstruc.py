@@ -4,8 +4,8 @@ Contains information about ploidy, number of loci, and number of bits per locus.
 Calculates phenotypes from input genomes (calls Interpreter, Phenomap and Flipmap).
 """
 import numpy as np
-from aegis import pan
 from aegis import cnf
+from aegis import var
 
 
 class Trait:
@@ -120,7 +120,7 @@ def initialize_genomes():
     headsup = cnf.HEADSUP + cnf.MATURATION_AGE if cnf.HEADSUP > -1 else None
 
     # Initial genomes with a trait.initial fraction of 1's
-    genomes = pan.rng.random(size=(n, *shape), dtype=np.float32)
+    genomes = var.rng.random(size=(n, *shape), dtype=np.float32)
 
     for trait in evolvable:
         genomes[:, :, trait.slice] = genomes[:, :, trait.slice] <= trait.initial

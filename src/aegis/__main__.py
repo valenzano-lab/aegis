@@ -6,6 +6,7 @@ import pickle
 from aegis import cnf
 from aegis.visor import visor
 from aegis import pan
+from aegis import var
 
 
 def main():
@@ -28,10 +29,10 @@ def main():
         recorder.record_input_summary()
 
         # Run simulation
-        while pan.stage <= cnf.STAGES_PER_SIMULATION_:
+        while var.stage <= cnf.STAGES_PER_SIMULATION_:
             recorder._log_progress()
             ecosystem.run_stage()
-            pan.stage += 1
+            var.stage += 1
 
         # Record output summary
         recorder.record_output_summary()

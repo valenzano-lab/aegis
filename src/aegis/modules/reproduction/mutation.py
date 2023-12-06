@@ -1,5 +1,5 @@
 import numpy as np
-from aegis import pan
+from aegis import var
 from aegis import cnf
 
 
@@ -12,7 +12,7 @@ def _mutate_by_bit(genomes, muta_prob, random_probabilities=None):
     """Induce germline mutations."""
 
     if random_probabilities is None:
-        random_probabilities = pan.rng.random(genomes.shape, dtype=np.float32)
+        random_probabilities = var.rng.random(genomes.shape, dtype=np.float32)
 
     # Broadcast to fit [individual, chromatid, locus, bit] shape
     mutation_probabilities = muta_prob[:, None, None, None]

@@ -1,5 +1,4 @@
 import logging
-import numpy as np
 
 causeofdeath_valid = (
     "max_lifespan",
@@ -14,6 +13,13 @@ causeofdeath_valid = (
 
 def get_default_parameters():
     return {p.key: p.default for p in params.values()}
+
+
+def set_cnf_to_default():
+    from aegis import cnf
+
+    for k, v in get_default_parameters().items():
+        setattr(cnf, k, v)
 
 
 def get_domains():
@@ -118,7 +124,9 @@ class Param:
     def generate_full_evalrange(self):
         if self.evalrange is not None:
             n_datapoints = 10
-            return np.linspace(self.evalrange[0], self.evalrange[1], n_datapoints)
+            from numpy import linspace
+
+            return linspace(self.evalrange[0], self.evalrange[1], n_datapoints)
 
 
 # You need the keys so you can find the param (in a list, you cannot)

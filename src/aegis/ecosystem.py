@@ -2,6 +2,7 @@ import numpy as np
 
 from aegis import cnf
 from aegis import pan
+from aegis import var
 
 from aegis.help.config import causeofdeath_valid
 from aegis.modules import recorder
@@ -97,8 +98,8 @@ class Ecosystem:
 
     def env_survival(self):
         """Impose environmental hazard death; i.e. death due to abiotic and cyclical factors such as temperature."""
-        hazard = environment.get_hazard(pan.stage)
-        mask_kill = pan.rng.random(len(self.population), dtype=np.float32) < hazard
+        hazard = environment.get_hazard(var.stage)
+        mask_kill = var.rng.random(len(self.population), dtype=np.float32) < hazard
         self._kill(mask_kill=mask_kill, causeofdeath="environment")
 
     def eco_survival(self):
@@ -109,7 +110,7 @@ class Ecosystem:
     def gen_survival(self):
         """Impose genomic death, i.e. death that arises with probability encoded in the genome."""
         probs_surv = self._get_evaluation("surv")
-        mask_surv = pan.rng.random(len(probs_surv), dtype=np.float32) < probs_surv
+        mask_surv = var.rng.random(len(probs_surv), dtype=np.float32) < probs_surv
         self._kill(mask_kill=~mask_surv, causeofdeath="genetic")
 
     def dis_survival(self):
@@ -121,7 +122,7 @@ class Ecosystem:
     def pred_survival(self):
         """Impose predation death"""
         probs_kill = predation.call(len(self))
-        mask_kill = pan.rng.random(len(self), dtype=np.float32) < probs_kill
+        mask_kill = var.rng.random(len(self), dtype=np.float32) < probs_kill
         self._kill(mask_kill=mask_kill, causeofdeath="predation")
 
     def season_step(self):
@@ -154,7 +155,7 @@ class Ecosystem:
 
         # Check if reproducing
         probs_repr = self._get_evaluation("repr", part=mask_fertile)
-        mask_repr = pan.rng.random(len(probs_repr), dtype=np.float32) < probs_repr
+        mask_repr = var.rng.random(len(probs_repr), dtype=np.float32) < probs_repr
 
         # Forgo if not at least two available parents
         if np.count_nonzero(mask_repr) < 2:
@@ -183,7 +184,7 @@ class Ecosystem:
             genomes=genomes,
             ages=np.zeros(n, dtype=np.int32),
             births=np.zeros(n, dtype=np.int32),
-            birthdays=np.zeros(n, dtype=np.int32) + pan.stage,
+            birthdays=np.zeros(n, dtype=np.int32) + var.stage,
             phenotypes=phenotyper.get(genomes),
             disease=np.zeros(n, dtype=np.int32),
         )

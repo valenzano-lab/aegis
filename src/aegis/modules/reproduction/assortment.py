@@ -1,12 +1,12 @@
 import numpy as np
-from aegis import pan
+from aegis import var
 
 def _get_order(n_gametes=None, order=None):
     """Return pairings of gametes from different parents."""
     # Extract parent indices twice, and shuffle
     if order is None:
         order = np.repeat(np.arange(n_gametes), 2)
-        pan.rng.shuffle(order)
+        var.rng.shuffle(order)
 
     # Check for selfing (selfing when pair contains equal parent indices)
     selfed = (order[::2] == order[1::2]).nonzero()[0] * 2

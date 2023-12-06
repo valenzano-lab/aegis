@@ -3,7 +3,7 @@
 Modifies topology of fitness landscape over time by changing the interpretation of zeros and ones in genomes.
 """
 import numpy as np
-from aegis import pan
+from aegis import var
 from aegis import cnf
 from aegis.modules.genetics.gstruc import shape
 
@@ -19,10 +19,10 @@ def call(genomes):
     return genomes if dummy else np.logical_xor(map_, genomes)
 
 
-def evolve():
+def evolve(FLIPMAP_CHANGE_RATE=cnf.FLIPMAP_CHANGE_RATE):
     """Modify the flipmap"""
-    if dummy or (pan.stage % cnf.FLIPMAP_CHANGE_RATE > 0):
+    if dummy or (var.stage % FLIPMAP_CHANGE_RATE > 0):
         return
 
-    indices = tuple(pan.rng.integers(map_.shape))
+    indices = tuple(var.rng.integers(map_.shape))
     map_[indices] = ~map_[indices]
