@@ -74,6 +74,7 @@ def get_config_layout():
     # Generate layout
     return html.Div(
         id="sim-section",
+        style={"display": "none"},
         children=preface + tables,
     )
 

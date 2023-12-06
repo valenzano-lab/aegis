@@ -2,6 +2,7 @@ from dash import html, dcc
 from visor.tab_config.layout import get_config_layout
 from visor.tab_list.layout import get_list_layout
 from visor.tab_plot.layout import get_plot_layout
+from visor.tab_landing.layout import get_landing_layout
 
 
 app_layout = html.Div(
@@ -27,9 +28,16 @@ app_layout = html.Div(
                                 html.H1("aegis"),
                                 html.Div(
                                     [
-                                        html.Img(
-                                            src="assets/sim.svg", className="svg-plot"
-                                        ),
+                                        html.Img(src="assets/sim.svg", className="svg-plot"),
+                                        html.Label("home"),
+                                        # html.Button("config view", id="config-view-button"),
+                                    ],
+                                    id="landing-view-button",
+                                    className="view-button",
+                                ),
+                                html.Div(
+                                    [
+                                        html.Img(src="assets/sim.svg", className="svg-plot"),
                                         html.Label("run"),
                                         # html.Button("config view", id="config-view-button"),
                                     ],
@@ -55,9 +63,7 @@ app_layout = html.Div(
                                 ),
                                 html.Div(
                                     [
-                                        html.Img(
-                                            src="assets/plot.svg", className="svg-plot"
-                                        ),
+                                        html.Img(src="assets/plot.svg", className="svg-plot"),
                                         html.Label("plot"),
                                         # html.Button("plot view", id="plot-view-button"),
                                     ],
@@ -68,6 +74,11 @@ app_layout = html.Div(
                         ),
                         html.Div(
                             children=[
+                                html.Div(
+                                    id="landing-section-control",
+                                    style={"display": "none"},
+                                    children=[],
+                                ),
                                 html.Div(
                                     id="sim-section-control",
                                     style={"display": "flex"},
@@ -112,7 +123,8 @@ app_layout = html.Div(
                 ),
             ],
         ),
-        # THREE TABS
+        # TABS
+        get_landing_layout(),
         get_config_layout(),
         get_list_layout(),
         get_plot_layout(),

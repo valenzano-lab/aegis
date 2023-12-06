@@ -173,11 +173,12 @@ button:active {
   width: 2000px;
 }
 
-#figure-section {
+#landing-section {
   display: flex;
   flex-direction: column;
   margin-left: auto;
   margin-right: auto;
+  color: white;
 }
 
 #figure-container {
@@ -420,11 +421,6 @@ tr:last-of-type td:last-of-type {
 
 .footer-p {
   font-size: 12px;
-}
-
-#plot-section-control {
-  /* margin: 0.5rem 0 1rem 0; */
-  /* height: 2.6rem; */
 }
 
 .control-element {

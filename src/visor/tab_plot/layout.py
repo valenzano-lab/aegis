@@ -4,7 +4,7 @@ from visor.tab_plot.prep_setup import FIG_SETUP
 
 def get_plot_layout():
     return html.Div(
-        id="figure-section",
+        id="plot-section",
         style={"display": "none"},
         children=[
             html.Div(
