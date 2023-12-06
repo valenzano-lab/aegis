@@ -10,7 +10,7 @@ from aegis.help import config
     State({"type": "config-input", "index": ALL}, "value"),
     prevent_initial_call=True,
 )
-@funcs.log_debug
+@funcs.log_info
 def run_simulation(n_clicks, filename, values):
     if n_clicks is None:
         return
@@ -35,7 +35,7 @@ def run_simulation(n_clicks, filename, values):
     Input("config-make-text", "value"),
     Input({"type": "config-input", "index": ALL}, "value"),
 )
-@funcs.log_debug
+@funcs.log_info
 def block_sim_button(filename, values):
     default_config = config.get_default_parameters()
     for k, value in zip(default_config, values):
@@ -63,7 +63,7 @@ def block_sim_button(filename, values):
     State({"type": "config-input", "index": MATCH}, "className"),
     prevent_initial_call=True,
 )
-@funcs.log_debug
+@funcs.log_info
 def block_config_input(value, className):
     print(className, "a")
     if ctx.triggered_id is None:

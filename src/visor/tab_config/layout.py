@@ -48,7 +48,7 @@ header = html.Tr(
 )
 
 
-@funcs.log_debug
+@funcs.log_info
 def get_config_layout():
     # Group parameters by domain
     subsets = {domain: [] for domain in texts_domain.keys()}
@@ -128,7 +128,7 @@ def get_row(v):
     )
 
 
-@funcs.log_debug
+@funcs.log_info
 def get_table(params_subset):
     return html.Table(
         className="config-table",

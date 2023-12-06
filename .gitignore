@@ -3,7 +3,8 @@
 tests/execution/*/*
 profiler
 ipynb
-temp/
+temp
+.temp
 
 ### Python ###
 # Byte-compiled / optimized / DLL files

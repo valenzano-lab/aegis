@@ -12,7 +12,7 @@ from aegis.help.config import get_default_parameters, validate
 logging.basicConfig(
     format="%(asctime)s %(levelname)s %(module)s -- %(message)s",
     datefmt="%d/%m/%Y %I:%M:%S",
-    level=logging.DEBUG,
+    level=logging.INFO,
 )
 
 

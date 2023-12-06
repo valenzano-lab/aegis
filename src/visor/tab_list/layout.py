@@ -4,7 +4,7 @@ import datetime
 from aegis.help.container import Container
 
 
-@funcs.log_debug
+@funcs.log_info
 def make_table_row(
     selection_state, sim_data, log, input_summary, output_summary, basepath, filename
 ):
@@ -91,7 +91,7 @@ def make_table_row(
     return row
 
 
-@funcs.log_debug
+@funcs.log_info
 def make_table(selection_states={}, sim_data=None):
     # Get data from folders
     paths = funcs.get_sim_paths()
@@ -131,7 +131,7 @@ def make_table(selection_states={}, sim_data=None):
     return html.Table(children=table, id="list-table")
 
 
-@funcs.log_debug
+@funcs.log_info
 def get_list_layout():
     # selection_states = [
     #     dcc.Store({"type": "selection-state", "index": sim}, data=False)

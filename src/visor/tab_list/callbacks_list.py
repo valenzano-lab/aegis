@@ -13,7 +13,7 @@ from visor.tab_list.layout import make_table
     State({"type": "selection-state", "index": ALL}, "data"),
     prevent_initial_call=True,
 )
-@funcs.log_debug
+@funcs.log_info
 def show_sims(n_clicks1, n_clicks2, data):
     if ctx.triggered_id is None:
         return []
@@ -43,7 +43,7 @@ def show_sims(n_clicks1, n_clicks2, data):
     Input({"type": "display-button", "index": MATCH}, "n_clicks"),
     State({"type": "selection-state", "index": MATCH}, "data"),
 )
-@funcs.log_debug
+@funcs.log_info
 def click_display_button(n_clicks, data):
     if n_clicks is None:
         return data
@@ -56,7 +56,7 @@ def click_display_button(n_clicks, data):
     Output({"type": "display-button", "index": MATCH}, "className"),
     Input({"type": "selection-state", "index": MATCH}, "data"),
 )
-@funcs.log_debug
+@funcs.log_info
 def stylize_display_buttons(data):
     selected = data[1]
     if selected:
@@ -72,7 +72,7 @@ def stylize_display_buttons(data):
     Input({"type": "selection-state", "index": MATCH}, "data"),
     State({"type": "sim-data", "index": MATCH}, "data"),
 )
-@funcs.log_debug
+@funcs.log_info
 def load_data(selection_state, data):
     filename, selected = selection_state
     if selected and data is None:
