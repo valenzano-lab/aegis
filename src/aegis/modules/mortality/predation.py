@@ -8,6 +8,12 @@ N = 1
 
 
 def call(K):
+
+    # TODO Add attrition penalty for when there are no living prey around (but there still are eggs)
+    # TODO Rename K; it appears it is the prey count
+    if K == 0:
+        return 0
+
     # Use Verhulst model
     global N
     change = N * cnf.PREDATOR_GROWTH * (1 - N / K)
