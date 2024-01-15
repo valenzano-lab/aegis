@@ -55,7 +55,7 @@ class Ecosystem:
         # If extinct (no living individuals nor eggs left), do nothing
         if len(self) == 0:
             recorder.extinct = True
-            return
+            return True  # extinct
 
         # If no living individuals
         if len(self.population):
@@ -85,6 +85,8 @@ class Ecosystem:
 
         # Memory use
         recorder.record_memory_use()
+
+        return False  # not extinct
 
     ###############
     # STAGE LOGIC #

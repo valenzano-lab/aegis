@@ -29,14 +29,18 @@ def main():
         recorder.record_input_summary()
 
         # Run simulation
-        while var.stage <= cnf.STAGES_PER_SIMULATION_:
+        extinct = False
+        while var.stage <= cnf.STAGES_PER_SIMULATION_ and not extinct:
             recorder._log_progress()
-            ecosystem.run_stage()
+            extinct = ecosystem.run_stage()
             var.stage += 1
 
         # Record output summary
         recorder.record_output_summary()
-        logging.info("Simulation is successfully finished")
+        if extinct:
+            logging.info("Population went extinct")
+        else:
+            logging.info("Simulation is successfully finished")
 
 
 if __name__ == "__main__":
