@@ -34,7 +34,9 @@ class Trait:
         if self.evolvable:
             if self.agespecific is True:  # one locus per age
                 self.length = cnf.MAX_LIFESPAN
-            else:  # one locus for all ages
+            elif self.agespecific is False:  # one locus for all ages
+                self.length = 1
+            else:  # custom number of loci
                 self.length = self.agespecific
         else:  # no loci for a constant trait
             self.length = 0
