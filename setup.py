@@ -27,7 +27,7 @@ setuptools.setup(
             "aegis = aegis.__main__:main",
         ]
     },
-    install_requires=["numpy", "pandas", "PyYAML", "pyarrow", "platformdirs", "dash", "urllib3==1.26.18"],  # for dash
+    install_requires=["numpy", "pandas", "PyYAML", "pyarrow", "platformdirs", "dash", "urllib3==1.26.18", "psutil"],  # for dash
     extras_require={
         "dev": [
             "pytest==6.2.4",
