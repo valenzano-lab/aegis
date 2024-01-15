@@ -19,6 +19,10 @@ def kill(population):
     """
     First try infecting susceptible.
     """
+
+    if len(population) == 0:
+        return
+
     probs = var.rng.random(len(population), dtype=float)
 
     # current status
