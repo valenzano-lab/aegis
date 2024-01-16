@@ -93,7 +93,10 @@ class Ecosystem:
     ###############
 
     def age(self):
-        """Increase age of all by one and kill those that surpass max lifespan."""
+        """Increase age of all by one and kill those that surpass max lifespan.
+        Age denotes the number of full cycles that an individual survived and reproduced.
+        MAX_LIFESPAN is the maximum number of full cycles an individual can go through.
+        """
         self.population.ages += 1
         mask_kill = self.population.ages >= cnf.MAX_LIFESPAN
         self._kill(mask_kill=mask_kill, causeofdeath="max_lifespan")
@@ -145,12 +148,14 @@ class Ecosystem:
             self._hatch_eggs()
 
     def reproduction(self):
-        """Generate offspring of reproducing individuals."""
+        """Generate offspring of reproducing individuals.
+        Initial is set to 0.
+        """
 
         # Check if fertile
-        mask_fertile = self.population.ages > cnf.MATURATION_AGE  # Check if mature
+        mask_fertile = self.population.ages >= cnf.MATURATION_AGE  # Check if mature; mature if survived MATURATION_AGE full cycles
         if cnf.MENOPAUSE > 0:
-            mask_menopausal = self.population.ages >= cnf.MENOPAUSE  # Check if menopausal
+            mask_menopausal = self.population.ages >= cnf.MENOPAUSE  # Check if menopausal; menopausal when lived through MENOPAUSE full cycles
             mask_fertile = (mask_fertile) & (~mask_menopausal)
         if not any(mask_fertile):
             return
