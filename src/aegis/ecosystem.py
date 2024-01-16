@@ -59,11 +59,11 @@ class Ecosystem:
 
         # If no living individuals
         if len(self.population):
-            self.eco_survival()
             self.gen_survival()
             self.env_survival()
             self.dis_survival()
             self.pred_survival()
+            self.eco_survival()
             self.reproduction()
             self.age()
 
