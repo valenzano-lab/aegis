@@ -112,7 +112,7 @@ if config_path:
 
     # Set up progress log
     progress_path = output_path / "progress.log"
-    content = ("stage", "ETA", "t1M", "runtime", "stg/min")
+    content = ("stage", "ETA", "t1M", "runtime", "stg/min", "popsize")
     with open(progress_path, "wb") as f:
         np.savetxt(f, [content], fmt="%-10s", delimiter="| ")
 

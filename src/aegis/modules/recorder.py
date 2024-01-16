@@ -36,13 +36,13 @@ def get_dhm(timediff):
     return f"{d}`{h:02}:{m:02}"
 
 
-def _log_progress():
+def _log_progress(popsize="?"):
     """Record some information about the time and speed of simulation."""
 
     if pan.skip(cnf.LOGGING_RATE_):
         return
 
-    logging.info("%8s / %s", var.stage, cnf.STAGES_PER_SIMULATION_)
+    logging.info("%8s / %s / N=%s", var.stage, cnf.STAGES_PER_SIMULATION_, popsize)
 
     # Get time estimations
     time_diff = time.time() - pan.time_start
@@ -57,7 +57,7 @@ def _log_progress():
     eta = get_dhm(eta)
 
     # Save time estimations
-    content = (var.stage, eta, time_per_1M, runtime, stages_per_min)
+    content = (var.stage, eta, time_per_1M, runtime, stages_per_min, popsize)
     with open(pan.progress_path, "ab") as f:
         np.savetxt(f, [content], fmt="%-10s", delimiter="| ")
 

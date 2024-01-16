@@ -31,7 +31,7 @@ def main():
         # Run simulation
         extinct = False
         while var.stage <= cnf.STAGES_PER_SIMULATION_ and not extinct:
-            recorder._log_progress()
+            recorder._log_progress(len(ecosystem.population))
             extinct = ecosystem.run_stage()
             var.stage += 1
 
