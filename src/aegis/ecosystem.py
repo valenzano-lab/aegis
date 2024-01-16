@@ -57,16 +57,16 @@ class Ecosystem:
             recorder.extinct = True
             return True  # extinct
 
-        # If no living individuals
-        if len(self.population):
-            self.gen_survival()
-            self.env_survival()
-            self.dis_survival()
-            self.pred_survival()
-            self.eco_survival()
-            self.reproduction()
-            self.age()
+        # Mortality sources
+        self.gen_survival()
+        self.env_survival()
+        self.dis_survival()
+        self.pred_survival()
+        self.eco_survival()
+        self.reproduction()
+        self.age()
 
+        # End of season
         self.season_step()
 
         # Evolve flipmap if applicable
