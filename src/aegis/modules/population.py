@@ -13,16 +13,16 @@ class Population:
         "births",
         "birthdays",
         "phenotypes",
-        "disease",
+        "infection",
     )
 
-    def __init__(self, genomes, ages, births, birthdays, phenotypes, disease):
+    def __init__(self, genomes, ages, births, birthdays, phenotypes, infection):
         self.genomes = genomes
         self.ages = ages
         self.births = births
         self.birthdays = birthdays
         self.phenotypes = phenotypes
-        self.disease = disease
+        self.infection = infection
 
         if not (
             len(genomes)
@@ -30,7 +30,7 @@ class Population:
             == len(births)
             == len(birthdays)
             == len(phenotypes)
-            == len(disease)
+            == len(infection)
         ):
             raise ValueError("Population attributes must have equal length")
 
@@ -46,7 +46,7 @@ class Population:
             births=self.births[index],
             birthdays=self.birthdays[index],
             phenotypes=self.phenotypes[index],
-            disease=self.disease[index],
+            infection=self.infection[index],
         )
 
     def __imul__(self, index):

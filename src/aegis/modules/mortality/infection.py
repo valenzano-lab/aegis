@@ -1,6 +1,6 @@
-"""Disease manager
+"""Infection manager
 
-Disease status:
+Infection status:
     0 .. susceptible
     1 .. infected
     -1 .. dead
@@ -26,19 +26,19 @@ def kill(population):
     probs = var.rng.random(len(population), dtype=float)
 
     # current status
-    infected = population.disease == 1
-    susceptible = population.disease == 0
+    infected = population.infection == 1
+    susceptible = population.infection == 0
 
     # compute infection probability
     infection_density = infected.sum() / len(population)
     infection_probability = get_infection_probability(infection_density=infection_density)
 
     # recoveries from old infections
-    population.disease[infected & (probs < cnf.RECOVERY_RATE)] = 0
+    population.infection[infected & (probs < cnf.RECOVERY_RATE)] = 0
 
     # fatalities
     # overrides recoveries
-    population.disease[infected & (probs < cnf.FATALITY_RATE)] = -1
+    population.infection[infected & (probs < cnf.FATALITY_RATE)] = -1
 
     # new infections
-    population.disease[susceptible & (probs < infection_probability)] = 1
+    population.infection[susceptible & (probs < infection_probability)] = 1

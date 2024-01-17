@@ -5,7 +5,7 @@ causeofdeath_valid = (
     "environment",
     "overshoot",
     "genetic",
-    "disease",
+    "infection",
     "predation",
     "season_shift",
 )

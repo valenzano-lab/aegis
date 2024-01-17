@@ -8,7 +8,7 @@ from aegis.help.config import causeofdeath_valid
 from aegis.modules import recorder
 from aegis.modules.genetics import gstruc, phenomap, flipmap, phenotyper
 from aegis.modules.population import Population
-from aegis.modules.mortality import disease, environment, overshoot, predation
+from aegis.modules.mortality import environment, infection, overshoot, predation
 from aegis.modules.reproduction import recombination, assortment, mutation
 
 
@@ -41,9 +41,9 @@ class Ecosystem:
             births = np.zeros(cnf.MAX_POPULATION_SIZE, dtype=np.int32)
             birthdays = np.zeros(cnf.MAX_POPULATION_SIZE, dtype=np.int32)
             phenotypes = phenotyper.get(genomes)
-            disease_ = np.zeros(cnf.MAX_POPULATION_SIZE, dtype=np.int32)
+            infection_ = np.zeros(cnf.MAX_POPULATION_SIZE, dtype=np.int32)
 
-            self.population = Population(genomes, ages, births, birthdays, phenotypes, disease_)
+            self.population = Population(genomes, ages, births, birthdays, phenotypes, infection_)
 
     ##############
     # MAIN LOGIC #
@@ -110,9 +110,9 @@ class Ecosystem:
 
     def dis_survival(self):
         """Impose death due to infection."""
-        disease.kill(self.population)
-        mask_kill = self.population.disease == -1
-        self._kill(mask_kill=mask_kill, causeofdeath="disease")
+        infection.kill(self.population)
+        mask_kill = self.population.infection == -1
+        self._kill(mask_kill=mask_kill, causeofdeath="infection")
 
     def pred_survival(self):
         """Impose predation death"""
@@ -187,7 +187,7 @@ class Ecosystem:
             births=np.zeros(n, dtype=np.int32),
             birthdays=np.zeros(n, dtype=np.int32) + var.stage,
             phenotypes=phenotyper.get(genomes),
-            disease=np.zeros(n, dtype=np.int32),
+            infection=np.zeros(n, dtype=np.int32),
         )
 
         if self.eggs is None:
