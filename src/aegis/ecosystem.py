@@ -55,7 +55,6 @@ class Ecosystem:
         # If extinct (no living individuals nor eggs left), do nothing
         if len(self) == 0:
             recorder.extinct = True
-            return True  # extinct
 
         # Mortality sources
         self.gen_survival()
@@ -63,30 +62,21 @@ class Ecosystem:
         self.dis_survival()
         self.pred_survival()
         self.eco_survival()
-        self.reproduction()
-        self.age()
 
-        # End of season
-        self.season_step()
-
-        # Evolve flipmap if applicable
-        flipmap.evolve()
-
-        # Population census
-        recorder.collect("additive_age_structure", self.population.ages)
+        self.reproduction()  # reproduction
+        self.age()  # age increment and potentially death
+        self.season_step()  # if season on, kill living and hatch if it is time
+        flipmap.evolve()  # if flipmap on, evolve it
 
         # Record data
+        recorder.collect("additive_age_structure", self.population.ages)  # population census
         recorder.record_pickle(self.population)
         recorder.record_snapshots(self.population)
         recorder.record_visor(self.population)
         recorder.record_popgenstats(
             self.population.genomes, self._get_evaluation
         )  # TODO defers calculation of mutation rates; hacky
-
-        # Memory use
         recorder.record_memory_use()
-
-        return False  # not extinct
 
     ###############
     # STAGE LOGIC #
@@ -153,9 +143,13 @@ class Ecosystem:
         """
 
         # Check if fertile
-        mask_fertile = self.population.ages >= cnf.MATURATION_AGE  # Check if mature; mature if survived MATURATION_AGE full cycles
+        mask_fertile = (
+            self.population.ages >= cnf.MATURATION_AGE
+        )  # Check if mature; mature if survived MATURATION_AGE full cycles
         if cnf.MENOPAUSE > 0:
-            mask_menopausal = self.population.ages >= cnf.MENOPAUSE  # Check if menopausal; menopausal when lived through MENOPAUSE full cycles
+            mask_menopausal = (
+                self.population.ages >= cnf.MENOPAUSE
+            )  # Check if menopausal; menopausal when lived through MENOPAUSE full cycles
             mask_fertile = (mask_fertile) & (~mask_menopausal)
         if not any(mask_fertile):
             return
