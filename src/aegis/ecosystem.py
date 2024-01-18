@@ -21,11 +21,7 @@ class Ecosystem:
     def __init__(self, population=None):
         # TODO when loading from a pickle, load the envmap too
 
-        # Initialize ecosystem variables
-        self.max_uid = 0  # ID of the most recently born individual
-
         # Initialize recorder
-
         if phenomap.map_ is not None:
             recorder.record_phenomap(phenomap.map_)
 
