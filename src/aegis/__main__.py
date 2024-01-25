@@ -36,7 +36,7 @@ def main():
 
         # Record output summary
         recorder.record_output_summary()
-        if extinct:
+        if recorder.extinct:
             logging.info("Population went extinct")
         else:
             logging.info("Simulation is successfully finished")
