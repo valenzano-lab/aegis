@@ -79,6 +79,8 @@ def _treadmill_boomer(n):
     """Kill the oldest individuals.
 
     The population size is brought down to the maximum allowed size in one go.
+    
+    NOTE: Why `-cnf.MAX_POPULATION_SIZE :`? Because old individuals are at the beginning of the population array.
     """
     mask = np.ones(n, dtype=np.bool_)
     mask[-cnf.MAX_POPULATION_SIZE :] = False
@@ -89,6 +91,8 @@ def _treadmill_zoomer(n):
     """Kill the youngest individuals.
 
     The population size is brought down to the maximum allowed size in one go.
+    
+    NOTE: Why `: cnf.MAX_POPULATION_SIZE`? Because young individuals are appended to the end of the population array.
     """
     mask = np.ones(n, dtype=np.bool_)
     mask[: cnf.MAX_POPULATION_SIZE] = False
