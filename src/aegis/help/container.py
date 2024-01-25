@@ -3,6 +3,7 @@ import pathlib
 import logging
 import json
 import yaml
+from aegis.help.config import get_default_parameters
 
 
 class Container:
@@ -59,7 +60,10 @@ class Container:
         if "config" not in self.data:
             path = self.basepath.parent / f"{self.basepath.stem}.yml"
             with open(path, "r") as file_:
-                self.data["config"] = yaml.safe_load(file_)
+                custom_config = yaml.safe_load(file_)
+            default_config = get_default_parameters()
+            self.data["config"] = {**default_config, **custom_config}
+
         return self.data["config"]
 
     def get_json(self, stem):
