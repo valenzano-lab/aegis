@@ -35,7 +35,8 @@ def parse():
     )
     parser.add_argument(
         "--overwrite",
-        type=bool,
+        "-o",
+        action="store_true",
         help="overwrite old data with new simulation",
         default=False,
     )
@@ -107,7 +108,7 @@ if config_path:
         if overwrite:
             shutil.rmtree(output_path)  # Delete previous directory if existing
         else:
-            raise Exception(f"--overwrite is set to False but {output_path} already exists")
+            raise Exception(f"{output_path} already exists. To overwrite, add flag --overwrite or -o.")
     output_path.mkdir(parents=True, exist_ok=True)
 
     # Set up progress log
