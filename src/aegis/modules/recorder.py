@@ -39,16 +39,16 @@ def get_dhm(timediff):
 def _log_progress(popsize="?"):
     """Record some information about the time and speed of simulation."""
 
-    if pan.skip(cnf.LOGGING_RATE_):
+    if pan.skip(cnf.LOGGING_RATE):
         return
 
-    logging.info("%8s / %s / N=%s", var.stage, cnf.STAGES_PER_SIMULATION_, popsize)
+    logging.info("%8s / %s / N=%s", var.stage, cnf.STAGES_PER_SIMULATION, popsize)
 
     # Get time estimations
     time_diff = time.time() - pan.time_start
 
     seconds_per_100 = time_diff / var.stage * 100
-    eta = (cnf.STAGES_PER_SIMULATION_ - var.stage) / 100 * seconds_per_100
+    eta = (cnf.STAGES_PER_SIMULATION - var.stage) / 100 * seconds_per_100
 
     stages_per_min = int(var.stage / (time_diff / 60))
 
@@ -129,7 +129,7 @@ def record_memory_use():
 
 def record_visor(population):
     """Record data that is needed by visor."""
-    if pan.skip(cnf.VISOR_RATE_) or len(population) == 0:
+    if pan.skip(cnf.VISOR_RATE) or len(population) == 0:
         return
 
     # genotypes.csv | Record allele frequency
@@ -147,7 +147,7 @@ def record_visor(population):
 
 def record_snapshots(population):
     """Record demographic, genetic and phenotypic data from the current population."""
-    if pan.skip(cnf.SNAPSHOT_RATE_) or len(population) == 0:
+    if pan.skip(cnf.SNAPSHOT_RATE) or len(population) == 0:
         return
 
     # genotypes
@@ -174,7 +174,7 @@ def record_popgenstats(genomes, mutation_rate_func):
     """Record population size in popgenstats, and record popgen statistics."""
     popgenstats.record_pop_size_history(genomes)
 
-    if pan.skip(cnf.POPGENSTATS_RATE_) or len(genomes) == 0:
+    if pan.skip(cnf.POPGENSTATS_RATE) or len(genomes) == 0:
         return
 
     mutation_rates = mutation_rate_func("muta")
@@ -196,7 +196,7 @@ def record_popgenstats(genomes, mutation_rate_func):
 
 
 def record_pickle(population):
-    if pan.skip(cnf.PICKLE_RATE_) and not var.stage == 1:  # Also records the pickle before the first stage
+    if pan.skip(cnf.PICKLE_RATE) and not var.stage == 1:  # Also records the pickle before the first stage
         return
 
     with open(paths["pickles"] / str(var.stage), "wb") as f:

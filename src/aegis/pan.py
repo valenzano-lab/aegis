@@ -118,5 +118,5 @@ if config_path:
         np.savetxt(f, [content], fmt="%-10s", delimiter="| ")
 
     # Set up random number generator
-    random_seed = np.random.randint(1, 10**6) if cnf.RANDOM_SEED_ is None else cnf.RANDOM_SEED_
+    random_seed = np.random.randint(1, 10**6) if cnf.RANDOM_SEED is None else cnf.RANDOM_SEED
     var.rng = np.random.default_rng(random_seed)

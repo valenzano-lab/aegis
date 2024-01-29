@@ -140,8 +140,8 @@ params = {
     #     drange="[0,inf)",
     #     inrange=lambda x: x >= 0,
     # ),
-    "RANDOM_SEED_": Param(
-        key="RANDOM_SEED_",
+    "RANDOM_SEED": Param(
+        key="RANDOM_SEED",
         name="",
         domain="recording",
         default=None,
@@ -150,8 +150,8 @@ params = {
         drange="{None, (-inf, inf)}",
         inrange=lambda x: True,
     ),
-    "STAGES_PER_SIMULATION_": Param(
-        key="STAGES_PER_SIMULATION_",
+    "STAGES_PER_SIMULATION": Param(
+        key="STAGES_PER_SIMULATION",
         name="",
         domain="recording",
         default=100000,
@@ -163,8 +163,8 @@ params = {
         resrange_info="[1,1000000]",
         evalrange=[1, 10000000],
     ),
-    "LOGGING_RATE_": Param(
-        key="LOGGING_RATE_",
+    "LOGGING_RATE": Param(
+        key="LOGGING_RATE",
         name="",
         domain="recording",
         default=1000,
@@ -174,8 +174,8 @@ params = {
         inrange=lambda x: x >= 0,
         evalrange=[1, 10000],
     ),
-    "PICKLE_RATE_": Param(
-        key="PICKLE_RATE_",
+    "PICKLE_RATE": Param(
+        key="PICKLE_RATE",
         name="",
         domain="recording",
         default=100000,
@@ -187,8 +187,8 @@ params = {
         resrange_info="0 or [1000, inf)",
         evalrange=[1, 10000],
     ),
-    "SNAPSHOT_RATE_": Param(
-        key="SNAPSHOT_RATE_",
+    "SNAPSHOT_RATE": Param(
+        key="SNAPSHOT_RATE",
         name="",
         domain="recording",
         default=10000,
@@ -200,8 +200,8 @@ params = {
         resrange_info="0 or [1000, inf)",
         evalrange=[1, 10000],
     ),
-    "VISOR_RATE_": Param(
-        key="VISOR_RATE_",
+    "VISOR_RATE": Param(
+        key="VISOR_RATE",
         name="",
         domain="recording",
         default=1000,
@@ -211,8 +211,8 @@ params = {
         inrange=lambda x: x >= 0,
         evalrange=[1, 10000],
     ),
-    "POPGENSTATS_RATE_": Param(
-        key="POPGENSTATS_RATE_",
+    "POPGENSTATS_RATE": Param(
+        key="POPGENSTATS_RATE",
         name="",
         domain="recording",
         default=1000,
@@ -224,8 +224,8 @@ params = {
         resrange_info="0 or [100, inf)",
         evalrange=[1, 10000],
     ),
-    "POPGENSTATS_SAMPLE_SIZE_": Param(
-        key="POPGENSTATS_SAMPLE_SIZE_",
+    "POPGENSTATS_SAMPLE_SIZE": Param(
+        key="POPGENSTATS_SAMPLE_SIZE",
         name="",
         domain="recording",
         default=100,
@@ -234,8 +234,8 @@ params = {
         drange="{0, [3, inf)}",
         inrange=lambda x: x == 0 or x >= 3,
     ),
-    "ECOSYSTEM_NUMBER_": Param(
-        key="ECOSYSTEM_NUMBER_",
+    "ECOSYSTEM_NUMBER": Param(
+        key="ECOSYSTEM_NUMBER",
         name="",
         domain="ecology",
         default=1,

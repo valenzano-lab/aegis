@@ -5,7 +5,7 @@ import numpy as np
 from aegis.modules import popgenstats
 from aegis.pan import pan
 
-pan.POPGENSTATS_SAMPLE_SIZE_ = 0
+pan.POPGENSTATS_SAMPLE_SIZE = 0
 
 def get_popgenstats(genomes, ploidy=1, mutation_rates=0):
     obj = popgenstats.PopgenStats()
@@ -391,7 +391,7 @@ def test_segregating_sites_valid_input(genomes, ploidy, expected):
 )
 def test_tajimas_d_valid_input(genomes, sample_size, ploidy, sample_provided, expected):
     sample_size = 0 if sample_size is None else sample_size
-    pan.POPGENSTATS_SAMPLE_SIZE_ = sample_size
+    pan.POPGENSTATS_SAMPLE_SIZE = sample_size
     calculated = get_popgenstats(genomes=genomes, ploidy=ploidy).tajimas_d
     assert pytest.approx(calculated, 0.0001) == expected
 
@@ -412,7 +412,7 @@ def test_tajimas_d_valid_input(genomes, sample_size, ploidy, sample_provided, ex
 )
 def test_theta_pi_valid_input(genomes, sample_size, ploidy, sample_provided, expected):
     sample_size = 0 if sample_size is None else sample_size
-    pan.POPGENSTATS_SAMPLE_SIZE_ = sample_size
+    pan.POPGENSTATS_SAMPLE_SIZE = sample_size
     calculated = get_popgenstats(genomes=genomes, ploidy=ploidy).theta_pi
     assert pytest.approx(calculated, 0.0001) == expected
 
@@ -432,7 +432,7 @@ def test_theta_pi_valid_input(genomes, sample_size, ploidy, sample_provided, exp
 )
 def test_theta_w_valid_input(genomes, sample_size, ploidy, sample_provided, expected):
     sample_size = 0 if sample_size is None else sample_size
-    pan.POPGENSTATS_SAMPLE_SIZE_ = sample_size
+    pan.POPGENSTATS_SAMPLE_SIZE = sample_size
     calculated = get_popgenstats(genomes=genomes, ploidy=ploidy).theta_w
     assert pytest.approx(calculated, 0.0001) == expected
 

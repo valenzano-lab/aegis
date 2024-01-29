@@ -5,7 +5,7 @@ import aegis
 @pytest.mark.parametrize(
     "config_file",
     [
-        "RANDOM_SEED_",
+        "RANDOM_SEED",
         "STARVATION_RESPONSE_cliff",
         "STARVATION_RESPONSE_treadmill_boomer",
         "STARVATION_RESPONSE_treadmill_zoomer",
@@ -20,7 +20,7 @@ import aegis
         "RECOMBINATION_RATE",
         "MUTATION_RATIO",
         "PHENOMAP_SPECS",
-        "STAGES_PER_SIMULATION_",
+        "STAGES_PER_SIMULATION",
         "FLIPMAP_CHANGE_RATE",
     ],
 )

@@ -60,8 +60,8 @@ To check if installation is successful, run `aegis -h`. If it is, the output wil
     ```yml
     # custom.yml
 
-    RANDOM_SEED_: 42
-    STAGES_PER_SIMULATION_: 10000
+    RANDOM_SEED: 42
+    STAGES_PER_SIMULATION: 10000
     MAX_LIFESPAN: 50
     ```
 
