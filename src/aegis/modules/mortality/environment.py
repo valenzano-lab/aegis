@@ -1,7 +1,6 @@
 """Cyclic extrinsic mortality"""
 import math
 import logging
-
 from aegis import cnf
 
 func = None  # defined below
@@ -11,7 +10,7 @@ def get_hazard(stage):
     return func(stage) + cnf.ENVIRONMENT_HAZARD_OFFSET
 
 
-def flat():
+def flat(_):
     return cnf.ENVIRONMENT_HAZARD_AMPLITUDE
 
 
@@ -41,6 +40,13 @@ def ramp(stage):
     return cnf.ENVIRONMENT_HAZARD_AMPLITUDE * (stage % cnf.ENVIRONMENT_HAZARD_PERIOD) / cnf.ENVIRONMENT_HAZARD_PERIOD
 
 
+def instant(stage):
+    """Mortality function that every ENVIRONMENT_HAZARD_PERIOD stages kills ENVIRONMENT_HAZARD_AMPLITUDE of the total living population; stage 0 is unaffected"""
+    if stage == 0 or stage % cnf.ENVIRONMENT_HAZARD_PERIOD:
+        return 0
+    return cnf.ENVIRONMENT_HAZARD_AMPLITUDE
+
+
 func = {
     "flat": flat,
     "sinusoidal": sinusoidal,
@@ -48,6 +54,7 @@ func = {
     "square": square,
     "sawtooth": sawtooth,
     "ramp": ramp,
+    "instant": instant,
 }[cnf.ENVIRONMENT_HAZARD_SHAPE]
 
 if (

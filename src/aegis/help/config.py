@@ -482,8 +482,8 @@ params = {
         default="sinusoidal",
         info="",
         dtype=str,
-        drange="{sinusoidal, flat, triangle, square, sawtooth, ramp}",
-        inrange=lambda x: x in {"sinusoidal", "flat", "triangle", "square", "sawtooth", "ramp"},
+        drange="{sinusoidal, flat, triangle, square, sawtooth, ramp, instant}",
+        inrange=lambda x: x in {"sinusoidal", "flat", "triangle", "square", "sawtooth", "ramp", "instant"},
     ),
     "BACKGROUND_INFECTIVITY": Param(
         key="BACKGROUND_INFECTIVITY",
