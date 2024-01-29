@@ -28,7 +28,7 @@ def get_birth_structure(container):
     return y
 
 
-def get_death_structure(container, targetcause="genetic"):
+def get_death_structure(container, targetcause):
     age_at = {
         causeofdeath: container.get_df(f"age_at_{causeofdeath}")
         for causeofdeath in causeofdeath_valid

@@ -9,7 +9,7 @@ from aegis.help.config import causeofdeath_valid
 from aegis.modules import recorder
 from aegis.modules.genetics import gstruc, phenomap, flipmap, phenotyper
 from aegis.modules.population import Population
-from aegis.modules.mortality import environment, infection, overshoot, predation
+from aegis.modules.mortality import abiotic, infection, predation, starvation
 from aegis.modules.reproduction import recombination, assortment, mutation
 
 
@@ -55,11 +55,11 @@ class Ecosystem:
             recorder.extinct = True
 
         # Mortality sources
-        self.gen_survival()
-        self.env_survival()
-        self.dis_survival()
-        self.pred_survival()
-        self.eco_survival()
+        self.mortality_intrinsic()
+        self.mortality_abiotic()
+        self.mortality_infection()
+        self.mortality_predation()
+        self.mortality_starvation()
 
         self.reproduction()  # reproduction
         self.age()  # age increment and potentially death
@@ -80,34 +80,29 @@ class Ecosystem:
     # STAGE LOGIC #
     ###############
 
-    def gen_survival(self):
-        """Impose genomic death, i.e. death that arises with probability encoded in the genome."""
+    def mortality_intrinsic(self):
         probs_surv = self._get_evaluation("surv")
         mask_surv = var.rng.random(len(probs_surv), dtype=np.float32) < probs_surv
-        self._kill(mask_kill=~mask_surv, causeofdeath="genetic")
+        self._kill(mask_kill=~mask_surv, causeofdeath="intrinsic")
 
-    def env_survival(self):
-        """Impose environmental hazard death; i.e. death due to abiotic and cyclical factors such as temperature."""
-        hazard = environment.get_hazard(var.stage)
+    def mortality_abiotic(self):
+        hazard = abiotic.get_hazard(var.stage)
         mask_kill = var.rng.random(len(self.population), dtype=np.float32) < hazard
-        self._kill(mask_kill=mask_kill, causeofdeath="environment")
+        self._kill(mask_kill=mask_kill, causeofdeath="abiotic")
 
-    def dis_survival(self):
-        """Impose death due to infection."""
+    def mortality_infection(self):
         infection.kill(self.population)
         mask_kill = self.population.infection == -1
         self._kill(mask_kill=mask_kill, causeofdeath="infection")
 
-    def pred_survival(self):
-        """Impose predation death"""
+    def mortality_predation(self):
         probs_kill = predation.call(len(self))
         mask_kill = var.rng.random(len(self), dtype=np.float32) < probs_kill
         self._kill(mask_kill=mask_kill, causeofdeath="predation")
 
-    def eco_survival(self):
-        """Impose ecological death, i.e. death that arises due to resource scarcity."""
-        mask_kill = overshoot.call(n=len(self.population))
-        self._kill(mask_kill=mask_kill, causeofdeath="overshoot")
+    def mortality_starvation(self):
+        mask_kill = starvation.call(n=len(self.population))
+        self._kill(mask_kill=mask_kill, causeofdeath="starvation")
 
     def reproduction(self):
         """Generate offspring of reproducing individuals.

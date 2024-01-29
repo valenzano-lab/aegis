@@ -35,14 +35,14 @@ def _logistic(n):
     return mask
 
 
-def _starvation(n):
+def _gradual(n):
     """Kill random individuals with time-increasing probability.
 
     The choice of individuals is random.
     The probability of dying increases each consecutive stage of overcrowding.
     The probability of dying resets to the base value once the population dips under the maximum allowed size.
     """
-    surv_probability = (1 - cnf.OVERSHOOT_MORTALITY) ** consecutive_overshoot_n
+    surv_probability = (1 - cnf.STARVATION_MAGNITUDE) ** consecutive_overshoot_n
     random_probabilities = var.rng.random(n, dtype=np.float32)
     mask = random_probabilities > surv_probability
     return mask
@@ -104,6 +104,6 @@ func = {
     "treadmill_boomer": _treadmill_boomer,
     "treadmill_zoomer": _treadmill_zoomer,
     "cliff": _cliff,
-    "starvation": _starvation,
+    "gradual": _gradual,
     "logistic": _logistic,
-}[cnf.OVERSHOOT_EVENT]
+}[cnf.STARVATION_RESPONSE]

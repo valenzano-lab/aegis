@@ -1,12 +1,12 @@
 import logging
 
 causeofdeath_valid = (
-    "max_lifespan",
-    "environment",
-    "overshoot",
-    "genetic",
+    "intrinsic",
+    "abiotic",
     "infection",
     "predation",
+    "starvation",
+    "max_lifespan",
 )
 
 
@@ -259,25 +259,25 @@ params = {
         resrange_info="[1,100000]",
         evalrange=[1, 1000000],
     ),
-    "OVERSHOOT_EVENT": Param(
-        key="OVERSHOOT_EVENT",
+    "STARVATION_RESPONSE": Param(
+        key="STARVATION_RESPONSE",
         name="",
         domain="ecology",
-        default="starvation",
+        default="gradual",
         info="Who dies when everyone is starving?",
         dtype=str,
-        drange="{starvation, cliff, treadmill_random, treadmill_zoomer, treadmill_boomer}",
+        drange="{gradual, cliff, treadmill_random, treadmill_zoomer, treadmill_boomer}",
         inrange=lambda x: x
         in (
-            "starvation",
+            "gradual",
             "cliff",
             "treadmill_random",
             "treadmill_zoomer",
             "treadmill_boomer",
         ),
     ),
-    "OVERSHOOT_MORTALITY": Param(
-        key="OVERSHOOT_MORTALITY",
+    "STARVATION_MAGNITUDE": Param(
+        key="STARVATION_MAGNITUDE",
         name="",
         domain="ecology",
         default=0.05,
@@ -444,8 +444,8 @@ params = {
         drange="[0, inf)",
         inrange=lambda x: x >= 0,
     ),
-    "ENVIRONMENT_HAZARD_AMPLITUDE": Param(
-        key="ENVIRONMENT_HAZARD_AMPLITUDE",
+    "ABIOTIC_HAZARD_AMPLITUDE": Param(
+        key="ABIOTIC_HAZARD_AMPLITUDE",
         name="",
         domain="environment",
         default=0,
@@ -454,8 +454,8 @@ params = {
         drange="[0, inf)",
         inrange=lambda x: x >= 0,
     ),
-    "ENVIRONMENT_HAZARD_PERIOD": Param(
-        key="ENVIRONMENT_HAZARD_PERIOD",
+    "ABIOTIC_HAZARD_PERIOD": Param(
+        key="ABIOTIC_HAZARD_PERIOD",
         name="",
         domain="environment",
         default=1,
@@ -464,18 +464,18 @@ params = {
         drange="[1, inf)",
         inrange=lambda x: x >= 1,
     ),
-    "ENVIRONMENT_HAZARD_OFFSET": Param(
-        key="ENVIRONMENT_HAZARD_OFFSET",
+    "ABIOTIC_HAZARD_OFFSET": Param(
+        key="ABIOTIC_HAZARD_OFFSET",
         name="",
         domain="environment",
         default=0,
-        info=r"e.g. 0.01 means that environmental mortality is increased by 1% each stage",
+        info=r"e.g. 0.01 means that abiotic mortality is increased by 1% each stage",
         dtype=float,
         drange="[0, inf)",
         inrange=lambda x: x >= 0,
     ),
-    "ENVIRONMENT_HAZARD_SHAPE": Param(
-        key="ENVIRONMENT_HAZARD_SHAPE",
+    "ABIOTIC_HAZARD_SHAPE": Param(
+        key="ABIOTIC_HAZARD_SHAPE",
         name="",
         domain="environment",
         default="sinusoidal",

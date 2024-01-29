@@ -7,11 +7,11 @@ texts_domain = {
     "recording": "Change which data are recorded and with what frequency.",
     "predation": "asdf",
     "computation": "wer",
-    "genetics": "asdf",
+    # "genetics": "asdf",
     "initialization": "wer",
     "infection": "asdf",
     "ecology": "wer",
-    "environment": "asdf",
+    # "environment": "asdf",
 }
 
 assert set(config.get_domains()) == set(
