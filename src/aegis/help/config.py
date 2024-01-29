@@ -7,7 +7,6 @@ causeofdeath_valid = (
     "genetic",
     "infection",
     "predation",
-    "season_shift",
 )
 
 
@@ -297,15 +296,15 @@ params = {
         drange="{None, (0,1)}",
         inrange=lambda x: x is None or (0 < x < 1),
     ),
-    "STAGES_PER_SEASON": Param(
-        key="STAGES_PER_SEASON",
+    "INCUBATION_PERIOD": Param(
+        key="INCUBATION_PERIOD",
         name="",
         domain="ecology",
         default=0,
-        info="How many stages does one season last; 0 for no seasons",
+        info="How many stages does it take from fertilization to hatching? 0 if egg period is skipped, -1 if hatching occurs only once no living individuals are around.",
         dtype=int,
-        drange="[0, inf)",
-        inrange=lambda x: x >= 0,
+        drange="[-1, inf)",
+        inrange=lambda x: x >= -1,
     ),
     "MAX_LIFESPAN": Param(
         key="MAX_LIFESPAN",

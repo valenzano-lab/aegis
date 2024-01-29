@@ -98,7 +98,6 @@ To check if installation is successful, run `aegis -h`. If it is, the output wil
                     age_at_end_of_sim.csv
                     age_at_genetic.csv
                     age_at_overshoot.csv
-                    age_at_season_shift.csv
                     additive_age_structure.csv
     ```
 

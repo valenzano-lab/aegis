@@ -119,6 +119,3 @@ if config_path:
     # Set up random number generator
     random_seed = np.random.randint(1, 10**6) if cnf.RANDOM_SEED_ is None else cnf.RANDOM_SEED_
     var.rng = np.random.default_rng(random_seed)
-
-    # Set up season
-    season_countdown = float("inf") if cnf.STAGES_PER_SEASON == 0 else cnf.STAGES_PER_SEASON

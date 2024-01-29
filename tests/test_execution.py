@@ -10,7 +10,6 @@ import aegis
         "OVERSHOOT_EVENT_treadmill_boomer",
         "OVERSHOOT_EVENT_treadmill_zoomer",
         "OVERSHOOT_EVENT_treadmill_random",
-        "STAGES_PER_SEASON",
         "MAX_LIFESPAN",
         "MATURATION_AGE",
         "BITS_PER_LOCUS",

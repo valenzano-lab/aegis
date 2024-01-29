@@ -1,4 +1,5 @@
 import numpy as np
+import logging
 
 from aegis import cnf
 from aegis import pan
@@ -50,6 +51,7 @@ class Ecosystem:
 
         # If extinct (no living individuals nor eggs left), do nothing
         if len(self) == 0:
+            logging.debug("went extinct")
             recorder.extinct = True
 
         # Mortality sources
@@ -61,7 +63,7 @@ class Ecosystem:
 
         self.reproduction()  # reproduction
         self.age()  # age increment and potentially death
-        self.season_step()  # if season on, kill living and hatch if it is time
+        self.hatch()
         flipmap.evolve()  # if flipmap on, evolve it
 
         # Record data
@@ -78,31 +80,17 @@ class Ecosystem:
     # STAGE LOGIC #
     ###############
 
-    def age(self):
-        """Increase age of all by one and kill those that surpass max lifespan.
-        Age denotes the number of full cycles that an individual survived and reproduced.
-        MAX_LIFESPAN is the maximum number of full cycles an individual can go through.
-        """
-        self.population.ages += 1
-        mask_kill = self.population.ages >= cnf.MAX_LIFESPAN
-        self._kill(mask_kill=mask_kill, causeofdeath="max_lifespan")
+    def gen_survival(self):
+        """Impose genomic death, i.e. death that arises with probability encoded in the genome."""
+        probs_surv = self._get_evaluation("surv")
+        mask_surv = var.rng.random(len(probs_surv), dtype=np.float32) < probs_surv
+        self._kill(mask_kill=~mask_surv, causeofdeath="genetic")
 
     def env_survival(self):
         """Impose environmental hazard death; i.e. death due to abiotic and cyclical factors such as temperature."""
         hazard = environment.get_hazard(var.stage)
         mask_kill = var.rng.random(len(self.population), dtype=np.float32) < hazard
         self._kill(mask_kill=mask_kill, causeofdeath="environment")
-
-    def eco_survival(self):
-        """Impose ecological death, i.e. death that arises due to resource scarcity."""
-        mask_kill = overshoot.call(n=len(self.population))
-        self._kill(mask_kill=mask_kill, causeofdeath="overshoot")
-
-    def gen_survival(self):
-        """Impose genomic death, i.e. death that arises with probability encoded in the genome."""
-        probs_surv = self._get_evaluation("surv")
-        mask_surv = var.rng.random(len(probs_surv), dtype=np.float32) < probs_surv
-        self._kill(mask_kill=~mask_surv, causeofdeath="genetic")
 
     def dis_survival(self):
         """Impose death due to infection."""
@@ -116,22 +104,10 @@ class Ecosystem:
         mask_kill = var.rng.random(len(self), dtype=np.float32) < probs_kill
         self._kill(mask_kill=mask_kill, causeofdeath="predation")
 
-    def season_step(self):
-        """Let one time unit pass in the season.
-        Kill the population if the season is over, and hatch the saved eggs."""
-        pan.season_countdown -= 1
-        if pan.season_countdown == 0:
-            # Kill all living
-            mask_kill = np.ones(len(self.population), dtype=np.bool_)
-            self._kill(mask_kill, "season_shift")
-
-            # Hatch eggs and restart season
-            self._hatch_eggs()
-            pan.season_countdown += cnf.STAGES_PER_SEASON
-
-        elif pan.season_countdown == float("inf"):
-            # Add newborns to population
-            self._hatch_eggs()
+    def eco_survival(self):
+        """Impose ecological death, i.e. death that arises due to resource scarcity."""
+        mask_kill = overshoot.call(n=len(self.population))
+        self._kill(mask_kill=mask_kill, causeofdeath="overshoot")
 
     def reproduction(self):
         """Generate offspring of reproducing individuals.
@@ -191,15 +167,34 @@ class Ecosystem:
         else:
             self.eggs += eggs
 
+    def age(self):
+        """Increase age of all by one and kill those that surpass max lifespan.
+        Age denotes the number of full cycles that an individual survived and reproduced.
+        MAX_LIFESPAN is the maximum number of full cycles an individual can go through.
+        """
+        self.population.ages += 1
+        mask_kill = self.population.ages >= cnf.MAX_LIFESPAN
+        self._kill(mask_kill=mask_kill, causeofdeath="max_lifespan")
+
+    def hatch(self):
+        """Turn eggs into living individuals"""
+
+        # If nothing to hatch
+        if self.eggs is None:
+            return
+
+        # If something to hatch
+        if (
+            (cnf.INCUBATION_PERIOD == -1 and len(self.population) == 0)  # hatch when everyone dead
+            or (cnf.INCUBATION_PERIOD == 0)  # hatch immediately
+            or (cnf.INCUBATION_PERIOD > 0 and var.stage % cnf.INCUBATION_PERIOD == 0)  # hatch with delay
+        ):
+            self.population += self.eggs
+            self.eggs = None
+
     ################
     # HELPER FUNCS #
     ################
-
-    def _hatch_eggs(self):
-        """Add offspring from eggs into the living population."""
-        if self.eggs is not None:
-            self.population += self.eggs
-            self.eggs = None
 
     def _get_evaluation(self, attr, part=None):
         """Get phenotypic values of a certain trait for a certain individuals."""
@@ -227,9 +222,7 @@ class Ecosystem:
         return final_probs
 
     def _kill(self, mask_kill, causeofdeath):
-        """Kill individuals and record their data.
-        Killing can occur due to age, genomic death, ecological death, and season shift.
-        """
+        """Kill individuals and record their data."""
 
         assert causeofdeath in causeofdeath_valid
 
