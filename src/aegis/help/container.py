@@ -82,6 +82,13 @@ class Container:
                 return json.load(file_)
 
     def get_snapshot(self, kind, index):
+
+        assert kind in (
+            "demography",
+            "phenotypes",
+            "genotypes",
+        ), f'kind can only be "demography", "phenotypes" or "genotypes"; you entered {kind}'
+
         paths = sorted(
             (self.paths["snapshots"] / kind).glob("*"),
             key=lambda path: int(path.stem),
