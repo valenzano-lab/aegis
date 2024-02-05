@@ -77,7 +77,17 @@ def set_up_cnf(custom_config_path, running_on_server):
 
 def skip(rate):
     """Should you skip an action performed at a certain rate"""
-    return (rate <= 0) or (var.stage % rate > 0)
+
+    # Skip if rate deactivated
+    if rate <= 0:
+        return True
+
+    # Do not skip first stage
+    if var.stage == 1:
+        return False
+
+    # Skip unless stage is divisible by rate
+    return var.stage % rate > 0
 
 
 # Decorators

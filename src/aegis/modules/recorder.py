@@ -150,6 +150,8 @@ def record_snapshots(population):
     if pan.skip(cnf.SNAPSHOT_RATE) or len(population) == 0:
         return
 
+    logging.debug(f"snapshot recorded at stage {var.stage}")
+
     # genotypes
     df_gen = pd.DataFrame(np.array(population.genomes.reshape(len(population), -1)))
     df_gen.reset_index(drop=True, inplace=True)
@@ -198,6 +200,8 @@ def record_popgenstats(genomes, mutation_rate_func):
 def record_pickle(population):
     if pan.skip(cnf.PICKLE_RATE) and not var.stage == 1:  # Also records the pickle before the first stage
         return
+
+    logging.debug(f"pickle recorded at stage {var.stage}")
 
     with open(paths["pickles"] / str(var.stage), "wb") as f:
         pickle.dump(population, f)
