@@ -13,7 +13,6 @@ import numpy as np
 import json
 import time
 import copy
-import pickle
 import psutil
 import subprocess
 import logging
@@ -203,8 +202,8 @@ def record_pickle(population):
 
     logging.debug(f"pickle recorded at stage {var.stage}")
 
-    with open(paths["pickles"] / str(var.stage), "wb") as f:
-        pickle.dump(population, f)
+    pickle_path = paths["pickles"] / str(var.stage)
+    population.save_pickle_to(pickle_path)
 
 
 # ==============================

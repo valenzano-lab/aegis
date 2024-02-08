@@ -1,7 +1,6 @@
 """This script is executed when you run `python3 -m aegis`."""
 
 import logging
-import pickle
 
 from aegis import cnf
 from visor import visor
@@ -21,9 +20,10 @@ def main():
         if not pan.pickle_path:
             ecosystem = Ecosystem()
         else:
-            with open(pan.pickle_path, "rb") as file_:
-                population = pickle.load(file_)
-                ecosystem = Ecosystem(population)
+            from aegis.modules.population import Population
+
+            population = Population.load_pickle_from(pan.pickle_path)
+            ecosystem = Ecosystem(population)
 
         # Record input summary
         recorder.record_input_summary()

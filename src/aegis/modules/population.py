@@ -1,4 +1,5 @@
 import numpy as np
+import pickle
 
 
 class Population:
@@ -24,14 +25,7 @@ class Population:
         self.phenotypes = phenotypes
         self.infection = infection
 
-        if not (
-            len(genomes)
-            == len(ages)
-            == len(births)
-            == len(birthdays)
-            == len(phenotypes)
-            == len(infection)
-        ):
+        if not (len(genomes) == len(ages) == len(births) == len(birthdays) == len(phenotypes) == len(infection)):
             raise ValueError("Population attributes must have equal length")
 
     def __len__(self):
@@ -61,3 +55,12 @@ class Population:
             val = np.concatenate([getattr(self, attr), getattr(population, attr)])
             setattr(self, attr, val)
         return self
+
+    @staticmethod
+    def load_pickle_from(path):
+        with open(path, "rb") as file_:
+            return pickle.load(file_)
+
+    def save_pickle_to(self, path):
+        with open(path, "wb") as file_:
+            pickle.dump(self, file_)
