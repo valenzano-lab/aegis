@@ -4,6 +4,7 @@ import logging
 import json
 import yaml
 from aegis.help.config import get_default_parameters
+from aegis.modules.population import Population
 
 
 class Container:
@@ -22,6 +23,7 @@ class Container:
         self.paths["output_summary"] = self.basepath / "output_summary.json"
         self.paths["input_summary"] = self.basepath / "input_summary.json"
         self.paths["snapshots"] = self.basepath / "snapshots"
+        self.paths["pickles"] = self.basepath / "pickles"
         self.data = {}
 
         if not self.paths["log"].is_file():
@@ -102,3 +104,11 @@ class Container:
 
     def get_json(self):
         return json.dumps(self)
+
+    def read_pickle(self, index):
+        paths = sorted(
+            (self.paths["pickles"]).glob("*"),
+            key=lambda path: int(path.stem),
+        )
+        assert index < len(paths), "Index out of range"
+        return Population.load_pickle_from(paths[index])
