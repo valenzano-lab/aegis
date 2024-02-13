@@ -59,7 +59,7 @@ class Container:
             if normalize:
                 table = table.div(table.sum(1), axis=0)
             table.index.names = ["interval"]
-            table.columns.names = ["age"]
+            table.columns.names = ["parental_age"]
             table.columns = table.columns.astype(int)
             return table
         elif record_type == "snapshot":
@@ -71,7 +71,7 @@ class Container:
         if record_type == "interval":
             table = self._read_df("additive_age_structure")
             table.index.names = ["interval"]
-            table.columns.names = ["age"]
+            table.columns.names = ["age_class"]
             table.columns = table.columns.astype(int)
             return table
         elif record_type == "snapshot":
@@ -81,7 +81,7 @@ class Container:
                 .ages.value_counts()
                 .reindex(range(MAX_LIFESPAN), fill_value=0)
             )
-            table.index.names = ["age"]
+            table.index.names = ["age_class"]
             return table
         else:
             raise Exception(f"record_type must be interval or snapshot, not {record_type}")
@@ -95,8 +95,8 @@ class Container:
                 .swaplevel()
                 .sort_index(level=0)
             )
-            table.index.names = ["interval", "cause"]
-            table.columns.names = ["age"]
+            table.index.names = ["interval", "cause_of_death"]
+            table.columns.names = ["age_class"]
             table.columns = table.columns.astype(int)
             return table
         elif record_type == "snapshot":
@@ -240,3 +240,25 @@ class Container:
         fertility = phenotypes.iloc[:, max_age:]
         y = fertility
         return y
+
+    # genotypic
+
+    def get_derived_allele_freq(self):
+        genotypes = self._read_df("genotypes")
+        reference = genotypes.round()
+        derived_allele_freq = (
+            genotypes.iloc[1:].reset_index(drop=True) - reference.iloc[:-1].reset_index(drop=True)
+        ).abs()
+        return derived_allele_freq
+
+    def get_sfss(self, bins=10):
+        daf = self.get_derived_allele_freq()
+        bins = 10
+        binsize = 1 / (bins - 1)
+        sfss = (daf // binsize).T.apply(lambda l: l.value_counts()).T.fillna(0).astype(int)
+
+        sfss.columns = sfss.columns.astype(int)
+        sfss.columns.names = ["frequency_bin"]
+        sfss.index.names = ["snapshot"]
+
+        return sfss
