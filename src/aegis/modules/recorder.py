@@ -75,6 +75,7 @@ paths = {
     "pickles": opath / "pickles",
     "popgen": opath / "popgen",
     "phenomap": opath,
+    "te": opath / "te",
 }
 for path in paths.values():
     path.mkdir(exist_ok=True, parents=True)
@@ -98,6 +99,9 @@ psutil_process = psutil.Process()
 
 # PopgenStats
 popgenstats = PopgenStats()
+
+# other
+te_record_number = 0
 
 # Add headers
 for key in _collection.keys():
@@ -149,7 +153,7 @@ def record_snapshots(population):
     if pan.skip(cnf.SNAPSHOT_RATE) or len(population) == 0:
         return
 
-    logging.debug(f"snapshot recorded at stage {var.stage}")
+    logging.debug(f"Snapshots recorded at stage {var.stage}")
 
     # genotypes
     df_gen = pd.DataFrame(np.array(population.genomes.reshape(len(population), -1)))
@@ -276,3 +280,56 @@ def record_input_summary():
     }
     with open(paths["input_summary"] / "input_summary.json", "w") as f:
         json.dump(summary, f, indent=4)
+
+
+# =================================
+# RECORDING METHOD IV. (other)
+# =================================
+
+
+def record_TE(T, e):
+    """
+    Record deaths.
+    T .. time / duration (ages)
+    E .. event observed (0/alive or 1/dead)
+
+    ###
+
+    To fit this data using lifelines, use this script as inspiration:
+        from lifelines import KaplanMeierFitter
+        kmf = KaplanMeierFitter()
+        te = pd.read_csv("/path/to/te/1.csv")
+        kmf.fit(te["T"], te["E"])
+        kmf.survival_function_.plot()
+
+    You can compare this to observed survivorship curves:
+        analyzer.get_total_survivorship(container).plot()
+
+    """
+
+    global te_record_number
+
+    assert e in ("alive", "dead")
+
+    if (var.stage % cnf.TE_RATE) == 0 or var.stage == 1:
+        # open new file and add header
+        with open(paths["te"] / f"{te_record_number}.csv", "w") as file_:
+            array = ["T", "E"]
+            np.savetxt(file_, [array], delimiter=",", fmt="%s")
+
+    elif ((var.stage % cnf.TE_RATE) < cnf.TE_DURATION) and e == "dead":
+        # record deaths
+        E = np.repeat(1, len(T))
+        data = np.array([T, E]).T
+        with open(paths["te"] / f"{te_record_number}.csv", "ab") as file_:
+            np.savetxt(file_, data, delimiter=",", fmt="%i")
+
+    elif ((var.stage % cnf.TE_RATE) == cnf.TE_DURATION) and e == "alive":
+        # flush
+        logging.debug(f"Data for survival analysis (T,E) flushed at stage {var.stage}")
+        E = np.repeat(0, len(T))
+        data = np.array([T, E]).T
+        with open(paths["te"] / f"{te_record_number}.csv", "ab") as file_:
+            np.savetxt(file_, data, delimiter=",", fmt="%i")
+
+        te_record_number += 1

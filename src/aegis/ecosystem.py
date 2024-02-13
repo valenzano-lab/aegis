@@ -75,6 +75,7 @@ class Ecosystem:
             self.population.genomes, self._get_evaluation
         )  # TODO defers calculation of mutation rates; hacky
         recorder.record_memory_use()
+        recorder.record_TE(self.population.ages, "alive")
 
     ###############
     # STAGE LOGIC #
@@ -229,6 +230,7 @@ class Ecosystem:
         if causeofdeath != "max_lifespan":
             ages_death = self.population.ages[mask_kill]
             recorder.collect(f"age_at_{causeofdeath}", ages_death)
+            recorder.record_TE(ages_death, "dead")
 
         # Retain survivors
         self.population *= ~mask_kill
