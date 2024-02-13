@@ -212,7 +212,7 @@ class Container:
 
     def _read_pickle(self, record_index):
         assert record_index < len(self.paths["pickles"]), "Index out of range"
-        return Population.load_pickle_from(self.paths["pickles"])
+        return Population.load_pickle_from(self.paths["pickles"][record_index])
 
     ### ANALYSIS FUNCTIONS
 
