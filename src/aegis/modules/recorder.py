@@ -324,7 +324,7 @@ def record_TE(T, e):
         with open(paths["te"] / f"{te_record_number}.csv", "ab") as file_:
             np.savetxt(file_, data, delimiter=",", fmt="%i")
 
-    elif ((var.stage % cnf.TE_RATE) == cnf.TE_DURATION) and e == "alive":
+    elif (((var.stage % cnf.TE_RATE) == cnf.TE_DURATION) or var.stage == cnf.STAGES_PER_SIMULATION) and e == "alive":
         # flush
         logging.debug(f"Data for survival analysis (T,E) flushed at stage {var.stage}")
         E = np.repeat(0, len(T))
