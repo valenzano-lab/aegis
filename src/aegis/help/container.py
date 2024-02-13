@@ -35,6 +35,10 @@ class Container:
             (self.basepath / "pickles").glob("*"),
             key=lambda path: int(path.stem),
         )
+        self.paths["te"] = sorted(
+            (self.basepath / "te").glob("*"),
+            key=lambda path: int(path.stem),
+        )
         if not self.paths["log"].is_file():
             logging.error(f"No AEGIS log found at path {self.paths['log']}")
 
@@ -176,6 +180,12 @@ class Container:
             return self._read_snapshot("demography", record_index=record_index)
         else:
             raise Exception(f"record_type must be interval or snapshot, not {record_type}")
+
+    def get_survival_analysis_TE(self, record_index):
+        assert record_index < len(self.paths["te"]), "Index out of range"
+        data = pd.read_csv(self.paths["te"][record_index])
+        data.index.names = ["individual"]
+        return data
 
     ### FORMAT READING FUNCTIONS
 
