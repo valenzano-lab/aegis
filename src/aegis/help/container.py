@@ -1,8 +1,10 @@
 import pandas as pd
+import numpy as np
 import pathlib
 import logging
 import json
 import yaml
+
 from aegis.help.config import get_default_parameters
 from aegis.modules.population import Population
 from aegis.help.config import causeofdeath_valid
@@ -19,6 +21,7 @@ class Container:
         self.data = {}
 
         # Set paths
+        # TODO smarter way of listing paths; you are capturing te files with number keys e.g. '6': ... /te/6.csv; that's silly
         self.paths = {
             path.stem: path for path in self.basepath.glob("**/*") if path.is_file() and path.suffix == ".csv"
         }
@@ -145,6 +148,8 @@ class Container:
             with open(path, "r") as file_:
                 custom_config = yaml.safe_load(file_)
             default_config = get_default_parameters()
+            if custom_config is None:
+                custom_config = {}
             self.data["config"] = {**default_config, **custom_config}
 
         return self.data["config"]
@@ -245,11 +250,19 @@ class Container:
     def get_intrinsic_fertility(self):
         phenotypes = self._read_df("phenotypes")
         max_age = self.get_config()["MAX_LIFESPAN"]
+
         # TODO Ensure that you are slicing the phenotype array at right places
-        # TODO Ensure that fertility is 0 before maturity
         fertility = phenotypes.iloc[:, max_age:]
-        y = fertility
-        return y
+
+        maturation_age = self.get_config()["MATURATION_AGE"]
+        menopause = self.get_config()["MENOPAUSE"]
+
+        fertility.iloc[:, :maturation_age] = 0
+
+        if menopause > 0:
+            fertility.iloc[:, menopause:] = 0
+
+        return fertility
 
     # genotypic
 
@@ -272,3 +285,35 @@ class Container:
         sfss.index.names = ["snapshot"]
 
         return sfss
+
+    # Leslie matrix and fitness analysis
+
+    @staticmethod
+    def get_leslie(s, r):
+        leslie = np.diag(s, k=-1)
+        leslie[0] = r
+        leslie[np.isnan(leslie)] = 0
+        return leslie
+
+    def get_observed_leslie(self, index):
+        lt = self.get_life_table("interval").iloc[index]
+        s = (1 + lt.pct_change())[1:]
+        bt = self.get_birth_table("interval").iloc[index]
+        r = (bt / lt).fillna(0)
+        return self.get_leslie(s, r)
+
+    def get_intrinsic_leslie(self, index):
+        m = self.get_intrinsic_mortality().iloc[index]
+        s = 1 - m
+        r = self.get_intrinsic_fertility().iloc[index]
+        return self.get_leslie(s[:-1], r)
+
+    @staticmethod
+    def get_leslie_breakdown(leslie):
+        eigenvalues, eigenvectors = np.linalg.eig(leslie)
+        dominant_index = np.argmax(np.abs(eigenvalues))
+        dominant_eigenvector = eigenvectors[:, dominant_index]
+        return {
+            "growth_rate": np.max(np.abs(eigenvalues)),
+            "stable_age_structure": dominant_eigenvector / dominant_eigenvector.sum(),
+        }
