@@ -231,6 +231,10 @@ class Container:
 
     ### ANALYSIS FUNCTIONS
 
+    @staticmethod
+    def get_observed_mortality(age_structure):
+        return -age_structure.pct_change()[1:]
+
     def get_intrinsic_mortality(self):
         phenotypes = self._read_df("phenotypes")
         max_age = self.get_config()["MAX_LIFESPAN"]
