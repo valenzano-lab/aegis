@@ -5,6 +5,7 @@ import itertools
 import logging
 import numpy as np
 from aegis import cnf
+from aegis import var
 
 
 class PopgenStats:
@@ -203,7 +204,7 @@ class PopgenStats:
 
         # Sample genomes
         if 0 < cnf.POPGENSTATS_SAMPLE_SIZE <= genomes.shape[0]:
-            indices = np.random.choice(
+            indices = var.rng.choice(
                 range(genomes.shape[0]),
                 cnf.POPGENSTATS_SAMPLE_SIZE,
                 replace=False,
