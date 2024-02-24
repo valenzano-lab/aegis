@@ -8,6 +8,8 @@ def get(genomes):
 
     envgenomes = flipmap.call(genomes)
 
+    # TODO resolve ploidy here, not in interpreter
+
     # Apply the interpreter functions
     interpretome = np.zeros(shape=(envgenomes.shape[0], envgenomes.shape[2]), dtype=np.float32)
     for trait in gstruc.evolvable:

@@ -7,7 +7,35 @@ When PHENOMAP_SPECS are given, interpreter values of some loci affect the phenot
 
 Phenotypic values can loosely be understood as levels of final quantitative traits, and some loci affecting
     multiple traits can be understood as pleiotropy.
+
+Example of PHENOMAP_SPECS: 
+    [
+    ["neut", 1, "surv", '12', '0.0015022406369215543'], 
+    ["neut", 1, "surv", '17', '-0.0015022406369215543'],
+    ["neut", 2, "surv", '1', '0.0004318344017753981'], 
+    ["neut", 2, "surv", '10', '-0.0004318344017753981'], 
+    ["neut", 3, "surv", '2', '0.007525611621651378'],
+    ["neut", 3, "surv", '20', '-0.007525611621651378'], 
+    ["neut", 4, "surv", '12', '0.0005129979580597647'],
+    ["neut", 4, "surv", '29', '-0.0005129979580597647'], 
+    ["neut", 5, "surv", '7', '0.00016150685474952513'],
+    ["neut", 5, "surv", '18', '-0.00016150685474952513'], 
+    ["neut", 6, "surv", '1', '0.0025197159199181027'],
+    ["neut", 6, "surv", '4', '-0.0025197159199181027'], 
+    ["neut", 7, "surv", '10', '0.0006980947369962286'],
+    ["neut", 7, "surv", '10', '-0.0006980947369962286'], 
+    ["neut", 8, "surv", '33', '0.0007719899275531902'],
+    ["neut", 8, "surv", '46', '-0.0007719899275531902'], 
+    ["neut", 9, "surv", '7', '4.159881874718622e-05'],
+    ["neut", 9, "surv", '49', '-4.159881874718622e-05'], 
+    ["neut", 10, "surv", '32', '0.001069693141890309'],
+    ["neut", 10, "surv", '40', '-0.001069693141890309'], 
+    ["neut", 11, "surv", '7', '0.0014580417800865069'],
+    ["neut", 11, "surv", '15', '-0.0014580417800865069'],
+    ]
+
 """
+
 import numpy as np
 import pandas as pd
 from aegis import cnf
