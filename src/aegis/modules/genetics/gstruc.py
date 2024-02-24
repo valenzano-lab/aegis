@@ -1,7 +1,6 @@
 """Genome structure
 
 Contains information about ploidy, number of loci, and number of bits per locus.
-Calculates phenotypes from input genomes (calls Interpreter, Phenomap and Flipmap).
 """
 
 import numpy as np
@@ -90,11 +89,7 @@ class Trait:
 
 
 class Gstruc:
-    def __init__(self):
-        return
-
     def init(self):
-
         # Generate traits and save
         self.traits = {}
         self.evolvable = []

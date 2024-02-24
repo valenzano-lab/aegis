@@ -5,12 +5,12 @@ from aegis.pan import cnf, var
 
 from aegis.help.config import causeofdeath_valid
 from aegis.modules import recorder
-from aegis.modules.genetics import phenomap, flipmap, phenotyper
 from aegis.modules.population import Population
 from aegis.modules.mortality import abiotic, infection, predation, starvation
 from aegis.modules.reproduction import recombination, assortment, mutation
 
-from aegis.modules.genetics.gstruc import gstruc
+
+from aegis.modules import genetics
 
 
 class Ecosystem:
@@ -22,10 +22,6 @@ class Ecosystem:
     def __init__(self, population=None):
         # TODO when loading from a pickle, load the envmap too
 
-        # Initialize recorder
-        if phenomap.map_ is not None:
-            recorder.record_phenomap(phenomap.map_)
-
         # Initialize eggs
         self.eggs = None
 
@@ -33,11 +29,11 @@ class Ecosystem:
         if population is not None:
             self.population = population
         else:
-            genomes = gstruc.initialize_genomes()
+            genomes = genetics.initialize_genomes()
             ages = np.zeros(cnf.MAX_POPULATION_SIZE, dtype=np.int32)
             births = np.zeros(cnf.MAX_POPULATION_SIZE, dtype=np.int32)
             birthdays = np.zeros(cnf.MAX_POPULATION_SIZE, dtype=np.int32)
-            phenotypes = phenotyper.get(genomes)
+            phenotypes = genetics.get_phenotypes(genomes)
             infection_ = np.zeros(cnf.MAX_POPULATION_SIZE, dtype=np.int32)
 
             self.population = Population(genomes, ages, births, birthdays, phenotypes, infection_)
@@ -64,7 +60,7 @@ class Ecosystem:
         self.reproduction()  # reproduction
         self.age()  # age increment and potentially death
         self.hatch()
-        flipmap.evolve()  # if flipmap on, evolve it
+        genetics.flipmap_evolve()
 
         # Record data
         recorder.collect("additive_age_structure", self.population.ages)  # population census
@@ -72,7 +68,7 @@ class Ecosystem:
         recorder.record_snapshots(self.population)
         recorder.record_visor(self.population)
         recorder.record_popgenstats(
-            self.population.genomes, self._get_evaluation
+            self.population.genomes, genetics.get_evaluation(self.population, "muta")
         )  # TODO defers calculation of mutation rates; hacky
         recorder.record_memory_use()
         recorder.record_TE(self.population.ages, "alive")
@@ -82,7 +78,7 @@ class Ecosystem:
     ###############
 
     def mortality_intrinsic(self):
-        probs_surv = self._get_evaluation("surv")
+        probs_surv = genetics.get_evaluation(self.population, "surv")
         mask_surv = var.rng.random(len(probs_surv), dtype=np.float32) < probs_surv
         self._kill(mask_kill=~mask_surv, causeofdeath="intrinsic")
 
@@ -123,7 +119,7 @@ class Ecosystem:
             return
 
         # Check if reproducing
-        probs_repr = self._get_evaluation("repr", part=mask_fertile)
+        probs_repr = genetics.get_evaluation(self.population, "repr", part=mask_fertile)
         mask_repr = var.rng.random(len(probs_repr), dtype=np.float32) < probs_repr
 
         # Forgo if not at least two available parents
@@ -139,7 +135,7 @@ class Ecosystem:
 
         # Generate offspring genomes
         genomes = self.population.genomes[mask_repr]  # parental genomes
-        muta_prob = self._get_evaluation("muta", part=mask_repr)[mask_repr]
+        muta_prob = genetics.get_evaluation(self.population, "muta", part=mask_repr)[mask_repr]
 
         if cnf.REPRODUCTION_MODE == "sexual":
             genomes = recombination.do(genomes)
@@ -154,7 +150,7 @@ class Ecosystem:
             ages=np.zeros(n, dtype=np.int32),
             births=np.zeros(n, dtype=np.int32),
             birthdays=np.zeros(n, dtype=np.int32) + var.stage,
-            phenotypes=phenotyper.get(genomes),
+            phenotypes=genetics.get_phenotypes(genomes),
             infection=np.zeros(n, dtype=np.int32),
         )
 
@@ -191,31 +187,6 @@ class Ecosystem:
     ################
     # HELPER FUNCS #
     ################
-
-    def _get_evaluation(self, attr, part=None):
-        """Get phenotypic values of a certain trait for a certain individuals."""
-        which_individuals = np.arange(len(self.population))
-        if part is not None:
-            which_individuals = which_individuals[part]
-
-        # first scenario
-        trait = gstruc.get_trait(attr)
-        if not trait.evolvable:
-            probs = trait.initial
-
-        # second and third scenario
-        if trait.evolvable:
-            which_loci = trait.start
-            if trait.agespecific:
-                which_loci += self.population.ages[which_individuals]
-
-            probs = self.population.phenotypes[which_individuals, which_loci]
-
-        # expand values back into an array with shape of whole population
-        final_probs = np.zeros(len(self.population), dtype=np.float32)
-        final_probs[which_individuals] += probs
-
-        return final_probs
 
     def _kill(self, mask_kill, causeofdeath):
         """Kill individuals and record their data."""

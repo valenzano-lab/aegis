@@ -2,7 +2,7 @@
 
 import pytest
 import numpy as np
-from aegis.modules.genetics.phenomap import Phenomap
+from aegis.modules.genetics import Phenomap
 
 
 @pytest.mark.parametrize(

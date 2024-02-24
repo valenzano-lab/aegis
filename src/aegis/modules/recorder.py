@@ -22,7 +22,7 @@ from aegis import pan
 from aegis.pan import var
 from aegis.modules.popgenstats import PopgenStats
 from aegis.help.config import causeofdeath_valid
-from aegis.modules.genetics.gstruc import gstruc
+from aegis.modules import genetics
 
 
 def get_dhm(timediff):
@@ -110,11 +110,11 @@ for key in _collection.keys():
         np.savetxt(f, [array], delimiter=",", fmt="%i")
 
 with open(paths["visor"] / "genotypes.csv", "ab") as f:
-    array = np.arange(gstruc.get_number_of_bits())  # (ploidy, length, bits_per_locus)
+    array = np.arange(genetics.get_number_of_bits())  # (ploidy, length, bits_per_locus)
     np.savetxt(f, [array], delimiter=",", fmt="%i")
 
 with open(paths["visor"] / "phenotypes.csv", "ab") as f:
-    array = np.arange(gstruc.get_number_of_phenotypic_values())  # number of phenotypic values
+    array = np.arange(genetics.get_number_of_phenotypic_values())  # number of phenotypic values
     np.savetxt(f, [array], delimiter=",", fmt="%i")
 
 # ===============================
@@ -175,14 +175,13 @@ def record_snapshots(population):
     df_dem.to_feather(paths["snapshots_demography"] / f"{var.stage}.feather")
 
 
-def record_popgenstats(genomes, mutation_rate_func):
+def record_popgenstats(genomes, mutation_rates):
     """Record population size in popgenstats, and record popgen statistics."""
     popgenstats.record_pop_size_history(genomes)
 
     if pan.skip(cnf.POPGENSTATS_RATE) or len(genomes) == 0:
         return
 
-    mutation_rates = mutation_rate_func("muta")
     popgenstats.calc(genomes, mutation_rates)
 
     # Record simple statistics
@@ -333,3 +332,8 @@ def record_TE(T, e):
             np.savetxt(file_, data, delimiter=",", fmt="%i")
 
         te_record_number += 1
+
+
+phenomap_ = genetics.get_map()
+if phenomap_ is not None:
+    record_phenomap(genetics.get_map())
