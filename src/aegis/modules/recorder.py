@@ -22,7 +22,7 @@ from aegis import pan
 from aegis.pan import var
 from aegis.modules.popgenstats import PopgenStats
 from aegis.help.config import causeofdeath_valid
-from aegis.modules.genetics.gstruc import shape as shape_
+from aegis.modules.genetics.gstruc import gstruc
 
 
 def get_dhm(timediff):
@@ -110,11 +110,11 @@ for key in _collection.keys():
         np.savetxt(f, [array], delimiter=",", fmt="%i")
 
 with open(paths["visor"] / "genotypes.csv", "ab") as f:
-    array = np.arange(shape_[0] * shape_[1] * shape_[2])  # (ploidy, length, bits_per_locus)
+    array = np.arange(gstruc.get_number_of_bits())  # (ploidy, length, bits_per_locus)
     np.savetxt(f, [array], delimiter=",", fmt="%i")
 
 with open(paths["visor"] / "phenotypes.csv", "ab") as f:
-    array = np.arange(shape_[1])  # number of phenotypic values
+    array = np.arange(gstruc.get_number_of_phenotypic_values())  # number of phenotypic values
     np.savetxt(f, [array], delimiter=",", fmt="%i")
 
 # ===============================

@@ -8,11 +8,11 @@ When PHENOMAP_SPECS are given, interpreter values of some loci affect the phenot
 Phenotypic values can loosely be understood as levels of final quantitative traits, and some loci affecting
     multiple traits can be understood as pleiotropy.
 """
+
 import numpy as np
 import pandas as pd
 from aegis.pan import cnf
-from aegis.modules.genetics.gstruc import traits as traits_
-from aegis.modules.genetics.gstruc import length as length_
+from aegis.modules.genetics.gstruc import gstruc
 
 
 def _by_dummy(probs):
@@ -87,17 +87,17 @@ def unfold_specs():
 
         # If no scope given, whole trait is affected
         if scope2 is None:
-            scope2 = f"{traits_[trait2].start + 1}-{traits_[trait2].end}"
+            scope2 = f"{gstruc.get_trait(trait2).start + 1}-{gstruc.get_trait(trait2).end}"
             # Note that PHENOMAP_SPECS scope is interpreted as a 1-indexed inclusive interval
 
-        pos2 = traits_[trait2].start
+        pos2 = gstruc.get_trait(trait2).start
         loci2 = decode_scope(scope2) + pos2 - 1  # -1 because the PHENOMAP_SPECS is 1-indexed
         weights = decode_pattern(pattern2, len(loci2))
 
         if trait1 is None:
             loci1 = loci2
         else:
-            pos1 = traits_[trait1].start
+            pos1 = gstruc.get_trait(trait1).start
             loci1 = [scope1 + pos1 - 1] * len(loci2)
 
         for locus1, locus2, weight in zip(loci1, loci2, weights):
@@ -110,7 +110,7 @@ if cnf.PHENOMAP_SPECS == []:
 else:
     trios = list(unfold_specs())
 
-    map_ = np.diag([1.0] * length_)
+    map_ = np.diag([1.0] * gstruc.get_shape()[1])
     for locus1, locus2, weight in trios:
         map_[locus1, locus2] = weight
 

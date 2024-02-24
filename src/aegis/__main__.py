@@ -53,6 +53,10 @@ def run_sim(config_path, pickle_path, overwrite):
 
     pan.init(config_path, pickle_path, overwrite)
 
+    from aegis.modules.genetics.gstruc import gstruc
+
+    gstruc.init()
+
     # Create ecosystem
     # Cannot import before
     from aegis.ecosystem import Ecosystem

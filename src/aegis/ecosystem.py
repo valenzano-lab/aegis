@@ -5,10 +5,12 @@ from aegis.pan import cnf, var
 
 from aegis.help.config import causeofdeath_valid
 from aegis.modules import recorder
-from aegis.modules.genetics import gstruc, phenomap, flipmap, phenotyper
+from aegis.modules.genetics import phenomap, flipmap, phenotyper
 from aegis.modules.population import Population
 from aegis.modules.mortality import abiotic, infection, predation, starvation
 from aegis.modules.reproduction import recombination, assortment, mutation
+
+from aegis.modules.genetics.gstruc import gstruc
 
 
 class Ecosystem:
@@ -197,7 +199,7 @@ class Ecosystem:
             which_individuals = which_individuals[part]
 
         # first scenario
-        trait = gstruc.traits[attr]
+        trait = gstruc.get_trait(attr)
         if not trait.evolvable:
             probs = trait.initial
 

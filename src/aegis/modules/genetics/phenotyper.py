@@ -1,5 +1,6 @@
 import numpy as np
-from aegis.modules.genetics import interpreter, gstruc, flipmap, phenomap
+from aegis.modules.genetics import interpreter, flipmap, phenomap
+from aegis.modules.genetics.gstruc import gstruc
 
 
 def get(genomes):
@@ -10,7 +11,7 @@ def get(genomes):
 
     # Apply the interpreter functions
     interpretome = np.zeros(shape=(envgenomes.shape[0], envgenomes.shape[2]), dtype=np.float32)
-    for trait in gstruc.evolvable:
+    for trait in gstruc.get_evolvable_traits():
         loci = envgenomes[:, :, trait.slice]  # fetch
         probs = interpreter.call(loci, trait.interpreter)  # interpret
         interpretome[:, trait.slice] += probs  # add back
@@ -20,7 +21,7 @@ def get(genomes):
     phenotypes = phenomap.call(interpretome)
 
     # Apply lo and hi bound
-    for trait in gstruc.evolvable:
+    for trait in gstruc.get_evolvable_traits():
         lo, hi = trait.lo, trait.hi
         phenotypes[:, trait.slice] = phenotypes[:, trait.slice] * (hi - lo) + lo
 
@@ -28,4 +29,4 @@ def get(genomes):
 
 
 def slice_phenotype_trait(phenotypes, trait_name):
-    return phenotypes[:, gstruc.traits[trait_name].slice]
+    return phenotypes[:, gstruc.get_trait(trait_name).slice]

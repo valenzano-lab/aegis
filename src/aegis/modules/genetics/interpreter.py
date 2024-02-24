@@ -3,6 +3,7 @@
 Transforms bool array into an array of numbers.
 These numbers can be loosely understood as gene activity.
 """
+
 import numpy as np
 from aegis.pan import cnf
 from aegis.pan import var
@@ -30,10 +31,10 @@ def _diploid_to_haploid(loci):
     """Merge two arrays encoding two chromatids into one array.
 
     Arguments:
-        loci: A bool numpy array with shape (population size, ploidy, gstruc.length, BITS_PER_LOCUS)
+        loci: A bool numpy array with shape (population size, ploidy, genome length, BITS_PER_LOCUS)
 
     Returns:
-        A bool numpy array with shape (population size, gstruc.length, BITS_PER_LOCUS)
+        A bool numpy array with shape (population size, genome length, BITS_PER_LOCUS)
     """
 
     # compute homozygous (0, 1) or heterozygous (0.5)
