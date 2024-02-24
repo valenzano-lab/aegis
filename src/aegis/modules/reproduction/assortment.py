@@ -1,5 +1,5 @@
 import numpy as np
-from aegis import var
+from aegis.pan import var
 
 def _get_order(n_gametes=None, order=None):
     """Return pairings of gametes from different parents."""

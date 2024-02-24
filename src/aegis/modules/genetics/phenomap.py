@@ -10,7 +10,7 @@ Phenotypic values can loosely be understood as levels of final quantitative trai
 """
 import numpy as np
 import pandas as pd
-from aegis import cnf
+from aegis.pan import cnf
 from aegis.modules.genetics.gstruc import traits as traits_
 from aegis.modules.genetics.gstruc import length as length_
 

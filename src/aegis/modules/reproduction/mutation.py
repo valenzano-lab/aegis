@@ -1,6 +1,6 @@
 import numpy as np
-from aegis import var
-from aegis import cnf
+from aegis.pan import var
+from aegis.pan import cnf
 
 
 rate_0to1 = cnf.MUTATION_RATIO / (1 + cnf.MUTATION_RATIO)

@@ -1,7 +1,7 @@
 """Cyclic extrinsic mortality"""
 import math
 import logging
-from aegis import cnf
+from aegis.pan import cnf
 
 func = None  # defined below
 

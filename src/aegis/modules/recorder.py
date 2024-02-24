@@ -17,9 +17,9 @@ import psutil
 import subprocess
 import logging
 
-from aegis import cnf
+from aegis.pan import cnf
 from aegis import pan
-from aegis import var
+from aegis.pan import var
 from aegis.modules.popgenstats import PopgenStats
 from aegis.help.config import causeofdeath_valid
 from aegis.modules.genetics.gstruc import shape as shape_
@@ -259,7 +259,7 @@ def record_output_summary():
 
     summary = {
         "extinct": extinct,
-        "random_seed": pan.random_seed,
+        "random_seed": var.random_seed,
         "time_start": pan.time_start,
         "runtime": time.time() - pan.time_start,
         "jupyter_path": str(pan.output_path.absolute()),
@@ -273,7 +273,7 @@ def record_output_summary():
 def record_input_summary():
     summary = {
         # "extinct": extinct,
-        "random_seed": pan.random_seed,
+        "random_seed": var.random_seed,
         "time_start": pan.time_start,
         # "time_end": time.time(),
         "jupyter_path": str(pan.output_path.absolute()),

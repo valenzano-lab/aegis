@@ -1,9 +1,7 @@
 import numpy as np
 import logging
 
-from aegis import cnf
-from aegis import pan
-from aegis import var
+from aegis.pan import cnf, var
 
 from aegis.help.config import causeofdeath_valid
 from aegis.modules import recorder

@@ -4,8 +4,8 @@ import statistics
 import itertools
 import logging
 import numpy as np
-from aegis import cnf
-from aegis import var
+from aegis.pan import cnf
+from aegis.pan import var
 
 
 class PopgenStats:

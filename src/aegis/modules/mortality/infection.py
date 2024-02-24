@@ -7,8 +7,8 @@ Infection status:
 """
 
 import math
-from aegis import cnf
-from aegis import var
+from aegis.pan import cnf
+from aegis.pan import var
 
 
 def get_infection_probability(infection_density):

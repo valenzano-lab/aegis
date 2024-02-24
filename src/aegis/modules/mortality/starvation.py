@@ -4,8 +4,8 @@ Decides which individuals to eliminate when there is overcrowding.
 """
 
 import numpy as np
-from aegis import var
-from aegis import cnf
+from aegis.pan import var
+from aegis.pan import cnf
 
 func = None  # defined below
 consecutive_overshoot_n = 0  # For starvation mode

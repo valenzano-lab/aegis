@@ -15,7 +15,7 @@ def get_default_parameters():
 
 
 def set_cnf_to_default():
-    from aegis import cnf
+    from aegis.pan import cnf
 
     for k, v in get_default_parameters().items():
         setattr(cnf, k, v)

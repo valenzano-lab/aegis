@@ -4,8 +4,8 @@ Contains information about ploidy, number of loci, and number of bits per locus.
 Calculates phenotypes from input genomes (calls Interpreter, Phenomap and Flipmap).
 """
 import numpy as np
-from aegis import cnf
-from aegis import var
+from aegis.pan import cnf
+from aegis.pan import var
 
 
 class Trait:

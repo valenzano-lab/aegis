@@ -4,8 +4,8 @@ Transforms bool array into an array of numbers.
 These numbers can be loosely understood as gene activity.
 """
 import numpy as np
-from aegis import cnf
-from aegis import var
+from aegis.pan import cnf
+from aegis.pan import var
 
 
 exp_base = 0.5  # Important for _exp

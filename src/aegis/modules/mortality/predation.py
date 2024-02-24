@@ -2,7 +2,7 @@
 https://bbolker.github.io/math3mb/labNotes/lotkavolterra.pdf
 """
 import numpy as np
-from aegis import cnf
+from aegis.pan import cnf
 
 N = 1
 

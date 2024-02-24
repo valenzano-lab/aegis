@@ -3,8 +3,8 @@
 Modifies topology of fitness landscape over time by changing the interpretation of zeros and ones in genomes.
 """
 import numpy as np
-from aegis import var
-from aegis import cnf
+from aegis.pan import var
+from aegis.pan import cnf
 from aegis.modules.genetics.gstruc import shape
 
 if cnf.FLIPMAP_CHANGE_RATE == 0:

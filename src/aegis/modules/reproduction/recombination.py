@@ -1,6 +1,6 @@
 import numpy as np
-from aegis import var
-from aegis import cnf
+from aegis.pan import var
+from aegis.pan import cnf
 
 
 def do(genomes):

@@ -2,56 +2,19 @@ import pathlib
 import time
 import numpy as np
 import shutil
-import logging
-import argparse
 import yaml
+import types
 
-from aegis import cnf, var
 from aegis.help.config import get_default_parameters, validate
 
-logging.basicConfig(
-    format="%(asctime)s %(levelname)s %(module)s -- %(message)s",
-    datefmt="%d/%m/%Y %I:%M:%S",
-    level=logging.DEBUG,
-)
 
-
-def parse():
-    # Define parser
-    parser = argparse.ArgumentParser(description="Aging of Evolving Genomes in Silico")
-    parser.add_argument(
-        "-c",
-        "--config_path",
-        type=str,
-        help="path to config file",
-        default="",
-    )
-    parser.add_argument(
-        "-p",
-        "--pickle_path",
-        type=str,
-        help="path to pickle file",
-        default="",
-    )
-    parser.add_argument(
-        "--overwrite",
-        "-o",
-        action="store_true",
-        help="overwrite old data with new simulation",
-        default=False,
-    )
-
-    # Parse arguments
-    args = parser.parse_args()
-
-    # Decision tree
-    config_path = pathlib.Path(args.config_path).absolute() if args.config_path else ""
-    pickle_path = pathlib.Path(args.pickle_path).absolute() if args.pickle_path else ""
-
-    return config_path, pickle_path, args.overwrite
+cnf = types.SimpleNamespace()
+var = types.SimpleNamespace()
 
 
 def set_up_cnf(custom_config_path, running_on_server):
+    global cnf
+
     # Read config parameters from the custom config file
     if custom_config_path == "":
         custom_config_params = {}
@@ -73,6 +36,19 @@ def set_up_cnf(custom_config_path, running_on_server):
 
     for k, v in params.items():
         setattr(cnf, k, v)
+
+
+def set_up_var():
+    global var
+
+    if cnf.RANDOM_SEED is None:
+        random_seed = np.random.randint(1, 10**6)
+    else:
+        random_seed = cnf.RANDOM_SEED
+
+    var.stage = 1
+    var.random_seed = random_seed
+    var.rng = np.random.default_rng(random_seed)
 
 
 def skip(rate):
@@ -105,13 +81,26 @@ def profile_time(func):
 
 # INITIALIZE
 
-time_start = time.time()
-here = pathlib.Path(__file__).absolute().parent
-config_path, pickle_path, overwrite = parse()
 
+def init(config_path, pickle_path_, overwrite):
 
-if config_path:
+    # config_path, pickle_path, overwrite = parse()
+
+    global output_path
+    global time_start
+    global here
+    global progress_path
+    global pickle_path
+
+    pickle_path = pickle_path_
+
+    time_start = time.time()
+    here = pathlib.Path(__file__).absolute().parent
+
+    config_path = pathlib.Path(config_path)
+
     set_up_cnf(config_path, running_on_server=False)
+    set_up_var()
     # Output directory
     output_path = config_path.parent / config_path.stem
     if output_path.exists() and output_path.is_dir():
@@ -126,7 +115,3 @@ if config_path:
     content = ("stage", "ETA", "t1M", "runtime", "stg/min", "popsize")
     with open(progress_path, "wb") as f:
         np.savetxt(f, [content], fmt="%-10s", delimiter="| ")
-
-    # Set up random number generator
-    random_seed = np.random.randint(1, 10**6) if cnf.RANDOM_SEED is None else cnf.RANDOM_SEED
-    var.rng = np.random.default_rng(random_seed)
