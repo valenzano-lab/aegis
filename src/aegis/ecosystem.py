@@ -7,9 +7,6 @@ from aegis.help.config import causeofdeath_valid
 from aegis.modules import recorder
 from aegis.modules.population import Population
 from aegis.modules.mortality import abiotic, infection, predation, starvation
-from aegis.modules.reproduction import recombination, assortment, mutation
-
-
 from aegis.modules import genetics
 
 
@@ -29,14 +26,7 @@ class Ecosystem:
         if population is not None:
             self.population = population
         else:
-            genomes = genetics.initialize_genomes()
-            ages = np.zeros(cnf.MAX_POPULATION_SIZE, dtype=np.int32)
-            births = np.zeros(cnf.MAX_POPULATION_SIZE, dtype=np.int32)
-            birthdays = np.zeros(cnf.MAX_POPULATION_SIZE, dtype=np.int32)
-            phenotypes = genetics.get_phenotypes(genomes)
-            infection_ = np.zeros(cnf.MAX_POPULATION_SIZE, dtype=np.int32)
-
-            self.population = Population(genomes, ages, births, birthdays, phenotypes, infection_)
+            self.population = Population.initialize(N=cnf.MAX_POPULATION_SIZE)
 
     ##############
     # MAIN LOGIC #
@@ -134,26 +124,14 @@ class Ecosystem:
         self.population.births += mask_repr
 
         # Generate offspring genomes
-        genomes = self.population.genomes[mask_repr]  # parental genomes
+        parental_genomes = self.population.genomes.get(individuals=mask_repr)  # parental genomes
         muta_prob = genetics.get_evaluation(self.population, "muta", part=mask_repr)[mask_repr]
-
-        if cnf.REPRODUCTION_MODE == "sexual":
-            genomes = recombination.do(genomes)
-            genomes, _ = assortment.do(genomes)
-
-        genomes = mutation._mutate(genomes, muta_prob)
-
-        # Get eggs
-        n = len(genomes)
-        eggs = Population(
-            genomes=genomes,
-            ages=np.zeros(n, dtype=np.int32),
-            births=np.zeros(n, dtype=np.int32),
-            birthdays=np.zeros(n, dtype=np.int32) + var.stage,
-            phenotypes=genetics.get_phenotypes(genomes),
-            infection=np.zeros(n, dtype=np.int32),
+        offspring_genomes = self.population.genomes.generate_offspring_genomes(
+            genomes=parental_genomes, muta_prob=muta_prob
         )
 
+        # Get eggs
+        eggs = Population.make_eggs(offspring_genomes=offspring_genomes, stage=var.stage)
         if self.eggs is None:
             self.eggs = eggs
         else:

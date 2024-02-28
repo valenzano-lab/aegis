@@ -137,7 +137,7 @@ def record_visor(population):
 
     # genotypes.csv | Record allele frequency
     with open(paths["visor"] / "genotypes.csv", "ab") as f:
-        array = population.genomes.reshape(len(population), -1).mean(0)
+        array = population.genomes.flatten().mean(0)
         np.savetxt(f, [array], delimiter=",", fmt="%1.3e")
 
     # phenotypes.csv | Record median phenotype
@@ -156,7 +156,7 @@ def record_snapshots(population):
     logging.debug(f"Snapshots recorded at stage {var.stage}")
 
     # genotypes
-    df_gen = pd.DataFrame(np.array(population.genomes.reshape(len(population), -1)))
+    df_gen = pd.DataFrame(np.array(population.genomes.flatten()))
     df_gen.reset_index(drop=True, inplace=True)
     df_gen.columns = [str(c) for c in df_gen.columns]
     df_gen.to_feather(paths["snapshots_genotypes"] / f"{var.stage}.feather")
@@ -177,12 +177,12 @@ def record_snapshots(population):
 
 def record_popgenstats(genomes, mutation_rates):
     """Record population size in popgenstats, and record popgen statistics."""
-    popgenstats.record_pop_size_history(genomes)
+    popgenstats.record_pop_size_history(genomes.array)
 
     if pan.skip(cnf.POPGENSTATS_RATE) or len(genomes) == 0:
         return
 
-    popgenstats.calc(genomes, mutation_rates)
+    popgenstats.calc(genomes.array, mutation_rates)
 
     # Record simple statistics
     array = list(popgenstats.emit_simple().values())

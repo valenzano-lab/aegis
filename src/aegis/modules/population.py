@@ -1,6 +1,8 @@
 import numpy as np
 import pickle
 
+from aegis.modules.genetics import initialize_genomes, get_phenotypes
+
 
 class Population:
     """Population data
@@ -35,7 +37,7 @@ class Population:
     def __getitem__(self, index):
         """Return a subpopulation."""
         return Population(
-            genomes=self.genomes[index],
+            genomes=self.genomes.get(individuals=index),
             ages=self.ages[index],
             births=self.births[index],
             birthdays=self.birthdays[index],
@@ -46,14 +48,21 @@ class Population:
     def __imul__(self, index):
         """Redefine itself as its own subpopulation."""
         for attr in self.attrs:
-            setattr(self, attr, getattr(self, attr)[index])
+            if attr == "genomes":
+                self.genomes.keep(individuals=index)
+            else:
+                setattr(self, attr, getattr(self, attr)[index])
         return self
 
     def __iadd__(self, population):
         """Merge with another population."""
+
         for attr in self.attrs:
-            val = np.concatenate([getattr(self, attr), getattr(population, attr)])
-            setattr(self, attr, val)
+            if attr == "genomes":
+                self.genomes.add(population.genomes)
+            else:
+                val = np.concatenate([getattr(self, attr), getattr(population, attr)])
+                setattr(self, attr, val)
         return self
 
     @staticmethod
@@ -64,3 +73,28 @@ class Population:
     def save_pickle_to(self, path):
         with open(path, "wb") as file_:
             pickle.dump(self, file_)
+
+    @staticmethod
+    def initialize(N):
+        genomes = initialize_genomes(N)
+        ages = np.zeros(N, dtype=np.int32)
+        births = np.zeros(N, dtype=np.int32)
+        birthdays = np.zeros(N, dtype=np.int32)
+        phenotypes = get_phenotypes(genomes)
+        infection = np.zeros(N, dtype=np.int32)
+        return Population(
+            genomes=genomes, ages=ages, births=births, birthdays=birthdays, phenotypes=phenotypes, infection=infection
+        )
+
+    @staticmethod
+    def make_eggs(offspring_genomes, stage):
+        n = len(offspring_genomes)
+        eggs = Population(
+            genomes=offspring_genomes,
+            ages=np.zeros(n, dtype=np.int32),
+            births=np.zeros(n, dtype=np.int32),
+            birthdays=np.zeros(n, dtype=np.int32) + stage,
+            phenotypes=get_phenotypes(offspring_genomes),
+            infection=np.zeros(n, dtype=np.int32),
+        )
+        return eggs

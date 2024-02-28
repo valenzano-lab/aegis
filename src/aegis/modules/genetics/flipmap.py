@@ -24,9 +24,11 @@ class Flipmap:
         indices = tuple(var.rng.integers(self.map.shape))
         self.map[indices] = ~self.map[indices]
 
-    def call(self, genomes):
+    def call(self, array):
         """Return the genomes reinterpreted"""
-        return genomes if (self.map is None) else np.logical_xor(self.map, genomes)
+        if self.map is not None:
+            array = np.logical_xor(self.map, array)
+        return array
 
 
 flipmap = Flipmap()

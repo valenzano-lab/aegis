@@ -7,6 +7,8 @@ import numpy as np
 from aegis.pan import cnf
 from aegis.pan import var
 
+from aegis.modules.genetics.genomes import Genomes
+
 
 class Trait:
     """Genetic trait
@@ -111,31 +113,14 @@ class Gstruc:
 
         self.shape = (ploidy, self.length, cnf.BITS_PER_LOCUS)
 
-    def initialize_genomes(self):
+    def initialize_genomes(self, N):
         """Return n initialized genomes.
 
         Different sections of genome are initialized with a different ratio of ones and zeros
         depending on the G_{}_initial parameter.
         """
-
-        n = cnf.MAX_POPULATION_SIZE
-        headsup = cnf.HEADSUP + cnf.MATURATION_AGE if cnf.HEADSUP > -1 else None
-
-        # Initial genomes with a trait.initial fraction of 1's
-        genomes = var.rng.random(size=(n, *self.shape), dtype=np.float32)
-
-        for trait in self.evolvable:
-            genomes[:, :, trait.slice] = genomes[:, :, trait.slice] <= trait.initial
-
-        genomes = genomes.astype(np.bool_)
-
-        # Guarantee survival and reproduction values up to a certain age
-        if headsup is not None:
-            surv_start = self.traits["surv"].start
-            repr_start = self.traits["repr"].start
-            genomes[:, :, surv_start : surv_start + headsup] = True
-            genomes[:, :, repr_start : repr_start + headsup] = True
-
+        
+        genomes = Genomes(var.rng.random(size=(N, *self.shape), dtype=np.float32))
         return genomes
 
     def get_number_of_bits(self):

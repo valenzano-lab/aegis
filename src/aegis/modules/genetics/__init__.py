@@ -6,6 +6,7 @@ from .flipmap import flipmap
 from .gstruc import gstruc
 from .phenomap import phenomap
 from .interpreter import interpreter
+from .reproduction.mutation import mutator
 
 
 def flipmap_evolve():
@@ -16,8 +17,8 @@ def get_map():
     return phenomap.get_map()
 
 
-def initialize_genomes():
-    return gstruc.initialize_genomes()
+def initialize_genomes(N):
+    return gstruc.initialize_genomes(N)
 
 
 def get_trait(attr):
@@ -35,7 +36,7 @@ def get_number_of_phenotypic_values():
 def get_phenotypes(genomes):
     """Translate genomes into an array of phenotypes probabilities."""
     # Apply the flipmap
-    envgenomes = flipmap.call(genomes)
+    envgenomes = flipmap.call(genomes.get_array())
 
     # Apply the interpreter functions
     interpretome = np.zeros(shape=(envgenomes.shape[0], envgenomes.shape[2]), dtype=np.float32)
@@ -56,7 +57,10 @@ def get_phenotypes(genomes):
 
 
 def get_evaluation(population, attr, part=None):
-    """Get phenotypic values of a certain trait for a certain individuals."""
+    """
+    Get phenotypic values of a certain trait for certain individuals.
+    Note that the function returns 0 for individuals that are to not be evaluated.
+    """
     which_individuals = np.arange(len(population))
     if part is not None:
         which_individuals = which_individuals[part]
