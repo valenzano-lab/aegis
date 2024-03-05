@@ -1,6 +1,7 @@
 import numpy as np
 from aegis.pan import var
 
+
 def _get_order(n_gametes=None, order=None):
     """Return pairings of gametes from different parents."""
     # Extract parent indices twice, and shuffle
@@ -33,10 +34,10 @@ def do(genomes, order=None):
         order = _get_order(n_gametes=len(genomes))
 
     # Extract gametes
-    gametes = genomes[order]
+    gametes = genomes.get(individuals=order)
 
     # Unify gametes
-    children = np.empty(genomes.shape, dtype=np.bool_)
+    children = np.empty(genomes.get_array().shape, dtype=np.bool_)
     children[:, 0] = gametes[::2, 0]  # 1st chromatid from 1st parent
     children[:, 1] = gametes[1::2, 1]  # 2nd chromatid from 2nd parent
 
