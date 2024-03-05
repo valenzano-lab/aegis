@@ -119,8 +119,15 @@ class Gstruc:
         Different sections of genome are initialized with a different ratio of ones and zeros
         depending on the G_{}_initial parameter.
         """
-        
-        genomes = Genomes(var.rng.random(size=(N, *self.shape), dtype=np.float32))
+
+        array = var.rng.random(size=(N, *self.shape), dtype=np.float32)
+
+        for trait in self.traits.values():
+            if trait.evolvable:
+                array[:, :, trait.slice] = array[:, :, trait.slice] < trait.initial
+
+        array = array.astype(np.bool_)
+        genomes = Genomes(array)
         return genomes
 
     def get_number_of_bits(self):
