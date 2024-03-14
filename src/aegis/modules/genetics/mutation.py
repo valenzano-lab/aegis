@@ -1,14 +1,13 @@
 import numpy as np
 from aegis.pan import rng
-from aegis.pan import cnf
 
 
 class Mutator:
-    def init(self, MUTATION_RATIO, MUTATION_METHOD):
+    def __init__(self, MUTATION_RATIO, MUTATION_METHOD):
         self.MUTATION_RATIO = MUTATION_RATIO
         self.MUTATION_METHOD = MUTATION_METHOD
-        self.rate_0to1 = cnf.MUTATION_RATIO / (1 + cnf.MUTATION_RATIO)
-        self.rate_1to0 = 1 / (1 + cnf.MUTATION_RATIO)
+        self.rate_0to1 = MUTATION_RATIO / (1 + MUTATION_RATIO)
+        self.rate_1to0 = 1 / (1 + MUTATION_RATIO)
         # Set mutation method
         if self.MUTATION_METHOD == "by_index":
             self._mutate = self._mutate_by_index
@@ -75,6 +74,3 @@ class Mutator:
         genomes[tuple(mutation_indices[:, bits0_indices.T])] = True
 
         return genomes
-
-
-mutator = Mutator()

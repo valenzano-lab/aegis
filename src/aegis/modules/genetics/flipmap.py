@@ -8,7 +8,7 @@ from aegis.pan import rng
 
 
 class Flipmap:
-    def init(self, FLIPMAP_CHANGE_RATE, gstruc_shape):
+    def __init__(self, FLIPMAP_CHANGE_RATE, gstruc_shape):
         self.FLIPMAP_CHANGE_RATE = FLIPMAP_CHANGE_RATE
 
         if self.FLIPMAP_CHANGE_RATE == 0:
@@ -29,6 +29,3 @@ class Flipmap:
         if self.map is not None:
             array = np.logical_xor(self.map, array)
         return array
-
-
-flipmap = Flipmap()

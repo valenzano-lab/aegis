@@ -6,8 +6,7 @@ from aegis.pan import cnf, rng, get_stage
 from aegis.help.config import causeofdeath_valid
 from aegis.modules import recorder
 from aegis.modules.population import Population
-from aegis.modules.mortality import abiotic, infection, predation, starvation
-from aegis.modules import genetics
+from aegis.init import get_evaluation, flipmap, abiotic, predation, starvation, infection, reproduction
 
 
 class Ecosystem:
@@ -50,7 +49,7 @@ class Ecosystem:
         self.reproduction()  # reproduction
         self.age()  # age increment and potentially death
         self.hatch()
-        genetics.flipmap_evolve(stage=get_stage())
+        flipmap.evolve(stage=get_stage())
 
         # Record data
         recorder.collect("additive_age_structure", self.population.ages)  # population census
@@ -58,7 +57,7 @@ class Ecosystem:
         recorder.record_snapshots(self.population)
         recorder.record_visor(self.population)
         recorder.record_popgenstats(
-            self.population.genomes, genetics.get_evaluation(self.population, "muta")
+            self.population.genomes, get_evaluation(self.population, "muta")
         )  # TODO defers calculation of mutation rates; hacky
         recorder.record_memory_use()
         recorder.record_TE(self.population.ages, "alive")
@@ -68,27 +67,27 @@ class Ecosystem:
     ###############
 
     def mortality_intrinsic(self):
-        probs_surv = genetics.get_evaluation(self.population, "surv")
+        probs_surv = get_evaluation(self.population, "surv")
         mask_surv = rng.random(len(probs_surv), dtype=np.float32) < probs_surv
         self._kill(mask_kill=~mask_surv, causeofdeath="intrinsic")
 
     def mortality_abiotic(self):
-        hazard = abiotic.get_hazard(get_stage())
+        hazard = abiotic(get_stage())
         mask_kill = rng.random(len(self.population), dtype=np.float32) < hazard
         self._kill(mask_kill=mask_kill, causeofdeath="abiotic")
 
     def mortality_infection(self):
-        infection.kill(self.population)
+        infection(self.population)
         mask_kill = self.population.infection == -1
         self._kill(mask_kill=mask_kill, causeofdeath="infection")
 
     def mortality_predation(self):
-        probs_kill = predation.call(len(self))
+        probs_kill = predation(len(self))
         mask_kill = rng.random(len(self), dtype=np.float32) < probs_kill
         self._kill(mask_kill=mask_kill, causeofdeath="predation")
 
     def mortality_starvation(self):
-        mask_kill = starvation.call(n=len(self.population))
+        mask_kill = starvation(n=len(self.population))
         self._kill(mask_kill=mask_kill, causeofdeath="starvation")
 
     def reproduction(self):
@@ -109,7 +108,7 @@ class Ecosystem:
             return
 
         # Check if reproducing
-        probs_repr = genetics.get_evaluation(self.population, "repr", part=mask_fertile)
+        probs_repr = get_evaluation(self.population, "repr", part=mask_fertile)
         mask_repr = rng.random(len(probs_repr), dtype=np.float32) < probs_repr
 
         # Forgo if not at least two available parents
@@ -125,10 +124,8 @@ class Ecosystem:
 
         # Generate offspring genomes
         parental_genomes = self.population.genomes.get(individuals=mask_repr)  # parental genomes
-        muta_prob = genetics.get_evaluation(self.population, "muta", part=mask_repr)[mask_repr]
-        offspring_genomes = self.population.genomes.generate_offspring_genomes(
-            genomes=parental_genomes, muta_prob=muta_prob
-        )
+        muta_prob = get_evaluation(self.population, "muta", part=mask_repr)[mask_repr]
+        offspring_genomes = reproduction.generate_offspring_genomes(genomes=parental_genomes, muta_prob=muta_prob)
 
         # Get eggs
         eggs = Population.make_eggs(offspring_genomes=offspring_genomes, stage=get_stage())

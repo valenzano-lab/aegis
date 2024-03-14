@@ -13,14 +13,6 @@ def run_sim(config_path, pickle_path, overwrite):
 
     pan.init(config_path, pickle_path, overwrite)
 
-    from aegis.modules.genetics import gstruc, flipmap, phenomap, interpreter, mutator
-
-    gstruc.init()
-    flipmap.init(pan.cnf.FLIPMAP_CHANGE_RATE, gstruc.get_shape())
-    phenomap.init(pan.cnf.PHENOMAP_SPECS, pan.cnf.PHENOMAP_METHOD)
-    interpreter.init(pan.cnf.BITS_PER_LOCUS, pan.cnf.DOMINANCE_FACTOR, pan.cnf.THRESHOLD)
-    mutator.init(MUTATION_METHOD=pan.cnf.MUTATION_METHOD, MUTATION_RATIO=pan.cnf.MUTATION_RATIO)
-
     # Create ecosystem
     # Cannot import before
     from aegis.ecosystem import Ecosystem

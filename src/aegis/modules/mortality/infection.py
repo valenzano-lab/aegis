@@ -7,38 +7,45 @@ Infection status:
 """
 
 import math
-from aegis.pan import cnf
 from aegis.pan import rng
 
 
-def get_infection_probability(infection_density):
-    return cnf.BACKGROUND_INFECTIVITY - 0.5 + 1 / (1 + math.exp(-cnf.TRANSMISSIBILITY * infection_density))
+class Infection:
+    def __init__(self, BACKGROUND_INFECTIVITY, TRANSMISSIBILITY, RECOVERY_RATE, FATALITY_RATE):
+        self.BACKGROUND_INFECTIVITY = BACKGROUND_INFECTIVITY
+        self.TRANSMISSIBILITY = TRANSMISSIBILITY
+        self.RECOVERY_RATE = RECOVERY_RATE
+        self.FATALITY_RATE = FATALITY_RATE
 
+    def get_infection_probability(self, infection_density):
+        return self.BACKGROUND_INFECTIVITY - 0.5 + 1 / (1 + math.exp(-self.TRANSMISSIBILITY * infection_density))
 
-def kill(population):
-    """
-    First try infecting susceptible.
-    """
+    def __call__(self, population):
+        """
+        First try infecting susceptible.
+        """
 
-    if len(population) == 0:
-        return
+        # TODO Do not change population here, only return new status
 
-    probs = rng.random(len(population), dtype=float)
+        if len(population) == 0:
+            return
 
-    # current status
-    infected = population.infection == 1
-    susceptible = population.infection == 0
+        probs = rng.random(len(population), dtype=float)
 
-    # compute infection probability
-    infection_density = infected.sum() / len(population)
-    infection_probability = get_infection_probability(infection_density=infection_density)
+        # current status
+        infected = population.infection == 1
+        susceptible = population.infection == 0
 
-    # recoveries from old infections
-    population.infection[infected & (probs < cnf.RECOVERY_RATE)] = 0
+        # compute infection probability
+        infection_density = infected.sum() / len(population)
+        infection_probability = self.get_infection_probability(infection_density=infection_density)
 
-    # fatalities
-    # overrides recoveries
-    population.infection[infected & (probs < cnf.FATALITY_RATE)] = -1
+        # recoveries from old infections
+        population.infection[infected & (probs < self.RECOVERY_RATE)] = 0
 
-    # new infections
-    population.infection[susceptible & (probs < infection_probability)] = 1
+        # fatalities
+        # overrides recoveries
+        population.infection[infected & (probs < self.FATALITY_RATE)] = -1
+
+        # new infections
+        population.infection[susceptible & (probs < infection_probability)] = 1

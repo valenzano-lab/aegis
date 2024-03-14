@@ -22,7 +22,8 @@ from aegis import pan
 from aegis.pan import var
 from aegis.modules.popgenstats import PopgenStats
 from aegis.help.config import causeofdeath_valid
-from aegis.modules import genetics
+
+from aegis.init import gstruc, phenomap
 
 
 def get_dhm(timediff):
@@ -112,11 +113,11 @@ for key in _collection.keys():
         np.savetxt(f, [array], delimiter=",", fmt="%i")
 
 with open(paths["visor"] / "genotypes.csv", "ab") as f:
-    array = np.arange(genetics.get_number_of_bits())  # (ploidy, length, bits_per_locus)
+    array = np.arange(gstruc.get_number_of_bits())  # (ploidy, length, bits_per_locus)
     np.savetxt(f, [array], delimiter=",", fmt="%i")
 
 with open(paths["visor"] / "phenotypes.csv", "ab") as f:
-    array = np.arange(genetics.get_number_of_phenotypic_values())  # number of phenotypic values
+    array = np.arange(gstruc.get_number_of_phenotypic_values())  # number of phenotypic values
     np.savetxt(f, [array], delimiter=",", fmt="%i")
 
 # ===============================
@@ -154,7 +155,7 @@ def record_snapshots(population):
     """Record demographic, genetic and phenotypic data from the current population."""
     if pan.skip(cnf.SNAPSHOT_RATE) or len(population) == 0:
         return
-    
+
     stage = pan.get_stage()
 
     logging.debug(f"Snapshots recorded at stage {stage}")
@@ -343,6 +344,6 @@ def record_TE(T, e):
         te_record_number += 1
 
 
-phenomap_ = genetics.get_map()
+phenomap_ = phenomap.get_map()
 if phenomap_ is not None:
-    record_phenomap(genetics.get_map())
+    record_phenomap(phenomap.get_map())

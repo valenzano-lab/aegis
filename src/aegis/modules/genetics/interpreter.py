@@ -9,8 +9,7 @@ from aegis.pan import rng
 
 
 class Interpreter:
-
-    def init(self, BITS_PER_LOCUS, DOMINANCE_FACTOR, THRESHOLD):
+    def __init__(self, BITS_PER_LOCUS, DOMINANCE_FACTOR, THRESHOLD):
 
         self.BITS_PER_LOCUS = BITS_PER_LOCUS
         self.DOMINANCE_FACTOR = DOMINANCE_FACTOR
@@ -152,6 +151,3 @@ class Interpreter:
             loci = self._diploid_to_haploid(loci)
         interpretome = method(loci)
         return interpretome
-
-
-interpreter = Interpreter()

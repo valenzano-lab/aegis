@@ -11,13 +11,14 @@ Phenotypic values can loosely be understood as levels of final quantitative trai
 
 import numpy as np
 import pandas as pd
-from aegis.modules.genetics import gstruc
 
 
 class Phenomap:
-    def init(self, PHENOMAP_SPECS, PHENOMAP_METHOD):
+    def __init__(self, PHENOMAP_SPECS, PHENOMAP_METHOD, gstruc):
         self.PHENOMAP_SPECS = PHENOMAP_SPECS
         self.PHENOMAP_METHOD = PHENOMAP_METHOD
+
+        self.gstruc = gstruc
 
         if self.PHENOMAP_SPECS == []:
             self.map_ = None
@@ -25,7 +26,7 @@ class Phenomap:
         else:
             trios = list(self.unfold_specs())
 
-            self.map_ = np.diag([1.0] * gstruc.get_shape()[1])
+            self.map_ = np.diag([1.0] * self.gstruc.get_shape()[1])
             for locus1, locus2, weight in trios:
                 self.map_[locus1, locus2] = weight
 
@@ -111,17 +112,17 @@ class Phenomap:
 
             # If no scope given, whole trait is affected
             if scope2 is None:
-                scope2 = f"{gstruc.get_trait(trait2).start + 1}-{gstruc.get_trait(trait2).end}"
+                scope2 = f"{self.gstruc.get_trait(trait2).start + 1}-{self.gstruc.get_trait(trait2).end}"
                 # Note that PHENOMAP_SPECS scope is interpreted as a 1-indexed inclusive interval
 
-            pos2 = gstruc.get_trait(trait2).start
+            pos2 = self.gstruc.get_trait(trait2).start
             loci2 = self.decode_scope(scope2) + pos2 - 1  # -1 because the PHENOMAP_SPECS is 1-indexed
             weights = self.decode_pattern(pattern2, len(loci2))
 
             if trait1 is None:
                 loci1 = loci2
             else:
-                pos1 = gstruc.get_trait(trait1).start
+                pos1 = self.gstruc.get_trait(trait1).start
                 loci1 = [scope1 + pos1 - 1] * len(loci2)
 
             for locus1, locus2, weight in zip(loci1, loci2, weights):
@@ -129,6 +130,3 @@ class Phenomap:
 
     def get_map(self):
         return self.map_
-
-
-phenomap = Phenomap()

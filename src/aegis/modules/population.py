@@ -1,7 +1,8 @@
 import numpy as np
 import pickle
 
-from aegis.modules.genetics import initialize_genomes, get_phenotypes
+from aegis.init import gstruc, get_phenotypes
+from aegis.modules.genetics.genomes import Genomes
 
 
 class Population:
@@ -76,7 +77,7 @@ class Population:
 
     @staticmethod
     def initialize(N):
-        genomes = initialize_genomes(N)
+        genomes = Genomes(gstruc.initialize_genomes(N))
         ages = np.zeros(N, dtype=np.int32)
         births = np.zeros(N, dtype=np.int32)
         birthdays = np.zeros(N, dtype=np.int32)

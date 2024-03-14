@@ -6,8 +6,6 @@ from .gstruc import gstruc
 from .phenomap import phenomap
 from .interpreter import interpreter
 
-from aegis.pan import cnf
-
 
 class Phenotyper:
     """
