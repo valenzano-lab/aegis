@@ -10,7 +10,16 @@ from aegis.help.config import get_default_parameters, validate
 
 cnf = types.SimpleNamespace()
 var = types.SimpleNamespace()
+var.stage = 1
 rng = None
+
+
+def get_stage():
+    return var.stage
+
+
+def increment_stage():
+    var.stage += 1
 
 
 def set_up_cnf(custom_config_path, running_on_server):
@@ -47,8 +56,8 @@ def set_up_var():
     else:
         random_seed = cnf.RANDOM_SEED
 
-    var.stage = 1
     var.random_seed = random_seed
+
     global rng
     rng = np.random.default_rng(random_seed)
 
@@ -61,11 +70,11 @@ def skip(rate):
         return True
 
     # Do not skip first stage
-    if var.stage == 1:
+    if get_stage() == 1:
         return False
 
     # Skip unless stage is divisible by rate
-    return var.stage % rate > 0
+    return get_stage() % rate > 0
 
 
 # Decorators

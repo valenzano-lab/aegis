@@ -1,6 +1,5 @@
 import logging
 
-
 logging.basicConfig(
     format="%(asctime)s %(levelname)s %(module)s -- %(message)s",
     datefmt="%d/%m/%Y %I:%M:%S",
@@ -39,10 +38,10 @@ def run_sim(config_path, pickle_path, overwrite):
     recorder.record_input_summary()
 
     # Run simulation (if population not extinct)
-    while pan.var.stage <= pan.cnf.STAGES_PER_SIMULATION and not recorder.extinct:
+    while pan.get_stage() <= pan.cnf.STAGES_PER_SIMULATION and not recorder.extinct:
         recorder._log_progress(len(ecosystem.population))
         ecosystem.run_stage()
-        pan.var.stage += 1
+        pan.increment_stage()
 
     # Record output summary
     recorder.record_output_summary()

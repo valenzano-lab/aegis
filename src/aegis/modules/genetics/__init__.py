@@ -9,8 +9,8 @@ from .interpreter import interpreter
 from .reproduction.mutation import mutator
 
 
-def flipmap_evolve():
-    flipmap.evolve()
+def flipmap_evolve(stage):
+    flipmap.evolve(stage=stage)
 
 
 def get_map():

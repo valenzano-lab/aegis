@@ -4,7 +4,7 @@ Modifies topology of fitness landscape over time by changing the interpretation 
 """
 
 import numpy as np
-from aegis.pan import var, rng
+from aegis.pan import rng
 
 
 class Flipmap:
@@ -16,9 +16,9 @@ class Flipmap:
         else:
             self.map = np.zeros(gstruc_shape, dtype=np.bool_)
 
-    def evolve(self):
+    def evolve(self, stage):
         """Modify the flipmap"""
-        if (self.map is None) or (var.stage % self.FLIPMAP_CHANGE_RATE > 0):
+        if (self.map is None) or (stage % self.FLIPMAP_CHANGE_RATE > 0):
             return
 
         indices = tuple(rng.integers(self.map.shape))

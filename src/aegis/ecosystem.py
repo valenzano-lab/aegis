@@ -1,7 +1,7 @@
 import numpy as np
 import logging
 
-from aegis.pan import cnf, var, rng
+from aegis.pan import cnf, rng, get_stage
 
 from aegis.help.config import causeofdeath_valid
 from aegis.modules import recorder
@@ -50,7 +50,7 @@ class Ecosystem:
         self.reproduction()  # reproduction
         self.age()  # age increment and potentially death
         self.hatch()
-        genetics.flipmap_evolve()
+        genetics.flipmap_evolve(stage=get_stage())
 
         # Record data
         recorder.collect("additive_age_structure", self.population.ages)  # population census
@@ -73,7 +73,7 @@ class Ecosystem:
         self._kill(mask_kill=~mask_surv, causeofdeath="intrinsic")
 
     def mortality_abiotic(self):
-        hazard = abiotic.get_hazard(var.stage)
+        hazard = abiotic.get_hazard(get_stage())
         mask_kill = rng.random(len(self.population), dtype=np.float32) < hazard
         self._kill(mask_kill=mask_kill, causeofdeath="abiotic")
 
@@ -131,7 +131,7 @@ class Ecosystem:
         )
 
         # Get eggs
-        eggs = Population.make_eggs(offspring_genomes=offspring_genomes, stage=var.stage)
+        eggs = Population.make_eggs(offspring_genomes=offspring_genomes, stage=get_stage())
         if self.eggs is None:
             self.eggs = eggs
         else:
@@ -157,7 +157,7 @@ class Ecosystem:
         if (
             (cnf.INCUBATION_PERIOD == -1 and len(self.population) == 0)  # hatch when everyone dead
             or (cnf.INCUBATION_PERIOD == 0)  # hatch immediately
-            or (cnf.INCUBATION_PERIOD > 0 and var.stage % cnf.INCUBATION_PERIOD == 0)  # hatch with delay
+            or (cnf.INCUBATION_PERIOD > 0 and get_stage() % cnf.INCUBATION_PERIOD == 0)  # hatch with delay
         ):
             self.population += self.eggs
             self.eggs = None

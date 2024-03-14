@@ -41,22 +41,24 @@ def _log_progress(popsize="?"):
     if pan.skip(cnf.LOGGING_RATE):
         return
 
-    logging.info("%8s / %s / N=%s", var.stage, cnf.STAGES_PER_SIMULATION, popsize)
+    stage = pan.get_stage()
+
+    logging.info("%8s / %s / N=%s", stage, cnf.STAGES_PER_SIMULATION, popsize)
 
     # Get time estimations
     time_diff = time.time() - pan.time_start
 
-    seconds_per_100 = time_diff / var.stage * 100
-    eta = (cnf.STAGES_PER_SIMULATION - var.stage) / 100 * seconds_per_100
+    seconds_per_100 = time_diff / stage * 100
+    eta = (cnf.STAGES_PER_SIMULATION - stage) / 100 * seconds_per_100
 
-    stages_per_min = int(var.stage / (time_diff / 60))
+    stages_per_min = int(stage / (time_diff / 60))
 
     runtime = get_dhm(time_diff)
-    time_per_1M = get_dhm(time_diff / var.stage * 1000000)
+    time_per_1M = get_dhm(time_diff / stage * 1000000)
     eta = get_dhm(eta)
 
     # Save time estimations
-    content = (var.stage, eta, time_per_1M, runtime, stages_per_min, popsize)
+    content = (stage, eta, time_per_1M, runtime, stages_per_min, popsize)
     with open(pan.progress_path, "ab") as f:
         np.savetxt(f, [content], fmt="%-10s", delimiter="| ")
 
@@ -152,27 +154,29 @@ def record_snapshots(population):
     """Record demographic, genetic and phenotypic data from the current population."""
     if pan.skip(cnf.SNAPSHOT_RATE) or len(population) == 0:
         return
+    
+    stage = pan.get_stage()
 
-    logging.debug(f"Snapshots recorded at stage {var.stage}")
+    logging.debug(f"Snapshots recorded at stage {stage}")
 
     # genotypes
     df_gen = pd.DataFrame(np.array(population.genomes.flatten()))
     df_gen.reset_index(drop=True, inplace=True)
     df_gen.columns = [str(c) for c in df_gen.columns]
-    df_gen.to_feather(paths["snapshots_genotypes"] / f"{var.stage}.feather")
+    df_gen.to_feather(paths["snapshots_genotypes"] / f"{stage}.feather")
 
     # phenotypes
     df_phe = pd.DataFrame(np.array(population.phenotypes))
     df_phe.reset_index(drop=True, inplace=True)
     df_phe.columns = [str(c) for c in df_phe.columns]
-    df_phe.to_feather(paths["snapshots_phenotypes"] / f"{var.stage}.feather")
+    df_phe.to_feather(paths["snapshots_phenotypes"] / f"{stage}.feather")
 
     # demography
     dem_attrs = ["ages", "births", "birthdays"]
     demo = {attr: getattr(population, attr) for attr in dem_attrs}
     df_dem = pd.DataFrame(demo, columns=dem_attrs)
     df_dem.reset_index(drop=True, inplace=True)
-    df_dem.to_feather(paths["snapshots_demography"] / f"{var.stage}.feather")
+    df_dem.to_feather(paths["snapshots_demography"] / f"{stage}.feather")
 
 
 def record_popgenstats(genomes, mutation_rates):
@@ -200,12 +204,15 @@ def record_popgenstats(genomes, mutation_rates):
 
 
 def record_pickle(population):
-    if pan.skip(cnf.PICKLE_RATE) and not var.stage == 1:  # Also records the pickle before the first stage
+
+    stage = pan.get_stage()
+
+    if pan.skip(cnf.PICKLE_RATE) and not stage == 1:  # Also records the pickle before the first stage
         return
 
-    logging.debug(f"pickle recorded at stage {var.stage}")
+    logging.debug(f"pickle recorded at stage {stage}")
 
-    pickle_path = paths["pickles"] / str(var.stage)
+    pickle_path = paths["pickles"] / str(stage)
     population.save_pickle_to(pickle_path)
 
 
@@ -310,22 +317,24 @@ def record_TE(T, e):
 
     assert e in ("alive", "dead")
 
-    if (var.stage % cnf.TE_RATE) == 0 or var.stage == 1:
+    stage = pan.get_stage()
+
+    if (stage % cnf.TE_RATE) == 0 or stage == 1:
         # open new file and add header
         with open(paths["te"] / f"{te_record_number}.csv", "w") as file_:
             array = ["T", "E"]
             np.savetxt(file_, [array], delimiter=",", fmt="%s")
 
-    elif ((var.stage % cnf.TE_RATE) < cnf.TE_DURATION) and e == "dead":
+    elif ((stage % cnf.TE_RATE) < cnf.TE_DURATION) and e == "dead":
         # record deaths
         E = np.repeat(1, len(T))
         data = np.array([T, E]).T
         with open(paths["te"] / f"{te_record_number}.csv", "ab") as file_:
             np.savetxt(file_, data, delimiter=",", fmt="%i")
 
-    elif (((var.stage % cnf.TE_RATE) == cnf.TE_DURATION) or var.stage == cnf.STAGES_PER_SIMULATION) and e == "alive":
+    elif (((stage % cnf.TE_RATE) == cnf.TE_DURATION) or stage == cnf.STAGES_PER_SIMULATION) and e == "alive":
         # flush
-        logging.debug(f"Data for survival analysis (T,E) flushed at stage {var.stage}")
+        logging.debug(f"Data for survival analysis (T,E) flushed at stage {stage}")
         E = np.repeat(0, len(T))
         data = np.array([T, E]).T
         with open(paths["te"] / f"{te_record_number}.csv", "ab") as file_:
