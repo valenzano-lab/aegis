@@ -5,7 +5,7 @@ Contains information about ploidy, number of loci, and number of bits per locus.
 
 import numpy as np
 from aegis.pan import cnf
-from aegis.pan import var
+from aegis.pan import rng
 
 from aegis.modules.genetics.genomes import Genomes
 
@@ -120,7 +120,7 @@ class Gstruc:
         depending on the G_{}_initial parameter.
         """
 
-        array = var.rng.random(size=(N, *self.shape), dtype=np.float32)
+        array = rng.random(size=(N, *self.shape), dtype=np.float32)
 
         for trait in self.traits.values():
             if trait.evolvable:

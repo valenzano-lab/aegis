@@ -10,6 +10,7 @@ from aegis.help.config import get_default_parameters, validate
 
 cnf = types.SimpleNamespace()
 var = types.SimpleNamespace()
+rng = None
 
 
 def set_up_cnf(custom_config_path, running_on_server):
@@ -48,7 +49,8 @@ def set_up_var():
 
     var.stage = 1
     var.random_seed = random_seed
-    var.rng = np.random.default_rng(random_seed)
+    global rng
+    rng = np.random.default_rng(random_seed)
 
 
 def skip(rate):

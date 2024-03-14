@@ -1,7 +1,7 @@
 import functools
 import numpy as np
 
-from aegis.pan import var
+from aegis.pan import rng
 
 
 class Genst:
@@ -69,7 +69,7 @@ class Genblock:
         for i in range(self.n):
             func = Genblock.__resolve_function(encoding["agefunc"], encoding["funcparam"])
             if encoding["agefunc"] == "agespec":
-                age = var.rng.integers(0, self.MAX_LIFESPAN)
+                age = rng.integers(0, self.MAX_LIFESPAN)
                 magnitude = func(age)
                 add_to_phenolist(i, encoding["trait"], age, magnitude)
             else:
@@ -104,10 +104,10 @@ class Genblock:
 
         def _normal(pair):
             mean, std = pair
-            return var.rng.normal(mean, std)
+            return rng.normal(mean, std)
 
         def _exponential(param):
-            return var.rng.exponential(param)
+            return rng.exponential(param)
 
         if func == "const" or func == "agespec":
             return functools.partial(const, _exponential(params[0]))

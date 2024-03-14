@@ -4,7 +4,7 @@ Decides which individuals to eliminate when there is overcrowding.
 """
 
 import numpy as np
-from aegis.pan import var
+from aegis.pan import rng
 from aegis.pan import cnf
 
 func = None  # defined below
@@ -30,7 +30,7 @@ def _logistic(n):
     # when ratio == 2, kill_probability is set to >0
     kill_probability = 2 / (1 + np.exp(-ratio + 1)) - 1
 
-    random_probabilities = var.rng.random(n, dtype=np.float32)
+    random_probabilities = rng.random(n, dtype=np.float32)
     mask = random_probabilities < kill_probability
     return mask
 
@@ -43,7 +43,7 @@ def _gradual(n):
     The probability of dying resets to the base value once the population dips under the maximum allowed size.
     """
     surv_probability = (1 - cnf.STARVATION_MAGNITUDE) ** consecutive_overshoot_n
-    random_probabilities = var.rng.random(n, dtype=np.float32)
+    random_probabilities = rng.random(n, dtype=np.float32)
     mask = random_probabilities > surv_probability
     return mask
 
@@ -53,7 +53,7 @@ def _treadmill_random(n):
 
     The population size is brought down to the maximum allowed size in one go.
     """
-    indices = var.rng.choice(n, n - cnf.MAX_POPULATION_SIZE, replace=False)
+    indices = rng.choice(n, n - cnf.MAX_POPULATION_SIZE, replace=False)
     mask = np.zeros(n, dtype=np.bool_)
     mask[indices] = True
     return mask
@@ -65,7 +65,7 @@ def _cliff(n):
     The proportion is defined as the parameter CLIFF_SURVIVORSHIP.
     This function will not necessarily bring the population below the maximum allowed size.
     """
-    indices = var.rng.choice(
+    indices = rng.choice(
         n,
         int(cnf.MAX_POPULATION_SIZE * cnf.CLIFF_SURVIVORSHIP),
         replace=False,

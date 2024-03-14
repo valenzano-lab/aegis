@@ -1,7 +1,7 @@
 import numpy as np
 import logging
 
-from aegis.pan import cnf, var
+from aegis.pan import cnf, var, rng
 
 from aegis.help.config import causeofdeath_valid
 from aegis.modules import recorder
@@ -69,12 +69,12 @@ class Ecosystem:
 
     def mortality_intrinsic(self):
         probs_surv = genetics.get_evaluation(self.population, "surv")
-        mask_surv = var.rng.random(len(probs_surv), dtype=np.float32) < probs_surv
+        mask_surv = rng.random(len(probs_surv), dtype=np.float32) < probs_surv
         self._kill(mask_kill=~mask_surv, causeofdeath="intrinsic")
 
     def mortality_abiotic(self):
         hazard = abiotic.get_hazard(var.stage)
-        mask_kill = var.rng.random(len(self.population), dtype=np.float32) < hazard
+        mask_kill = rng.random(len(self.population), dtype=np.float32) < hazard
         self._kill(mask_kill=mask_kill, causeofdeath="abiotic")
 
     def mortality_infection(self):
@@ -84,7 +84,7 @@ class Ecosystem:
 
     def mortality_predation(self):
         probs_kill = predation.call(len(self))
-        mask_kill = var.rng.random(len(self), dtype=np.float32) < probs_kill
+        mask_kill = rng.random(len(self), dtype=np.float32) < probs_kill
         self._kill(mask_kill=mask_kill, causeofdeath="predation")
 
     def mortality_starvation(self):
@@ -110,7 +110,7 @@ class Ecosystem:
 
         # Check if reproducing
         probs_repr = genetics.get_evaluation(self.population, "repr", part=mask_fertile)
-        mask_repr = var.rng.random(len(probs_repr), dtype=np.float32) < probs_repr
+        mask_repr = rng.random(len(probs_repr), dtype=np.float32) < probs_repr
 
         # Forgo if not at least two available parents
         if np.count_nonzero(mask_repr) < 2:

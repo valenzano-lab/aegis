@@ -8,7 +8,7 @@ Infection status:
 
 import math
 from aegis.pan import cnf
-from aegis.pan import var
+from aegis.pan import rng
 
 
 def get_infection_probability(infection_density):
@@ -23,7 +23,7 @@ def kill(population):
     if len(population) == 0:
         return
 
-    probs = var.rng.random(len(population), dtype=float)
+    probs = rng.random(len(population), dtype=float)
 
     # current status
     infected = population.infection == 1

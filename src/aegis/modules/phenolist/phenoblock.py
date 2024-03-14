@@ -1,7 +1,7 @@
 import numpy as np
 import functools
 
-from aegis.pan import var
+from aegis.pan import rng
 from aegis.pan import cnf
 
 
@@ -104,7 +104,7 @@ class Phenoblock:
 
         def _normal(pair):
             mean, std = pair
-            return var.rng.normal(mean, std)
+            return rng.normal(mean, std)
 
         if func == "const":
             return functools.partial(const, _normal(params[0]))

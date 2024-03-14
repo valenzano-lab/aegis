@@ -11,9 +11,10 @@ logging.basicConfig(
 def run_sim(config_path, pickle_path, overwrite):
 
     from aegis import pan
-    from aegis.modules.genetics import gstruc, flipmap, phenomap, interpreter, mutator
 
     pan.init(config_path, pickle_path, overwrite)
+
+    from aegis.modules.genetics import gstruc, flipmap, phenomap, interpreter, mutator
 
     gstruc.init()
     flipmap.init(pan.cnf.FLIPMAP_CHANGE_RATE, gstruc.get_shape())
