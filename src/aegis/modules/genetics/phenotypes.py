@@ -6,6 +6,8 @@ from .gstruc import gstruc
 from .phenomap import phenomap
 from .interpreter import interpreter
 
+from aegis.pan import cnf
+
 
 class Phenotyper:
     """
@@ -47,18 +49,32 @@ class Phenotyper:
             return vectors.dot(phenomatrix)
         elif phenolist is not None:
             popsize = len(vectors)
-            phenodiff = np.zeros(shape=(popsize, self.MAX_LIFESPAN * 4))
+            phenodiff = Phenotype.zeros(popsize, self.MAX_LIFESPAN)
+            # phenodiff = np.zeros(shape=(popsize, self.MAX_LIFESPAN * 4))
             for vec_index, trait, age, magnitude in phenolist:
                 vec_state = vectors[:, vec_index]
                 phenotype_change = vec_state * magnitude
-                phenotype_index = self.__where(trait, age)
+                phenotype_index = Phenotype.where(trait, age, self.MAX_LIFESPAN)
                 phenodiff[:, phenotype_index] += phenotype_change
             return phenodiff
         else:
             raise Exception("Neither phenomatrix nor phenolist has been provided.")
 
-    def __where(self, trait, age):
+
+class Phenotype:
+    def __init__(self, array):
+        self.array = array
+
+    @staticmethod
+    def zeros(popsize, MAX_LIFESPAN):
+        return np.zeros(shape=(popsize, MAX_LIFESPAN * 4))
+
+    @staticmethod
+    def where(trait, age, MAX_LIFESPAN):
         # Used for phenolist
         # Order of traits is hard-encoded and is: surv, repr, muta, neut
         order = {"surv": 0, "repr": 1, "muta": 2, "neut": 3}
-        return self.MAX_LIFESPAN * order[trait] + age
+        return MAX_LIFESPAN * order[trait] + age
+
+    def get(self, trait, age, MAX_LIFESPAN):
+        return self.array[:, self.where(trait, age, MAX_LIFESPAN)]
