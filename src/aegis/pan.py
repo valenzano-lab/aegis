@@ -126,3 +126,8 @@ def init(config_path, pickle_path_, overwrite):
     content = ("stage", "ETA", "t1M", "runtime", "stg/min", "popsize")
     with open(progress_path, "wb") as f:
         np.savetxt(f, [content], fmt="%-10s", delimiter="| ")
+
+
+def init_minimal():
+    set_up_cnf("", running_on_server=False)
+    set_up_var()
