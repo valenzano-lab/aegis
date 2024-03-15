@@ -1,5 +1,6 @@
 from aegis.pan import cnf
 
+# TODO add to init; because this is initialized once; maybe somehow merge with genopheno architecture
 
 class Trait:
     """Genetic trait
@@ -21,7 +22,8 @@ class Trait:
         self.interpreter = get("interpreter")
         self.lo = get("lo")
         self.hi = get("hi")
-        self.initial = get("initial")
+        self.initgeno = get("initgeno")
+        self.initpheno = get("initpheno")
 
         # Determine the number of loci encoding the trait
         if self.evolvable:
@@ -46,7 +48,7 @@ class Trait:
         if not isinstance(self.evolvable, bool):
             raise TypeError
 
-        if not 0 <= self.initial <= 1:
+        if not 0 <= self.initgeno <= 1:
             raise ValueError
 
         if self.evolvable:

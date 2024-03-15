@@ -43,7 +43,7 @@ class Gstruc:
 
         for trait in self.traits.values():
             if trait.evolvable:
-                array[:, :, trait.slice] = array[:, :, trait.slice] < trait.initial
+                array[:, :, trait.slice] = array[:, :, trait.slice] < trait.initgeno
 
         array = array.astype(np.bool_)
         return array

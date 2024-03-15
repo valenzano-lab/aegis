@@ -613,8 +613,17 @@ params = {
         dtype=float,
         drange="",
     ),
-    "G_surv_initial": Param(
-        key="G_surv_initial",
+    "G_surv_initgeno": Param(
+        key="G_surv_initgeno",
+        name="",
+        domain="initialization",
+        default=1,
+        info="Initial survival rate",
+        dtype=float,
+        drange="",
+    ),
+    "G_surv_initpheno": Param(
+        key="G_surv_initpheno",
         name="",
         domain="initialization",
         default=1,
@@ -668,8 +677,17 @@ params = {
         drange="",
         evalrange=[0.5, 1],
     ),
-    "G_repr_initial": Param(
-        key="G_repr_initial",
+    "G_repr_initgeno": Param(
+        key="G_repr_initgeno",
+        name="",
+        domain="initialization",
+        default=1,
+        info="Initial fertility rate",
+        dtype=float,
+        drange="",
+    ),
+    "G_repr_initpheno": Param(
+        key="G_repr_initpheno",
         name="",
         domain="initialization",
         default=1,
@@ -722,8 +740,17 @@ params = {
         dtype=float,
         drange="",
     ),
-    "G_neut_initial": Param(
-        key="G_neut_initial",
+    "G_neut_initgeno": Param(
+        key="G_neut_initgeno",
+        name="",
+        domain="initialization",
+        default=1,
+        info="",
+        dtype=float,
+        drange="",
+    ),
+    "G_neut_initpheno": Param(
+        key="G_neut_initpheno",
         name="",
         domain="initialization",
         default=1,
@@ -776,8 +803,17 @@ params = {
         dtype=float,
         drange="",
     ),
-    "G_muta_initial": Param(
-        key="G_muta_initial",
+    "G_muta_initgeno": Param(
+        key="G_muta_initgeno",
+        name="",
+        domain="initialization",
+        default=1,
+        info="Initial mutation rate",
+        dtype=float,
+        drange="",
+    ),
+    "G_muta_initpheno": Param(
+        key="G_muta_initpheno",
         name="",
         domain="initialization",
         default=0.001,

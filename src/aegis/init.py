@@ -104,7 +104,7 @@ def get_evaluation(population, attr, part=None):
     # first scenario
     trait = gstruc.get_trait(attr)
     if not trait.evolvable:
-        probs = trait.initial
+        probs = trait.initpheno
 
     # second and third scenario
     if trait.evolvable:
