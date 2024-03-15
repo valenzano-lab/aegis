@@ -22,7 +22,7 @@ def increment_stage():
     var.stage += 1
 
 
-def set_up_cnf(custom_config_path, running_on_server):
+def set_up_cnf(custom_config_path, running_on_server, custom_input_params={}):
     global cnf
 
     # Read config parameters from the custom config file
@@ -41,6 +41,7 @@ def set_up_cnf(custom_config_path, running_on_server):
     params = {}
     params.update(default_config_params)
     params.update(custom_config_params)
+    params.update(custom_input_params)
 
     validate(params, validate_resrange=running_on_server)
 
@@ -128,6 +129,6 @@ def init(config_path, pickle_path_, overwrite):
         np.savetxt(f, [content], fmt="%-10s", delimiter="| ")
 
 
-def init_minimal():
-    set_up_cnf("", running_on_server=False)
+def init_minimal(custom_input_params={}):
+    set_up_cnf("", running_on_server=False, custom_input_params=custom_input_params)
     set_up_var()
