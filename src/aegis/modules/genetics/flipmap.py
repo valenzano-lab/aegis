@@ -8,13 +8,13 @@ from aegis.pan import rng
 
 
 class Flipmap:
-    def __init__(self, FLIPMAP_CHANGE_RATE, gstruc_shape):
+    def __init__(self, FLIPMAP_CHANGE_RATE, genome_shape):
         self.FLIPMAP_CHANGE_RATE = FLIPMAP_CHANGE_RATE
 
         if self.FLIPMAP_CHANGE_RATE == 0:
             self.map = None
         else:
-            self.map = np.zeros(gstruc_shape, dtype=np.bool_)
+            self.map = np.zeros(genome_shape, dtype=np.bool_)
 
     def evolve(self, stage):
         """Modify the flipmap"""

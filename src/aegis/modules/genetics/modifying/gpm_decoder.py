@@ -4,12 +4,33 @@ import numpy as np
 from aegis.pan import rng
 
 
-class Genst:
-    def __init__(self, encodings):
+class GPM_decoder:
+    """
+    Example input...
+    PHENOMAP:
+        "AP1, 7":
+            - - "surv"
+            - "agespec"
+            - - 0.1
+            - - "repr"
+            - "agespec"
+            - - 0.1
+        "MA1, 13":
+            - - "surv"
+            - "agespec"
+            - - 0.1
+    """
+
+    def __init__(self, config_PHENOMAP):
         self.blocks = {}
         self.n = 0
 
-        for (name, n), quartets in encodings.items():
+        for namen, quartets in config_PHENOMAP.items():
+            # YML dict cannot take tuple as key, so it is fused as f'{name}, {n}'
+            name, n = namen.split(", ")
+            n = int(n)
+            self.n += n
+
             self.__add_genblock(name, n)
             for trait, agefunc, funcparam in quartets:
                 self.__add_encoding(name, trait, agefunc, funcparam)

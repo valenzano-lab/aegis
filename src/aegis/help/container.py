@@ -5,9 +5,9 @@ import logging
 import json
 import yaml
 
-from aegis.help.config import get_default_parameters
-from aegis.modules.population import Population
-from aegis.help.config import causeofdeath_valid
+from aegis.modules.setup.config import get_default_parameters
+from aegis.modules.dataclasses.population import Population
+from aegis.modules.setup.config import causeofdeath_valid
 
 
 class Container:

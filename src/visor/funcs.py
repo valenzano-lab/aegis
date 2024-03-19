@@ -5,7 +5,7 @@ import pathlib
 import yaml
 import logging
 
-from aegis.help import config
+from aegis.modules.setup import config
 
 
 def get_here():

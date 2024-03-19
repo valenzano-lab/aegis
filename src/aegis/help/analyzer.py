@@ -1,5 +1,5 @@
 import pandas as pd
-from aegis.help.config import causeofdeath_valid
+from aegis.modules.setup.config import causeofdeath_valid
 
 
 # ANALYZE FEATHER SNAPSHOTS

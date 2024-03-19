@@ -1,6 +1,5 @@
-from aegis.pan import cnf
-
 # TODO add to init; because this is initialized once; maybe somehow merge with genopheno architecture
+
 
 class Trait:
     """Genetic trait
@@ -10,7 +9,7 @@ class Trait:
 
     legal = ("surv", "repr", "neut", "muta")
 
-    def __init__(self, name, start):
+    def __init__(self, name, cnf):
         def get(key):
             return getattr(cnf, f"G_{name}_{key}")
 
@@ -39,8 +38,12 @@ class Trait:
         self._validate()
 
         # Infer positions in the genome
-        self.start = start
-        self.end = self.start + self.length
+        # self.start = start
+        # self.end = self.start + self.length
+        # self.slice = slice(self.start, self.end)
+
+        self.start = cnf.MAX_LIFESPAN * {"surv": 0, "repr": 1, "muta": 2, "neut": 3}[self.name]
+        self.end = self.start + cnf.MAX_LIFESPAN
         self.slice = slice(self.start, self.end)
 
     def _validate(self):

@@ -9,10 +9,9 @@ from aegis.pan import rng
 
 
 class Interpreter:
-    def __init__(self, BITS_PER_LOCUS, DOMINANCE_FACTOR, THRESHOLD):
+    def __init__(self, BITS_PER_LOCUS, THRESHOLD):
 
         self.BITS_PER_LOCUS = BITS_PER_LOCUS
-        self.DOMINANCE_FACTOR = DOMINANCE_FACTOR
         self.THRESHOLD = THRESHOLD
 
         self.exp_base = 0.5  # Important for _exp
@@ -31,28 +30,6 @@ class Interpreter:
         # Parameters for the linear interpreter
         linear_weights = np.arange(self.BITS_PER_LOCUS)[::-1] + 1
         self.linear_weights = linear_weights / linear_weights.sum()
-
-    def _diploid_to_haploid(self, loci):
-        """Merge two arrays encoding two chromatids into one array.
-
-        Arguments:
-            loci: A bool numpy array with shape (population size, ploidy, genome length, BITS_PER_LOCUS)
-
-        Returns:
-            A bool numpy array with shape (population size, genome length, BITS_PER_LOCUS)
-        """
-
-        # compute homozygous (0, 1) or heterozygous (0.5)
-        zygosity = loci.mean(1)
-        mask = zygosity == 0.5
-
-        # correct heterozygous with DOMINANCE_FACTOR
-        if isinstance(self.DOMINANCE_FACTOR, list):
-            zygosity[mask] = self.DOMINANCE_FACTOR[mask]
-        else:
-            zygosity[mask] = self.DOMINANCE_FACTOR
-
-        return zygosity
 
     @staticmethod
     def _const1(loci):
@@ -145,9 +122,5 @@ class Interpreter:
             "exp": self._exp,
             "binary_exp": self._binary_exp,
         }[interpreter_kind]
-        if loci.shape[1] == 1:  # Do not calculate mean if genomes are haploid
-            loci = loci[:, 0]
-        else:
-            loci = self._diploid_to_haploid(loci)
         interpretome = method(loci)
         return interpretome

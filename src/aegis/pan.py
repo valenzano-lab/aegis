@@ -5,13 +5,16 @@ import shutil
 import yaml
 import types
 
-from aegis.help.config import get_default_parameters, validate
+from aegis.modules.setup.config import get_default_parameters, validate
+from aegis.modules.setup.trait import Trait
 
 
 cnf = types.SimpleNamespace()
 var = types.SimpleNamespace()
 var.stage = 1
 rng = None
+
+TRAITS = {}
 
 
 def get_stage():
@@ -61,6 +64,14 @@ def set_up_var():
 
     global rng
     rng = np.random.default_rng(random_seed)
+
+
+def set_up_traits(cnf):
+    global TRAITS
+
+    for traitname in ("surv", "repr", "muta", "neut"):
+        trait = Trait(name=traitname, cnf=cnf)
+        TRAITS[traitname] = trait
 
 
 def skip(rate):
@@ -113,6 +124,7 @@ def init(config_path, pickle_path_, overwrite):
 
     set_up_cnf(config_path, running_on_server=False)
     set_up_var()
+    set_up_traits(cnf)
     # Output directory
     output_path = config_path.parent / config_path.stem
     if output_path.exists() and output_path.is_dir():

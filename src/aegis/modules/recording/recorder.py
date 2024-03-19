@@ -20,10 +20,10 @@ import logging
 from aegis.pan import cnf
 from aegis import pan
 from aegis.pan import var
-from aegis.modules.popgenstats import PopgenStats
-from aegis.help.config import causeofdeath_valid
+from aegis.modules.recording.popgenstats import PopgenStats
+from aegis.modules.setup.config import causeofdeath_valid
 
-from aegis.init import gstruc, phenomap
+from aegis.modules.init import architect
 
 
 def get_dhm(timediff):
@@ -64,7 +64,7 @@ def _log_progress(popsize="?"):
         np.savetxt(f, [content], fmt="%-10s", delimiter="| ")
 
 
-print(pan.output_path)
+logging.info(pan.output_path)
 opath = pan.output_path
 paths = {
     "BASE_DIR": opath,
@@ -113,11 +113,11 @@ for key in _collection.keys():
         np.savetxt(f, [array], delimiter=",", fmt="%i")
 
 with open(paths["visor"] / "genotypes.csv", "ab") as f:
-    array = np.arange(gstruc.get_number_of_bits())  # (ploidy, length, bits_per_locus)
+    array = np.arange(architect.architecture.get_number_of_bits())  # (ploidy, length, bits_per_locus)
     np.savetxt(f, [array], delimiter=",", fmt="%i")
 
 with open(paths["visor"] / "phenotypes.csv", "ab") as f:
-    array = np.arange(gstruc.get_number_of_phenotypic_values())  # number of phenotypic values
+    array = np.arange(architect.architecture.get_number_of_phenotypic_values())  # number of phenotypic values
     np.savetxt(f, [array], delimiter=",", fmt="%i")
 
 # ===============================
@@ -247,9 +247,13 @@ def flush():
 # =================================
 
 
-def record_phenomap(map_):
-    with open(paths["phenomap"] / "phenomap.csv", "w") as f:
-        np.savetxt(f, map_, delimiter=",", fmt="%f")
+def record_phenomap(phenolist):
+    if phenolist:
+        pd.DataFrame(phenolist).to_csv(
+            paths["phenomap"] / "phenomap.csv", index=None, header=["bit", "trait", "age", "weight"]
+        )
+    else:
+        logging.info("Phenomap is empty")
 
 
 @staticmethod
@@ -344,6 +348,5 @@ def record_TE(T, e):
         te_record_number += 1
 
 
-phenomap_ = phenomap.get_map()
-if phenomap_ is not None:
-    record_phenomap(phenomap.get_map())
+if hasattr(architect.architecture, "phenomap"):
+    record_phenomap(architect.architecture.phenomap.phenolist)

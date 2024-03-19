@@ -3,10 +3,10 @@ import logging
 
 from aegis.pan import cnf, rng, get_stage
 
-from aegis.help.config import causeofdeath_valid
-from aegis.modules import recorder
-from aegis.modules.population import Population
-from aegis.init import get_evaluation, flipmap, abiotic, predation, starvation, infection, reproduction
+from aegis.modules.setup.config import causeofdeath_valid
+from aegis.modules.recording import recorder
+from aegis.modules.dataclasses.population import Population
+from aegis.modules.init import abiotic, predation, starvation, infection, reproduction, architect
 
 
 class Ecosystem:
@@ -49,7 +49,7 @@ class Ecosystem:
         self.reproduction()  # reproduction
         self.age()  # age increment and potentially death
         self.hatch()
-        flipmap.evolve(stage=get_stage())
+        architect.flipmap.evolve(stage=get_stage())
 
         # Record data
         recorder.collect("additive_age_structure", self.population.ages)  # population census
@@ -57,7 +57,7 @@ class Ecosystem:
         recorder.record_snapshots(self.population)
         recorder.record_visor(self.population)
         recorder.record_popgenstats(
-            self.population.genomes, get_evaluation(self.population, "muta")
+            self.population.genomes, architect.get_evaluation(self.population, "muta")
         )  # TODO defers calculation of mutation rates; hacky
         recorder.record_memory_use()
         recorder.record_TE(self.population.ages, "alive")
@@ -67,7 +67,7 @@ class Ecosystem:
     ###############
 
     def mortality_intrinsic(self):
-        probs_surv = get_evaluation(self.population, "surv")
+        probs_surv = architect.get_evaluation(self.population, "surv")
         mask_surv = rng.random(len(probs_surv), dtype=np.float32) < probs_surv
         self._kill(mask_kill=~mask_surv, causeofdeath="intrinsic")
 
@@ -108,7 +108,7 @@ class Ecosystem:
             return
 
         # Check if reproducing
-        probs_repr = get_evaluation(self.population, "repr", part=mask_fertile)
+        probs_repr = architect.get_evaluation(self.population, "repr", part=mask_fertile)
         mask_repr = rng.random(len(probs_repr), dtype=np.float32) < probs_repr
 
         # Forgo if not at least two available parents
@@ -124,7 +124,7 @@ class Ecosystem:
 
         # Generate offspring genomes
         parental_genomes = self.population.genomes.get(individuals=mask_repr)  # parental genomes
-        muta_prob = get_evaluation(self.population, "muta", part=mask_repr)[mask_repr]
+        muta_prob = architect.get_evaluation(self.population, "muta", part=mask_repr)[mask_repr]
         offspring_genomes = reproduction.generate_offspring_genomes(genomes=parental_genomes, muta_prob=muta_prob)
 
         # Get eggs

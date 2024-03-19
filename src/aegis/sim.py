@@ -16,12 +16,12 @@ def run_sim(config_path, pickle_path, overwrite):
     # Create ecosystem
     # Cannot import before
     from aegis.ecosystem import Ecosystem
-    from aegis.modules import recorder
+    from aegis.modules.recording import recorder
 
     if not pan.pickle_path:
         ecosystem = Ecosystem()
     else:
-        from aegis.modules.population import Population
+        from aegis.modules.dataclasses.population import Population
 
         population = Population.load_pickle_from(pan.pickle_path)
         ecosystem = Ecosystem(population)

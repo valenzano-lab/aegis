@@ -1,8 +1,8 @@
 import numpy as np
 import pickle
 
-from aegis.init import gstruc, get_phenotypes
-from aegis.modules.genetics.genomes import Genomes
+from aegis.modules.init import architect
+from aegis.modules.dataclasses.genomes import Genomes
 
 
 class Population:
@@ -77,11 +77,11 @@ class Population:
 
     @staticmethod
     def initialize(N):
-        genomes = Genomes(gstruc.initialize_genomes(N))
+        genomes = Genomes(architect.architecture.init_genome_array(N))
         ages = np.zeros(N, dtype=np.int32)
         births = np.zeros(N, dtype=np.int32)
         birthdays = np.zeros(N, dtype=np.int32)
-        phenotypes = get_phenotypes(genomes)
+        phenotypes = architect.__call__(genomes)
         infection = np.zeros(N, dtype=np.int32)
         return Population(
             genomes=genomes, ages=ages, births=births, birthdays=birthdays, phenotypes=phenotypes, infection=infection
@@ -95,7 +95,7 @@ class Population:
             ages=np.zeros(n, dtype=np.int32),
             births=np.zeros(n, dtype=np.int32),
             birthdays=np.zeros(n, dtype=np.int32) + stage,
-            phenotypes=get_phenotypes(offspring_genomes),
+            phenotypes=architect.__call__(offspring_genomes),
             infection=np.zeros(n, dtype=np.int32),
         )
         return eggs
