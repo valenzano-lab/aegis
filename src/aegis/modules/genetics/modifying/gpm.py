@@ -1,6 +1,6 @@
 import logging
 
-from aegis.pan import TRAITS
+from aegis.hermes import hermes
 
 
 class GPM:
@@ -52,7 +52,7 @@ class GPM:
     def add_initial_values(self, array):
         array = array.copy()
 
-        for traitname, d in TRAITS.items():
+        for traitname, d in hermes.traits.items():
             where = self.__where(traitname)
             array[:, where] += d.initpheno
         return array

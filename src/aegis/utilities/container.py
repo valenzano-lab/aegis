@@ -5,9 +5,9 @@ import logging
 import json
 import yaml
 
-from aegis.modules.setup.config import get_default_parameters
+from aegis.modules.setup.parameters.funcs import get_default_parameters
 from aegis.modules.dataclasses.population import Population
-from aegis.modules.setup.config import causeofdeath_valid
+from aegis.modules.setup.const import VALID_CAUSES_OF_DEATH
 
 
 class Container:
@@ -97,7 +97,7 @@ class Container:
         if record_type == "interval":
             table = (
                 pd.concat(
-                    {causeofdeath: self._read_df(f"age_at_{causeofdeath}") for causeofdeath in causeofdeath_valid}
+                    {causeofdeath: self._read_df(f"age_at_{causeofdeath}") for causeofdeath in VALID_CAUSES_OF_DEATH}
                 )
                 .swaplevel()
                 .sort_index(level=0)

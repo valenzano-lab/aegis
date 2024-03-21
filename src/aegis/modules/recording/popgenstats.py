@@ -4,8 +4,7 @@ import statistics
 import itertools
 import logging
 import numpy as np
-from aegis.pan import cnf
-from aegis.pan import rng
+from aegis.hermes import hermes
 
 
 class PopgenStats:
@@ -203,10 +202,10 @@ class PopgenStats:
             return None
 
         # Sample genomes
-        if 0 < cnf.POPGENSTATS_SAMPLE_SIZE <= genomes.shape[0]:
-            indices = rng.choice(
+        if 0 < hermes.parameters.POPGENSTATS_SAMPLE_SIZE <= genomes.shape[0]:
+            indices = hermes.rng.choice(
                 range(genomes.shape[0]),
-                cnf.POPGENSTATS_SAMPLE_SIZE,
+                hermes.parameters.POPGENSTATS_SAMPLE_SIZE,
                 replace=False,
             )
             return genomes[indices]

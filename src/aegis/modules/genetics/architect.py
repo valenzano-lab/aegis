@@ -4,7 +4,7 @@ Abstract away genetic architecture.
 
 import numpy as np
 
-from aegis.pan import TRAITS
+from aegis.hermes import hermes
 
 from aegis.modules.genetics.flipmap import Flipmap
 from aegis.modules.genetics.composite.architecture import CompositeArchitecture
@@ -52,15 +52,15 @@ class Architect:
 
         # Apply lo and hi bound
         # TODO extract slicing
-        for trait in TRAITS.values():
+        for trait in hermes.traits.values():
             phenotypes[:, trait.slice] = Architect.clip(phenotypes[:, trait.slice], trait.name)
 
         return phenotypes
 
     @staticmethod
     def clip(array, traitname):
-        lo = TRAITS[traitname].lo
-        hi = TRAITS[traitname].hi
+        lo = hermes.traits[traitname].lo
+        hi = hermes.traits[traitname].hi
         return lo + array * (hi - lo)
 
     def get_evaluation(self, population, attr, part=None):
@@ -76,7 +76,7 @@ class Architect:
             which_individuals = which_individuals[part]
 
         # first scenario
-        trait = TRAITS[attr]
+        trait = hermes.traits[attr]
         if not trait.evolvable:
             probs = trait.initpheno
 

@@ -1,4 +1,3 @@
-
 from aegis.modules.dataclasses.genomes import Genomes
 from aegis.modules.reproduction.assortment import assortment
 from aegis.modules.reproduction.recombination import recombination

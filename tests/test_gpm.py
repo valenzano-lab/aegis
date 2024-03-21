@@ -17,7 +17,7 @@ pan.init_minimal(
     },
 )
 
-from aegis.modules.init import architecture
+from aegis.modules.setup.init import architecture
 
 # def test_gpm():
 #     from aegis.init import phenomap

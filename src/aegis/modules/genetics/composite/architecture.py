@@ -1,7 +1,6 @@
 import numpy as np
-from aegis.pan import rng
+from aegis.hermes import hermes
 
-from aegis.pan import TRAITS
 from aegis.modules.genetics.composite.interpreter import Interpreter
 
 
@@ -12,7 +11,7 @@ class CompositeArchitecture:
         self.n_loci = 4 * MAX_LIFESPAN
         self.MAX_LIFESPAN = MAX_LIFESPAN
 
-        self.evolvable = [trait for trait in TRAITS.values() if trait.evolvable]
+        self.evolvable = [trait for trait in hermes.traits.values() if trait.evolvable]
 
         self.interpreter = Interpreter(
             self.BITS_PER_LOCUS,
@@ -30,9 +29,9 @@ class CompositeArchitecture:
 
     def init_genome_array(self, popsize):
         # TODO enable initgeno
-        array = rng.random(size=(popsize, *self.get_shape()), dtype=np.float32)
+        array = hermes.rng.random(size=(popsize, *self.get_shape()), dtype=np.float32)
 
-        for trait in TRAITS.values():
+        for trait in hermes.traits.values():
             array[:, :, trait.slice] = array[:, :, trait.slice] < trait.initgeno
 
         return array
@@ -48,7 +47,7 @@ class CompositeArchitecture:
             genomes = self.ploid.diploid_to_haploid(genomes)
 
         interpretome = np.zeros(shape=(genomes.shape[0], genomes.shape[1]), dtype=np.float32)
-        for trait in TRAITS.values():
+        for trait in hermes.traits.values():
             loci = genomes[:, trait.slice]  # fetch
             probs = self.interpreter.call(loci, trait.interpreter)  # interpret
             interpretome[:, trait.slice] += probs  # add back

@@ -1,13 +1,8 @@
-# TODO add to init; because this is initialized once; maybe somehow merge with genopheno architecture
-
-
 class Trait:
     """Genetic trait
 
     Contains data on traits encoded in the genome.
     """
-
-    legal = ("surv", "repr", "neut", "muta")
 
     def __init__(self, name, cnf):
         def get(key):
@@ -42,7 +37,9 @@ class Trait:
         # self.end = self.start + self.length
         # self.slice = slice(self.start, self.end)
 
-        self.start = cnf.MAX_LIFESPAN * {"surv": 0, "repr": 1, "muta": 2, "neut": 3}[self.name]
+        self.start = (
+            cnf.MAX_LIFESPAN * {"surv": 0, "repr": 1, "muta": 2, "neut": 3}[self.name]
+        )  # TODO this should not be here
         self.end = self.start + cnf.MAX_LIFESPAN
         self.slice = slice(self.start, self.end)
 

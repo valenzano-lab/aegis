@@ -1,5 +1,5 @@
 from dash import html, dcc
-from aegis.modules.setup import config
+from aegis.modules.setup.parameters import funcs
 from visor import funcs
 
 # TODO change text
@@ -14,7 +14,7 @@ texts_domain = {
     # "environment": "asdf",
 }
 
-assert set(config.get_domains()) == set(
+assert set(funcs.get_domains()) == set(
     texts_domain
 ), "Specified and expected domains do not match"
 
@@ -52,7 +52,7 @@ header = html.Tr(
 def get_config_layout():
     # Group parameters by domain
     subsets = {domain: [] for domain in texts_domain.keys()}
-    for param in config.params.values():
+    for param in funcs.params.values():
         subsets[param.domain].append(param)
 
     # Generate layout

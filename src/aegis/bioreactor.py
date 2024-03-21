@@ -1,31 +1,15 @@
 import numpy as np
 import logging
 
-from aegis.pan import cnf, rng, get_stage
-
-from aegis.modules.setup.config import causeofdeath_valid
-from aegis.modules.recording import recorder
+from aegis.constants import VALID_CAUSES_OF_DEATH
 from aegis.modules.dataclasses.population import Population
-from aegis.modules.init import abiotic, predation, starvation, infection, reproduction, architect
+from aegis.hermes import hermes
 
 
-class Ecosystem:
-    """Ecosystem
-
-    Contains all logic and data necessary to simulate one population.
-    """
-
-    def __init__(self, population=None):
-        # TODO when loading from a pickle, load the envmap too
-
-        # Initialize eggs
+class Bioreactor:
+    def __init__(self, population):
         self.eggs = None
-
-        # Initialize population
-        if population is not None:
-            self.population = population
-        else:
-            self.population = Population.initialize(N=cnf.MAX_POPULATION_SIZE)
+        self.population = population
 
     ##############
     # MAIN LOGIC #
@@ -37,7 +21,7 @@ class Ecosystem:
         # If extinct (no living individuals nor eggs left), do nothing
         if len(self) == 0:
             logging.debug("went extinct")
-            recorder.extinct = True
+            hermes.recorder.extinct = True
 
         # Mortality sources
         self.mortality_intrinsic()
@@ -49,45 +33,45 @@ class Ecosystem:
         self.reproduction()  # reproduction
         self.age()  # age increment and potentially death
         self.hatch()
-        architect.flipmap.evolve(stage=get_stage())
+        hermes.modules.architect.flipmap.evolve(stage=hermes.get_stage())
 
         # Record data
-        recorder.collect("additive_age_structure", self.population.ages)  # population census
-        recorder.record_pickle(self.population)
-        recorder.record_snapshots(self.population)
-        recorder.record_visor(self.population)
-        recorder.record_popgenstats(
-            self.population.genomes, architect.get_evaluation(self.population, "muta")
+        hermes.recorder.collect("additive_age_structure", self.population.ages)  # population census
+        hermes.recorder.record_pickle(self.population)
+        hermes.recorder.record_snapshots(self.population)
+        hermes.recorder.record_visor(self.population)
+        hermes.recorder.record_popgenstats(
+            self.population.genomes, hermes.modules.architect.get_evaluation(self.population, "muta")
         )  # TODO defers calculation of mutation rates; hacky
-        recorder.record_memory_use()
-        recorder.record_TE(self.population.ages, "alive")
+        hermes.recorder.record_memory_use()
+        hermes.recorder.record_TE(self.population.ages, "alive")
 
     ###############
     # STAGE LOGIC #
     ###############
 
     def mortality_intrinsic(self):
-        probs_surv = architect.get_evaluation(self.population, "surv")
-        mask_surv = rng.random(len(probs_surv), dtype=np.float32) < probs_surv
+        probs_surv = hermes.modules.architect.get_evaluation(self.population, "surv")
+        mask_surv = hermes.rng.random(len(probs_surv), dtype=np.float32) < probs_surv
         self._kill(mask_kill=~mask_surv, causeofdeath="intrinsic")
 
     def mortality_abiotic(self):
-        hazard = abiotic(get_stage())
-        mask_kill = rng.random(len(self.population), dtype=np.float32) < hazard
+        hazard = hermes.modules.abiotic(hermes.get_stage())
+        mask_kill = hermes.rng.random(len(self.population), dtype=np.float32) < hazard
         self._kill(mask_kill=mask_kill, causeofdeath="abiotic")
 
     def mortality_infection(self):
-        infection(self.population)
+        hermes.modules.infection(self.population)
         mask_kill = self.population.infection == -1
         self._kill(mask_kill=mask_kill, causeofdeath="infection")
 
     def mortality_predation(self):
-        probs_kill = predation(len(self))
-        mask_kill = rng.random(len(self), dtype=np.float32) < probs_kill
+        probs_kill = hermes.modules.predation(len(self))
+        mask_kill = hermes.rng.random(len(self), dtype=np.float32) < probs_kill
         self._kill(mask_kill=mask_kill, causeofdeath="predation")
 
     def mortality_starvation(self):
-        mask_kill = starvation(n=len(self.population))
+        mask_kill = hermes.modules.starvation(n=len(self.population))
         self._kill(mask_kill=mask_kill, causeofdeath="starvation")
 
     def reproduction(self):
@@ -97,19 +81,19 @@ class Ecosystem:
 
         # Check if fertile
         mask_fertile = (
-            self.population.ages >= cnf.MATURATION_AGE
+            self.population.ages >= hermes.parameters.MATURATION_AGE
         )  # Check if mature; mature if survived MATURATION_AGE full cycles
-        if cnf.MENOPAUSE > 0:
+        if hermes.parameters.MENOPAUSE > 0:
             mask_menopausal = (
-                self.population.ages >= cnf.MENOPAUSE
+                self.population.ages >= hermes.parameters.MENOPAUSE
             )  # Check if menopausal; menopausal when lived through MENOPAUSE full cycles
             mask_fertile = (mask_fertile) & (~mask_menopausal)
         if not any(mask_fertile):
             return
 
         # Check if reproducing
-        probs_repr = architect.get_evaluation(self.population, "repr", part=mask_fertile)
-        mask_repr = rng.random(len(probs_repr), dtype=np.float32) < probs_repr
+        probs_repr = hermes.modules.architect.get_evaluation(self.population, "repr", part=mask_fertile)
+        mask_repr = hermes.rng.random(len(probs_repr), dtype=np.float32) < probs_repr
 
         # Forgo if not at least two available parents
         if np.count_nonzero(mask_repr) < 2:
@@ -117,18 +101,20 @@ class Ecosystem:
 
         # Count ages at reproduction
         ages_repr = self.population.ages[mask_repr]
-        recorder.collect("age_at_birth", ages_repr)
+        hermes.recorder.collect("age_at_birth", ages_repr)
 
         # Increase births statistics
         self.population.births += mask_repr
 
         # Generate offspring genomes
         parental_genomes = self.population.genomes.get(individuals=mask_repr)  # parental genomes
-        muta_prob = architect.get_evaluation(self.population, "muta", part=mask_repr)[mask_repr]
-        offspring_genomes = reproduction.generate_offspring_genomes(genomes=parental_genomes, muta_prob=muta_prob)
+        muta_prob = hermes.modules.architect.get_evaluation(self.population, "muta", part=mask_repr)[mask_repr]
+        offspring_genomes = hermes.modules.reproduction.generate_offspring_genomes(
+            genomes=parental_genomes, muta_prob=muta_prob
+        )
 
         # Get eggs
-        eggs = Population.make_eggs(offspring_genomes=offspring_genomes, stage=get_stage())
+        eggs = Population.make_eggs(offspring_genomes=offspring_genomes, stage=hermes.get_stage())
         if self.eggs is None:
             self.eggs = eggs
         else:
@@ -140,7 +126,7 @@ class Ecosystem:
         MAX_LIFESPAN is the maximum number of full cycles an individual can go through.
         """
         self.population.ages += 1
-        mask_kill = self.population.ages >= cnf.MAX_LIFESPAN
+        mask_kill = self.population.ages >= hermes.parameters.MAX_LIFESPAN
         self._kill(mask_kill=mask_kill, causeofdeath="max_lifespan")
 
     def hatch(self):
@@ -152,9 +138,12 @@ class Ecosystem:
 
         # If something to hatch
         if (
-            (cnf.INCUBATION_PERIOD == -1 and len(self.population) == 0)  # hatch when everyone dead
-            or (cnf.INCUBATION_PERIOD == 0)  # hatch immediately
-            or (cnf.INCUBATION_PERIOD > 0 and get_stage() % cnf.INCUBATION_PERIOD == 0)  # hatch with delay
+            (hermes.parameters.INCUBATION_PERIOD == -1 and len(self.population) == 0)  # hatch when everyone dead
+            or (hermes.parameters.INCUBATION_PERIOD == 0)  # hatch immediately
+            or (
+                hermes.parameters.INCUBATION_PERIOD > 0
+                and hermes.get_stage() % hermes.parameters.INCUBATION_PERIOD == 0
+            )  # hatch with delay
         ):
             self.population += self.eggs
             self.eggs = None
@@ -166,7 +155,7 @@ class Ecosystem:
     def _kill(self, mask_kill, causeofdeath):
         """Kill individuals and record their data."""
 
-        assert causeofdeath in causeofdeath_valid
+        assert causeofdeath in VALID_CAUSES_OF_DEATH
 
         # Skip if no one to kill
         if not any(mask_kill):
@@ -175,8 +164,8 @@ class Ecosystem:
         # Count ages at death
         if causeofdeath != "max_lifespan":
             ages_death = self.population.ages[mask_kill]
-            recorder.collect(f"age_at_{causeofdeath}", ages_death)
-            recorder.record_TE(ages_death, "dead")
+            hermes.recorder.collect(f"age_at_{causeofdeath}", ages_death)
+            hermes.recorder.record_TE(ages_death, "dead")
 
         # Retain survivors
         self.population *= ~mask_kill

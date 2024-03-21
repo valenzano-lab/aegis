@@ -1,46 +1,12 @@
-from aegis.modules.setup.param import Param
-
-causeofdeath_valid = (
-    "intrinsic",
-    "abiotic",
-    "infection",
-    "predation",
-    "starvation",
-    "max_lifespan",
-)
+from aegis.modules.initialization.parameterization.parameter import Parameter
 
 
 def get_default_parameters():
-    return {p.key: p.default for p in params.values()}
-
-
-def set_cnf_to_default():
-    from aegis.pan import cnf
-
-    for k, v in get_default_parameters().items():
-        setattr(cnf, k, v)
-
-
-def get_domains():
-    return {p.domain for p in params.values()}
-
-
-def validate(pdict, validate_resrange=False):
-    for key, val in pdict.items():
-        # Validate key
-        if all(key != p.key for p in params.values()):
-            raise ValueError(f"'{key}' is not a valid parameter name")
-
-        # Validate value type and range
-        params[key].validate_dtype(val)
-        params[key].validate_inrange(val)
-
-        if validate_resrange:
-            params[key].validate_resrange(val)
+    return {p.key: p.default for p in DEFAULT_PARAMETERS.values()}
 
 
 # You need the keys so you can find the param (in a list, you cannot)
-params = {
+DEFAULT_PARAMETERS = {
     # "": Param(
     #     key="",
     #     name="",
@@ -51,7 +17,7 @@ params = {
     #     drange="[0,inf)",
     #     inrange=lambda x: x >= 0,
     # ),
-    "RANDOM_SEED": Param(
+    "RANDOM_SEED": Parameter(
         key="RANDOM_SEED",
         name="",
         domain="recording",
@@ -61,7 +27,7 @@ params = {
         drange="{None, (-inf, inf)}",
         inrange=lambda x: True,
     ),
-    "STAGES_PER_SIMULATION": Param(
+    "STAGES_PER_SIMULATION": Parameter(
         key="STAGES_PER_SIMULATION",
         name="",
         domain="recording",
@@ -74,7 +40,7 @@ params = {
         resrange_info="[1,1000000]",
         evalrange=[1, 10000000],
     ),
-    "LOGGING_RATE": Param(
+    "LOGGING_RATE": Parameter(
         key="LOGGING_RATE",
         name="",
         domain="recording",
@@ -85,7 +51,7 @@ params = {
         inrange=lambda x: x >= 0,
         evalrange=[1, 10000],
     ),
-    "PICKLE_RATE": Param(
+    "PICKLE_RATE": Parameter(
         key="PICKLE_RATE",
         name="",
         domain="recording",
@@ -98,7 +64,7 @@ params = {
         resrange_info="0 or [1000, inf)",
         evalrange=[1, 10000],
     ),
-    "SNAPSHOT_RATE": Param(
+    "SNAPSHOT_RATE": Parameter(
         key="SNAPSHOT_RATE",
         name="",
         domain="recording",
@@ -111,7 +77,7 @@ params = {
         resrange_info="0 or [1000, inf)",
         evalrange=[1, 10000],
     ),
-    "VISOR_RATE": Param(
+    "VISOR_RATE": Parameter(
         key="VISOR_RATE",
         name="",
         domain="recording",
@@ -122,7 +88,7 @@ params = {
         inrange=lambda x: x >= 0,
         evalrange=[1, 10000],
     ),
-    "TE_RATE": Param(
+    "TE_RATE": Parameter(
         key="TE_RATE",
         name="",
         domain="recording",
@@ -133,7 +99,7 @@ params = {
         inrange=lambda x: x >= 0,
         evalrange=[1, 10000],
     ),
-    "TE_DURATION": Param(
+    "TE_DURATION": Parameter(
         key="TE_DURATION",
         name="",
         domain="recording",
@@ -144,7 +110,7 @@ params = {
         inrange=lambda x: x >= 0,
         evalrange=[1, 10000],
     ),
-    "POPGENSTATS_RATE": Param(
+    "POPGENSTATS_RATE": Parameter(
         key="POPGENSTATS_RATE",
         name="",
         domain="recording",
@@ -157,7 +123,7 @@ params = {
         resrange_info="0 or [100, inf)",
         evalrange=[1, 10000],
     ),
-    "POPGENSTATS_SAMPLE_SIZE": Param(
+    "POPGENSTATS_SAMPLE_SIZE": Parameter(
         key="POPGENSTATS_SAMPLE_SIZE",
         name="",
         domain="recording",
@@ -167,19 +133,19 @@ params = {
         drange="{0, [3, inf)}",
         inrange=lambda x: x == 0 or x >= 3,
     ),
-    "ECOSYSTEM_NUMBER": Param(
-        key="ECOSYSTEM_NUMBER",
-        name="",
-        domain="ecology",
-        default=1,
-        info="Number of subpopulations",
-        dtype=int,
-        drange="[1, inf)",
-        inrange=lambda x: x >= 1,
-        resrange=lambda x: x == 1,
-        resrange_info="1",
-    ),
-    "MAX_POPULATION_SIZE": Param(
+    # "ECOSYSTEM_NUMBER": Param(
+    #     key="ECOSYSTEM_NUMBER",
+    #     name="",
+    #     domain="ecology",
+    #     default=1,
+    #     info="Number of subpopulations",
+    #     dtype=int,
+    #     drange="[1, inf)",
+    #     inrange=lambda x: x >= 1,
+    #     resrange=lambda x: x == 1,
+    #     resrange_info="1",
+    # ),
+    "MAX_POPULATION_SIZE": Parameter(
         key="MAX_POPULATION_SIZE",
         name="",
         domain="ecology",
@@ -192,7 +158,7 @@ params = {
         resrange_info="[1,100000]",
         evalrange=[1, 1000000],
     ),
-    "STARVATION_RESPONSE": Param(
+    "STARVATION_RESPONSE": Parameter(
         key="STARVATION_RESPONSE",
         name="",
         domain="ecology",
@@ -209,7 +175,7 @@ params = {
             "treadmill_boomer",
         ),
     ),
-    "STARVATION_MAGNITUDE": Param(
+    "STARVATION_MAGNITUDE": Parameter(
         key="STARVATION_MAGNITUDE",
         name="",
         domain="ecology",
@@ -219,7 +185,7 @@ params = {
         drange="(0,1)",
         inrange=lambda x: 0 <= x <= 1,
     ),
-    "CLIFF_SURVIVORSHIP": Param(
+    "CLIFF_SURVIVORSHIP": Parameter(
         key="CLIFF_SURVIVORSHIP",
         name="",
         domain="ecology",
@@ -229,7 +195,7 @@ params = {
         drange="{None, (0,1)}",
         inrange=lambda x: x is None or (0 < x < 1),
     ),
-    "INCUBATION_PERIOD": Param(
+    "INCUBATION_PERIOD": Parameter(
         key="INCUBATION_PERIOD",
         name="",
         domain="ecology",
@@ -239,7 +205,7 @@ params = {
         drange="[-1, inf)",
         inrange=lambda x: x >= -1,
     ),
-    "MAX_LIFESPAN": Param(
+    "MAX_LIFESPAN": Parameter(
         key="MAX_LIFESPAN",
         name="",
         domain="genetics",
@@ -252,7 +218,7 @@ params = {
         resrange_info="[1,100]",
         evalrange=[15, 100],
     ),
-    "MATURATION_AGE": Param(
+    "MATURATION_AGE": Parameter(
         key="MATURATION_AGE",
         name="",
         domain="genetics",
@@ -263,7 +229,7 @@ params = {
         inrange=lambda x: x >= 1,
         evalrange=[0, 50],
     ),
-    "MENOPAUSE": Param(
+    "MENOPAUSE": Parameter(
         key="MENOPAUSE",
         name="",
         domain="genetics",
@@ -273,7 +239,7 @@ params = {
         drange="[0, inf)",
         inrange=lambda x: x >= 0,
     ),
-    "GENOME_FREE": Param(
+    "GENOME_FREE": Parameter(
         key="GENOME_FREE",
         name="",
         domain="genetics",
@@ -283,7 +249,7 @@ params = {
         drange="",
         inrange=lambda x: True,
     ),
-    "BITS_PER_LOCUS": Param(
+    "BITS_PER_LOCUS": Parameter(
         key="BITS_PER_LOCUS",
         name="",
         domain="genetics",
@@ -296,7 +262,7 @@ params = {
         resrange_info="[1,10]",
         evalrange=[1, 100],
     ),
-    "HEADSUP": Param(
+    "HEADSUP": Parameter(
         key="HEADSUP",
         name="",
         domain="initialization",
@@ -306,7 +272,7 @@ params = {
         drange="{-1, 0, [1, inf)}",
         inrange=lambda x: x in (-1, 0) or x >= 1,
     ),
-    "REPRODUCTION_MODE": Param(
+    "REPRODUCTION_MODE": Parameter(
         key="REPRODUCTION_MODE",
         name="",
         domain="genetics",
@@ -316,7 +282,7 @@ params = {
         drange="{sexual, asexual, asexual_diploid}",
         inrange=lambda x: x in ("sexual", "asexual", "asexual_diploid"),
     ),
-    "RECOMBINATION_RATE": Param(
+    "RECOMBINATION_RATE": Parameter(
         key="RECOMBINATION_RATE",
         name="",
         domain="genetics",
@@ -327,7 +293,7 @@ params = {
         inrange=lambda x: x >= 0,
         evalrange=[0, 1],
     ),
-    "MUTATION_RATIO": Param(
+    "MUTATION_RATIO": Parameter(
         key="MUTATION_RATIO",
         name="",
         domain="genetics",
@@ -337,7 +303,7 @@ params = {
         drange="[0, inf)",
         inrange=lambda x: x >= 0,
     ),
-    "MUTATION_METHOD": Param(
+    "MUTATION_METHOD": Parameter(
         key="MUTATION_METHOD",
         name="",
         domain="computation",
@@ -347,7 +313,7 @@ params = {
         drange="{by_bit, by_index}",
         inrange=lambda x: x in ("by_bit", "by_index"),
     ),
-    "DOMINANCE_FACTOR": Param(
+    "DOMINANCE_FACTOR": Parameter(
         key="DOMINANCE_FACTOR",
         name="",
         domain="genetics",
@@ -357,7 +323,7 @@ params = {
         drange="[0, inf)",
         inrange=lambda x: x >= 0,
     ),
-    "PHENOMAP_METHOD": Param(
+    "PHENOMAP_METHOD": Parameter(
         key="PHENOMAP_METHOD",
         name="",
         domain="computation",
@@ -367,7 +333,7 @@ params = {
         drange="{by_loop, by_dot, by_dummy}",
         inrange=lambda x: x in ("by_loop", "by_dot", "by_dummy"),
     ),
-    "FLIPMAP_CHANGE_RATE": Param(
+    "FLIPMAP_CHANGE_RATE": Parameter(
         key="FLIPMAP_CHANGE_RATE",
         name="",
         domain="ecology",
@@ -377,7 +343,7 @@ params = {
         drange="[0, inf)",
         inrange=lambda x: x >= 0,
     ),
-    "ABIOTIC_HAZARD_AMPLITUDE": Param(
+    "ABIOTIC_HAZARD_AMPLITUDE": Parameter(
         key="ABIOTIC_HAZARD_AMPLITUDE",
         name="",
         domain="environment",
@@ -387,7 +353,7 @@ params = {
         drange="[0, inf)",
         inrange=lambda x: x >= 0,
     ),
-    "ABIOTIC_HAZARD_PERIOD": Param(
+    "ABIOTIC_HAZARD_PERIOD": Parameter(
         key="ABIOTIC_HAZARD_PERIOD",
         name="",
         domain="environment",
@@ -397,7 +363,7 @@ params = {
         drange="[1, inf)",
         inrange=lambda x: x >= 1,
     ),
-    "ABIOTIC_HAZARD_OFFSET": Param(
+    "ABIOTIC_HAZARD_OFFSET": Parameter(
         key="ABIOTIC_HAZARD_OFFSET",
         name="",
         domain="environment",
@@ -407,7 +373,7 @@ params = {
         drange="[0, inf)",
         inrange=lambda x: x >= 0,
     ),
-    "ABIOTIC_HAZARD_SHAPE": Param(
+    "ABIOTIC_HAZARD_SHAPE": Parameter(
         key="ABIOTIC_HAZARD_SHAPE",
         name="",
         domain="environment",
@@ -417,7 +383,7 @@ params = {
         drange="{sinusoidal, flat, triangle, square, sawtooth, ramp, instant}",
         inrange=lambda x: x in {"sinusoidal", "flat", "triangle", "square", "sawtooth", "ramp", "instant"},
     ),
-    "BACKGROUND_INFECTIVITY": Param(
+    "BACKGROUND_INFECTIVITY": Parameter(
         key="BACKGROUND_INFECTIVITY",
         name="",
         domain="infection",
@@ -427,7 +393,7 @@ params = {
         drange="[0,inf)",
         inrange=lambda x: x >= 0,
     ),
-    "TRANSMISSIBILITY": Param(
+    "TRANSMISSIBILITY": Parameter(
         key="TRANSMISSIBILITY",
         name="",
         domain="infection",
@@ -437,7 +403,7 @@ params = {
         drange="[0,inf)",
         inrange=lambda x: x >= 0,
     ),
-    "RECOVERY_RATE": Param(
+    "RECOVERY_RATE": Parameter(
         key="RECOVERY_RATE",
         name="",
         domain="infection",
@@ -447,7 +413,7 @@ params = {
         drange="[0,inf)",
         inrange=lambda x: x >= 0,
     ),
-    "FATALITY_RATE": Param(
+    "FATALITY_RATE": Parameter(
         key="FATALITY_RATE",
         name="",
         domain="infection",
@@ -457,7 +423,7 @@ params = {
         drange="[0,inf)",
         inrange=lambda x: x >= 0,
     ),
-    "PREDATION_RATE": Param(
+    "PREDATION_RATE": Parameter(
         key="PREDATION_RATE",
         name="",
         domain="predation",
@@ -467,7 +433,7 @@ params = {
         drange="[0, inf)",
         inrange=lambda x: x >= 0,
     ),
-    "PREDATOR_GROWTH": Param(
+    "PREDATOR_GROWTH": Parameter(
         key="PREDATOR_GROWTH",
         name="",
         domain="predation",
@@ -477,7 +443,7 @@ params = {
         drange="[0,inf)",
         inrange=lambda x: x >= 0,
     ),
-    "G_surv_evolvable": Param(
+    "G_surv_evolvable": Parameter(
         key="G_surv_evolvable",
         name="",
         domain="genetics",
@@ -487,7 +453,7 @@ params = {
         drange="",
         inrange=lambda x: True,
     ),
-    "G_surv_agespecific": Param(
+    "G_surv_agespecific": Parameter(
         key="G_surv_agespecific",
         name="",
         domain="genetics",
@@ -497,7 +463,7 @@ params = {
         drange="",
         inrange=lambda x: True,
     ),
-    "G_surv_interpreter": Param(
+    "G_surv_interpreter": Parameter(
         key="G_surv_interpreter",
         name="",
         domain="genetics",
@@ -506,7 +472,7 @@ params = {
         dtype=str,
         drange="",
     ),
-    "G_surv_lo": Param(
+    "G_surv_lo": Parameter(
         key="G_surv_lo",
         name="",
         domain="genetics",
@@ -515,7 +481,7 @@ params = {
         dtype=float,
         drange="",
     ),
-    "G_surv_hi": Param(
+    "G_surv_hi": Parameter(
         key="G_surv_hi",
         name="",
         domain="genetics",
@@ -524,7 +490,7 @@ params = {
         dtype=float,
         drange="",
     ),
-    "G_surv_initgeno": Param(
+    "G_surv_initgeno": Parameter(
         key="G_surv_initgeno",
         name="",
         domain="initialization",
@@ -533,7 +499,7 @@ params = {
         dtype=float,
         drange="",
     ),
-    "G_surv_initpheno": Param(
+    "G_surv_initpheno": Parameter(
         key="G_surv_initpheno",
         name="",
         domain="initialization",
@@ -542,7 +508,7 @@ params = {
         dtype=float,
         drange="",
     ),
-    "G_repr_evolvable": Param(
+    "G_repr_evolvable": Parameter(
         key="G_repr_evolvable",
         name="",
         domain="genetics",
@@ -551,7 +517,7 @@ params = {
         dtype=bool,
         drange="",
     ),
-    "G_repr_agespecific": Param(
+    "G_repr_agespecific": Parameter(
         key="G_repr_agespecific",
         name="",
         domain="genetics",
@@ -560,7 +526,7 @@ params = {
         dtype=bool,
         drange="",
     ),
-    "G_repr_interpreter": Param(
+    "G_repr_interpreter": Parameter(
         key="G_repr_interpreter",
         name="",
         domain="genetics",
@@ -569,7 +535,7 @@ params = {
         dtype=str,
         drange="",
     ),
-    "G_repr_lo": Param(
+    "G_repr_lo": Parameter(
         key="G_repr_lo",
         name="",
         domain="genetics",
@@ -578,7 +544,7 @@ params = {
         dtype=float,
         drange="",
     ),
-    "G_repr_hi": Param(
+    "G_repr_hi": Parameter(
         key="G_repr_hi",
         name="",
         domain="genetics",
@@ -588,7 +554,7 @@ params = {
         drange="",
         evalrange=[0.5, 1],
     ),
-    "G_repr_initgeno": Param(
+    "G_repr_initgeno": Parameter(
         key="G_repr_initgeno",
         name="",
         domain="initialization",
@@ -597,7 +563,7 @@ params = {
         dtype=float,
         drange="",
     ),
-    "G_repr_initpheno": Param(
+    "G_repr_initpheno": Parameter(
         key="G_repr_initpheno",
         name="",
         domain="initialization",
@@ -606,7 +572,7 @@ params = {
         dtype=float,
         drange="",
     ),
-    "G_neut_evolvable": Param(
+    "G_neut_evolvable": Parameter(
         key="G_neut_evolvable",
         name="",
         domain="genetics",
@@ -615,7 +581,7 @@ params = {
         dtype=bool,
         drange="",
     ),
-    "G_neut_agespecific": Param(
+    "G_neut_agespecific": Parameter(
         key="G_neut_agespecific",
         name="",
         domain="genetics",
@@ -624,7 +590,7 @@ params = {
         dtype=bool,
         drange="",
     ),
-    "G_neut_interpreter": Param(
+    "G_neut_interpreter": Parameter(
         key="G_neut_interpreter",
         name="",
         domain="genetics",
@@ -633,7 +599,7 @@ params = {
         dtype=str,
         drange="",
     ),
-    "G_neut_lo": Param(
+    "G_neut_lo": Parameter(
         key="G_neut_lo",
         name="",
         domain="genetics",
@@ -642,7 +608,7 @@ params = {
         dtype=float,
         drange="",
     ),
-    "G_neut_hi": Param(
+    "G_neut_hi": Parameter(
         key="G_neut_hi",
         name="",
         domain="genetics",
@@ -651,7 +617,7 @@ params = {
         dtype=float,
         drange="",
     ),
-    "G_neut_initgeno": Param(
+    "G_neut_initgeno": Parameter(
         key="G_neut_initgeno",
         name="",
         domain="initialization",
@@ -660,7 +626,7 @@ params = {
         dtype=float,
         drange="",
     ),
-    "G_neut_initpheno": Param(
+    "G_neut_initpheno": Parameter(
         key="G_neut_initpheno",
         name="",
         domain="initialization",
@@ -669,7 +635,7 @@ params = {
         dtype=float,
         drange="",
     ),
-    "G_muta_evolvable": Param(
+    "G_muta_evolvable": Parameter(
         key="G_muta_evolvable",
         name="",
         domain="genetics",
@@ -678,7 +644,7 @@ params = {
         dtype=bool,
         drange="",
     ),
-    "G_muta_agespecific": Param(
+    "G_muta_agespecific": Parameter(
         key="G_muta_agespecific",
         name="",
         domain="genetics",
@@ -687,7 +653,7 @@ params = {
         dtype=bool,
         drange="",
     ),
-    "G_muta_interpreter": Param(
+    "G_muta_interpreter": Parameter(
         key="G_muta_interpreter",
         name="",
         domain="genetics",
@@ -696,7 +662,7 @@ params = {
         dtype=str,
         drange="",
     ),
-    "G_muta_lo": Param(
+    "G_muta_lo": Parameter(
         key="G_muta_lo",
         name="",
         domain="genetics",
@@ -705,7 +671,7 @@ params = {
         dtype=float,
         drange="",
     ),
-    "G_muta_hi": Param(
+    "G_muta_hi": Parameter(
         key="G_muta_hi",
         name="",
         domain="genetics",
@@ -714,7 +680,7 @@ params = {
         dtype=float,
         drange="",
     ),
-    "G_muta_initgeno": Param(
+    "G_muta_initgeno": Parameter(
         key="G_muta_initgeno",
         name="",
         domain="initialization",
@@ -723,7 +689,7 @@ params = {
         dtype=float,
         drange="",
     ),
-    "G_muta_initpheno": Param(
+    "G_muta_initpheno": Parameter(
         key="G_muta_initpheno",
         name="",
         domain="initialization",
@@ -732,7 +698,7 @@ params = {
         dtype=float,
         drange="",
     ),
-    "THRESHOLD": Param(
+    "THRESHOLD": Parameter(
         key="THRESHOLD",
         name="",
         domain="genetics",
@@ -741,7 +707,7 @@ params = {
         dtype=int,
         drange="",
     ),
-    "PHENOMAP_SPECS": Param(
+    "PHENOMAP_SPECS": Parameter(
         key="PHENOMAP_SPECS",
         name="",
         domain="genetics",
@@ -750,7 +716,7 @@ params = {
         dtype=list,
         drange="",
     ),
-    "PHENOMAP": Param(
+    "PHENOMAP": Parameter(
         key="PHENOMAP",
         name="",
         domain="genetics",
@@ -759,7 +725,7 @@ params = {
         dtype=dict,
         drange="",
     ),
-    "NOTES": Param(
+    "NOTES": Parameter(
         key="NOTES",
         name="",
         domain="recording",

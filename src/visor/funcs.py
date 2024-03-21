@@ -5,7 +5,7 @@ import pathlib
 import yaml
 import logging
 
-from aegis.modules.setup import config
+from aegis.modules.setup.parameters import funcs
 
 
 def get_here():
@@ -35,7 +35,7 @@ def make_config_file(filename, configs):
     configs["PHENOMAP_SPECS"] = []
     configs["NOTES"] = []
     for k, v in configs.items():
-        configs[k] = config.params[k].convert(v)
+        configs[k] = funcs.DEFAULT_PARAMETERS[k].convert(v)
     logging.info("making config file")
     config_path = get_config_path(filename)
     with open(config_path, "w") as file_:

@@ -1,5 +1,5 @@
 from dash import html, dcc
-from aegis.modules.setup import config
+from aegis.modules.setup.parameters import funcs
 from visor import funcs
 
 # # TODO change text

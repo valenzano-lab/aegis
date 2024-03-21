@@ -1,7 +1,7 @@
 import functools
 import numpy as np
 
-from aegis.pan import rng
+from aegis.hermes import hermes
 
 
 class GPM_decoder:
@@ -90,7 +90,7 @@ class Genblock:
         for i in range(self.n):
             func = Genblock.__resolve_function(encoding["agefunc"], encoding["funcparam"])
             if encoding["agefunc"] == "agespec":
-                age = rng.integers(0, self.MAX_LIFESPAN)
+                age = hermes.rng.integers(0, self.MAX_LIFESPAN)
                 magnitude = func(age)
                 add_to_phenolist(i, encoding["trait"], age, magnitude)
             else:
@@ -125,10 +125,10 @@ class Genblock:
 
         def _normal(pair):
             mean, std = pair
-            return rng.normal(mean, std)
+            return hermes.rng.normal(mean, std)
 
         def _exponential(param):
-            return rng.exponential(param)
+            return hermes.rng.exponential(param)
 
         if func == "const" or func == "agespec":
             return functools.partial(const, _exponential(params[0]))

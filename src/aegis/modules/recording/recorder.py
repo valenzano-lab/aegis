@@ -16,337 +16,357 @@ import copy
 import psutil
 import subprocess
 import logging
+import pathlib
+import shutil
 
-from aegis.pan import cnf
-from aegis import pan
-from aegis.pan import var
+from aegis.hermes import hermes
 from aegis.modules.recording.popgenstats import PopgenStats
-from aegis.modules.setup.config import causeofdeath_valid
-
-from aegis.modules.init import architect
+from aegis.constants import VALID_CAUSES_OF_DEATH
 
 
-def get_dhm(timediff):
-    """Format time in a human-readable format."""
-    d = int(timediff / 86400)
-    timediff %= 86400
-    h = int(timediff / 3600)
-    timediff %= 3600
-    m = int(timediff / 60)
-    return f"{d}`{h:02}:{m:02}"
+class Recorder:
+    def __init__(self, custom_config_path, overwrite):
+        self.progress_path = None  # TODO
 
+        self.time_start = time.time()
 
-def _log_progress(popsize="?"):
-    """Record some information about the time and speed of simulation."""
+        self.output_path = self.initialize_output_directory(custom_config_path=custom_config_path, overwrite=overwrite)
+        self.paths = {
+            "BASE_DIR": self.output_path,
+            "snapshots_genotypes": self.output_path / "snapshots" / "genotypes",
+            "snapshots_phenotypes": self.output_path / "snapshots" / "phenotypes",
+            "snapshots_demography": self.output_path / "snapshots" / "demography",
+            "visor": self.output_path / "visor",
+            "visor_spectra": self.output_path / "visor" / "spectra",
+            "input_summary": self.output_path,
+            "output_summary": self.output_path,
+            "pickles": self.output_path / "pickles",
+            "popgen": self.output_path / "popgen",
+            "phenomap": self.output_path,
+            "te": self.output_path / "te",
+        }
 
-    if pan.skip(cnf.LOGGING_RATE):
-        return
+        for path in self.paths.values():
+            path.mkdir(exist_ok=True, parents=True)
 
-    stage = pan.get_stage()
+        # Initialize collection
+        self._collection = {
+            "age_at_birth": [0] * hermes.parameters.MAX_LIFESPAN,
+            "additive_age_structure": [0] * hermes.parameters.MAX_LIFESPAN,
+        }
 
-    logging.info("%8s / %s / N=%s", stage, cnf.STAGES_PER_SIMULATION, popsize)
+        self._collection.update(
+            {f"age_at_{causeofdeath}": [0] * hermes.parameters.MAX_LIFESPAN for causeofdeath in VALID_CAUSES_OF_DEATH}
+        )
 
-    # Get time estimations
-    time_diff = time.time() - pan.time_start
+        self.collection = copy.deepcopy(self._collection)
 
-    seconds_per_100 = time_diff / stage * 100
-    eta = (cnf.STAGES_PER_SIMULATION - stage) / 100 * seconds_per_100
+        # Needed for output summary
+        self.extinct = False
 
-    stages_per_min = int(stage / (time_diff / 60))
+        # Memory utilization
+        self.memory_use = []
+        self.psutil_process = psutil.Process()
 
-    runtime = get_dhm(time_diff)
-    time_per_1M = get_dhm(time_diff / stage * 1000000)
-    eta = get_dhm(eta)
+        # PopgenStats
+        self.popgenstats = PopgenStats()
 
-    # Save time estimations
-    content = (stage, eta, time_per_1M, runtime, stages_per_min, popsize)
-    with open(pan.progress_path, "ab") as f:
-        np.savetxt(f, [content], fmt="%-10s", delimiter="| ")
+        # other
+        self.te_record_number = 0
 
+        # Add headers
+        for key in self._collection.keys():
+            with open(self.paths["visor_spectra"] / f"{key}.csv", "ab") as f:
+                array = np.arange(hermes.parameters.MAX_LIFESPAN)
+                np.savetxt(f, [array], delimiter=",", fmt="%i")
 
-logging.info(pan.output_path)
-opath = pan.output_path
-paths = {
-    "BASE_DIR": opath,
-    "snapshots_genotypes": opath / "snapshots" / "genotypes",
-    "snapshots_phenotypes": opath / "snapshots" / "phenotypes",
-    "snapshots_demography": opath / "snapshots" / "demography",
-    "visor": opath / "visor",
-    "visor_spectra": opath / "visor" / "spectra",
-    "input_summary": opath,
-    "output_summary": opath,
-    "pickles": opath / "pickles",
-    "popgen": opath / "popgen",
-    "phenomap": opath,
-    "te": opath / "te",
-}
-for path in paths.values():
-    path.mkdir(exist_ok=True, parents=True)
-
-# Initialize collection
-_collection = {
-    "age_at_birth": [0] * cnf.MAX_LIFESPAN,
-    "additive_age_structure": [0] * cnf.MAX_LIFESPAN,
-}
-
-_collection.update({f"age_at_{causeofdeath}": [0] * cnf.MAX_LIFESPAN for causeofdeath in causeofdeath_valid})
-
-collection = copy.deepcopy(_collection)
-
-# Needed for output summary
-extinct = False
-
-# Memory utilization
-memory_use = []
-psutil_process = psutil.Process()
-
-# PopgenStats
-popgenstats = PopgenStats()
-
-# other
-te_record_number = 0
-
-# Add headers
-for key in _collection.keys():
-    with open(paths["visor_spectra"] / f"{key}.csv", "ab") as f:
-        array = np.arange(cnf.MAX_LIFESPAN)
-        np.savetxt(f, [array], delimiter=",", fmt="%i")
-
-with open(paths["visor"] / "genotypes.csv", "ab") as f:
-    array = np.arange(architect.architecture.get_number_of_bits())  # (ploidy, length, bits_per_locus)
-    np.savetxt(f, [array], delimiter=",", fmt="%i")
-
-with open(paths["visor"] / "phenotypes.csv", "ab") as f:
-    array = np.arange(architect.architecture.get_number_of_phenotypic_values())  # number of phenotypic values
-    np.savetxt(f, [array], delimiter=",", fmt="%i")
-
-# ===============================
-# RECORDING METHOD I. (snapshots)
-# ===============================
-
-
-def record_memory_use():
-    # TODO refine
-    memory_use_ = psutil_process.memory_info()[0] / float(2**20)
-    memory_use.append(memory_use_)
-    if len(memory_use) > 1000:
-        memory_use.pop(0)
-
-
-def record_visor(population):
-    """Record data that is needed by visor."""
-    if pan.skip(cnf.VISOR_RATE) or len(population) == 0:
-        return
-
-    # genotypes.csv | Record allele frequency
-    with open(paths["visor"] / "genotypes.csv", "ab") as f:
-        array = population.genomes.flatten().mean(0)
-        np.savetxt(f, [array], delimiter=",", fmt="%1.3e")
-
-    # phenotypes.csv | Record median phenotype
-    with open(paths["visor"] / "phenotypes.csv", "ab") as f:
-        array = np.median(population.phenotypes, 0)
-        np.savetxt(f, [array], delimiter=",", fmt="%1.3e")
-
-    flush()
-
-
-def record_snapshots(population):
-    """Record demographic, genetic and phenotypic data from the current population."""
-    if pan.skip(cnf.SNAPSHOT_RATE) or len(population) == 0:
-        return
-
-    stage = pan.get_stage()
-
-    logging.debug(f"Snapshots recorded at stage {stage}")
-
-    # genotypes
-    df_gen = pd.DataFrame(np.array(population.genomes.flatten()))
-    df_gen.reset_index(drop=True, inplace=True)
-    df_gen.columns = [str(c) for c in df_gen.columns]
-    df_gen.to_feather(paths["snapshots_genotypes"] / f"{stage}.feather")
-
-    # phenotypes
-    df_phe = pd.DataFrame(np.array(population.phenotypes))
-    df_phe.reset_index(drop=True, inplace=True)
-    df_phe.columns = [str(c) for c in df_phe.columns]
-    df_phe.to_feather(paths["snapshots_phenotypes"] / f"{stage}.feather")
-
-    # demography
-    dem_attrs = ["ages", "births", "birthdays"]
-    demo = {attr: getattr(population, attr) for attr in dem_attrs}
-    df_dem = pd.DataFrame(demo, columns=dem_attrs)
-    df_dem.reset_index(drop=True, inplace=True)
-    df_dem.to_feather(paths["snapshots_demography"] / f"{stage}.feather")
-
-
-def record_popgenstats(genomes, mutation_rates):
-    """Record population size in popgenstats, and record popgen statistics."""
-    popgenstats.record_pop_size_history(genomes.array)
-
-    if pan.skip(cnf.POPGENSTATS_RATE) or len(genomes) == 0:
-        return
-
-    popgenstats.calc(genomes.array, mutation_rates)
-
-    # Record simple statistics
-    array = list(popgenstats.emit_simple().values())
-    if None in array:
-        return
-
-    with open(paths["popgen"] / "simple.csv", "ab") as f:
-        np.savetxt(f, [array], delimiter=",", fmt="%1.3e")
-
-    # Record complex statistics
-    complex_statistics = popgenstats.emit_complex()
-    for key, array in complex_statistics.items():
-        with open(paths["popgen"] / f"{key}.csv", "ab") as f:
-            np.savetxt(f, [array], delimiter=",", fmt="%1.3e")
-
-
-def record_pickle(population):
-
-    stage = pan.get_stage()
-
-    if pan.skip(cnf.PICKLE_RATE) and not stage == 1:  # Also records the pickle before the first stage
-        return
-
-    logging.debug(f"pickle recorded at stage {stage}")
-
-    pickle_path = paths["pickles"] / str(stage)
-    population.save_pickle_to(pickle_path)
-
-
-# ==============================
-# RECORDING METHOD II. (flushes)
-# ==============================
-
-
-def collect(key, ages):
-    """Add data into memory which will be recorded later."""
-    collection[key] += np.bincount(ages, minlength=cnf.MAX_LIFESPAN)
-
-
-def flush():
-    """Record data that has been collected over time."""
-    # spectra/*.csv | Age distribution of various subpopulations (e.g. population that died of genetic causes)
-
-    global collection
-
-    for key, val in collection.items():
-        with open(paths["visor_spectra"] / f"{key}.csv", "ab") as f:
-            array = np.array(val)
+        with open(self.paths["visor"] / "genotypes.csv", "ab") as f:
+            array = np.arange(
+                hermes.modules.architect.architecture.get_number_of_bits()
+            )  # (ploidy, length, bits_per_locus)
             np.savetxt(f, [array], delimiter=",", fmt="%i")
 
-    # Reinitialize the collection
-    collection = copy.deepcopy(_collection)
+        with open(self.paths["visor"] / "phenotypes.csv", "ab") as f:
+            array = np.arange(
+                hermes.modules.architect.architecture.get_number_of_phenotypic_values()
+            )  # number of phenotypic values
+            np.savetxt(f, [array], delimiter=",", fmt="%i")
 
+        if hasattr(hermes.modules.architect.architecture, "phenomap"):
+            self.record_phenomap(hermes.modules.architect.architecture.phenomap.phenolist)
 
-# =================================
-# RECORDING METHOD III. (record once)
-# =================================
+    @staticmethod
+    def initialize_output_directory(custom_config_path, overwrite) -> pathlib.Path:
+        output_path = custom_config_path.parent / custom_config_path.stem  # remove .yml
+        is_occupied = output_path.exists() and output_path.is_dir()
+        if is_occupied:
+            if overwrite:
+                shutil.rmtree(output_path)
+            else:
+                raise Exception(f"{output_path} already exists. To overwrite, add flag --overwrite or -o.")
+        return output_path
 
+    @staticmethod
+    def get_dhm(timediff):
+        """Format time in a human-readable format."""
+        d = int(timediff / 86400)
+        timediff %= 86400
+        h = int(timediff / 3600)
+        timediff %= 3600
+        m = int(timediff / 60)
+        return f"{d}`{h:02}:{m:02}"
 
-def record_phenomap(phenolist):
-    if phenolist:
-        pd.DataFrame(phenolist).to_csv(
-            paths["phenomap"] / "phenomap.csv", index=None, header=["bit", "trait", "age", "weight"]
-        )
-    else:
-        logging.info("Phenomap is empty")
+    @staticmethod
+    def skip(rate) -> bool:
+        """Should you skip an action performed at a certain rate"""
 
+        # Skip if rate deactivated
+        if rate <= 0:
+            return True
 
-@staticmethod
-def get_folder_size_with_du(folder_path):
-    result = subprocess.run(["du", "-sh", folder_path], stdout=subprocess.PIPE, text=True)
-    return result.stdout.split()[0]
+        # Do not skip first stage
+        if hermes.stage == 1:
+            return False
 
+        # Skip unless stage is divisible by rate
+        return hermes.stage % rate > 0
 
-def record_output_summary():
-    try:
-        storage_use = get_folder_size_with_du(pan.output_path)
-    except:
-        storage_use = ""
+    def _log_progress(self, popsize="?"):
+        """Record some information about the time and speed of simulation."""
 
-    summary = {
-        "extinct": extinct,
-        "random_seed": var.random_seed,
-        "time_start": pan.time_start,
-        "runtime": time.time() - pan.time_start,
-        "jupyter_path": str(pan.output_path.absolute()),
-        "memory_use": np.median(memory_use),
-        "storage_use": storage_use,
-    }
-    with open(paths["output_summary"] / "output_summary.json", "w") as f:
-        json.dump(summary, f, indent=4)
+        if Recorder.skip(hermes.parameters.LOGGING_RATE):
+            return
 
+        stage = hermes.get_stage()
 
-def record_input_summary():
-    summary = {
-        # "extinct": extinct,
-        "random_seed": var.random_seed,
-        "time_start": pan.time_start,
-        # "time_end": time.time(),
-        "jupyter_path": str(pan.output_path.absolute()),
-    }
-    with open(paths["input_summary"] / "input_summary.json", "w") as f:
-        json.dump(summary, f, indent=4)
+        logging.info("%8s / %s / N=%s", stage, hermes.parameters.STAGES_PER_SIMULATION, popsize)
 
+        # Get time estimations
+        time_diff = time.time() - self.time_start
 
-# =================================
-# RECORDING METHOD IV. (other)
-# =================================
+        seconds_per_100 = time_diff / stage * 100
+        eta = (hermes.parameters.STAGES_PER_SIMULATION - stage) / 100 * seconds_per_100
 
+        stages_per_min = int(stage / (time_diff / 60))
 
-def record_TE(T, e):
-    """
-    Record deaths.
-    T .. time / duration (ages)
-    E .. event observed (0/alive or 1/dead)
+        runtime = Recorder.get_dhm(time_diff)
+        time_per_1M = Recorder.get_dhm(time_diff / stage * 1000000)
+        eta = Recorder.get_dhm(eta)
 
-    ###
+        # Save time estimations
+        content = (stage, eta, time_per_1M, runtime, stages_per_min, popsize)
+        with open(self.output_path / "progress.log", "ab") as f:
+            np.savetxt(f, [content], fmt="%-10s", delimiter="| ")
 
-    To fit this data using lifelines, use this script as inspiration:
-        from lifelines import KaplanMeierFitter
-        kmf = KaplanMeierFitter()
-        te = pd.read_csv("/path/to/te/1.csv")
-        kmf.fit(te["T"], te["E"])
-        kmf.survival_function_.plot()
+    # ===============================
+    # RECORDING METHOD I. (snapshots)
+    # ===============================
 
-    You can compare this to observed survivorship curves:
-        analyzer.get_total_survivorship(container).plot()
+    def record_memory_use(self):
+        # TODO refine
+        memory_use_ = self.psutil_process.memory_info()[0] / float(2**20)
+        self.memory_use.append(memory_use_)
+        if len(self.memory_use) > 1000:
+            self.memory_use.pop(0)
 
-    """
+    def record_visor(self, population):
+        """Record data that is needed by visor."""
+        if Recorder.skip(hermes.parameters.VISOR_RATE) or len(population) == 0:
+            return
 
-    global te_record_number
+        # genotypes.csv | Record allele frequency
+        with open(self.paths["visor"] / "genotypes.csv", "ab") as f:
+            array = population.genomes.flatten().mean(0)
+            np.savetxt(f, [array], delimiter=",", fmt="%1.3e")
 
-    assert e in ("alive", "dead")
+        # phenotypes.csv | Record median phenotype
+        with open(self.paths["visor"] / "phenotypes.csv", "ab") as f:
+            array = np.median(population.phenotypes, 0)
+            np.savetxt(f, [array], delimiter=",", fmt="%1.3e")
 
-    stage = pan.get_stage()
+        self.flush()
 
-    if (stage % cnf.TE_RATE) == 0 or stage == 1:
-        # open new file and add header
-        with open(paths["te"] / f"{te_record_number}.csv", "w") as file_:
-            array = ["T", "E"]
-            np.savetxt(file_, [array], delimiter=",", fmt="%s")
+    def record_snapshots(self, population):
+        """Record demographic, genetic and phenotypic data from the current population."""
+        if Recorder.skip(hermes.parameters.SNAPSHOT_RATE) or len(population) == 0:
+            return
 
-    elif ((stage % cnf.TE_RATE) < cnf.TE_DURATION) and e == "dead":
-        # record deaths
-        E = np.repeat(1, len(T))
-        data = np.array([T, E]).T
-        with open(paths["te"] / f"{te_record_number}.csv", "ab") as file_:
-            np.savetxt(file_, data, delimiter=",", fmt="%i")
+        stage = hermes.get_stage()
 
-    elif (((stage % cnf.TE_RATE) == cnf.TE_DURATION) or stage == cnf.STAGES_PER_SIMULATION) and e == "alive":
-        # flush
-        logging.debug(f"Data for survival analysis (T,E) flushed at stage {stage}")
-        E = np.repeat(0, len(T))
-        data = np.array([T, E]).T
-        with open(paths["te"] / f"{te_record_number}.csv", "ab") as file_:
-            np.savetxt(file_, data, delimiter=",", fmt="%i")
+        logging.debug(f"Snapshots recorded at stage {stage}")
 
-        te_record_number += 1
+        # genotypes
+        df_gen = pd.DataFrame(np.array(population.genomes.flatten()))
+        df_gen.reset_index(drop=True, inplace=True)
+        df_gen.columns = [str(c) for c in df_gen.columns]
+        df_gen.to_feather(self.paths["snapshots_genotypes"] / f"{stage}.feather")
 
+        # phenotypes
+        df_phe = pd.DataFrame(np.array(population.phenotypes))
+        df_phe.reset_index(drop=True, inplace=True)
+        df_phe.columns = [str(c) for c in df_phe.columns]
+        df_phe.to_feather(self.paths["snapshots_phenotypes"] / f"{stage}.feather")
 
-if hasattr(architect.architecture, "phenomap"):
-    record_phenomap(architect.architecture.phenomap.phenolist)
+        # demography
+        dem_attrs = ["ages", "births", "birthdays"]
+        demo = {attr: getattr(population, attr) for attr in dem_attrs}
+        df_dem = pd.DataFrame(demo, columns=dem_attrs)
+        df_dem.reset_index(drop=True, inplace=True)
+        df_dem.to_feather(self.paths["snapshots_demography"] / f"{stage}.feather")
+
+    def record_popgenstats(self, genomes, mutation_rates):
+        """Record population size in popgenstats, and record popgen statistics."""
+        self.popgenstats.record_pop_size_history(genomes.array)
+
+        if Recorder.skip(hermes.parameters.POPGENSTATS_RATE) or len(genomes) == 0:
+            return
+
+        self.popgenstats.calc(genomes.array, mutation_rates)
+
+        # Record simple statistics
+        array = list(self.popgenstats.emit_simple().values())
+        if None in array:
+            return
+
+        with open(self.paths["popgen"] / "simple.csv", "ab") as f:
+            np.savetxt(f, [array], delimiter=",", fmt="%1.3e")
+
+        # Record complex statistics
+        complex_statistics = self.popgenstats.emit_complex()
+        for key, array in complex_statistics.items():
+            with open(self.paths["popgen"] / f"{key}.csv", "ab") as f:
+                np.savetxt(f, [array], delimiter=",", fmt="%1.3e")
+
+    def record_pickle(self, population):
+
+        stage = hermes.get_stage()
+
+        if (
+            Recorder.skip(hermes.parameters.PICKLE_RATE) and not stage == 1
+        ):  # Also records the pickle before the first stage
+            return
+
+        logging.debug(f"pickle recorded at stage {stage}")
+
+        pickle_path = self.paths["pickles"] / str(stage)
+        population.save_pickle_to(pickle_path)
+
+    # ==============================
+    # RECORDING METHOD II. (flushes)
+    # ==============================
+
+    def collect(self, key, ages):
+        """Add data into memory which will be recorded later."""
+        self.collection[key] += np.bincount(ages, minlength=hermes.parameters.MAX_LIFESPAN)
+
+    def flush(self):
+        """Record data that has been collected over time."""
+        # spectra/*.csv | Age distribution of various subpopulations (e.g. population that died of genetic causes)
+
+        for key, val in self.collection.items():
+            with open(self.paths["visor_spectra"] / f"{key}.csv", "ab") as f:
+                array = np.array(val)
+                np.savetxt(f, [array], delimiter=",", fmt="%i")
+
+        # Reinitialize the collection
+        self.collection = copy.deepcopy(self._collection)
+
+    # =================================
+    # RECORDING METHOD III. (record once)
+    # =================================
+
+    def record_phenomap(self, phenolist):
+        if phenolist:
+            pd.DataFrame(phenolist).to_csv(
+                self.paths["phenomap"] / "phenomap.csv", index=None, header=["bit", "trait", "age", "weight"]
+            )
+        else:
+            logging.info("Phenomap is empty")
+
+    @staticmethod
+    def get_folder_size_with_du(folder_path):
+        result = subprocess.run(["du", "-sh", folder_path], stdout=subprocess.PIPE, text=True)
+        return result.stdout.split()[0]
+
+    def record_output_summary(self):
+        try:
+            storage_use = self.get_folder_size_with_du(self.output_path)
+        except:
+            storage_use = ""
+
+        summary = {
+            "extinct": self.extinct,
+            "random_seed": hermes.random_seed,
+            "time_start": self.time_start,
+            "runtime": time.time() - self.time_start,
+            "jupyter_path": str(self.output_path.absolute()),
+            "memory_use": np.median(self.memory_use),
+            "storage_use": storage_use,
+        }
+        with open(self.paths["output_summary"] / "output_summary.json", "w") as f:
+            json.dump(summary, f, indent=4)
+
+    def record_input_summary(self):
+        summary = {
+            # "extinct": extinct,
+            "random_seed": hermes.random_seed,
+            "time_start": self.time_start,
+            # "time_end": time.time(),
+            "jupyter_path": str(self.output_path.absolute()),
+        }
+        with open(self.paths["input_summary"] / "input_summary.json", "w") as f:
+            json.dump(summary, f, indent=4)
+
+    # =================================
+    # RECORDING METHOD IV. (other)
+    # =================================
+
+    def record_TE(self, T, e):
+        """
+        Record deaths.
+        T .. time / duration (ages)
+        E .. event observed (0/alive or 1/dead)
+
+        ###
+
+        To fit this data using lifelines, use this script as inspiration:
+            from lifelines import KaplanMeierFitter
+            kmf = KaplanMeierFitter()
+            te = pd.read_csv("/path/to/te/1.csv")
+            kmf.fit(te["T"], te["E"])
+            kmf.survival_function_.plot()
+
+        You can compare this to observed survivorship curves:
+            analyzer.get_total_survivorship(container).plot()
+
+        """
+
+        assert e in ("alive", "dead")
+
+        stage = hermes.get_stage()
+
+        if (stage % hermes.parameters.TE_RATE) == 0 or stage == 1:
+            # open new file and add header
+            with open(self.paths["te"] / f"{self.te_record_number}.csv", "w") as file_:
+                array = ["T", "E"]
+                np.savetxt(file_, [array], delimiter=",", fmt="%s")
+
+        elif ((stage % hermes.parameters.TE_RATE) < hermes.parameters.TE_DURATION) and e == "dead":
+            # record deaths
+            E = np.repeat(1, len(T))
+            data = np.array([T, E]).T
+            with open(self.paths["te"] / f"{self.te_record_number}.csv", "ab") as file_:
+                np.savetxt(file_, data, delimiter=",", fmt="%i")
+
+        elif (
+            ((stage % hermes.parameters.TE_RATE) == hermes.parameters.TE_DURATION)
+            or stage == hermes.parameters.STAGES_PER_SIMULATION
+        ) and e == "alive":
+            # flush
+            logging.debug(f"Data for survival analysis (T,E) flushed at stage {stage}")
+            E = np.repeat(0, len(T))
+            data = np.array([T, E]).T
+            with open(self.paths["te"] / f"{self.te_record_number}.csv", "ab") as file_:
+                np.savetxt(file_, data, delimiter=",", fmt="%i")
+
+            self.te_record_number += 1

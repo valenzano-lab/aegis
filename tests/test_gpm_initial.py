@@ -31,7 +31,7 @@ pan.init_minimal(
 
 
 def test_call():
-    from aegis.modules.init import architecture
+    from aegis.modules.setup.init import architecture
     from aegis.modules.genetics.architecture.gpm import GPM
 
     # from aegis.init import phenomap

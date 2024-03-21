@@ -1,6 +1,6 @@
 from dash import html, dcc, callback, Output, Input, State, ALL, MATCH, ctx
 from visor import funcs
-from aegis.modules.setup import config
+from aegis.modules.setup.parameters import funcs
 
 
 @callback(
@@ -16,7 +16,7 @@ def run_simulation(n_clicks, filename, values):
         return
 
     # make config file
-    default_config = config.get_default_parameters()
+    default_config = funcs.get_default_parameters()
     custom_config = {
         k: val
         for (k, v), val in zip(default_config.items(), values)
@@ -37,10 +37,10 @@ def run_simulation(n_clicks, filename, values):
 )
 @funcs.log_debug
 def block_sim_button(filename, values):
-    default_config = config.get_default_parameters()
+    default_config = funcs.get_default_parameters()
     for k, value in zip(default_config, values):
         if value != "" and value is not None:
-            param = config.params[k]
+            param = funcs.DEFAULT_PARAMETERS[k]
             val = param.convert(value)
             valid = param.resrange(val)
             if not valid:
@@ -69,7 +69,7 @@ def block_config_input(value, className):
     if ctx.triggered_id is None:
         return className
 
-    param = config.params[ctx.triggered_id["index"]]
+    param = funcs.DEFAULT_PARAMETERS[ctx.triggered_id["index"]]
 
     className = className.replace(" disabled", "")
 

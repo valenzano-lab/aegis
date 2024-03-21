@@ -1,7 +1,7 @@
 import logging
 
 
-class Param:
+class Parameter:
     def __init__(
         self,
         key,

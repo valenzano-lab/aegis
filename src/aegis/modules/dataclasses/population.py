@@ -1,7 +1,7 @@
 import numpy as np
 import pickle
 
-from aegis.modules.init import architect
+from aegis.hermes import hermes
 from aegis.modules.dataclasses.genomes import Genomes
 
 
@@ -77,11 +77,11 @@ class Population:
 
     @staticmethod
     def initialize(N):
-        genomes = Genomes(architect.architecture.init_genome_array(N))
+        genomes = Genomes(hermes.modules.architect.architecture.init_genome_array(N))
         ages = np.zeros(N, dtype=np.int32)
         births = np.zeros(N, dtype=np.int32)
         birthdays = np.zeros(N, dtype=np.int32)
-        phenotypes = architect.__call__(genomes)
+        phenotypes = hermes.modules.architect.__call__(genomes)
         infection = np.zeros(N, dtype=np.int32)
         return Population(
             genomes=genomes, ages=ages, births=births, birthdays=birthdays, phenotypes=phenotypes, infection=infection
@@ -95,7 +95,7 @@ class Population:
             ages=np.zeros(n, dtype=np.int32),
             births=np.zeros(n, dtype=np.int32),
             birthdays=np.zeros(n, dtype=np.int32) + stage,
-            phenotypes=architect.__call__(offspring_genomes),
+            phenotypes=hermes.modules.architect.__call__(offspring_genomes),
             infection=np.zeros(n, dtype=np.int32),
         )
         return eggs

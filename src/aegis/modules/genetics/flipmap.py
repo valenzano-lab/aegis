@@ -4,7 +4,7 @@ Modifies topology of fitness landscape over time by changing the interpretation 
 """
 
 import numpy as np
-from aegis.pan import rng
+from aegis.hermes import hermes
 
 
 class Flipmap:
@@ -21,7 +21,7 @@ class Flipmap:
         if (self.map is None) or (stage % self.FLIPMAP_CHANGE_RATE > 0):
             return
 
-        indices = tuple(rng.integers(self.map.shape))
+        indices = tuple(hermes.rng.integers(self.map.shape))
         self.map[indices] = ~self.map[indices]
 
     def call(self, array):
