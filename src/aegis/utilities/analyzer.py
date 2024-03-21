@@ -1,5 +1,5 @@
 import pandas as pd
-from aegis.modules.setup.const import VALID_CAUSES_OF_DEATH
+from aegis.constants import VALID_CAUSES_OF_DEATH
 
 
 # ANALYZE FEATHER SNAPSHOTS
@@ -15,9 +15,7 @@ def get_total_survivorship(container):
     # furthermore, if normalized, it is equivalent to the survivorship curve
     # when not applied to a cohort, the same holds if the population is stationary which approximately holds at short time scales
     additive_age_structure = container.get_df("additive_age_structure")
-    total_survivorship = additive_age_structure.div(
-        additive_age_structure.iloc[:, 0], axis=0
-    )  # normalize
+    total_survivorship = additive_age_structure.div(additive_age_structure.iloc[:, 0], axis=0)  # normalize
     return total_survivorship
 
 
@@ -29,17 +27,12 @@ def get_birth_structure(container):
 
 
 def get_death_structure(container, targetcause):
-    age_at = {
-        causeofdeath: container.get_df(f"age_at_{causeofdeath}")
-        for causeofdeath in VALID_CAUSES_OF_DEATH
-    }
+    age_at = {causeofdeath: container.get_df(f"age_at_{causeofdeath}") for causeofdeath in VALID_CAUSES_OF_DEATH}
 
     pseudocount = 0
 
     age_at_target = age_at[targetcause] + pseudocount
-    age_at_all = pd.DataFrame(
-        pseudocount, columns=age_at_target.columns, index=age_at_target.index
-    )
+    age_at_all = pd.DataFrame(pseudocount, columns=age_at_target.columns, index=age_at_target.index)
 
     for v in age_at.values():
         age_at_all += v
@@ -49,8 +42,7 @@ def get_death_structure(container, targetcause):
 
 def get_causes_of_death(container):
     age_at = {
-        causeofdeath: container.get_df(f"age_at_{causeofdeath}").stack()
-        for causeofdeath in VALID_CAUSES_OF_DEATH
+        causeofdeath: container.get_df(f"age_at_{causeofdeath}").stack() for causeofdeath in VALID_CAUSES_OF_DEATH
     }
     return pd.DataFrame(age_at)
 
@@ -63,20 +55,13 @@ def get_causes_of_death(container):
 def get_sorted_allele_frequencies(container):
     genotypes = container.get_df("genotypes")
     total_frequency = genotypes.sum(0)
-    return (
-        genotypes.T.assign(total=total_frequency)
-        .sort_values(by="total", ascending=False)
-        .T.iloc[:-1]
-    )
+    return genotypes.T.assign(total=total_frequency).sort_values(by="total", ascending=False).T.iloc[:-1]
 
 
 def get_derived_allele_freq(container):
     genotypes = container.get_df("genotypes")
     reference = genotypes.round()
-    derived_allele_freq = (
-        genotypes.iloc[1:].reset_index(drop=True)
-        - reference.iloc[:-1].reset_index(drop=True)
-    ).abs()
+    derived_allele_freq = (genotypes.iloc[1:].reset_index(drop=True) - reference.iloc[:-1].reset_index(drop=True)).abs()
     return derived_allele_freq
 
 

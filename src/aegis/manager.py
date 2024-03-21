@@ -55,21 +55,22 @@ class Manager:
 
     @staticmethod
     def log_pre_simulation():
-        hermes.recorder.record_input_summary()
+        hermes.recorder.summaryrecorder.record_input_summary()
 
     def run_simulation_stages(self) -> None:
+        hermes.recorder.phenomaprecorder.write()
         while not self.is_finished() and not self.is_extinct():
-            hermes.recorder._log_progress(len(self.bioreactor.population))
+            hermes.recorder.progressrecorder.write(len(self.bioreactor.population))
             self.bioreactor.run_stage()
             hermes.increment_stage()
 
     @staticmethod
     def log_post_simulation() -> None:
-        hermes.recorder.record_output_summary()
+        hermes.recorder.summaryrecorder.record_output_summary()
         logging.info("Simulation finished")
 
     def is_extinct(self) -> bool:
-        if hermes.recorder.extinct:
+        if hermes.recorder.summaryrecorder.extinct:
             logging.info(f"Population went extinct (at stage {hermes.stage})")
             return True
         return False

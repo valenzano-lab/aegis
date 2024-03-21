@@ -59,9 +59,9 @@ class Hermes:
 
     def init_recorder(self, custom_config_path, overwrite):
         # NOTE Circular import if put on top
-        from aegis.modules.recording.recorder import Recorder
+        from aegis.modules.recording.recordingmanager import RecordingManager
 
-        return Recorder(custom_config_path, overwrite)
+        return RecordingManager(custom_config_path, overwrite)
 
     def init_modules(self):
         # NOTE Circular import if put on top
@@ -73,6 +73,7 @@ class Hermes:
         from aegis.modules.mortality.infection import Infection
         from aegis.modules.genetics.ploider import Ploider
         from aegis.modules.genetics.architect import Architect
+        from aegis.utilities.popgenstats import PopgenStats
 
         modules = types.SimpleNamespace()
         # Mortality
@@ -123,6 +124,10 @@ class Hermes:
             THRESHOLD=self.parameters.THRESHOLD,
             FLIPMAP_CHANGE_RATE=self.parameters.FLIPMAP_CHANGE_RATE,
         )
+
+        # Other
+        modules.popgenstats = PopgenStats()
+
         return modules
 
     #############
@@ -134,6 +139,22 @@ class Hermes:
 
     def increment_stage(self) -> None:
         self.stage += 1
+
+    def skip(self, rate_name) -> bool:
+        """Should you skip an action performed at a certain rate"""
+
+        rate = getattr(self.parameters, rate_name)
+
+        # Skip if rate deactivated
+        if rate <= 0:
+            return True
+
+        # Do not skip first stage
+        if self.stage == 1:
+            return False
+
+        # Skip unless stage is divisible by rate
+        return self.stage % rate > 0
 
 
 hermes = Hermes()
