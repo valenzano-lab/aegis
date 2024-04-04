@@ -127,5 +127,13 @@ def get_row(v: Parameter) -> html.Tr:
 def get_table(params_subset) -> html.Table:
     return html.Table(
         className="config-table",
-        children=[HEADER] + [get_row(v) for v in params_subset if not isinstance(v.default, list)],
+        children=[
+            html.Col(className="config-table-col"),
+            html.Col(className="config-table-col"),
+            html.Col(className="config-table-col"),
+            html.Col(className="config-table-col"),
+            html.Col(className="config-table-col"),
+        ]
+        + [HEADER]
+        + [get_row(v) for v in params_subset if not isinstance(v.default, list)],
     )

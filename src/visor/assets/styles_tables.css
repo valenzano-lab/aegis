@@ -21,6 +21,19 @@ th {
   width: 100%;
 }
 
+.config-table-col:nth-child(1) {
+  width: 10rem;
+}
+.config-table-col:nth-child(2) {
+  width: 1rem;
+}
+.config-table-col:nth-child(3) {
+  width: 2rem;
+}
+.config-table-col:nth-child(3) {
+  width: 4rem;
+}
+
 td,
 th {
   padding-left: 0.5rem;
@@ -108,14 +121,11 @@ tr:last-of-type td:last-of-type {
   border-bottom-right-radius: 10px;
 }
 
-
-
 .domain,
 .dtype {
   /* font-family: Quicksand; */
   font-weight: 600;
 }
-
 
 .config-input-class.disabled {
   border: none;
