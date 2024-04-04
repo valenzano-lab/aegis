@@ -1,10 +1,10 @@
 from dash import html, dcc
-from visor import funcs
+from visor import utilities
 import datetime
 from aegis.utilities.container import Container
 
 
-@funcs.log_debug
+@utilities.log_debug
 def make_table_row(
     selection_state, sim_data, log, input_summary, output_summary, basepath, filename
 ):
@@ -91,10 +91,10 @@ def make_table_row(
     return row
 
 
-@funcs.log_debug
+@utilities.log_debug
 def make_table(selection_states={}, sim_data=None):
     # Get data from folders
-    paths = funcs.get_sim_paths()
+    paths = utilities.get_sim_paths()
 
     # Make table
     # - specify table header
@@ -131,7 +131,7 @@ def make_table(selection_states={}, sim_data=None):
     return html.Table(children=table, id="list-table")
 
 
-@funcs.log_debug
+@utilities.log_debug
 def get_list_layout():
     # selection_states = [
     #     dcc.Store({"type": "selection-state", "index": sim}, data=False)

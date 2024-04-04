@@ -1,0 +1,26 @@
+@font-face {
+  font-family: "Quicksand";
+  src: url("Quicksand.ttf") format("truetype");
+}
+
+@font-face {
+  font-family: "Inter";
+  src: url("Inter.ttf") format("truetype");
+}
+
+body {
+  font-family: Inter;
+  margin: 0;
+}
+
+#main-container {
+  padding: 0 10%;
+}
+
+/* LANDING TAB */
+#landing-section {
+  display: flex;
+  flex-direction: column;
+  margin-left: auto;
+  margin-right: auto;
+}

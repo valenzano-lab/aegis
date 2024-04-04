@@ -12,8 +12,8 @@ class Parameter:
         dtype,
         drange,
         inrange=lambda x: True,
-        resrange=lambda x: True,
-        resrange_info="",
+        serverrange=lambda x: True,
+        serverrange_info="",
         evalrange=None,
     ):
         self.key = key
@@ -24,8 +24,8 @@ class Parameter:
         self.dtype = dtype
         self.drange = drange
         self.inrange = inrange
-        self.resrange = resrange
-        self.resrange_info = resrange_info
+        self.serverrange = serverrange
+        self.serverrange_info = serverrange_info
         self.evalrange = evalrange
 
     def convert(self, value):
@@ -75,8 +75,8 @@ class Parameter:
             return
         raise ValueError(f"{self.key} is set to be '{value}' which is outside of the valid range '{self.drange}'.")
 
-    def validate_resrange(self, value):
-        if self.resrange(value):
+    def validate_serverrange(self, value):
+        if self.serverrange(value):
             return
         raise ValueError(
             f"{self.key} is set to be '{value}' which is outside of the valid server range '{self.drange}'."

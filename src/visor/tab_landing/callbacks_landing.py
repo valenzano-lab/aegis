@@ -42,7 +42,7 @@
 #         if value != "" and value is not None:
 #             param = config.params[k]
 #             val = param.convert(value)
-#             valid = param.resrange(val)
+#             valid = param.serverrange(val)
 #             if not valid:
 #                 return True
 
@@ -73,7 +73,7 @@
 
 #     className = className.replace(" disabled", "")
 
-#     inside_range = param.resrange(param.convert(value))
+#     inside_range = param.serverrange(param.convert(value))
 #     if not inside_range:
 #         className += " disabled"
 

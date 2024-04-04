@@ -1,0 +1,122 @@
+td,
+th {
+  -webkit-touch-callout: none;
+  /* iOS Safari */
+  -webkit-user-select: none;
+  /* Safari */
+  -khtml-user-select: none;
+  /* Konqueror HTML */
+  -moz-user-select: none;
+  /* Old versions of Firefox */
+  -ms-user-select: none;
+  /* Internet Explorer/Edge */
+  user-select: none;
+  /* Non-prefixed version, currently supported by Chrome, Edge, Opera and Firefox */
+}
+
+.config-table,
+#list-table {
+  border-spacing: 0px;
+  font-size: 14px;
+  width: 100%;
+}
+
+td,
+th {
+  padding-left: 0.5rem;
+  padding-right: 0.5rem;
+  font-family: Inter;
+}
+
+td {
+  height: 2rem;
+  padding-top: 0.5rem;
+  padding-bottom: 0.5rem;
+}
+
+th {
+  padding-top: 0.8rem;
+  padding-bottom: 0.8rem;
+  margin-top: 1.5rem;
+}
+
+.config-table th {
+  text-align: left;
+}
+
+.config-domain {
+  text-transform: uppercase;
+  font-weight: 700;
+}
+
+.serverrange_info_message {
+  font-style: italic;
+  margin: 0;
+}
+
+label,
+input,
+button {
+  padding: 0.3rem 0.5rem;
+  font-size: 14px;
+  border: none;
+}
+
+label,
+input {
+  border-radius: 6px;
+}
+
+label {
+  padding: 0.25rem 0.5rem;
+}
+
+.config-table td.td-info {
+  font-size: 14px;
+}
+
+th.valid-values {
+  width: 100px;
+}
+
+table {
+  border-radius: 10px;
+  margin-bottom: 2rem;
+}
+
+table:hover {
+}
+
+#list-table {
+  text-align: center;
+}
+
+/* Rounded corners of tables -- */
+th:first-of-type {
+  border-top-left-radius: 10px;
+}
+
+th:last-of-type {
+  border-top-right-radius: 10px;
+}
+
+tr:last-of-type td:first-of-type {
+  border-bottom-left-radius: 10px;
+}
+
+tr:last-of-type td:last-of-type {
+  border-bottom-right-radius: 10px;
+}
+
+
+
+.domain,
+.dtype {
+  /* font-family: Quicksand; */
+  font-weight: 600;
+}
+
+
+.config-input-class.disabled {
+  border: none;
+}

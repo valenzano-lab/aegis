@@ -30,7 +30,7 @@ class ParameterManager:
         params.update(self.custom_input_params)
 
         running_on_server = False  # TODO customize
-        ParameterManager.validate(params, validate_resrange=running_on_server)
+        ParameterManager.validate(params, validate_serverrange=running_on_server)
 
         # convert to types.SimpleNamespace
         params = types.SimpleNamespace(**params)
@@ -55,7 +55,7 @@ class ParameterManager:
         return ccp
 
     @staticmethod
-    def validate(pdict, validate_resrange=False):
+    def validate(pdict, validate_serverrange=False):
         for key, val in pdict.items():
             # Validate key
             if all(key != p.key for p in DEFAULT_PARAMETERS.values()):
@@ -65,5 +65,5 @@ class ParameterManager:
             DEFAULT_PARAMETERS[key].validate_dtype(val)
             DEFAULT_PARAMETERS[key].validate_inrange(val)
 
-            if validate_resrange:
-                DEFAULT_PARAMETERS[key].validate_resrange(val)
+            if validate_serverrange:
+                DEFAULT_PARAMETERS[key].validate_serverrange(val)

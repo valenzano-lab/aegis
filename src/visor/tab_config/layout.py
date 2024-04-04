@@ -1,13 +1,11 @@
 from dash import html, dcc
-
-# from aegis.modules.setup.parameters import funcs
-from visor import funcs
+from visor import utilities
 from aegis.modules.initialization.parameterization.default_parameters import DEFAULT_PARAMETERS
 from aegis.modules.initialization.parameterization.parameter import Parameter
 
 
 # TODO change text
-texts_domain = {
+TEXTS_DOMAIN = {
     "recording": "Change which data are recorded and with what frequency.",
     "predation": "asdf",
     "computation": "wer",
@@ -18,11 +16,8 @@ texts_domain = {
     "environment": "asdf",
 }
 
-# assert set(funcs.get_domains()) == set(
-#     texts_domain
-# ), "Specified and expected domains do not match"
 
-preface = [
+PREFACE = [
     html.Div(
         children=[
             # TODO change text
@@ -36,26 +31,24 @@ preface = [
                 ]
             )
         ],
-        style={"color": "white"},
     )
 ]
 
-header = html.Tr(
+HEADER = html.Tr(
     [
         html.Th("PARAMETER", style={"padding-left": "1.2rem"}),
         html.Th("VALUE"),
         html.Th("TYPE"),
         html.Th("RANGE", className="valid-values"),
-        # html.Th("DOMAIN"),
         html.Th("DESCRIPTION", style={"padding-right": "1.2rem"}),
     ],
 )
 
 
-@funcs.log_debug
-def get_config_layout():
+@utilities.log_debug
+def get_config_layout() -> html.Div:
     # Group parameters by domain
-    subsets = {domain: [] for domain in texts_domain.keys()}
+    subsets = {domain: [] for domain in TEXTS_DOMAIN.keys()}
     for param in DEFAULT_PARAMETERS.values():
         subsets[param.domain].append(param)
 
@@ -68,7 +61,7 @@ def get_config_layout():
                 html.Div(
                     children=[
                         html.P(domain, className="config-domain"),
-                        html.P(texts_domain[domain], className="config-domain-desc"),
+                        html.P(TEXTS_DOMAIN[domain], className="config-domain-desc"),
                     ],
                 ),
                 get_table(subset),
@@ -79,16 +72,16 @@ def get_config_layout():
     return html.Div(
         id="sim-section",
         style={"display": "none"},
-        children=preface + tables,
+        children=PREFACE + tables,
     )
 
 
-@funcs.log_debug
-def get_row(v: Parameter):
-    if v.resrange_info:
-        resrange_info_message = f"Allowed parameter range for the server is {v.resrange_info}."
+@utilities.log_debug
+def get_row(v: Parameter) -> html.Tr:
+    if v.serverrange_info:
+        serverrange_info_message = f"Allowed parameter range for the server is {v.serverrange_info}."
     else:
-        resrange_info_message = ""
+        serverrange_info_message = ""
 
     return html.Tr(
         [
@@ -119,8 +112,8 @@ def get_row(v: Parameter):
                 children=[
                     v.info + ".",
                     html.P(
-                        resrange_info_message,
-                        className="resrange_info_message",
+                        serverrange_info_message,
+                        className="serverrange_info_message",
                     ),
                 ],
                 className="td-info",
@@ -130,9 +123,9 @@ def get_row(v: Parameter):
     )
 
 
-@funcs.log_debug
-def get_table(params_subset):
+@utilities.log_debug
+def get_table(params_subset) -> html.Table:
     return html.Table(
         className="config-table",
-        children=[header] + [get_row(v) for v in params_subset if not isinstance(v.default, list)],
+        children=[HEADER] + [get_row(v) for v in params_subset if not isinstance(v.default, list)],
     )

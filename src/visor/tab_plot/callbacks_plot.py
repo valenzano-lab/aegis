@@ -2,7 +2,7 @@ from dash import callback, Output, Input, ctx, ALL, State
 
 import logging
 from aegis.utilities.container import Container
-from visor.funcs import default_selection_states, log_debug, get_base_dir
+from visor.utilities import default_selection_states, log_debug, get_base_dir
 from visor.tab_plot import prep_fig
 from visor.tab_plot.prep_setup import FIG_SETUP
 

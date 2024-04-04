@@ -7,7 +7,7 @@ FIG_LAYOUT = dict(
     margin={"t": 0, "r": 150, "b": 0, "l": 0},
     plot_bgcolor="rgba(190, 189, 183, 0.0)",
     paper_bgcolor="rgba(24, 25, 27, 0)",
-    font_color="white",
+    # font_color="white",
     showlegend=True,
     legend=dict(x=1.05, y=1),
     xaxis=dict(

@@ -5,6 +5,7 @@ profiler
 ipynb
 temp
 .temp
+src/visor/sim_data
 
 ### Python ###
 # Byte-compiled / optimized / DLL files

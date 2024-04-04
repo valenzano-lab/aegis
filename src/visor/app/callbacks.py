@@ -1,6 +1,5 @@
-from dash import html, dcc, callback, Output, Input, State, ALL, MATCH, ctx
-from visor import funcs
-import subprocess
+from dash import callback, Output, Input, ctx
+from visor import utilities
 
 
 @callback(
@@ -18,7 +17,7 @@ import subprocess
     Input("plot-view-button", "n_clicks"),
     prevent_initial_call=True,
 )
-@funcs.log_info
+@utilities.log_info
 def toggle_display(*_):
     triggered = ctx.triggered_id.split("-")[0]
     styles = {
