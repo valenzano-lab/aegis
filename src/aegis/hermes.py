@@ -19,6 +19,8 @@ logging.basicConfig(
 
 
 class Hermes:
+    """
+    """
     def initialize(self, custom_config_path, custom_input_params, overwrite):
         self.stage = 1
         self.constants = constants

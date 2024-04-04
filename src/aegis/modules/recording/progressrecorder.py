@@ -9,6 +9,12 @@ class ProgressRecorder:
     def __init__(self, odir):
         self.odir = odir
         self.time_start = time.time()
+        self.init_headers()
+
+    def init_headers(self):
+        content = ("stage", "ETA", "t1M", "runtime", "stg/min", "popsize")
+        with open(self.odir / "progress.log", "ab") as f:
+            np.savetxt(f, [content], fmt="%-10s", delimiter="| ")
 
     def write(self, popsize="?"):
         """Record some information about the time and speed of simulation."""

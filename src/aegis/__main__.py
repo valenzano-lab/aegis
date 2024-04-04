@@ -3,4 +3,5 @@
 import aegis
 
 if __name__ == "__main__":
-    aegis.run_from_main()
+    # aegis.run_from_main()
+    aegis.run_from_terminal()

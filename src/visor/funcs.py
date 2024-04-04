@@ -5,7 +5,9 @@ import pathlib
 import yaml
 import logging
 
-from aegis.modules.setup.parameters import funcs
+from aegis.modules.initialization.parameterization.default_parameters import DEFAULT_PARAMETERS
+
+default_selection_states = (["default", True],)
 
 
 def get_here():
@@ -28,6 +30,7 @@ def get_config_path(filename):
 def run(filename):
     config_path = get_config_path(filename)
     logging.info(f"Running a simulation at path {config_path}")
+    print(f"Running a simulation at path {config_path}")
     subprocess.Popen(["python3", "-m", "aegis", "--config_path", config_path])
 
 
@@ -35,7 +38,7 @@ def make_config_file(filename, configs):
     configs["PHENOMAP_SPECS"] = []
     configs["NOTES"] = []
     for k, v in configs.items():
-        configs[k] = funcs.DEFAULT_PARAMETERS[k].convert(v)
+        configs[k] = DEFAULT_PARAMETERS[k].convert(v)
     logging.info("making config file")
     config_path = get_config_path(filename)
     with open(config_path, "w") as file_:

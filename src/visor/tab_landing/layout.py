@@ -1,6 +1,5 @@
 from dash import html, dcc
-from aegis.modules.setup.parameters import funcs
-from visor import funcs
+from visor.funcs import log_debug
 
 # # TODO change text
 # texts_domain = {
@@ -48,7 +47,7 @@ from visor import funcs
 # )
 
 
-@funcs.log_debug
+@log_debug
 def get_landing_layout():
     # # Group parameters by domain
     # subsets = {domain: [] for domain in texts_domain.keys()}
@@ -79,7 +78,7 @@ def get_landing_layout():
     )
 
 
-# @funcs.log_debug
+# @log_debug
 # def get_row(v):
 #     if v.resrange_info:
 #         resrange_info_message = (
@@ -128,7 +127,7 @@ def get_landing_layout():
 #     )
 
 
-# @funcs.log_debug
+# @log_debug
 # def get_table(params_subset):
 #     return html.Table(
 #         className="config-table",

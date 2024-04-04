@@ -1,4 +1,4 @@
-from aegis.help import analyzer
+from aegis.utilities import analyzer
 
 
 # x-axis is age

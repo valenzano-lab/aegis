@@ -14,20 +14,20 @@ def get_total_survivorship(container):
     # when applied to a discrete cohort, additive age structure have the same shape as the survivorship curve
     # furthermore, if normalized, it is equivalent to the survivorship curve
     # when not applied to a cohort, the same holds if the population is stationary which approximately holds at short time scales
-    additive_age_structure = container.get_df("additive_age_structure")
+    additive_age_structure = container._read_df("additive_age_structure")
     total_survivorship = additive_age_structure.div(additive_age_structure.iloc[:, 0], axis=0)  # normalize
     return total_survivorship
 
 
 def get_birth_structure(container):
-    age_at_birth = container.get_df("age_at_birth")
+    age_at_birth = container._read_df("age_at_birth")
     y = age_at_birth.iloc[-1]
     y = age_at_birth.div(age_at_birth.sum(1), axis=0)
     return y
 
 
 def get_death_structure(container, targetcause):
-    age_at = {causeofdeath: container.get_df(f"age_at_{causeofdeath}") for causeofdeath in VALID_CAUSES_OF_DEATH}
+    age_at = {causeofdeath: container._read_df(f"age_at_{causeofdeath}") for causeofdeath in VALID_CAUSES_OF_DEATH}
 
     pseudocount = 0
 
@@ -42,7 +42,7 @@ def get_death_structure(container, targetcause):
 
 def get_causes_of_death(container):
     age_at = {
-        causeofdeath: container.get_df(f"age_at_{causeofdeath}").stack() for causeofdeath in VALID_CAUSES_OF_DEATH
+        causeofdeath: container._read_df(f"age_at_{causeofdeath}").stack() for causeofdeath in VALID_CAUSES_OF_DEATH
     }
     return pd.DataFrame(age_at)
 
@@ -53,33 +53,33 @@ def get_causes_of_death(container):
 # ANALYZE CSVs
 # -- Genotypic
 def get_sorted_allele_frequencies(container):
-    genotypes = container.get_df("genotypes")
+    genotypes = container._read_df("genotypes")
     total_frequency = genotypes.sum(0)
     return genotypes.T.assign(total=total_frequency).sort_values(by="total", ascending=False).T.iloc[:-1]
 
 
 def get_derived_allele_freq(container):
-    genotypes = container.get_df("genotypes")
+    genotypes = container._read_df("genotypes")
     reference = genotypes.round()
     derived_allele_freq = (genotypes.iloc[1:].reset_index(drop=True) - reference.iloc[:-1].reset_index(drop=True)).abs()
     return derived_allele_freq
 
 
 def get_mean_allele_freq(container):
-    genotypes = container.get_df("genotypes")
+    genotypes = container._read_df("genotypes")
     mean_allele_freq = genotypes.mean(0)
     return mean_allele_freq
 
 
 def get_quantile_allele_freq(container, quantile):
-    genotypes = container.get_df("genotypes")
+    genotypes = container._read_df("genotypes")
     quantile_allele_freq = genotypes.quantile(quantile)
     return quantile_allele_freq
 
 
 # -- Phenotypic
 def get_life_expectancy(container):
-    phenotypes = container.get_df("phenotypes")
+    phenotypes = container._read_df("phenotypes")
     max_age = container.get_config()["MAX_LIFESPAN"]
     # TODO Ensure that you are slicing the phenotype array at right places
     pdf = phenotypes.iloc[:, :max_age]
@@ -89,7 +89,7 @@ def get_life_expectancy(container):
 
 
 def get_intrinsic_mortality(container):
-    phenotypes = container.get_df("phenotypes")
+    phenotypes = container._read_df("phenotypes")
     max_age = container.get_config()["MAX_LIFESPAN"]
     # TODO Ensure that you are slicing the phenotype array at right places
     pdf = phenotypes.iloc[:, :max_age]
@@ -98,7 +98,7 @@ def get_intrinsic_mortality(container):
 
 
 def get_intrinsic_survivorship(container):
-    phenotypes = container.get_df("phenotypes")
+    phenotypes = container._read_df("phenotypes")
     max_age = container.get_config()["MAX_LIFESPAN"]
     # TODO Ensure that you are slicing the phenotype array at right places
     pdf = phenotypes.iloc[:, :max_age]
@@ -107,7 +107,7 @@ def get_intrinsic_survivorship(container):
 
 
 def get_fertility_potential(container):
-    phenotypes = container.get_df("phenotypes")
+    phenotypes = container._read_df("phenotypes")
     max_age = container.get_config()["MAX_LIFESPAN"]
     # TODO Ensure that you are slicing the phenotype array at right places
     # TODO Ensure that fertility is 0 before maturity

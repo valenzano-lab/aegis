@@ -1,6 +1,8 @@
 from dash import html, dcc, callback, Output, Input, State, ALL, MATCH, ctx
 from visor import funcs
-from aegis.modules.setup.parameters import funcs
+# from aegis.modules.setup.parameters import funcs
+from aegis.modules.initialization.parameterization.default_parameters import DEFAULT_PARAMETERS
+
 
 
 @callback(
@@ -16,7 +18,7 @@ def run_simulation(n_clicks, filename, values):
         return
 
     # make config file
-    default_config = funcs.get_default_parameters()
+    default_config = DEFAULT_PARAMETERS.copy()
     custom_config = {
         k: val
         for (k, v), val in zip(default_config.items(), values)
@@ -37,7 +39,7 @@ def run_simulation(n_clicks, filename, values):
 )
 @funcs.log_debug
 def block_sim_button(filename, values):
-    default_config = funcs.get_default_parameters()
+    default_config = DEFAULT_PARAMETERS.copy()
     for k, value in zip(default_config, values):
         if value != "" and value is not None:
             param = funcs.DEFAULT_PARAMETERS[k]

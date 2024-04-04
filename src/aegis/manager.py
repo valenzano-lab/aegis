@@ -17,6 +17,7 @@ class Manager:
         self.bioreactor = None
 
     def run(self) -> None:
+        logging.info(f"Running {self.custom_config_path}.")
         self.run_initialization()
         self.run_simulation()
 

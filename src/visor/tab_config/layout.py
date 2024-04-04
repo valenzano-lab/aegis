@@ -1,22 +1,26 @@
 from dash import html, dcc
-from aegis.modules.setup.parameters import funcs
+
+# from aegis.modules.setup.parameters import funcs
 from visor import funcs
+from aegis.modules.initialization.parameterization.default_parameters import DEFAULT_PARAMETERS
+from aegis.modules.initialization.parameterization.parameter import Parameter
+
 
 # TODO change text
 texts_domain = {
     "recording": "Change which data are recorded and with what frequency.",
     "predation": "asdf",
     "computation": "wer",
-    # "genetics": "asdf",
+    "genetics": "asdf",
     "initialization": "wer",
     "infection": "asdf",
     "ecology": "wer",
-    # "environment": "asdf",
+    "environment": "asdf",
 }
 
-assert set(funcs.get_domains()) == set(
-    texts_domain
-), "Specified and expected domains do not match"
+# assert set(funcs.get_domains()) == set(
+#     texts_domain
+# ), "Specified and expected domains do not match"
 
 preface = [
     html.Div(
@@ -52,7 +56,7 @@ header = html.Tr(
 def get_config_layout():
     # Group parameters by domain
     subsets = {domain: [] for domain in texts_domain.keys()}
-    for param in funcs.params.values():
+    for param in DEFAULT_PARAMETERS.values():
         subsets[param.domain].append(param)
 
     # Generate layout
@@ -80,11 +84,9 @@ def get_config_layout():
 
 
 @funcs.log_debug
-def get_row(v):
+def get_row(v: Parameter):
     if v.resrange_info:
-        resrange_info_message = (
-            f"Allowed parameter range for the server is {v.resrange_info}."
-        )
+        resrange_info_message = f"Allowed parameter range for the server is {v.resrange_info}."
     else:
         resrange_info_message = ""
 
@@ -132,6 +134,5 @@ def get_row(v):
 def get_table(params_subset):
     return html.Table(
         className="config-table",
-        children=[header]
-        + [get_row(v) for v in params_subset if not isinstance(v.default, list)],
+        children=[header] + [get_row(v) for v in params_subset if not isinstance(v.default, list)],
     )

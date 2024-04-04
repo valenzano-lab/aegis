@@ -193,21 +193,21 @@ FIG_SETUP = {
             "yaxis_title": "",
         },
     },
-    "death structure": {
-        "title": "death structure",
-        "prep_y": prep_y.get_death_structure,
-        "prep_x": prep_x.get_ages,
-        "prep_figure": "make_scatter_figure",
-        "description": dcc.Markdown(
-            """The measured ratio of intrinsic deaths versus total deaths, grouped by age.""",
-            mathjax=True,
-        ),
-        # graph
-        "figure_layout": {
-            "xaxis_title": "age",
-            "yaxis_title": "",
-        },
-    },
+    # "death structure": {
+    #     "title": "death structure",
+    #     "prep_y": prep_y.get_death_structure,
+    #     "prep_x": prep_x.get_ages,
+    #     "prep_figure": "make_scatter_figure",
+    #     "description": dcc.Markdown(
+    #         """The measured ratio of intrinsic deaths versus total deaths, grouped by age.""",
+    #         mathjax=True,
+    #     ),
+    #     # graph
+    #     "figure_layout": {
+    #         "xaxis_title": "age",
+    #         "yaxis_title": "",
+    #     },
+    # },
     # "total survivorship": {
     #     "title": "total survivorship",
     #     "description": dcc.Markdown(

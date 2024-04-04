@@ -4,6 +4,7 @@ import pathlib
 import logging
 import json
 import yaml
+from typing import Union
 
 from aegis.modules.initialization.parameterization.default_parameters import get_default_parameters
 from aegis.modules.dataclasses.population import Population
@@ -135,6 +136,7 @@ class Container:
                 return int(nums[0]) * 24 * 60 + int(nums[1]) * 60 + int(nums[2])
 
             # TODO resolve deprecated function
+            print(df)
             try:
                 df[["ETA", "t1M", "runtime"]].map(dhm_inverse)
             except:
@@ -154,8 +156,11 @@ class Container:
 
         return self.data["config"]
 
-    def get_output_summary(self):
-        return self._read_json(self.paths["output_summary"])
+    def get_output_summary(self) -> Union[dict, None]:
+        path = self.paths["output_summary"]
+        if path.exists():
+            return self._read_json(path)
+        return {}
 
     def get_input_summary(self):
         return self._read_json(self.paths["input_summary"])

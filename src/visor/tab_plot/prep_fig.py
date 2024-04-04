@@ -67,6 +67,7 @@ def make_hist_figure(id_, xs, ys, selected_sims):
 
 
 def make_heatmap_figure(id_, xs, ys, selected_sims):
+    print(selected_sims)
     x = xs[0]
     y = ys[0]
     sim = next(iter(selected_sims))
