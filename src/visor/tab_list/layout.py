@@ -13,7 +13,7 @@ def make_table_row(
     else:
         logline = {"ETA": None, "stage": None, "stg/min": None}
 
-    if output_summary is None:
+    if not output_summary:
         status = ["not finished", "not extinct"]
     elif output_summary["extinct"]:
         status = ["finished", "extinct"]
