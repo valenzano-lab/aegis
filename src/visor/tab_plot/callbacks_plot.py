@@ -2,7 +2,7 @@ from dash import callback, Output, Input, ctx, ALL, State
 
 import logging
 from aegis.utilities.container import Container
-from visor.utilities import default_selection_states, log_debug, get_base_dir
+from visor.utilities import default_selection_states, log_debug, get_sim_dir
 from visor.tab_plot import prep_fig
 from visor.tab_plot.prep_setup import FIG_SETUP
 
@@ -40,7 +40,8 @@ def disable_plot_tab(data, className):
 
 
 @callback(
-    [Output(key, "figure") for key in FIG_SETUP.keys()],
+    # [Output(key, "figure") for key in FIG_SETUP.keys()],
+    [Output({"type": "graph-figure", "index": key}, "figure") for key in FIG_SETUP.keys()],
     Input("plot-view-button", "n_clicks"),
     Input("reload-plots-button", "n_clicks"),
     State({"type": "selection-state", "index": ALL}, "data"),
@@ -56,7 +57,7 @@ def update_plot_tab(n_clicks1, n_clicks2, selection_states):
         selection_states = list(default_selection_states)
 
     containers = {}
-    base_dir = get_base_dir()
+    base_dir = get_sim_dir()
     for filename, selected in selection_states:
         if selected and filename not in containers:
             results_path = base_dir / filename

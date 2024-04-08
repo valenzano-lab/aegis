@@ -15,7 +15,8 @@ def get_plot_layout():
                             html.Div(
                                 [
                                     dcc.Graph(
-                                        id=figure_id,
+                                        # id=figure_id,
+                                        id={"type": "graph-figure", "index": figure_id},
                                         config={"displayModeBar": False},
                                         className="figure",
                                     ),
@@ -34,13 +35,17 @@ def get_plot_layout():
                                     ),
                                 ]
                             ),
+                            html.Button(
+                                "download",
+                                id={"type": "figure-download-button", "index": figure_id},
+                            ),
                         ],
                         className="figure-card",
                     )
                     for figure_id, info in FIG_SETUP.items()
                 ],
             ),
-        ]
+        ],
         # + [
         #     dcc.Graph(id="figurex"),
         #     html.Div(

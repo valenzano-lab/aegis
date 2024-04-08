@@ -19,13 +19,25 @@ def get_base_dir():
     return pathlib.Path(platformdirs.user_data_dir("aegis", "aegis"))
 
 
+def get_sim_dir():
+    base_dir = get_base_dir() / "sim_data"
+    base_dir.mkdir(exist_ok=True)
+    return base_dir
+
+
+def get_figure_dir():
+    figure_dir = get_base_dir() / "figures"
+    figure_dir.mkdir(exist_ok=True)
+    return figure_dir
+
+
 def read_yml(path):
     with open(path, "r") as f:
         return yaml.safe_load(f)
 
 
 def get_config_path(filename):
-    return get_base_dir() / f"{filename}.yml"
+    return get_sim_dir() / f"{filename}.yml"
 
 
 def run(filename):
@@ -63,8 +75,8 @@ def log_info(func):
 
 
 def get_sim_paths():
-    base_dir = get_base_dir()
-    return [p for p in base_dir.iterdir() if p.is_dir()]
+    sim_dir = get_sim_dir()
+    return [p for p in sim_dir.iterdir() if p.is_dir()]
 
 
 def get_sims():

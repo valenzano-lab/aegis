@@ -7,6 +7,7 @@ from visor.app.layout import app_layout
 import visor.app.callbacks
 import visor.tab_config.callbacks_config
 import visor.tab_plot.callbacks_plot
+import visor.tab_plot.callbacks_download
 import visor.tab_list.callbacks_list
 
 
