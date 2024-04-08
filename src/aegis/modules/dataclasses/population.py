@@ -20,6 +20,8 @@ class Population:
         "infection",
     )
 
+    # NOTE Add sex
+
     def __init__(self, genomes, ages, births, birthdays, phenotypes, infection):
         self.genomes = genomes
         self.ages = ages

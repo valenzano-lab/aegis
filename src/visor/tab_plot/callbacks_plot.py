@@ -59,6 +59,8 @@ def update_plot_tab(n_clicks1, n_clicks2, selection_states):
     base_dir = get_base_dir()
     for filename, selected in selection_states:
         if selected and filename not in containers:
+            results_path = base_dir / filename
+            logging.info(f"Fetching data from {results_path}")
             containers[filename] = Container(base_dir / filename)
 
     selected_sims = [filename for filename, selected in selection_states if selected]

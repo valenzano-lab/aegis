@@ -31,10 +31,7 @@ FIG_LAYOUT = dict(
 
 def make_scatter_figure(id_, xs, ys, selected_sims):
     figure = go.Figure(
-        data=[
-            go.Scatter(x=x, y=y, mode="markers", name=sim)
-            for x, y, sim in zip(xs, ys, selected_sims)
-        ],
+        data=[go.Scatter(x=x, y=y, mode="markers", name=sim) for x, y, sim in zip(xs, ys, selected_sims)],
         layout=go.Layout({**FIG_LAYOUT, **FIG_SETUP[id_]["figure_layout"]}),
     )
 
@@ -67,7 +64,6 @@ def make_hist_figure(id_, xs, ys, selected_sims):
 
 
 def make_heatmap_figure(id_, xs, ys, selected_sims):
-    print(selected_sims)
     x = xs[0]
     y = ys[0]
     sim = next(iter(selected_sims))

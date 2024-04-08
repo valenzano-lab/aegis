@@ -136,7 +136,6 @@ class Container:
                 return int(nums[0]) * 24 * 60 + int(nums[1]) * 60 + int(nums[2])
 
             # TODO resolve deprecated function
-            print(df)
             try:
                 df[["ETA", "t1M", "runtime"]].map(dhm_inverse)
             except:
@@ -221,7 +220,9 @@ class Container:
 
     @staticmethod
     def _read_json(path):
-        assert path.exists(), f"'{path}' does not exist."
+        if not path.exists():
+            logging.warning(f"'{path}' does not exist.")
+            return None
         with open(path, "r") as file_:
             return json.load(file_)
 

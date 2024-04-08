@@ -45,26 +45,29 @@ def is_input_in_serverrange(input_, param_name: str) -> bool:
     Output("simulation-run-button", "disabled"),
     Input("config-make-text", "value"),
     Input({"type": "config-input", "index": ALL}, "value"),
+    State({"type": "config-input", "index": ALL}, "id"),
 )
 @utilities.log_debug
-def disable_sim_button(filename, values) -> bool:
+def disable_sim_button(filename, values, ids) -> bool:
     """
     Make simulation run button unclickable when any of these is true:
     - input values for parameters are not inside the acceptable server range
     - simulation name is not valid
     - simulation name is already used
     """
-    default_config = DEFAULT_PARAMETERS.copy()
-    for k, value in zip(default_config, values):
 
+    for value, id_ in zip(values, ids):
+        param_name = id_["index"]
         is_value_set = value != "" and value is not None
         if not is_value_set:
             continue
 
         # check validity of input value
-        in_serverrange = is_input_in_serverrange(input_=value, param_name=k)
+        in_serverrange = is_input_in_serverrange(input_=value, param_name=param_name)
         if not in_serverrange:
-            logging.info(f"Simulation run button is blocked because parameter {k} has received an invalid input")
+            logging.info(
+                f"Simulation run button is blocked because parameter {param_name} has received an invalid input"
+            )
             return True
 
     if not is_sim_name_valid(filename):
@@ -95,7 +98,6 @@ def disable_config_input(value, className) -> str:
     param_name = ctx.triggered_id["index"]
     className = className.replace(" disabled", "")
 
-    print(param_name)
     in_serverrange = is_input_in_serverrange(input_=value, param_name=param_name)
     if not in_serverrange:
         className += " disabled"

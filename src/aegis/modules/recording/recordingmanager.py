@@ -22,6 +22,8 @@ from .phenomaprecorder import PhenomapRecorder
 from .summaryrecorder import SummaryRecorder
 from .progressrecorder import ProgressRecorder
 
+# TODO write tests
+
 
 class RecordingManager:
     def __init__(self, custom_config_path, overwrite):
