@@ -1,8 +1,6 @@
-
 .figure-title {
   font-weight: bold;
 }
-
 
 #figure-container {
   display: flex;
@@ -16,4 +14,8 @@
   display: flex;
   width: 100%;
   border-radius: 16px;
+}
+
+.figure-description {
+  margin-bottom: 2rem;
 }

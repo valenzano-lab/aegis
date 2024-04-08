@@ -33,11 +33,12 @@ def get_plot_layout():
                                         children=info["description"],
                                         className="figure-description",
                                     ),
+                                    html.Button(
+                                        "download figure",
+                                        id={"type": "figure-download-button", "index": figure_id},
+                                    ),
+                                    dcc.Download(id={"type": "figure-dcc-download", "index": figure_id}),
                                 ]
-                            ),
-                            html.Button(
-                                "download",
-                                id={"type": "figure-download-button", "index": figure_id},
                             ),
                         ],
                         className="figure-card",

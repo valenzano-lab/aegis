@@ -1,15 +1,15 @@
 import logging
-from dash import callback, Output, Input, ctx, State, MATCH
+from dash import callback, Output, Input, ctx, State, MATCH, dcc
 from plotly.io import write_image
 from visor.utilities import get_figure_dir
 
 
 @callback(
-    Output({"type": "figure-download-button", "index": MATCH}, "n_clicks"),
+    Output({"type": "figure-dcc-download", "index": MATCH}, "data"),
     Input({"type": "figure-download-button", "index": MATCH}, "n_clicks"),
     State({"type": "graph-figure", "index": MATCH}, "figure"),
 )
-def create_figure(n_clicks, figure):
+def download_figure(n_clicks, figure):
 
     if n_clicks is None:
         return n_clicks
@@ -20,4 +20,4 @@ def create_figure(n_clicks, figure):
     write_image(figure, path_figure)
     logging.info(f"'{fig_name}' has been recorded successfully.")
 
-    return n_clicks
+    return dcc.send_file(path_figure)
