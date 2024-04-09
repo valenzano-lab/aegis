@@ -11,21 +11,17 @@ from visor.tab_list.layout import make_table
     Input({"type": "delete-simulation-button", "index": ALL}, "n_clicks"),
     Input("list-view-button", "n_clicks"),
     State({"type": "selection-state", "index": ALL}, "data"),
-    prevent_initial_call=True,
 )
 @utilities.log_debug
 def show_sims(n_clicks1, n_clicks2, data):
-    if ctx.triggered_id is None:
-        return []
+    if ctx.triggered_id is None:  # If initial call
+        return [make_table(selection_states={"default": True}, sim_data=None)]
 
     if ctx.triggered_id == "list-view-button":
         pass
 
     # If delete button triggered the action, delete the simulation
-    if (
-        isinstance(ctx.triggered_id, dict)
-        and ctx.triggered_id.get("type") == "delete-simulation-button"
-    ):
+    if isinstance(ctx.triggered_id, dict) and ctx.triggered_id.get("type") == "delete-simulation-button":
         filename = ctx.triggered_id["index"]
         config_path = utilities.get_config_path(filename)
         sim_path = config_path.parent / filename
