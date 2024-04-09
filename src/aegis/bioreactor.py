@@ -122,13 +122,13 @@ class Bioreactor:
             self.eggs += eggs
 
     def age(self):
-        """Increase age of all by one and kill those that surpass max lifespan.
+        """Increase age of all by one and kill those that surpass age limit.
         Age denotes the number of full cycles that an individual survived and reproduced.
-        MAX_LIFESPAN is the maximum number of full cycles an individual can go through.
+        AGE_LIMIT is the maximum number of full cycles an individual can go through.
         """
         self.population.ages += 1
-        mask_kill = self.population.ages >= hermes.parameters.MAX_LIFESPAN
-        self._kill(mask_kill=mask_kill, causeofdeath="max_lifespan")
+        mask_kill = self.population.ages >= hermes.parameters.AGE_LIMIT
+        self._kill(mask_kill=mask_kill, causeofdeath="age_limit")
 
     def hatch(self):
         """Turn eggs into living individuals"""
@@ -163,7 +163,7 @@ class Bioreactor:
             return
 
         # Count ages at death
-        if causeofdeath != "max_lifespan":
+        if causeofdeath != "age_limit":
             ages_death = self.population.ages[mask_kill]
             hermes.recorder.flushrecorder.collect(f"age_at_{causeofdeath}", ages_death)
             hermes.recorder.terecorder.record(ages_death, "dead")

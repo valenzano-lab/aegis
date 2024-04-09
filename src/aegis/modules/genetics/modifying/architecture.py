@@ -5,23 +5,23 @@ from aegis.modules.genetics.modifying.gpm import GPM
 
 
 class ModifyingArchitecture:
-    def __init__(self, ploid, PHENOMAP, MAX_LIFESPAN):
+    def __init__(self, ploid, PHENOMAP, AGE_LIMIT):
         self.ploid = ploid
         self.PHENOMAP = PHENOMAP
-        self.MAX_LIFESPAN = MAX_LIFESPAN
+        self.AGE_LIMIT = AGE_LIMIT
 
         self.gpm_decoder = GPM_decoder(PHENOMAP)
 
         self.length = self.gpm_decoder.n
 
         self.phenomap = GPM(
-            MAX_LIFESPAN=MAX_LIFESPAN,
+            AGE_LIMIT=AGE_LIMIT,
             phenomatrix=None,
             phenolist=self.gpm_decoder.get_total_phenolist(),
         )
 
     def get_number_of_phenotypic_values(self):
-        return self.MAX_LIFESPAN * 4
+        return self.AGE_LIMIT * 4
 
     def get_number_of_bits(self):
         return self.length

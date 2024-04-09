@@ -80,7 +80,7 @@ def get_quantile_allele_freq(container, quantile):
 # -- Phenotypic
 def get_life_expectancy(container):
     phenotypes = container._read_df("phenotypes")
-    max_age = container.get_config()["MAX_LIFESPAN"]
+    max_age = container.get_config()["AGE_LIMIT"]
     # TODO Ensure that you are slicing the phenotype array at right places
     pdf = phenotypes.iloc[:, :max_age]
     survivorship = pdf.cumprod(1)
@@ -90,7 +90,7 @@ def get_life_expectancy(container):
 
 def get_intrinsic_mortality(container):
     phenotypes = container._read_df("phenotypes")
-    max_age = container.get_config()["MAX_LIFESPAN"]
+    max_age = container.get_config()["AGE_LIMIT"]
     # TODO Ensure that you are slicing the phenotype array at right places
     pdf = phenotypes.iloc[:, :max_age]
     y = 1 - pdf
@@ -99,7 +99,7 @@ def get_intrinsic_mortality(container):
 
 def get_intrinsic_survivorship(container):
     phenotypes = container._read_df("phenotypes")
-    max_age = container.get_config()["MAX_LIFESPAN"]
+    max_age = container.get_config()["AGE_LIMIT"]
     # TODO Ensure that you are slicing the phenotype array at right places
     pdf = phenotypes.iloc[:, :max_age]
     y = pdf.cumprod(axis=1)
@@ -108,7 +108,7 @@ def get_intrinsic_survivorship(container):
 
 def get_fertility_potential(container):
     phenotypes = container._read_df("phenotypes")
-    max_age = container.get_config()["MAX_LIFESPAN"]
+    max_age = container.get_config()["AGE_LIMIT"]
     # TODO Ensure that you are slicing the phenotype array at right places
     # TODO Ensure that fertility is 0 before maturity
     fertility = phenotypes.iloc[:, max_age:]

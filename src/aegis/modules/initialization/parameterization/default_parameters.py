@@ -205,8 +205,8 @@ DEFAULT_PARAMETERS = {
         drange="[-1, inf)",
         inrange=lambda x: x >= -1,
     ),
-    "MAX_LIFESPAN": Parameter(
-        key="MAX_LIFESPAN",
+    "AGE_LIMIT": Parameter(
+        key="AGE_LIMIT",
         name="",
         domain="genetics",
         default=50,

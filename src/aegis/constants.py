@@ -11,5 +11,5 @@ VALID_CAUSES_OF_DEATH = (
     "infection",
     "predation",
     "starvation",
-    "max_lifespan",
+    "age_limit",
 )

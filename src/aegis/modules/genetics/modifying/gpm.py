@@ -8,8 +8,8 @@ class GPM:
     Order of elements in the vector does not matter.
     """
 
-    def __init__(self, MAX_LIFESPAN, phenomatrix, phenolist):
-        self.MAX_LIFESPAN = MAX_LIFESPAN
+    def __init__(self, AGE_LIMIT, phenomatrix, phenolist):
+        self.AGE_LIMIT = AGE_LIMIT
         self.phenomatrix = phenomatrix
         self.phenolist = phenolist
 
@@ -30,7 +30,7 @@ class GPM:
 
         elif self.phenolist is not None:
             phenodiff = zeropheno.copy()
-            # phenodiff = np.zeros(shape=(popsize, self.MAX_LIFESPAN * 4))
+            # phenodiff = np.zeros(shape=(popsize, self.AGE_LIMIT * 4))
             for vec_index, trait, age, magnitude in self.phenolist:
                 vec_state = vectors[:, vec_index]
                 phenotype_change = vec_state * magnitude
@@ -45,9 +45,9 @@ class GPM:
         # Order of traits is hard-encoded and is: surv, repr, muta, neut
         order = {"surv": 0, "repr": 1, "muta": 2, "neut": 3}[traitname]
         if age is None:
-            return slice(self.MAX_LIFESPAN * order, self.MAX_LIFESPAN * (order + 1))
+            return slice(self.AGE_LIMIT * order, self.AGE_LIMIT * (order + 1))
         else:
-            return self.MAX_LIFESPAN * order + age
+            return self.AGE_LIMIT * order + age
 
     def add_initial_values(self, array):
         array = array.copy()

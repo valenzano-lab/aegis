@@ -16,7 +16,7 @@ class Architect:
         self,
         BITS_PER_LOCUS,
         PHENOMAP,
-        MAX_LIFESPAN,
+        AGE_LIMIT,
         THRESHOLD,
         ploid,
         FLIPMAP_CHANGE_RATE,
@@ -29,14 +29,14 @@ class Architect:
             architecture = ModifyingArchitecture(
                 ploid=ploid,
                 PHENOMAP=PHENOMAP,
-                MAX_LIFESPAN=MAX_LIFESPAN,
+                AGE_LIMIT=AGE_LIMIT,
             )
 
         else:
             architecture = CompositeArchitecture(
                 ploid=ploid,
                 BITS_PER_LOCUS=BITS_PER_LOCUS,
-                MAX_LIFESPAN=MAX_LIFESPAN,
+                AGE_LIMIT=AGE_LIMIT,
                 THRESHOLD=THRESHOLD,
             )
         self.architecture = architecture

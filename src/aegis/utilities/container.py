@@ -83,11 +83,11 @@ class Container:
             table.columns = table.columns.astype(int)
             return table
         elif record_type == "snapshot":
-            MAX_LIFESPAN = self.get_config()["MAX_LIFESPAN"]
+            AGE_LIMIT = self.get_config()["AGE_LIMIT"]
             table = (
                 self.get_demography(record_type, record_index)
                 .ages.value_counts()
-                .reindex(range(MAX_LIFESPAN), fill_value=0)
+                .reindex(range(AGE_LIMIT), fill_value=0)
             )
             table.index.names = ["age_class"]
             return table
@@ -243,7 +243,7 @@ class Container:
 
     def get_intrinsic_mortality(self):
         phenotypes = self._read_df("phenotypes")
-        max_age = self.get_config()["MAX_LIFESPAN"]
+        max_age = self.get_config()["AGE_LIMIT"]
         # TODO Ensure that you are slicing the phenotype array at right places
         pdf = phenotypes.iloc[:, :max_age]
         y = 1 - pdf
@@ -251,7 +251,7 @@ class Container:
 
     def get_intrinsic_survivorship(self):
         phenotypes = self._read_df("phenotypes")
-        max_age = self.get_config()["MAX_LIFESPAN"]
+        max_age = self.get_config()["AGE_LIMIT"]
         # TODO Ensure that you are slicing the phenotype array at right places
         pdf = phenotypes.iloc[:, :max_age]
         y = pdf.cumprod(axis=1)
@@ -259,7 +259,7 @@ class Container:
 
     def get_intrinsic_fertility(self):
         phenotypes = self._read_df("phenotypes")
-        max_age = self.get_config()["MAX_LIFESPAN"]
+        max_age = self.get_config()["AGE_LIMIT"]
 
         # TODO Ensure that you are slicing the phenotype array at right places
         fertility = phenotypes.iloc[:, max_age:]

@@ -7,7 +7,7 @@ from aegis import pan
 G_surv_initpheno = 0.1013
 G_repr_initpheno = 0.2124
 G_muta_initpheno = 0.377
-MAX_LIFESPAN = 44
+AGE_LIMIT = 44
 
 pan.init_minimal(
     custom_input_params={
@@ -17,7 +17,7 @@ pan.init_minimal(
         "G_surv_initpheno": G_surv_initpheno,
         "G_repr_initpheno": G_repr_initpheno,
         "G_muta_initpheno": G_muta_initpheno,
-        "MAX_LIFESPAN": MAX_LIFESPAN,
+        "AGE_LIMIT": AGE_LIMIT,
         "BITS_PER_LOCUS": 1,
     },
 )
@@ -59,15 +59,15 @@ def test_call():
         (9, "repr", 19, 0.1482034870062023),
     ]
 
-    gpm = GPM(MAX_LIFESPAN=MAX_LIFESPAN, phenolist=phenolist)
+    gpm = GPM(AGE_LIMIT=AGE_LIMIT, phenolist=phenolist)
     interpretome = np.random.random(size=(1009, 111))
     phenodiff = gpm.phenodiff(vectors=interpretome, zeropheno=architecture.get_number_of_phenotypic_values())
     phenowhole = gpm.add_initial_values(phenodiff)
 
     for before, after in zip(phenodiff, phenowhole):
         assert before[0] + G_surv_initpheno == after[0]
-        assert before[MAX_LIFESPAN] + G_repr_initpheno == after[MAX_LIFESPAN]  # no phenomap at this bit index
-        assert before[MAX_LIFESPAN * 2] + G_muta_initpheno == after[MAX_LIFESPAN * 2]  # no phenomap at this bit index
+        assert before[AGE_LIMIT] + G_repr_initpheno == after[AGE_LIMIT]  # no phenomap at this bit index
+        assert before[AGE_LIMIT * 2] + G_muta_initpheno == after[AGE_LIMIT * 2]  # no phenomap at this bit index
 
     # for interpretomei, phenodiffi in zip(interpretome, phenodiff):
 
@@ -78,10 +78,10 @@ def test_call():
     #     assert phenodiffi[11] == interpretomei[2] * phenolist[2][3] + interpretomei[9] * phenolist[9][3]
 
     #     # test 3
-    #     assert phenodiffi[MAX_LIFESPAN + 18] == interpretomei[1] * phenolist[10 + 1][3]
+    #     assert phenodiffi[AGE_LIMIT + 18] == interpretomei[1] * phenolist[10 + 1][3]
 
     #     # test 4
     #     assert (
-    #         phenodiffi[MAX_LIFESPAN + 6]
+    #         phenodiffi[AGE_LIMIT + 6]
     #         == interpretomei[0] * phenolist[10 + 0][3] + interpretomei[8] * phenolist[10 + 8][3]
     #     )

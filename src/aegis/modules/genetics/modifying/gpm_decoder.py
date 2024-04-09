@@ -57,7 +57,7 @@ class GPM_decoder:
 
 
 class Genblock:
-    def __init__(self, name, n, position, MAX_LIFESPAN=20):
+    def __init__(self, name, n, position, AGE_LIMIT=20):
         self.name = name
         self.n = n
 
@@ -67,7 +67,7 @@ class Genblock:
 
         self.phenolist = []
 
-        self.MAX_LIFESPAN = MAX_LIFESPAN
+        self.AGE_LIMIT = AGE_LIMIT
 
     def add_encoding(self, trait, agefunc, funcparam):
         encoding = {
@@ -90,11 +90,11 @@ class Genblock:
         for i in range(self.n):
             func = Genblock.__resolve_function(encoding["agefunc"], encoding["funcparam"])
             if encoding["agefunc"] == "agespec":
-                age = hermes.rng.integers(0, self.MAX_LIFESPAN)
+                age = hermes.rng.integers(0, self.AGE_LIMIT)
                 magnitude = func(age)
                 add_to_phenolist(i, encoding["trait"], age, magnitude)
             else:
-                for age in range(self.MAX_LIFESPAN):
+                for age in range(self.AGE_LIMIT):
                     magnitude = func(age)
                     add_to_phenolist(i, encoding["trait"], age, magnitude)
 

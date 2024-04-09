@@ -6,7 +6,7 @@ def get_none(container, **_):
 
 
 def get_ages(container, **_):
-    return np.arange(1, container.get_config()["MAX_LIFESPAN"] + 1)
+    return np.arange(1, container.get_config()["AGE_LIMIT"] + 1)
 
 
 def get_stages(container, **kwargs):

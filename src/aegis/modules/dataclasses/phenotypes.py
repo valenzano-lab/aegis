@@ -12,11 +12,11 @@ class Phenotypes:
     #     return np.zeros(shape=(popsize, number_of_phenotypic_values))
 
     # @staticmethod
-    # def where(trait, age, MAX_LIFESPAN):
+    # def where(trait, age, AGE_LIMIT):
     #     # Used for phenolist
     #     # Order of traits is hard-encoded and is: surv, repr, muta, neut
     #     order = {"surv": 0, "repr": 1, "muta": 2, "neut": 3}
-    #     return MAX_LIFESPAN * order[trait] + age
+    #     return AGE_LIMIT * order[trait] + age
 
-    # def get(self, trait, age, MAX_LIFESPAN):
-    #     return self.array[:, self.where(trait, age, MAX_LIFESPAN)]
+    # def get(self, trait, age, AGE_LIMIT):
+    #     return self.array[:, self.where(trait, age, AGE_LIMIT)]

@@ -62,7 +62,7 @@ To check if installation is successful, run `aegis -h`. If it is, the output wil
 
     RANDOM_SEED: 42
     STAGES_PER_SIMULATION: 10000
-    MAX_LIFESPAN: 50
+    AGE_LIMIT: 50
     ```
 
 

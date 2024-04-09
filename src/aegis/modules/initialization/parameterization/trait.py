@@ -22,7 +22,7 @@ class Trait:
         # Determine the number of loci encoding the trait
         if self.evolvable:
             if self.agespecific is True:  # one locus per age
-                self.length = cnf.MAX_LIFESPAN
+                self.length = cnf.AGE_LIMIT
             elif self.agespecific is False:  # one locus for all ages
                 self.length = 1
             else:  # custom number of loci
@@ -38,9 +38,9 @@ class Trait:
         # self.slice = slice(self.start, self.end)
 
         self.start = (
-            cnf.MAX_LIFESPAN * {"surv": 0, "repr": 1, "muta": 2, "neut": 3}[self.name]
+            cnf.AGE_LIMIT * {"surv": 0, "repr": 1, "muta": 2, "neut": 3}[self.name]
         )  # TODO this should not be here
-        self.end = self.start + cnf.MAX_LIFESPAN
+        self.end = self.start + cnf.AGE_LIMIT
         self.slice = slice(self.start, self.end)
 
     def _validate(self):

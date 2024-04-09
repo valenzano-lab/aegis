@@ -122,7 +122,7 @@ class Hermes:
             ploid=modules.ploidy,
             BITS_PER_LOCUS=self.parameters.BITS_PER_LOCUS,
             PHENOMAP=self.parameters.PHENOMAP,
-            MAX_LIFESPAN=self.parameters.MAX_LIFESPAN,
+            AGE_LIMIT=self.parameters.AGE_LIMIT,
             THRESHOLD=self.parameters.THRESHOLD,
             FLIPMAP_CHANGE_RATE=self.parameters.FLIPMAP_CHANGE_RATE,
         )
