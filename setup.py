@@ -18,7 +18,7 @@ setuptools.setup(
         # "Documentation": "",
     },
     url="https://github.com/valenzano-lab/aegis",
-    packages=setuptools.find_packages(include=["aegis", "visor", "aegis.*"]),
+    packages=setuptools.find_packages(include=["aegis", "visor", "documentation", "aegis.*"]),
     package_dir={"": "src"},
     include_package_data=True,
     python_requires=">=3.6",
