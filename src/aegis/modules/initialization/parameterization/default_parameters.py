@@ -145,8 +145,8 @@ DEFAULT_PARAMETERS = {
     #     serverrange=lambda x: x == 1,
     #     serverrange_info="1",
     # ),
-    "MAX_POPULATION_SIZE": Parameter(
-        key="MAX_POPULATION_SIZE",
+    "CARRYING_CAPACITY": Parameter(
+        key="CARRYING_CAPACITY",
         name="",
         domain="ecology",
         default=1000,

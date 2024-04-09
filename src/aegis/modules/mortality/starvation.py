@@ -13,12 +13,12 @@ class Starvation:
         STARVATION_RESPONSE,
         STARVATION_MAGNITUDE,
         CLIFF_SURVIVORSHIP,
-        MAX_POPULATION_SIZE,
+        CARRYING_CAPACITY,
     ):
 
         self.STARVATION_MAGNITUDE = STARVATION_MAGNITUDE
         self.CLIFF_SURVIVORSHIP = CLIFF_SURVIVORSHIP
-        self.MAX_POPULATION_SIZE = MAX_POPULATION_SIZE
+        self.CARRYING_CAPACITY = CARRYING_CAPACITY
 
         self.consecutive_overshoot_n = 0  # For starvation mode
 
@@ -34,7 +34,7 @@ class Starvation:
     def __call__(self, n):
         """Exposed method"""
         global consecutive_overshoot_n  # TODO do not use global
-        if n <= self.MAX_POPULATION_SIZE:
+        if n <= self.CARRYING_CAPACITY:
             consecutive_overshoot_n = 0
             return np.zeros(n, dtype=np.bool_)
         else:
@@ -43,7 +43,7 @@ class Starvation:
 
     def _logistic(self, n):
         """Kill random individuals with logistic-like probability."""
-        ratio = n / self.MAX_POPULATION_SIZE
+        ratio = n / self.CARRYING_CAPACITY
 
         # when ratio == 1, kill_probability is set to 0
         # when ratio == 2, kill_probability is set to >0
@@ -70,7 +70,7 @@ class Starvation:
 
         The population size is brought down to the maximum allowed size in one go.
         """
-        indices = hermes.rng.choice(n, n - self.MAX_POPULATION_SIZE, replace=False)
+        indices = hermes.rng.choice(n, n - self.CARRYING_CAPACITY, replace=False)
         mask = np.zeros(n, dtype=np.bool_)
         mask[indices] = True
         return mask
@@ -83,7 +83,7 @@ class Starvation:
         """
         indices = hermes.rng.choice(
             n,
-            int(self.MAX_POPULATION_SIZE * self.CLIFF_SURVIVORSHIP),
+            int(self.CARRYING_CAPACITY * self.CLIFF_SURVIVORSHIP),
             replace=False,
         )
         mask = np.ones(n, dtype=np.bool_)
@@ -95,10 +95,10 @@ class Starvation:
 
         The population size is brought down to the maximum allowed size in one go.
 
-        NOTE: Why `-self.MAX_POPULATION_SIZE :`? Because old individuals are at the beginning of the population array.
+        NOTE: Why `-self.CARRYING_CAPACITY :`? Because old individuals are at the beginning of the population array.
         """
         mask = np.ones(n, dtype=np.bool_)
-        mask[-self.MAX_POPULATION_SIZE :] = False
+        mask[-self.CARRYING_CAPACITY :] = False
         return mask
 
     def _treadmill_zoomer(self, n):
@@ -106,8 +106,8 @@ class Starvation:
 
         The population size is brought down to the maximum allowed size in one go.
 
-        NOTE: Why `: self.MAX_POPULATION_SIZE`? Because young individuals are appended to the end of the population array.
+        NOTE: Why `: self.CARRYING_CAPACITY`? Because young individuals are appended to the end of the population array.
         """
         mask = np.ones(n, dtype=np.bool_)
-        mask[: self.MAX_POPULATION_SIZE] = False
+        mask[: self.CARRYING_CAPACITY] = False
         return mask
