@@ -4,7 +4,7 @@ import datetime
 from aegis.utilities.container import Container
 
 
-@utilities.log_debug
+# @utilities.log_debug
 def make_table_row(
     selection_state, sim_data, log, input_summary, output_summary, basepath, filename
 ):

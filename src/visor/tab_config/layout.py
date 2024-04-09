@@ -76,7 +76,7 @@ def get_config_layout() -> html.Div:
     )
 
 
-@utilities.log_debug
+# @utilities.log_debug
 def get_row(v: Parameter) -> html.Tr:
     if v.serverrange_info:
         serverrange_info_message = f"Allowed parameter range for the server is {v.serverrange_info}."

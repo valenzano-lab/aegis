@@ -16,7 +16,7 @@ FIG_SETUP = {
         ),
         # graph
         "figure_layout": {
-            "xaxis_title": "stage",
+            "xaxis_title": "simulation stage",
             "yaxis_title": "site",
         },
     },
@@ -31,7 +31,7 @@ FIG_SETUP = {
         ),
         # graph
         "figure_layout": {
-            "xaxis_title": "age",
+            "xaxis_title": "age class",
             "yaxis_title": "",
         },
     },
@@ -61,7 +61,7 @@ FIG_SETUP = {
         ),
         # graph
         "figure_layout": {
-            "xaxis_title": "age",
+            "xaxis_title": "age class",
             "yaxis_title": "",
         },
     },
@@ -79,7 +79,7 @@ FIG_SETUP = {
         ),
         # graph
         "figure_layout": {
-            "xaxis_title": "age",
+            "xaxis_title": "age class",
             "yaxis_title": "",
         },
     },
@@ -94,7 +94,7 @@ FIG_SETUP = {
         ),
         # graph
         "figure_layout": {
-            "xaxis_title": "age",
+            "xaxis_title": "age class",
             "yaxis_title": "",
         },
     },
@@ -109,7 +109,7 @@ FIG_SETUP = {
         ),
         # graph
         "figure_layout": {
-            "xaxis_title": "age",
+            "xaxis_title": "age class",
             "yaxis_title": "",
         },
     },
@@ -126,7 +126,7 @@ FIG_SETUP = {
         ),
         # graph
         "figure_layout": {
-            "xaxis_title": "stage",
+            "xaxis_title": "simulation stage",
             "yaxis_title": "",
         },
     },
@@ -142,7 +142,7 @@ FIG_SETUP = {
         ),
         # graph
         "figure_layout": {
-            "xaxis_title": "age",
+            "xaxis_title": "age class",
             "yaxis_title": "",
         },
     },
@@ -159,7 +159,7 @@ FIG_SETUP = {
         ),
         # graph
         "figure_layout": {
-            "xaxis_title": "age",
+            "xaxis_title": "age class",
             "yaxis_title": "",
         },
     },
@@ -174,7 +174,7 @@ FIG_SETUP = {
         ),
         # graph
         "figure_layout": {
-            "xaxis_title": "stage",
+            "xaxis_title": "simulation stage",
             "yaxis_title": "",
         },
     },
@@ -189,7 +189,7 @@ FIG_SETUP = {
         ),
         # graph
         "figure_layout": {
-            "xaxis_title": "age",
+            "xaxis_title": "age class",
             "yaxis_title": "",
         },
     },
@@ -204,7 +204,7 @@ FIG_SETUP = {
     #     ),
     #     # graph
     #     "figure_layout": {
-    #         "xaxis_title": "age",
+    #         "xaxis_title": "age class",
     #         "yaxis_title": "",
     #     },
     # },
@@ -216,7 +216,7 @@ FIG_SETUP = {
     #     ),
     #     # graph
     #     "figure_layout": {
-    #         "xaxis_title": "age",
+    #         "xaxis_title": "age class",
     #         "yaxis_title": "",
     #         # "yaxis": {"range": [0, 1]},
     #     },
