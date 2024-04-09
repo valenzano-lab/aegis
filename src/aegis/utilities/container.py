@@ -58,73 +58,14 @@ class Container:
         # TODO
         return
 
-    ### INTERFACING FUNCTIONS ("API")
+    def export(self):
+        """Export all primary data from the container using general formats"""
+        # TODO
+        return
 
-    # Tables
-    def get_birth_table(self, record_type, record_index=None, normalize=False):
-        if record_type == "interval":
-            table = self._read_df("age_at_birth")
-            if normalize:
-                table = table.div(table.sum(1), axis=0)
-            table.index.names = ["interval"]
-            table.columns.names = ["parental_age"]
-            table.columns = table.columns.astype(int)
-            return table
-        elif record_type == "snapshot":
-            raise Exception("Snapshot birth table not available")
-        else:
-            raise Exception(f"record_type must be interval or snapshot, not {record_type}")
-
-    def get_life_table(self, record_type, record_index=None, normalize=False):
-        if record_type == "interval":
-            table = self._read_df("additive_age_structure")
-            table.index.names = ["interval"]
-            table.columns.names = ["age_class"]
-            table.columns = table.columns.astype(int)
-            return table
-        elif record_type == "snapshot":
-            AGE_LIMIT = self.get_config()["AGE_LIMIT"]
-            table = (
-                self.get_demography(record_type, record_index)
-                .ages.value_counts()
-                .reindex(range(AGE_LIMIT), fill_value=0)
-            )
-            table.index.names = ["age_class"]
-            return table
-        else:
-            raise Exception(f"record_type must be interval or snapshot, not {record_type}")
-
-    def get_death_table(self, record_type, record_index=None, normalize=False):
-        if record_type == "interval":
-            table = (
-                pd.concat(
-                    {causeofdeath: self._read_df(f"age_at_{causeofdeath}") for causeofdeath in VALID_CAUSES_OF_DEATH}
-                )
-                .swaplevel()
-                .sort_index(level=0)
-            )
-            table.index.names = ["interval", "cause_of_death"]
-            table.columns.names = ["age_class"]
-            table.columns = table.columns.astype(int)
-            return table
-        elif record_type == "snapshot":
-            raise Exception("Snapshot death table not available")
-        else:
-            raise Exception(f"record_type must be interval or snapshot, not {record_type}")
-
-    # Metadata
-
-    def read_metadata(self, which, **kwargs):
-        if which == "log":
-            return self.get_log(kwargs["reload"])
-        elif which == "config":
-            return self.get_config()
-        elif which == "input_summary":
-            return self.get_input_summary()
-        elif which == "output_summary":
-            return self.get_output_summary()
-        else:
-            raise Exception(f"{which} is not valid; enter 'log', 'config', 'input_summary' or 'output_summary'")
+    ############
+    # METADATA #
+    ############
 
     def get_log(self, reload=True):
         if ("log" not in self.data) or reload:
@@ -164,39 +105,125 @@ class Container:
     def get_input_summary(self):
         return self._read_json(self.paths["input_summary"])
 
-    # BASIC INPUTS
-    # Data
-    def get_genotypes(self, record_type, record_index=None, reload=True):
-        if record_type == "interval":
-            return self._read_df("genotypes", reload=reload)
-        elif record_type == "snapshot":
-            return self._read_snapshot("genotypes", record_index=record_index)
-        else:
-            raise Exception(f"record_type must be interval or snapshot, not {record_type}")
+    ##########
+    # TABLES #
+    ##########
 
-    def get_phenotypes(self, record_type, record_index=None, reload=True):
-        if record_type == "interval":
-            return self._read_df("phenotypes", reload=reload)
-        elif record_type == "snapshot":
-            return self._read_snapshot("phenotypes", record_index=record_index)
-        else:
-            raise Exception(f"record_type must be interval or snapshot, not {record_type}")
+    def get_interval_birth_table(self, normalize=False):
+        """
+        Observed data.
+        Number of births (int) per parental age during an interval of length VISOR_RATE.
+        columns.name == parental_age (int)
+        index.name == interval (int)
+        """
+        table = self._read_df("age_at_birth")
+        if normalize:
+            table = table.div(table.sum(1), axis=0)
+        table.index.names = ["interval"]
+        table.columns.names = ["parental_age"]
+        table.columns = table.columns.astype(int)
+        return table
 
-    def get_demography(self, record_type, record_index=None):
-        if record_type == "interval":
-            raise Exception("Interval demography not available")
-        elif record_type == "snapshot":
-            return self._read_snapshot("demography", record_index=record_index)
-        else:
-            raise Exception(f"record_type must be interval or snapshot, not {record_type}")
+    def get_interval_life_table(self, normalize=False):
+        """
+        Observed data.
+        Number of individuals (int) per age class observed during an interval of length VISOR_RATE.
+        columns.name == age_class (int)
+        index.name == interval (int)
+        """
+        table = self._read_df("additive_age_structure")
+        table.index.names = ["interval"]
+        table.columns.names = ["age_class"]
+        table.columns = table.columns.astype(int)
+        return table
+
+    def get_snapshot_life_table(self, record_index: int, normalize=False):
+        """
+        Observed data. Series.
+        Number of individuals (int) per age class observed at some simulation stage captured by the record of index record_index.
+        name == count
+        index.name == age_class
+        """
+        AGE_LIMIT = self.get_config()["AGE_LIMIT"]
+        table = self.get_snapshot_demography(record_index).ages.value_counts().reindex(range(AGE_LIMIT), fill_value=0)
+        table.index.names = ["age_class"]
+        return table
+
+    def get_interval_death_table(self, normalize=False):
+        """
+        Observed data. Has a MultiIndex.
+        Number of deaths (int) per age class observed during an interval of length VISOR_RATE.
+        columns.name == age_class (int)
+        index.names == ["interval", "cause_of_death"] (int, str)
+        """
+        table = (
+            pd.concat({causeofdeath: self._read_df(f"age_at_{causeofdeath}") for causeofdeath in VALID_CAUSES_OF_DEATH})
+            .swaplevel()
+            .sort_index(level=0)
+        )
+        table.index.names = ["interval", "cause_of_death"]
+        table.columns.names = ["age_class"]
+        table.columns = table.columns.astype(int)
+        return table
+
+    ##########
+    # BASICS #
+    ##########
+
+    def get_snapshot_genotypes(self, record_index):
+        """
+        columns .. bit index
+        index .. individual index
+        value .. True or False
+        """
+        return self._read_snapshot("genotypes", record_index=record_index)
+
+    def get_snapshot_phenotypes(self, record_index):
+        """
+        columns .. phenotypic trait index
+        index .. individual index
+        value .. phenotypic trait value
+        """
+        return self._read_snapshot("phenotypes", record_index=record_index)
+
+    def get_snapshot_demography(self, record_index):
+        """
+        columns .. ages, births, birthdays
+        index .. individual index
+        """
+        return self._read_snapshot("demography", record_index=record_index)
+
+    def get_interval_genotypes(self, reload=True):
+        """
+        columns .. bit index
+        index .. record index
+        value .. mean bit value
+        """
+        return self._read_df("genotypes", reload=reload)
+
+    def get_interval_phenotypes(self, reload=True):
+        """
+        columns .. phenotypic trait index
+        index .. record index
+        value .. median phenotypic trait value
+        """
+        return self._read_df("phenotypes", reload=reload)
 
     def get_survival_analysis_TE(self, record_index):
+        """
+        columns .. T, E
+        index .. individual
+        value .. age at event, event (1 .. died, 0 .. alive)
+        """
+        # TODO error with T and E in the record; they are being appended on top
         assert record_index < len(self.paths["te"]), "Index out of range"
-        data = pd.read_csv(self.paths["te"][record_index])
+        data = pd.read_csv(self.paths["te"][record_index], header=0)
         data.index.names = ["individual"]
         return data
 
-    ### FORMAT READING FUNCTIONS
+    #############
+    # UTILITIES #
+    #############
 
     def _read_df(self, stem, reload=True):
         file_read = stem in self.data
@@ -209,14 +236,6 @@ class Container:
             self.data[stem] = pd.read_csv(self.paths[stem])
 
         return self.data.get(stem, pd.DataFrame())
-
-    # def _return_json(self, stem):
-    #     df = self._read_df(stem)
-    #     json = df.T.to_json(index=False, orient="split")
-    #     return json
-
-    # def _return_json(self):
-    #     return json.dumps(self)
 
     @staticmethod
     def _read_json(path):
@@ -295,35 +314,3 @@ class Container:
         sfss.index.names = ["snapshot"]
 
         return sfss
-
-    # Leslie matrix and fitness analysis
-
-    @staticmethod
-    def get_leslie(s, r):
-        leslie = np.diag(s, k=-1)
-        leslie[0] = r
-        leslie[np.isnan(leslie)] = 0
-        return leslie
-
-    def get_observed_leslie(self, index):
-        lt = self.get_life_table("interval").iloc[index]
-        s = (1 + lt.pct_change())[1:]
-        bt = self.get_birth_table("interval").iloc[index]
-        r = (bt / lt).fillna(0)
-        return self.get_leslie(s, r)
-
-    def get_intrinsic_leslie(self, index):
-        m = self.get_intrinsic_mortality().iloc[index]
-        s = 1 - m
-        r = self.get_intrinsic_fertility().iloc[index]
-        return self.get_leslie(s[:-1], r)
-
-    @staticmethod
-    def get_leslie_breakdown(leslie):
-        eigenvalues, eigenvectors = np.linalg.eig(leslie)
-        dominant_index = np.argmax(np.abs(eigenvalues))
-        dominant_eigenvector = eigenvectors[:, dominant_index]
-        return {
-            "growth_rate": np.max(np.abs(eigenvalues)),
-            "stable_age_structure": dominant_eigenvector / dominant_eigenvector.sum(),
-        }
