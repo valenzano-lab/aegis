@@ -205,7 +205,12 @@ class Container:
         index .. record index
         value .. mean bit value
         """
-        return self._read_df("genotypes", reload=reload)
+        # TODO check that they exist
+        df = pd.read_csv(self._get_path("genotypes"), header=[0])
+        df.index.names = ["interval"]
+        df.index = df.index.astype(int)
+        df.columns.names = ["bit_index"]
+        return df
 
     def get_interval_phenotypes(self, reload=True):
         """
@@ -213,7 +218,13 @@ class Container:
         index .. record index
         value .. median phenotypic trait value
         """
-        return self._read_df("phenotypes", reload=reload)
+        # TODO check that they exist
+        df = pd.read_csv(self._get_path("phenotypes"), header=[0, 1])
+        df.index.names = ["interval"]
+        df.index = df.index.astype(int)
+        df.columns.names = ["trait", "age_class"]
+        # TODO age_class is str
+        return df
 
     def get_survival_analysis_TE(self, record_index):
         """
@@ -231,6 +242,9 @@ class Container:
     # UTILITIES #
     #############
 
+    def _get_path(self, stem):
+        return self.paths[stem]
+
     def _read_df(self, stem, reload=True):
         file_read = stem in self.data
         file_exists = stem in self.paths
@@ -239,9 +253,7 @@ class Container:
         if not file_exists:
             logging.error(f"File {self.paths[stem]} does not exist")
         elif (not file_read) or reload:
-
-            header = [0, 1] if stem == "phenotypes" else None  # phenotypes.csv have two column rows
-            self.data[stem] = pd.read_csv(self.paths[stem], header=header)
+            self.data[stem] = pd.read_csv(self.paths[stem], header=0)
 
         return self.data.get(stem, pd.DataFrame())
 
