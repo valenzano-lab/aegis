@@ -10,6 +10,7 @@ class VisorRecorder:
 
     def record(self, population):
         """Record data that is needed by visor."""
+        # TODO rename VISOR_RATE into something more representative; potentially, restructure the recording rates
         if hermes.skip("VISOR_RATE") or len(population) == 0:
             return
 
@@ -29,5 +30,10 @@ class VisorRecorder:
             np.savetxt(f, [array], delimiter=",", fmt="%i")
 
         with open(self.odir / "phenotypes.csv", "ab") as f:
-            array = np.arange(hermes.modules.architect.architecture.get_number_of_phenotypic_values())
-            np.savetxt(f, [array], delimiter=",", fmt="%i")
+            age_limit = hermes.modules.architect.architecture.AGE_LIMIT
+            trait_list = list(hermes.traits.keys())
+            n_traits = len(trait_list)
+            header0 = np.repeat(trait_list, age_limit)
+            header1 = list(np.arange(age_limit)) * n_traits
+            np.savetxt(f, [header0], delimiter=",", fmt="%s")
+            np.savetxt(f, [header1], delimiter=",", fmt="%i")

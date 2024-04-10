@@ -239,7 +239,9 @@ class Container:
         if not file_exists:
             logging.error(f"File {self.paths[stem]} does not exist")
         elif (not file_read) or reload:
-            self.data[stem] = pd.read_csv(self.paths[stem])
+
+            header = [0, 1] if stem == "phenotypes" else None  # phenotypes.csv have two column rows
+            self.data[stem] = pd.read_csv(self.paths[stem], header=header)
 
         return self.data.get(stem, pd.DataFrame())
 
