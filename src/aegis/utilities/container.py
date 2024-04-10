@@ -1,5 +1,4 @@
 import pandas as pd
-import numpy as np
 import pathlib
 import logging
 import json
@@ -11,17 +10,24 @@ from aegis.modules.dataclasses.population import Population
 from aegis.constants import VALID_CAUSES_OF_DEATH
 
 
+# TODO for analysis:
+# TODO add 0 to survivorship, think about edge cases
+# TODO clean up indices, columns and dtypes
+# TODO be explicit about aggregation function
+
+
 class Container:
-    """Wrapper class
-    Contains paths to output files which it can read and return.
+    """
+    Reads and reformats output files so they are available for internal and external use (prepare for export).
     """
 
     def __init__(self, basepath):
         self.basepath = pathlib.Path(basepath).absolute()
         self.name = self.basepath.stem
         self.data = {}
+        self.set_paths()
 
-        # Set paths
+    def set_paths(self):
         # TODO smarter way of listing paths; you are capturing te files with number keys e.g. '6': ... /te/6.csv; that's silly
         self.paths = {
             path.stem: path for path in self.basepath.glob("**/*") if path.is_file() and path.suffix == ".csv"
@@ -45,9 +51,6 @@ class Container:
         )
         if not self.paths["log"].is_file():
             logging.error(f"No AEGIS log found at path {self.paths['log']}")
-
-    def __str__(self):
-        return self.name
 
     def get_record_structure():
         # TODO
@@ -156,6 +159,7 @@ class Container:
         columns.name == age_class (int)
         index.names == ["interval", "cause_of_death"] (int, str)
         """
+        # TODO think about position of axes
         table = (
             pd.concat({causeofdeath: self._read_df(f"age_at_{causeofdeath}") for causeofdeath in VALID_CAUSES_OF_DEATH})
             .swaplevel()
@@ -169,6 +173,8 @@ class Container:
     ##########
     # BASICS #
     ##########
+
+    # TODO add better column and index names
 
     def get_snapshot_genotypes(self, record_index):
         """
@@ -253,64 +259,3 @@ class Container:
     def _read_pickle(self, record_index):
         assert record_index < len(self.paths["pickles"]), "Index out of range"
         return Population.load_pickle_from(self.paths["pickles"][record_index])
-
-    ### ANALYSIS FUNCTIONS
-
-    @staticmethod
-    def get_observed_mortality(age_structure):
-        return -age_structure.pct_change()[1:]
-
-    def get_intrinsic_mortality(self):
-        phenotypes = self._read_df("phenotypes")
-        max_age = self.get_config()["AGE_LIMIT"]
-        # TODO Ensure that you are slicing the phenotype array at right places
-        pdf = phenotypes.iloc[:, :max_age]
-        y = 1 - pdf
-        return y
-
-    def get_intrinsic_survivorship(self):
-        phenotypes = self._read_df("phenotypes")
-        max_age = self.get_config()["AGE_LIMIT"]
-        # TODO Ensure that you are slicing the phenotype array at right places
-        pdf = phenotypes.iloc[:, :max_age]
-        y = pdf.cumprod(axis=1)
-        return y
-
-    def get_intrinsic_fertility(self):
-        phenotypes = self._read_df("phenotypes")
-        max_age = self.get_config()["AGE_LIMIT"]
-
-        # TODO Ensure that you are slicing the phenotype array at right places
-        fertility = phenotypes.iloc[:, max_age:]
-
-        maturation_age = self.get_config()["MATURATION_AGE"]
-        menopause = self.get_config()["MENOPAUSE"]
-
-        fertility.iloc[:, :maturation_age] = 0
-
-        if menopause > 0:
-            fertility.iloc[:, menopause:] = 0
-
-        return fertility
-
-    # genotypic
-
-    def get_derived_allele_freq(self):
-        genotypes = self._read_df("genotypes")
-        reference = genotypes.round()
-        derived_allele_freq = (
-            genotypes.iloc[1:].reset_index(drop=True) - reference.iloc[:-1].reset_index(drop=True)
-        ).abs()
-        return derived_allele_freq
-
-    def get_sfss(self, bins=10):
-        daf = self.get_derived_allele_freq()
-        bins = 10
-        binsize = 1 / (bins - 1)
-        sfss = (daf // binsize).T.apply(lambda l: l.value_counts()).T.fillna(0).astype(int)
-
-        sfss.columns = sfss.columns.astype(int)
-        sfss.columns.names = ["frequency_bin"]
-        sfss.index.names = ["snapshot"]
-
-        return sfss
