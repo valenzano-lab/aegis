@@ -138,6 +138,8 @@ class Container:
         table.index.names = ["interval"]
         table.columns.names = ["age_class"]
         table.columns = table.columns.astype(int)
+        if normalize:
+            table = table.div(table.iloc[:, 0], axis=0)
         return table
 
     def get_snapshot_life_table(self, record_index: int, normalize=False):
