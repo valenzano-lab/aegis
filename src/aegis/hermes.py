@@ -19,8 +19,8 @@ logging.basicConfig(
 
 
 class Hermes:
-    """
-    """
+    """ """
+
     def initialize(self, custom_config_path, custom_input_params, overwrite):
         self.stage = 1
         self.constants = constants
@@ -51,6 +51,9 @@ class Hermes:
         return np.random.default_rng(self.random_seed)
 
     def init_traits(self):
+        """
+        Here the trait order is hardcoded.
+        """
         from aegis.modules.initialization.parameterization.trait import Trait
 
         traits = {}

@@ -34,27 +34,18 @@ class GPM:
             for vec_index, trait, age, magnitude in self.phenolist:
                 vec_state = vectors[:, vec_index]
                 phenotype_change = vec_state * magnitude
-                phenotype_index = self.__where(trait, age)
+                phenotype_index = hermes.traits[trait].start + age
                 phenodiff[:, phenotype_index] += phenotype_change
             return phenodiff
 
         else:
             raise Exception("Neither phenomatrix nor phenolist has been provided.")
 
-    def __where(self, traitname, age=None):
-        # Order of traits is hard-encoded and is: surv, repr, muta, neut
-        order = {"surv": 0, "repr": 1, "muta": 2, "neut": 3}[traitname]
-        if age is None:
-            return slice(self.AGE_LIMIT * order, self.AGE_LIMIT * (order + 1))
-        else:
-            return self.AGE_LIMIT * order + age
-
     def add_initial_values(self, array):
         array = array.copy()
 
-        for traitname, d in hermes.traits.items():
-            where = self.__where(traitname)
-            array[:, where] += d.initpheno
+        for traitname, trait in hermes.traits.items():
+            array[:, trait.slice] += trait.initpheno
         return array
 
     def __call__(self, interpretome, zeropheno):
