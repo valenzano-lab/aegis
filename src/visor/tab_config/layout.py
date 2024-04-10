@@ -3,17 +3,22 @@ from visor import utilities
 from aegis.modules.initialization.parameterization.default_parameters import DEFAULT_PARAMETERS
 from aegis.modules.initialization.parameterization.parameter import Parameter
 
+from aegis.modules.mortality.predation import Predation
+from aegis.modules.recording.recordingmanager import RecordingManager
 
-# TODO change text
+# TODO source from documentation
 TEXTS_DOMAIN = {
-    "recording": "Change which data are recorded and with what frequency.",
-    "predation": "asdf",
+    "recording": utilities.extract_visor_from_docstring(RecordingManager),
+    "predation": utilities.extract_visor_from_docstring(Predation),
     "computation": "wer",
     "genetics": "asdf",
     "initialization": "wer",
     "infection": "asdf",
     "ecology": "wer",
     "environment": "asdf",
+    "reproduction": "",
+    "mutation": "",
+    "other": "",
 }
 
 

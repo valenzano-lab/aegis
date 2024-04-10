@@ -1,11 +1,15 @@
-"""
-https://bbolker.github.io/math3mb/labNotes/lotkavolterra.pdf
-"""
-
 import numpy as np
 
 
 class Predation:
+    """
+    VISOR
+    Predation is an optional source of mortality. It is inactive when PREDATION_RATE is set to 0.
+    The probability that an individual dies from predation depends (logistically) on the number of predators and PREDATION_RATE.
+    It is independent of the age and genetics of an individual.
+    The change in the number of predators is modeled using the logistic Verhulst growth model, which depends on PREDATOR_GROWTH.
+    """
+
     def __init__(self, PREDATOR_GROWTH, PREDATION_RATE):
         self.N = 1
         self.PREDATOR_GROWTH = PREDATOR_GROWTH

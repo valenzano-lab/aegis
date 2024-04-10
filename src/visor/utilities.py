@@ -86,3 +86,9 @@ def get_sims():
 def sim_exists(filename: str) -> bool:
     paths = get_sim_paths()
     return any(path.stem == filename for path in paths)
+
+
+def extract_visor_from_docstring(class_):
+    docstring = class_.__doc__
+    visor_section = docstring.split("VISOR")[1]
+    return visor_section

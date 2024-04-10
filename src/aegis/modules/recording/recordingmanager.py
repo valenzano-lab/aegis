@@ -26,6 +26,29 @@ from .progressrecorder import ProgressRecorder
 
 
 class RecordingManager:
+    """
+    Container class for various recorders.
+    Each recorder records a certain type of data.
+    Most recorders record data as tables, except SummaryRecorder and PickleRecorder which record JSON files and pickles (a binary python format).
+    Headers and indexes of all tabular files are explicitly recorded.
+
+    -----
+    VISOR
+    AEGIS records a lot of different data.
+    In brief, AEGIS records
+    genomic data (population-level allele frequencies and individual-level binary sequences) and
+    phenotypic data (observed population-level phenotypes and intrinsic individual-level phenotypes),
+    as well as
+    derived demographic data (life, death and birth tables),
+    population genetic data (e.g. effective population size, theta), and
+    survival analysis data (TE / time-event tables).
+    Furthermore, it records metadata (e.g. simulation log, processed configuration files) and python pickle files.
+
+    Recorded data is distributed in multiple files.
+    Almost all data are tabular, so each file is a table to which rows are appended as the simulation is running.
+    The recording rates are frequencies at which rows are added; they are expressed in simulation stages.
+    """
+
     def __init__(self, custom_config_path, overwrite):
         odir = self.make_odir(custom_config_path=custom_config_path, overwrite=overwrite)
         self.paths = self.get_paths(odir)

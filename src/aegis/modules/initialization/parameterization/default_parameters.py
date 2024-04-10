@@ -20,7 +20,7 @@ DEFAULT_PARAMETERS = {
     "RANDOM_SEED": Parameter(
         key="RANDOM_SEED",
         name="",
-        domain="recording",
+        domain="computation",
         default=None,
         info="If nothing is given, a random integer will be used as the seed; otherwise the given integer will be used as the seed",
         dtype=int,
@@ -30,7 +30,7 @@ DEFAULT_PARAMETERS = {
     "STAGES_PER_SIMULATION": Parameter(
         key="STAGES_PER_SIMULATION",
         name="",
-        domain="recording",
+        domain="other",
         default=100000,
         info="How many stages does the simulation run for?",
         dtype=int,
@@ -221,7 +221,7 @@ DEFAULT_PARAMETERS = {
     "MATURATION_AGE": Parameter(
         key="MATURATION_AGE",
         name="",
-        domain="genetics",
+        domain="reproduction",
         default=10,
         info="Age at which reproduction is possible",
         dtype=int,
@@ -232,7 +232,7 @@ DEFAULT_PARAMETERS = {
     "MENOPAUSE": Parameter(
         key="MENOPAUSE",
         name="",
-        domain="genetics",
+        domain="reproduction",
         default=0,
         info="Age at which reproduction is not longer possible",
         dtype=int,
@@ -275,7 +275,7 @@ DEFAULT_PARAMETERS = {
     "REPRODUCTION_MODE": Parameter(
         key="REPRODUCTION_MODE",
         name="",
-        domain="genetics",
+        domain="reproduction",
         default="asexual",
         info="Mode of reproduction",
         dtype=str,
@@ -285,7 +285,7 @@ DEFAULT_PARAMETERS = {
     "RECOMBINATION_RATE": Parameter(
         key="RECOMBINATION_RATE",
         name="",
-        domain="genetics",
+        domain="reproduction",
         default=0,
         info="Rate of recombination; 0 if no recombination",
         dtype=float,
@@ -296,7 +296,7 @@ DEFAULT_PARAMETERS = {
     "MUTATION_RATIO": Parameter(
         key="MUTATION_RATIO",
         name="",
-        domain="genetics",
+        domain="mutation",
         default=0.1,
         info="Ratio of 0->1 mutations to 1->0 mutations",
         dtype=float,
