@@ -33,7 +33,7 @@ class Bioreactor:
         self.reproduction()  # reproduction
         self.age()  # age increment and potentially death
         self.hatch()
-        hermes.modules.architect.flipmap.evolve(stage=hermes.get_stage())
+        hermes.modules.architect.envdrift.evolve(stage=hermes.get_stage())
 
         # Record data
         hermes.recorder.flushrecorder.collect("additive_age_structure", self.population.ages)  # population census

@@ -333,12 +333,12 @@ DEFAULT_PARAMETERS = {
         drange="{by_loop, by_dot, by_dummy}",
         inrange=lambda x: x in ("by_loop", "by_dot", "by_dummy"),
     ),
-    "FLIPMAP_CHANGE_RATE": Parameter(
-        key="FLIPMAP_CHANGE_RATE",
+    "ENVDRIFT_RATE": Parameter(
+        key="ENVDRIFT_RATE",
         name="",
         domain="environmental drift",
         default=0,
-        info="Flipmap changes every ? stages",
+        info="Fitness landscape is modified every ? stages",
         dtype=int,
         drange="[0, inf)",
         inrange=lambda x: x >= 0,

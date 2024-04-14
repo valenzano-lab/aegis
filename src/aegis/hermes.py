@@ -127,7 +127,7 @@ class Hermes:
             PHENOMAP=self.parameters.PHENOMAP,
             AGE_LIMIT=self.parameters.AGE_LIMIT,
             THRESHOLD=self.parameters.THRESHOLD,
-            FLIPMAP_CHANGE_RATE=self.parameters.FLIPMAP_CHANGE_RATE,
+            ENVDRIFT_RATE=self.parameters.ENVDRIFT_RATE,
         )
 
         # Other

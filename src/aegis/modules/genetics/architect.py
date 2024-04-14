@@ -6,7 +6,7 @@ import numpy as np
 
 from aegis.hermes import hermes
 
-from aegis.modules.genetics.flipmap import Flipmap
+from aegis.modules.genetics.envdrift import Envdrift
 from aegis.modules.genetics.composite.architecture import CompositeArchitecture
 from aegis.modules.genetics.modifying.architecture import ModifyingArchitecture
 
@@ -19,7 +19,7 @@ class Architect:
         AGE_LIMIT,
         THRESHOLD,
         ploid,
-        FLIPMAP_CHANGE_RATE,
+        ENVDRIFT_RATE,
     ):
 
         if PHENOMAP:
@@ -40,13 +40,13 @@ class Architect:
                 THRESHOLD=THRESHOLD,
             )
         self.architecture = architecture
-        self.flipmap = Flipmap(FLIPMAP_CHANGE_RATE=FLIPMAP_CHANGE_RATE, genome_shape=self.architecture.get_shape())
+        self.envdrift = Envdrift(ENVDRIFT_RATE=ENVDRIFT_RATE, genome_shape=self.architecture.get_shape())
 
     def __call__(self, genomes):
         """Translate genomes into an array of phenotypes probabilities."""
 
-        # Apply the flipmap
-        envgenomes = self.flipmap.call(genomes.get_array())
+        # Apply the envdrift
+        envgenomes = self.envdrift.call(genomes.get_array())
 
         phenotypes = self.architecture.compute(envgenomes)
 

@@ -8,6 +8,7 @@ from aegis.modules.reproduction.reproduction import Reproducer
 from aegis.modules.mortality import starvation, predation, infection, abiotic
 from aegis.modules.genetics.composite.architecture import CompositeArchitecture
 from aegis.modules.genetics.modifying.architecture import ModifyingArchitecture
+from aegis.modules.genetics.envdrift import Envdrift
 
 # TODO source from documentation
 TEXTS_DOMAIN = {
@@ -20,7 +21,7 @@ TEXTS_DOMAIN = {
     "genetics": "asdf",
     "composite genetic architecture": utilities.extract_visor_from_docstring(CompositeArchitecture),
     "modifying genetic architecture": utilities.extract_visor_from_docstring(ModifyingArchitecture),
-    "environmental drift": "",
+    "environmental drift": utilities.extract_visor_from_docstring(Envdrift),
     "other": "",
 }
 
