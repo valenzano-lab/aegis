@@ -5,6 +5,13 @@ from aegis.modules.genetics.composite.interpreter import Interpreter
 
 
 class CompositeArchitecture:
+    """
+    
+    VISOR
+
+    
+
+    """
     def __init__(self, ploid, BITS_PER_LOCUS, AGE_LIMIT, THRESHOLD):
         self.ploid = ploid
         self.BITS_PER_LOCUS = BITS_PER_LOCUS

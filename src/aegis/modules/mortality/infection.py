@@ -11,6 +11,17 @@ from aegis.hermes import hermes
 
 
 class Infection:
+    """
+
+    VISOR
+    Infection is an optional source of mortality. It causes no deaths when FATALITY_RATE is 0.
+    It is akin to a SIR (susceptible-infectious-removed) model without immunity (i.e. recovered individuals can get reinfected).
+    The infectious agent can be transmitted between individuals (probability grows logistically with the
+    proportion of infected population and TRANSMISSIBILITY) or be acquired from the environment (with the probability
+    of BACKGROUND_INFECTIVITY). The infection cannot be eradicated. The probability to recover
+    is the RECOVERY_RATE, and the probability to die the FATALITY_RATE.
+    """
+
     def __init__(self, BACKGROUND_INFECTIVITY, TRANSMISSIBILITY, RECOVERY_RATE, FATALITY_RATE):
         self.BACKGROUND_INFECTIVITY = BACKGROUND_INFECTIVITY
         self.TRANSMISSIBILITY = TRANSMISSIBILITY

@@ -4,7 +4,9 @@ import numpy as np
 class Predation:
     """
     VISOR
-    Predation is an optional source of mortality. It is inactive when PREDATION_RATE is set to 0.
+    Predation is an optional source of mortality, useful for modeling
+    death with prey-predator dynamics.
+    It causes no deaths when PREDATION_RATE is set to 0.
     The probability that an individual dies from predation depends (logistically) on the number of predators and PREDATION_RATE.
     It is independent of the age and genetics of an individual.
     The change in the number of predators is modeled using the logistic Verhulst growth model, which depends on PREDATOR_GROWTH.

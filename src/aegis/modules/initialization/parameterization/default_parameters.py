@@ -20,7 +20,7 @@ DEFAULT_PARAMETERS = {
     "RANDOM_SEED": Parameter(
         key="RANDOM_SEED",
         name="",
-        domain="computation",
+        domain="other",
         default=None,
         info="If nothing is given, a random integer will be used as the seed; otherwise the given integer will be used as the seed",
         dtype=int,
@@ -136,7 +136,7 @@ DEFAULT_PARAMETERS = {
     # "ECOSYSTEM_NUMBER": Param(
     #     key="ECOSYSTEM_NUMBER",
     #     name="",
-    #     domain="ecology",
+    #     domain="starvation",
     #     default=1,
     #     info="Number of subpopulations",
     #     dtype=int,
@@ -148,7 +148,7 @@ DEFAULT_PARAMETERS = {
     "CARRYING_CAPACITY": Parameter(
         key="CARRYING_CAPACITY",
         name="",
-        domain="ecology",
+        domain="starvation",
         default=1000,
         info="Number of individuals in the population",
         dtype=int,
@@ -161,7 +161,7 @@ DEFAULT_PARAMETERS = {
     "STARVATION_RESPONSE": Parameter(
         key="STARVATION_RESPONSE",
         name="",
-        domain="ecology",
+        domain="starvation",
         default="gradual",
         info="Who dies when everyone is starving?",
         dtype=str,
@@ -178,7 +178,7 @@ DEFAULT_PARAMETERS = {
     "STARVATION_MAGNITUDE": Parameter(
         key="STARVATION_MAGNITUDE",
         name="",
-        domain="ecology",
+        domain="starvation",
         default=0.05,
         info="",
         dtype=float,
@@ -188,7 +188,7 @@ DEFAULT_PARAMETERS = {
     "CLIFF_SURVIVORSHIP": Parameter(
         key="CLIFF_SURVIVORSHIP",
         name="",
-        domain="ecology",
+        domain="starvation",
         default=None,
         info="What fraction of population survives after a cliff?; null if not applicable",
         dtype=float,
@@ -198,7 +198,7 @@ DEFAULT_PARAMETERS = {
     "INCUBATION_PERIOD": Parameter(
         key="INCUBATION_PERIOD",
         name="",
-        domain="ecology",
+        domain="reproduction",
         default=0,
         info="How many stages does it take from fertilization to hatching? 0 if egg period is skipped, -1 if hatching occurs only once no living individuals are around.",
         dtype=int,
@@ -208,7 +208,7 @@ DEFAULT_PARAMETERS = {
     "AGE_LIMIT": Parameter(
         key="AGE_LIMIT",
         name="",
-        domain="genetics",
+        domain="other",
         default=50,
         info="Maximum lifespan",
         dtype=int,
@@ -239,20 +239,20 @@ DEFAULT_PARAMETERS = {
         drange="[0, inf)",
         inrange=lambda x: x >= 0,
     ),
-    "GENOME_FREE": Parameter(
-        key="GENOME_FREE",
-        name="",
-        domain="genetics",
-        default=False,
-        info="Do not simulate genetics",
-        dtype=bool,
-        drange="",
-        inrange=lambda x: True,
-    ),
+    # "GENOME_FREE": Parameter(
+    #     key="GENOME_FREE",
+    #     name="",
+    #     domain="composite genetic architecture",
+    #     default=False,
+    #     info="Do not simulate genetics",
+    #     dtype=bool,
+    #     drange="",
+    #     inrange=lambda x: True,
+    # ),
     "BITS_PER_LOCUS": Parameter(
         key="BITS_PER_LOCUS",
         name="",
-        domain="genetics",
+        domain="composite genetic architecture",
         default=8,
         info="Number of bits that each locus has",
         dtype=int,
@@ -265,7 +265,7 @@ DEFAULT_PARAMETERS = {
     "HEADSUP": Parameter(
         key="HEADSUP",
         name="",
-        domain="initialization",
+        domain="composite genetic architecture",
         default=-1,
         info="-1 if no preevolution, 0 for maturity guarantee, +x for headsup",
         dtype=int,
@@ -296,7 +296,7 @@ DEFAULT_PARAMETERS = {
     "MUTATION_RATIO": Parameter(
         key="MUTATION_RATIO",
         name="",
-        domain="mutation",
+        domain="reproduction",
         default=0.1,
         info="Ratio of 0->1 mutations to 1->0 mutations",
         dtype=float,
@@ -306,7 +306,7 @@ DEFAULT_PARAMETERS = {
     "MUTATION_METHOD": Parameter(
         key="MUTATION_METHOD",
         name="",
-        domain="computation",
+        domain="other",
         default="by_bit",
         info="Mutate by XOR with a randomized bit matrix or generate random indices to mutate",
         dtype=str,
@@ -326,7 +326,7 @@ DEFAULT_PARAMETERS = {
     "PHENOMAP_METHOD": Parameter(
         key="PHENOMAP_METHOD",
         name="",
-        domain="computation",
+        domain="other",
         default="by_loop",
         info="Non-vectorized, vectorized and null method of calculating phenotypic values",
         dtype=str,
@@ -336,7 +336,7 @@ DEFAULT_PARAMETERS = {
     "FLIPMAP_CHANGE_RATE": Parameter(
         key="FLIPMAP_CHANGE_RATE",
         name="",
-        domain="ecology",
+        domain="environmental drift",
         default=0,
         info="Flipmap changes every ? stages",
         dtype=int,
@@ -346,7 +346,7 @@ DEFAULT_PARAMETERS = {
     "ABIOTIC_HAZARD_AMPLITUDE": Parameter(
         key="ABIOTIC_HAZARD_AMPLITUDE",
         name="",
-        domain="environment",
+        domain="abiotic",
         default=0,
         info="",
         dtype=float,
@@ -356,7 +356,7 @@ DEFAULT_PARAMETERS = {
     "ABIOTIC_HAZARD_PERIOD": Parameter(
         key="ABIOTIC_HAZARD_PERIOD",
         name="",
-        domain="environment",
+        domain="abiotic",
         default=1,
         info="",
         dtype=float,
@@ -366,7 +366,7 @@ DEFAULT_PARAMETERS = {
     "ABIOTIC_HAZARD_OFFSET": Parameter(
         key="ABIOTIC_HAZARD_OFFSET",
         name="",
-        domain="environment",
+        domain="abiotic",
         default=0,
         info=r"e.g. 0.01 means that abiotic mortality is increased by 1% each stage",
         dtype=float,
@@ -376,7 +376,7 @@ DEFAULT_PARAMETERS = {
     "ABIOTIC_HAZARD_SHAPE": Parameter(
         key="ABIOTIC_HAZARD_SHAPE",
         name="",
-        domain="environment",
+        domain="abiotic",
         default="sinusoidal",
         info="",
         dtype=str,
@@ -446,7 +446,7 @@ DEFAULT_PARAMETERS = {
     "G_surv_evolvable": Parameter(
         key="G_surv_evolvable",
         name="",
-        domain="genetics",
+        domain="composite genetic architecture",
         default=True,
         info="Is survival an evolvable trait?",
         dtype=bool,
@@ -456,7 +456,7 @@ DEFAULT_PARAMETERS = {
     "G_surv_agespecific": Parameter(
         key="G_surv_agespecific",
         name="",
-        domain="genetics",
+        domain="composite genetic architecture",
         default=True,
         info="Is survival age-specific?",
         dtype=bool,
@@ -466,7 +466,7 @@ DEFAULT_PARAMETERS = {
     "G_surv_interpreter": Parameter(
         key="G_surv_interpreter",
         name="",
-        domain="genetics",
+        domain="composite genetic architecture",
         default="binary",
         info="",
         dtype=str,
@@ -493,7 +493,7 @@ DEFAULT_PARAMETERS = {
     "G_surv_initgeno": Parameter(
         key="G_surv_initgeno",
         name="",
-        domain="initialization",
+        domain="composite genetic architecture",
         default=1,
         info="Initial survival rate",
         dtype=float,
@@ -502,7 +502,7 @@ DEFAULT_PARAMETERS = {
     "G_surv_initpheno": Parameter(
         key="G_surv_initpheno",
         name="",
-        domain="initialization",
+        domain="modifying genetic architecture",
         default=1,
         info="Initial survival rate",
         dtype=float,
@@ -511,7 +511,7 @@ DEFAULT_PARAMETERS = {
     "G_repr_evolvable": Parameter(
         key="G_repr_evolvable",
         name="",
-        domain="genetics",
+        domain="composite genetic architecture",
         default=True,
         info="Is fertility an evolvable trait?",
         dtype=bool,
@@ -520,7 +520,7 @@ DEFAULT_PARAMETERS = {
     "G_repr_agespecific": Parameter(
         key="G_repr_agespecific",
         name="",
-        domain="genetics",
+        domain="composite genetic architecture",
         default=True,
         info="Is fertility age-specific?",
         dtype=bool,
@@ -529,7 +529,7 @@ DEFAULT_PARAMETERS = {
     "G_repr_interpreter": Parameter(
         key="G_repr_interpreter",
         name="",
-        domain="genetics",
+        domain="composite genetic architecture",
         default="binary",
         info="",
         dtype=str,
@@ -557,7 +557,7 @@ DEFAULT_PARAMETERS = {
     "G_repr_initgeno": Parameter(
         key="G_repr_initgeno",
         name="",
-        domain="initialization",
+        domain="composite genetic architecture",
         default=1,
         info="Initial fertility rate",
         dtype=float,
@@ -566,7 +566,7 @@ DEFAULT_PARAMETERS = {
     "G_repr_initpheno": Parameter(
         key="G_repr_initpheno",
         name="",
-        domain="initialization",
+        domain="modifying genetic architecture",
         default=1,
         info="Initial fertility rate",
         dtype=float,
@@ -575,7 +575,7 @@ DEFAULT_PARAMETERS = {
     "G_neut_evolvable": Parameter(
         key="G_neut_evolvable",
         name="",
-        domain="genetics",
+        domain="composite genetic architecture",
         default=False,
         info="",
         dtype=bool,
@@ -584,7 +584,7 @@ DEFAULT_PARAMETERS = {
     "G_neut_agespecific": Parameter(
         key="G_neut_agespecific",
         name="",
-        domain="genetics",
+        domain="composite genetic architecture",
         default=False,
         info="",
         dtype=bool,
@@ -593,7 +593,7 @@ DEFAULT_PARAMETERS = {
     "G_neut_interpreter": Parameter(
         key="G_neut_interpreter",
         name="",
-        domain="genetics",
+        domain="composite genetic architecture",
         default="binary",
         info="",
         dtype=str,
@@ -620,7 +620,7 @@ DEFAULT_PARAMETERS = {
     "G_neut_initgeno": Parameter(
         key="G_neut_initgeno",
         name="",
-        domain="initialization",
+        domain="composite genetic architecture",
         default=1,
         info="",
         dtype=float,
@@ -629,7 +629,7 @@ DEFAULT_PARAMETERS = {
     "G_neut_initpheno": Parameter(
         key="G_neut_initpheno",
         name="",
-        domain="initialization",
+        domain="modifying genetic architecture",
         default=1,
         info="",
         dtype=float,
@@ -638,7 +638,7 @@ DEFAULT_PARAMETERS = {
     "G_muta_evolvable": Parameter(
         key="G_muta_evolvable",
         name="",
-        domain="genetics",
+        domain="composite genetic architecture",
         default=False,
         info="",
         dtype=bool,
@@ -647,7 +647,7 @@ DEFAULT_PARAMETERS = {
     "G_muta_agespecific": Parameter(
         key="G_muta_agespecific",
         name="",
-        domain="genetics",
+        domain="composite genetic architecture",
         default=False,
         info="",
         dtype=bool,
@@ -656,7 +656,7 @@ DEFAULT_PARAMETERS = {
     "G_muta_interpreter": Parameter(
         key="G_muta_interpreter",
         name="",
-        domain="genetics",
+        domain="composite genetic architecture",
         default="binary",
         info="",
         dtype=str,
@@ -683,7 +683,7 @@ DEFAULT_PARAMETERS = {
     "G_muta_initgeno": Parameter(
         key="G_muta_initgeno",
         name="",
-        domain="initialization",
+        domain="composite genetic architecture",
         default=1,
         info="Initial mutation rate",
         dtype=float,
@@ -692,7 +692,7 @@ DEFAULT_PARAMETERS = {
     "G_muta_initpheno": Parameter(
         key="G_muta_initpheno",
         name="",
-        domain="initialization",
+        domain="modifying genetic architecture",
         default=0.001,
         info="Initial mutation rate",
         dtype=float,
@@ -701,7 +701,7 @@ DEFAULT_PARAMETERS = {
     "THRESHOLD": Parameter(
         key="THRESHOLD",
         name="",
-        domain="genetics",
+        domain="composite genetic architecture",
         default=None,  # 3
         info="",
         dtype=int,
@@ -710,7 +710,7 @@ DEFAULT_PARAMETERS = {
     "PHENOMAP_SPECS": Parameter(
         key="PHENOMAP_SPECS",
         name="",
-        domain="genetics",
+        domain="modifying genetic architecture",
         default=[],
         info="",
         dtype=list,
@@ -719,7 +719,7 @@ DEFAULT_PARAMETERS = {
     "PHENOMAP": Parameter(
         key="PHENOMAP",
         name="",
-        domain="genetics",
+        domain="modifying genetic architecture",
         default={},
         info="",
         dtype=dict,

@@ -3,21 +3,24 @@ from visor import utilities
 from aegis.modules.initialization.parameterization.default_parameters import DEFAULT_PARAMETERS
 from aegis.modules.initialization.parameterization.parameter import Parameter
 
-from aegis.modules.mortality.predation import Predation
 from aegis.modules.recording.recordingmanager import RecordingManager
+from aegis.modules.reproduction.reproduction import Reproducer
+from aegis.modules.mortality import starvation, predation, infection, abiotic
+from aegis.modules.genetics.composite.architecture import CompositeArchitecture
+from aegis.modules.genetics.modifying.architecture import ModifyingArchitecture
 
 # TODO source from documentation
 TEXTS_DOMAIN = {
+    "infection": utilities.extract_visor_from_docstring(infection.Infection),
+    "predation": utilities.extract_visor_from_docstring(predation.Predation),
+    "reproduction": utilities.extract_visor_from_docstring(Reproducer),
+    "starvation": utilities.extract_visor_from_docstring(starvation.Starvation),
+    "abiotic": utilities.extract_visor_from_docstring(abiotic.Abiotic),
     "recording": utilities.extract_visor_from_docstring(RecordingManager),
-    "predation": utilities.extract_visor_from_docstring(Predation),
-    "computation": "wer",
     "genetics": "asdf",
-    "initialization": "wer",
-    "infection": "asdf",
-    "ecology": "wer",
-    "environment": "asdf",
-    "reproduction": "",
-    "mutation": "",
+    "composite genetic architecture": utilities.extract_visor_from_docstring(CompositeArchitecture),
+    "modifying genetic architecture": utilities.extract_visor_from_docstring(ModifyingArchitecture),
+    "environmental drift": "",
     "other": "",
 }
 

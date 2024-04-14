@@ -5,6 +5,12 @@ from aegis.modules.genetics.modifying.gpm import GPM
 
 
 class ModifyingArchitecture:
+    """
+    
+    VISOR
+
+    
+    """
     def __init__(self, ploid, PHENOMAP, AGE_LIMIT):
         self.ploid = ploid
         self.PHENOMAP = PHENOMAP

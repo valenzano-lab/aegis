@@ -6,6 +6,16 @@ import logging
 
 
 class Abiotic:
+    """
+
+    VISOR
+    Abiotic mortality is an optional source of mortality, useful for modeling death by periodic environmental phenomena such as water availability and temperature.
+    It has no effect when ABIOTIC_HAZARD_OFFSET and ABIOTIC_HAZARD_AMPLITUDE are set to 0.
+    It is modeled using periodic functions with a period of ABIOTIC_HAZARD_PERIOD, amplitude of ABIOTIC_HAZARD_AMPLITUDE,
+    shape of ABIOTIC_HAZARD_SHAPE and constant background mortality of ABIOTIC_HAZARD_OFFSET (negative or positive).
+    Available hazard shapes (waveforms) are flat, sinusoidal, square, triangle, sawtooth, ramp (backward sawtooth) and instant (Dirac comb / impulse train).
+    """
+
     def __init__(self, ABIOTIC_HAZARD_SHAPE, ABIOTIC_HAZARD_OFFSET, ABIOTIC_HAZARD_AMPLITUDE, ABIOTIC_HAZARD_PERIOD):
 
         self.ABIOTIC_HAZARD_SHAPE = ABIOTIC_HAZARD_SHAPE

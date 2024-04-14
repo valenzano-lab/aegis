@@ -8,6 +8,18 @@ from aegis.hermes import hermes
 
 
 class Starvation:
+    """
+
+    VISOR
+    Starvation is an obligatory source of mortality, useful for modeling death from lack of resources.
+    The availability of resources is parameterized as CARRYING_CAPACITY.
+    When population size exceeds CARRYING_CAPACITY, random individuals will start dying.
+    The probability to die is genetics-independent but can be age-dependent, based on the
+    STARVATION_RESPONSE.
+    If the species is oviparious (INCUBATION_PERIOD), the produced eggs do not consume resources and are
+    immune to starvation mortality (until they hatch).
+    """
+
     def __init__(
         self,
         STARVATION_RESPONSE,
