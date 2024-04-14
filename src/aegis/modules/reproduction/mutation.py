@@ -3,9 +3,10 @@ from aegis.hermes import hermes
 
 
 class Mutator:
-    def __init__(self, MUTATION_RATIO, MUTATION_METHOD):
+    def __init__(self, MUTATION_RATIO, MUTATION_METHOD, MUTATION_AGE_MULTIPLIER):
         self.MUTATION_RATIO = MUTATION_RATIO
         self.MUTATION_METHOD = MUTATION_METHOD
+        self.MUTATION_AGE_MULTIPLIER = MUTATION_AGE_MULTIPLIER
         self.rate_0to1 = MUTATION_RATIO / (1 + MUTATION_RATIO)
         self.rate_1to0 = 1 / (1 + MUTATION_RATIO)
         # Set mutation method
@@ -16,7 +17,7 @@ class Mutator:
         else:
             raise ValueError("MUTATION_METHOD must be 'by_index' or 'by_bit'")
 
-    def _mutate_by_bit(self, genomes, muta_prob, random_probabilities=None):
+    def _mutate_by_bit(self, genomes, muta_prob, ages, random_probabilities=None):
         """Induce germline mutations."""
 
         if random_probabilities is None:
@@ -24,6 +25,12 @@ class Mutator:
 
         # Broadcast to fit [individual, chromatid, locus, bit] shape
         mutation_probabilities = muta_prob[:, None, None, None]
+
+        mutation_probabilities = self.apply_mutation_age_multiplier(
+            mutation_probabilities=mutation_probabilities,
+            ages=ages,
+            MUTATION_AGE_MULTIPLIER=self.MUTATION_AGE_MULTIPLIER,
+        )
 
         mutate_0to1 = (~genomes) & (
             random_probabilities < (mutation_probabilities * self.rate_0to1).astype("float32")
@@ -37,13 +44,19 @@ class Mutator:
 
         return genomes
 
-    def _mutate_by_index(self, genomes, muta_prob):
+    def _mutate_by_index(self, genomes, muta_prob, ages):
         """Alternative faster method for introducing mutations.
 
         Instead of generating a random probability for every bit in the array of genomes,
         generate random indices of bits that could be mutated."""
 
         bits_per_genome = genomes[0].size
+
+        muta_prob = self.apply_mutation_age_multiplier(
+            mutation_probabilities=muta_prob,
+            ages=ages,
+            MUTATION_AGE_MULTIPLIER=self.MUTATION_AGE_MULTIPLIER,
+        )
 
         # Calculate number of bits to mutate
         n_mutations_per_individual = hermes.rng.binomial(n=bits_per_genome, p=muta_prob, size=len(genomes))
@@ -74,3 +87,12 @@ class Mutator:
         genomes[tuple(mutation_indices[:, bits0_indices.T])] = True
 
         return genomes
+
+    @staticmethod
+    def apply_mutation_age_multiplier(mutation_probabilities, ages, MUTATION_AGE_MULTIPLIER):
+        """
+        final = initial(1 + age * multiplier)
+        """
+        multipliers = ages * MUTATION_AGE_MULTIPLIER
+        multipliers = multipliers.reshape(mutation_probabilities.shape)
+        return mutation_probabilities * (1 + multipliers)

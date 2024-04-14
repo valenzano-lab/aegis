@@ -109,6 +109,7 @@ class Hermes:
         modules.mutator = Mutator(
             MUTATION_RATIO=self.parameters.MUTATION_RATIO,
             MUTATION_METHOD=self.parameters.MUTATION_METHOD,
+            MUTATION_AGE_MULTIPLIER=self.parameters.MUTATION_AGE_MULTIPLIER,
         )
         modules.reproduction = Reproducer(
             RECOMBINATION_RATE=self.parameters.RECOMBINATION_RATE,

@@ -313,6 +313,16 @@ DEFAULT_PARAMETERS = {
         drange="{by_bit, by_index}",
         inrange=lambda x: x in ("by_bit", "by_index"),
     ),
+    "MUTATION_AGE_MULTIPLIER": Parameter(
+        key="MUTATION_AGE_MULTIPLIER",
+        name="",
+        domain="genetics",
+        default=0,
+        info="Mutation rate is modified by this multiplier times the individual's age",
+        dtype=float,
+        drange="[0, inf)",
+        inrange=lambda x: x >= 0,
+    ),
     "DOMINANCE_FACTOR": Parameter(
         key="DOMINANCE_FACTOR",
         name="",

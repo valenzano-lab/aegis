@@ -22,12 +22,12 @@ class Reproducer:
         self.REPRODUCTION_MODE = REPRODUCTION_MODE
         self.mutator = mutator
 
-    def generate_offspring_genomes(self, genomes, muta_prob):
+    def generate_offspring_genomes(self, genomes, muta_prob, ages):
 
         if self.REPRODUCTION_MODE == "sexual":
             genomes = recombination(genomes, self.RECOMBINATION_RATE)
             genomes, _ = assortment(Genomes(genomes))
 
-        genomes = self.mutator._mutate(genomes, muta_prob)
+        genomes = self.mutator._mutate(genomes, muta_prob, ages)
         genomes = Genomes(genomes)
         return genomes

@@ -111,7 +111,9 @@ class Bioreactor:
         parental_genomes = self.population.genomes.get(individuals=mask_repr)  # parental genomes
         muta_prob = hermes.modules.architect.get_evaluation(self.population, "muta", part=mask_repr)[mask_repr]
         offspring_genomes = hermes.modules.reproduction.generate_offspring_genomes(
-            genomes=parental_genomes, muta_prob=muta_prob
+            genomes=parental_genomes,
+            muta_prob=muta_prob,
+            ages=ages_repr,
         )
 
         # Get eggs
