@@ -8,8 +8,10 @@ class ModifyingArchitecture:
     """
     
     VISOR
-
-    
+    - when pleiotropy is needed
+    - when all bits are 0, the phenotypic values are the ones set from parameters (baseline set in parameters);
+    vs composite where it would be 0.
+    - ... dev still required
     """
     def __init__(self, ploid, PHENOMAP, AGE_LIMIT):
         self.ploid = ploid

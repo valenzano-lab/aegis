@@ -8,9 +8,13 @@ class CompositeArchitecture:
     """
     
     VISOR
-
-    
-
+    - when pleiotropy is not needed;
+    - it is quick, easy to analyze, delivers a diversity of phenotypes
+    - every trait (surv repr muta neut) can be evolvable or not
+    - if not evolvable, the value is set by !!!
+    - if evolvable, it can be agespecific or age-independent
+    - probability of a trait at each age is determined by a BITS_PER_LOCUS adjacent bits forming a "locus" / gene
+    - the method by which these loci are converted into a phenotypic value is the Interpreter type
     """
     def __init__(self, ploid, BITS_PER_LOCUS, AGE_LIMIT, THRESHOLD):
         self.ploid = ploid

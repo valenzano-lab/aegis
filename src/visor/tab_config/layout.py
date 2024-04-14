@@ -18,7 +18,7 @@ TEXTS_DOMAIN = {
     "starvation": utilities.extract_visor_from_docstring(starvation.Starvation),
     "abiotic": utilities.extract_visor_from_docstring(abiotic.Abiotic),
     "recording": utilities.extract_visor_from_docstring(RecordingManager),
-    "genetics": "asdf",
+    "genetics": "",
     "composite genetic architecture": utilities.extract_visor_from_docstring(CompositeArchitecture),
     "modifying genetic architecture": utilities.extract_visor_from_docstring(ModifyingArchitecture),
     "environmental drift": utilities.extract_visor_from_docstring(Envdrift),
