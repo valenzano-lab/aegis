@@ -33,11 +33,21 @@ PREFACE = [
             html.P(
                 [
                     """
-        Using this tab you can customize your simulation and run it.
-        Change the parameter values under the column name VALUE.
-        Run the simulation by giving it a unique id name and clicking the button 'run simulation'.
-        """
-                ]
+                    This is the configuration tab.
+                    - this is configuration tab
+                    - it is useful for configuring a simulation and letting it run
+                    - on the left side, in parameter tables, you can specify the custom parameter values
+                    - on the right, you can find explanations of parameters.
+                    - aegis simulates many processes and is thus composed of submodels, which are separately listed below.
+                    - these broadly include mortality (infection, predation, starvation, abiotic), reproduction, genetics, environmental drift and recording.
+
+
+                    To run a custom model, adjust the parameter values, then enter a unique ID and click the button "run simulation".
+                    When adjusting the parameter values, the inputs have to be of valid type and in valid value range (both are specified in parameter tables).
+                    
+                    """,
+                ],
+                style={"margin-bottom": "2rem"},
             )
         ],
     )
@@ -46,10 +56,10 @@ PREFACE = [
 HEADER = html.Tr(
     [
         html.Th("PARAMETER", style={"padding-left": "1.2rem"}),
-        html.Th("VALUE"),
         html.Th("TYPE"),
         html.Th("RANGE", className="valid-values"),
-        html.Th("DESCRIPTION", style={"padding-right": "1.2rem"}),
+        html.Th("VALUE"),
+        # html.Th("DESCRIPTION", style={"padding-right": "1.2rem"}),
     ],
 )
 
@@ -65,16 +75,29 @@ def get_config_layout() -> html.Div:
 
     tables = []
     for domain, subset in subsets.items():
-        tables.extend(
-            [
-                html.Div(
-                    children=[
-                        html.P(domain, className="config-domain"),
-                        html.P(TEXTS_DOMAIN[domain], className="config-domain-desc"),
-                    ],
-                ),
-                get_table(subset),
-            ]
+        tables.append(
+            html.Div(
+                children=[
+                    html.P(domain, className="config-domain"),
+                    html.Div(
+                        children=[
+                            html.Div(
+                                children=[
+                                    html.Div(
+                                        children=[get_table(subset)],
+                                        # style={"width": "50%"},
+                                    ),
+                                ],
+                            ),
+                            html.Div(
+                                html.P(TEXTS_DOMAIN[domain], className="config-domain-desc"),
+                                style={"margin-left": "1.5rem"},
+                            ),
+                        ],
+                        style={"display": "flex"},
+                    ),
+                ],
+            )
         )
 
     # Generate layout
@@ -100,6 +123,15 @@ def get_row(v: Parameter) -> html.Tr:
                 style={"padding-left": "1.2rem"},
                 title=v.info if v.info else None,
             ),
+            # TYPE
+            html.Td(
+                children=html.Label(
+                    v.dtype.__name__,
+                    className=f"dtype-{v.dtype.__name__} dtype",
+                )
+            ),
+            # RANGE
+            html.Td(children=v.drange, className="data-range"),
             # VALUE
             html.Td(
                 children=dcc.Input(
@@ -111,27 +143,18 @@ def get_row(v: Parameter) -> html.Tr:
                     className="config-input-class",
                 ),
             ),
-            # TYPE
-            html.Td(
-                children=html.Label(
-                    v.dtype.__name__,
-                    className=f"dtype-{v.dtype.__name__} dtype",
-                )
-            ),
-            # RANGE
-            html.Td(children=v.drange, className="data-range"),
             # DESCRIPTION
-            html.Td(
-                children=[
-                    v.info + ".",
-                    html.P(
-                        serverrange_info_message,
-                        className="serverrange_info_message",
-                    ),
-                ],
-                className="td-info",
-                style={"padding-right": "0.8rem"},
-            ),
+            # html.Td(
+            #     children=[
+            #         v.info + ".",
+            #         html.P(
+            #             serverrange_info_message,
+            #             className="serverrange_info_message",
+            #         ),
+            #     ],
+            #     className="td-info",
+            #     style={"padding-right": "0.8rem"},
+            # ),
         ],
     )
 
