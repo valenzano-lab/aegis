@@ -95,7 +95,11 @@ def get_row(v: Parameter) -> html.Tr:
     return html.Tr(
         [
             # PARAMETER
-            html.Td(v.get_name(), style={"padding-left": "1.2rem"}),
+            html.Td(
+                v.get_name(),
+                style={"padding-left": "1.2rem"},
+                title=v.info if v.info else None,
+            ),
             # VALUE
             html.Td(
                 children=dcc.Input(

@@ -223,7 +223,7 @@ DEFAULT_PARAMETERS = {
         name="",
         domain="reproduction",
         default=10,
-        info="Age at which reproduction is possible",
+        info="Age at which reproduction becomes possible",
         dtype=int,
         drange="[1, inf)",
         inrange=lambda x: x >= 1,
