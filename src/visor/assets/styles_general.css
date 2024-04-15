@@ -30,4 +30,5 @@ body {
   text-decoration-style: dotted;
   text-decoration-color: gray;
   text-decoration-thickness: 0.1rem;
+  cursor: help;
 }
