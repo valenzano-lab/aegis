@@ -4,6 +4,27 @@ import datetime
 from aegis.utilities.container import Container
 
 
+
+PREFACE = [
+    html.Div(
+        children=[
+            # TODO change text
+            html.P(
+                [
+                    """
+                    This is the list tab. Here you can see which simulations you have started and what their status is, including their metadata.
+                    You can also delete simulations and mark which simulations you would like to display in the plot tab.
+
+                    Note that the 'default' simulation cannot be deleted – it comes with the installation and can be used
+                    as an exploratory example. All parameters for the default simulation have default values.
+                    """,
+                ],
+                style={"margin-bottom": "2rem"},
+            )
+        ],
+    )
+]
+
 # @utilities.log_debug
 def make_table_row(
     selection_state, sim_data, log, input_summary, output_summary, basepath, filename
@@ -140,7 +161,7 @@ def get_list_layout():
     return html.Div(
         id="list-section",
         style={"display": "none"},
-        children=[
+        children=PREFACE + [
             # html.Div(id="selection-states", children=selection_states),
             html.Div(id="list-section-table", children=[]),
         ],

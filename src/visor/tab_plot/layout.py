@@ -2,11 +2,33 @@ from dash import html, dcc
 from visor.tab_plot.prep_setup import FIG_SETUP
 
 
+PREFACE = [
+    html.Div(
+        children=[
+            # TODO change text
+            html.P(
+                [
+                    """
+                    This is the plot tab. Here you can explore the simulation visually.
+                    You can also download the figures and the data used for plotting.
+                    The figures are interactive – if multiple simulations are displayed, you can click on
+                    simulation IDs to toggle their visibility; you can also zoom in and out.
+                    For figures that show time-specific data, you can use sliders to change the time point plotted.
+                    """,
+                ],
+                style={"margin-bottom": "2rem"},
+            )
+        ],
+    )
+]
+
+
 def get_plot_layout():
     return html.Div(
         id="plot-section",
         style={"display": "none"},
-        children=[
+        children=PREFACE
+        + [
             html.Div(
                 id="figure-container",
                 children=[
@@ -38,6 +60,7 @@ def get_plot_layout():
                                         id={"type": "figure-download-button", "index": figure_id},
                                     ),
                                     dcc.Download(id={"type": "figure-dcc-download", "index": figure_id}),
+                                    # dcc.Slider(0,100)
                                 ]
                             ),
                         ],

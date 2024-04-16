@@ -34,8 +34,8 @@ def toggle_display(*_):
         "plot": [
             {"display": "none"},
             {"display": "none"},
-            {"display": "flex"},
-            {"display": "flex"},
+            {"display": "block"},
+            {"display": "block"},
             {"display": "none"},
             {"display": "none"},
             {"display": "none"},
