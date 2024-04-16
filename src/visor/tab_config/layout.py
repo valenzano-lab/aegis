@@ -12,13 +12,23 @@ from aegis.modules.genetics.envdrift import Envdrift
 
 # TODO source from documentation
 TEXTS_DOMAIN = {
-    "infection": utilities.extract_visor_from_docstring(infection.Infection),
-    "predation": utilities.extract_visor_from_docstring(predation.Predation),
-    "reproduction": utilities.extract_visor_from_docstring(Reproducer),
     "starvation": utilities.extract_visor_from_docstring(starvation.Starvation),
+    "predation": utilities.extract_visor_from_docstring(predation.Predation),
+    "infection": utilities.extract_visor_from_docstring(infection.Infection),
     "abiotic": utilities.extract_visor_from_docstring(abiotic.Abiotic),
+    "reproduction": utilities.extract_visor_from_docstring(Reproducer),
     "recording": utilities.extract_visor_from_docstring(RecordingManager),
-    "genetics": "",
+    "genetics": """
+    Every individual carries their own genome. In AEGIS, those are bit strings (arrays of 0's and 1's), passed on from parent to offspring, and mutated in the process.
+    The submodel genetics transforms genomes into phenotypes; more specifically – into intrinsic phenotypes – biological potentials to exhibit a certain trait (e.g. probability to reproduce).
+    These potentials are either realized or not realized, depending on the environment (e.g. availability of resources), interaction with other individuals (e.g. availability of mates) and interaction with other traits (e.g. survival).
+
+    In AEGIS, genetics is simplified in comparison to the biological reality – it references no real genes and it simulates no molecular interactions; thus, it cannot be used to answer questions about specific genes, metabolic pathways or molecular mechanisms.
+    However, in AEGIS, in comparison to empirical datasets, genes are fully functionally characterized (in terms of their impact on the phenotype), and are to be studied as functional, heritable genetic elements – in particular, their evolutionary dynamics.
+
+    The configuration of genetics – the genetic architecture – is highly flexible. This includes specifying which traits are evolvable number of genetic elements (i.e. size of genome)...
+    AEGIS offers two genetic architectures – composite and modifying. They are mutually exclusive and are described in detail below...
+    """,
     "composite genetic architecture": utilities.extract_visor_from_docstring(CompositeArchitecture),
     "modifying genetic architecture": utilities.extract_visor_from_docstring(ModifyingArchitecture),
     "environmental drift": utilities.extract_visor_from_docstring(Envdrift),
@@ -33,18 +43,16 @@ PREFACE = [
             html.P(
                 [
                     """
-                    This is the configuration tab.
-                    - this is configuration tab
-                    - it is useful for configuring a simulation and letting it run
-                    - on the left side, in parameter tables, you can specify the custom parameter values
-                    - on the right, you can find explanations of parameters.
-                    - aegis simulates many processes and is thus composed of submodels, which are separately listed below.
-                    - these broadly include mortality (infection, predation, starvation, abiotic), reproduction, genetics, environmental drift and recording.
+                    This is the configuration tab. Here you can customize parameters and start simulations.
 
-
-                    To run a custom model, adjust the parameter values, then enter a unique ID and click the button "run simulation".
-                    When adjusting the parameter values, the inputs have to be of valid type and in valid value range (both are specified in parameter tables).
+                    On the left side, there are the parameter tables in which you can specify custom parameter values.
+                    Each parameter has a valid data type and a valid range; when the input value is not valid, the simulation cannot be started.
+                    If no input is given, the parameter will take on the default value.
                     
+                    Parameters are grouped into tables depending on which simulated process (submodel) they customize – these are, in brief, mortality (infection, predation, starvation, abiotic mortality), reproduction, genetics, environmental drift and recording.
+                    Each submodel is described on the right side, next to the relevant parameter table.
+
+                    To start the simulation, adjust parameter values, enter a unique ID in the input bar on top and click the adjacent button "run simulation".
                     """,
                 ],
                 style={"margin-bottom": "2rem"},

@@ -14,7 +14,7 @@ DEFAULT_PARAMETERS = {
     #     default=None,
     #     info="",
     #     dtype=float,
-    #     drange="[0,inf)",
+    #     drange="[0, inf)",
     #     inrange=lambda x: x >= 0,
     # ),
     "RANDOM_SEED": Parameter(
@@ -400,7 +400,7 @@ DEFAULT_PARAMETERS = {
         default=0,
         info="",
         dtype=float,
-        drange="[0,inf)",
+        drange="[0, inf)",
         inrange=lambda x: x >= 0,
     ),
     "TRANSMISSIBILITY": Parameter(
@@ -410,7 +410,7 @@ DEFAULT_PARAMETERS = {
         default=0,
         info="",
         dtype=float,
-        drange="[0,inf)",
+        drange="[0, inf)",
         inrange=lambda x: x >= 0,
     ),
     "RECOVERY_RATE": Parameter(
@@ -420,7 +420,7 @@ DEFAULT_PARAMETERS = {
         default=0,
         info="",
         dtype=float,
-        drange="[0,inf)",
+        drange="[0, inf)",
         inrange=lambda x: x >= 0,
     ),
     "FATALITY_RATE": Parameter(
@@ -430,7 +430,7 @@ DEFAULT_PARAMETERS = {
         default=0,
         info="",
         dtype=float,
-        drange="[0,inf)",
+        drange="[0, inf)",
         inrange=lambda x: x >= 0,
     ),
     "PREDATION_RATE": Parameter(
@@ -450,7 +450,7 @@ DEFAULT_PARAMETERS = {
         default=0,
         info="Intrinsic growth rate of predators",
         dtype=float,
-        drange="[0,inf)",
+        drange="[0, inf)",
         inrange=lambda x: x >= 0,
     ),
     "G_surv_evolvable": Parameter(
