@@ -14,12 +14,19 @@ class Infection:
     """
 
     VISOR
-    Infection is an optional source of mortality. It causes no deaths when FATALITY_RATE is 0.
-    It is akin to a SIR (susceptible-infectious-removed) model without immunity (i.e. recovered individuals can get reinfected).
-    The infectious agent can be transmitted between individuals (probability grows logistically with the
-    proportion of infected population and TRANSMISSIBILITY) or be acquired from the environment (with the probability
-    of BACKGROUND_INFECTIVITY). The infection cannot be eradicated. The probability to recover
-    is the RECOVERY_RATE, and the probability to die the FATALITY_RATE.
+    Infection is an optional source of mortality.
+    FATALITY_RATE specifies how deadly the infection is; thus if set to 0, no deaths from infection will occur.
+    The infection modeling is inspired by the SIR (susceptible-infectious-removed) model.
+
+    Individuals cannot gain immunity, thus can get reinfected many times.
+    The probability to die from an infection is constant as long as the individual is infected; there is no incubation period nor disease progression.
+    The same is true for recovering from the disease, which is equal to RECOVERY_RATE.
+
+    Both of these are independent of age and genetics.
+
+    The infectious agent can be transmitted from an individual to an individual but can also be contracted from the environment (and can therefore not be fully eradicated).
+    The probability to acquire the infection from the environment is equal to BACKGROUND_INFECTIVITY, and from other infected individuals it grows with TRANSMISSIBILITY
+    but also (logistically) with the proportion of the infected population.
     """
 
     def __init__(self, BACKGROUND_INFECTIVITY, TRANSMISSIBILITY, RECOVERY_RATE, FATALITY_RATE):

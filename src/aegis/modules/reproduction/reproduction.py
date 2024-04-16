@@ -13,7 +13,15 @@ class Reproducer:
     which can be parameterized (genetics-independent) or set to evolve (genetics-dependent).
     Mutations cause the offspring genome bit states to flip from 0-to-1 or 1-to-0.
     The ratio of 0-to-1 and 1-to-0 can be modified using the MUTATION_RATIO.
+
+    If the population is oviparous, INCUBATION_PERIOD should be set to -1, 1 or greater.
+    When it is set to -1, all laid eggs hatch only once all living individuals die.
+    When it is set to 0 or greater, eggs hatch after that specified time.
+    Thus, when 0, the population has no egg life stage.
     """
+
+    # TODO INCUBATION_PERIOD set to -1 or 1 or greater is stupid
+    # TODO INCUBATION_PERIOD is not really a part of this submodel, but it is in the documentation. it should be though.
 
     # TODO probably better to split mutation logic into another domain and cluster together with genetic architecture stuff
 
