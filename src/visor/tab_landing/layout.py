@@ -9,9 +9,8 @@ def get_landing_layout():
         id="landing-section",
         children=[
             dcc.Markdown(Documenter.read("1 welcome.md")),
-            dcc.Markdown(Documenter.read("1 what is aegis for.md")),
-            dcc.Markdown(Documenter.read("1 who is aegis for.md")),
             dcc.Markdown(Documenter.read("1 getting started.md")),
+            dcc.Markdown(Documenter.read("1 who is aegis for.md")),
             dcc.Markdown(Documenter.read("1 gallery.md")),
             dcc.Markdown(Documenter.read("2 odd.md")),
             dcc.Markdown(Documenter.read("3 user guide.md")),
