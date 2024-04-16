@@ -43,7 +43,7 @@ def get_plot_layout():
                                         className="figure",
                                     ),
                                 ],
-                                style={"padding-right": "20px"},
+                                style={"padding-right": "0.9rem", "margin-left": "0.6rem"},
                             ),
                             html.Div(
                                 children=[
