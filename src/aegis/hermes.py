@@ -70,6 +70,7 @@ class Hermes:
 
     def init_modules(self):
         # NOTE Circular import if put on top
+        # NOTE when modules are put into simplenamespace, no code intelligence can be used
         from aegis.modules.reproduction.mutation import Mutator
         from aegis.modules.reproduction.reproduction import Reproducer
         from aegis.modules.mortality.abiotic import Abiotic
@@ -79,6 +80,7 @@ class Hermes:
         from aegis.modules.genetics.ploider import Ploider
         from aegis.modules.genetics.architect import Architect
         from aegis.utilities.popgenstats import PopgenStats
+        from aegis.modules.resources.resources import Resources
 
         modules = types.SimpleNamespace()
         # Mortality
@@ -96,13 +98,17 @@ class Hermes:
             STARVATION_RESPONSE=self.parameters.STARVATION_RESPONSE,
             STARVATION_MAGNITUDE=self.parameters.STARVATION_MAGNITUDE,
             CLIFF_SURVIVORSHIP=self.parameters.CLIFF_SURVIVORSHIP,
-            CARRYING_CAPACITY=self.parameters.CARRYING_CAPACITY,
         )
         modules.infection = Infection(
             BACKGROUND_INFECTIVITY=self.parameters.BACKGROUND_INFECTIVITY,
             TRANSMISSIBILITY=self.parameters.TRANSMISSIBILITY,
             RECOVERY_RATE=self.parameters.RECOVERY_RATE,
             FATALITY_RATE=self.parameters.FATALITY_RATE,
+        )
+
+        # Resources
+        modules.resources = Resources(
+            CARRYING_CAPACITY=self.parameters.CARRYING_CAPACITY,
         )
 
         # Reproduction

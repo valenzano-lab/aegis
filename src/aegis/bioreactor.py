@@ -35,6 +35,7 @@ class Bioreactor:
         self.age()  # age increment and potentially death
         self.hatch()
         hermes.modules.architect.envdrift.evolve(stage=hermes.get_stage())
+        hermes.modules.resources.replenish()
 
         # Record data
         hermes.recorder.flushrecorder.collect("additive_age_structure", self.population.ages)  # population census
@@ -73,7 +74,11 @@ class Bioreactor:
         self._kill(mask_kill=mask_kill, causeofdeath="predation")
 
     def mortality_starvation(self):
-        mask_kill = hermes.modules.starvation(n=len(self.population))
+        resource_availability = hermes.modules.resources.scavenge(np.ones(len(self.population)))
+        mask_kill = hermes.modules.starvation(
+            n=len(self.population),
+            resource_availability=resource_availability.sum(),
+        )
         self._kill(mask_kill=mask_kill, causeofdeath="starvation")
 
     def reproduction(self):
@@ -126,9 +131,8 @@ class Bioreactor:
 
     def growth(self):
         max_growth_potential = hermes.modules.architect.get_evaluation(self.population, "grow")
-        gathered_resources = np.ones(shape=max_growth_potential.shape)
-        realized_growth = np.clip(gathered_resources, a_min=0, a_max=max_growth_potential)
-        self.population.sizes += realized_growth
+        gathered_resources = hermes.modules.resources.scavenge(max_growth_potential)
+        self.population.sizes += gathered_resources
 
     def age(self):
         """Increase age of all by one and kill those that surpass age limit.
