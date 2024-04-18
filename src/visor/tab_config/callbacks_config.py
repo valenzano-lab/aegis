@@ -9,10 +9,11 @@ from aegis.modules.initialization.parameterization.default_parameters import DEF
     Input("simulation-run-button", "n_clicks"),
     State("config-make-text", "value"),
     State({"type": "config-input", "index": ALL}, "value"),
+    State({"type": "config-input", "index": ALL}, "id"),
     prevent_initial_call=True,
 )
 @utilities.log_debug
-def click_sim_button(n_clicks, filename, values):
+def click_sim_button(n_clicks, filename, values, ids_):
     """
     Run simulation when sim button clicked (also, implicitly, not disabled).
     """
@@ -20,9 +21,8 @@ def click_sim_button(n_clicks, filename, values):
         return
 
     # make config file
-    default_config = DEFAULT_PARAMETERS.copy()
-    custom_config = {k: val for (k, v), val in zip(default_config.items(), values) if not isinstance(v, list)}
-    utilities.make_config_file(filename, custom_config)
+    input_config = {id_["index"]: value for id_, value in zip(ids_, values)}
+    utilities.make_config_file(filename, input_config)
 
     # run simulation
     utilities.run(filename)

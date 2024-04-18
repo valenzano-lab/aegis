@@ -116,6 +116,59 @@ def get_config_layout() -> html.Div:
     )
 
 
+def get_input_element(param):
+
+    if param.dtype == int:
+        return (
+            dcc.Input(
+                type="number",
+                value=param.default,
+                step=0,
+                id={"type": "config-input", "index": param.key},
+                autoComplete="off",
+                className="config-input-class",
+            ),
+        )
+
+    elif param.dtype == float:
+        return (
+            dcc.Input(
+                type="number",
+                value=param.default,
+                step=0.01,
+                id={"type": "config-input", "index": param.key},
+                autoComplete="off",
+                className="config-input-class",
+            ),
+        )
+
+    elif param.dtype == bool:
+        return dcc.Checklist([""])
+
+    # elif param.dtype == str:
+    #     return (
+    #         dcc.Input(
+    #             type="text",
+    #             list=param.drange.strip("{").strip("}").split(", "),
+    #             placeholder=param.default,
+    #             id={"type": "config-input", "index": param.key},
+    #             autoComplete="off",
+    #             className="config-input-class",
+    #         ),
+    #     )
+
+    return (
+        dcc.Input(
+            type="text",
+            placeholder=str(param.default) if param.default is not None else "",
+            # id=f"config-{v.key}",
+            id={"type": "config-input", "index": param.key},
+            autoComplete="off",
+            className="config-input-class",
+        ),
+    )
+
+
 # @utilities.log_debug
 def get_row(v: Parameter) -> html.Tr:
     if v.serverrange_info:
@@ -141,16 +194,7 @@ def get_row(v: Parameter) -> html.Tr:
             # RANGE
             html.Td(children=v.drange, className="data-range"),
             # VALUE
-            html.Td(
-                children=dcc.Input(
-                    type="text",
-                    placeholder=str(v.default) if v.default is not None else "",
-                    # id=f"config-{v.key}",
-                    id={"type": "config-input", "index": v.key},
-                    autoComplete="off",
-                    className="config-input-class",
-                ),
-            ),
+            html.Td(children=get_input_element(param=v)),
             # DESCRIPTION
             # html.Td(
             #     children=[
