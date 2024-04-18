@@ -18,19 +18,29 @@ class Population:
         "birthdays",
         "phenotypes",
         "infection",
+        "sizes",
     )
 
     # NOTE Add sex
 
-    def __init__(self, genomes, ages, births, birthdays, phenotypes, infection):
+    def __init__(self, genomes, ages, births, birthdays, phenotypes, infection, sizes):
         self.genomes = genomes
         self.ages = ages
         self.births = births
         self.birthdays = birthdays
         self.phenotypes = phenotypes
         self.infection = infection
+        self.sizes = sizes
 
-        if not (len(genomes) == len(ages) == len(births) == len(birthdays) == len(phenotypes) == len(infection)):
+        if not (
+            len(genomes)
+            == len(ages)
+            == len(births)
+            == len(birthdays)
+            == len(phenotypes)
+            == len(infection)
+            == len(sizes)
+        ):
             raise ValueError("Population attributes must have equal length")
 
     def __len__(self):
@@ -46,6 +56,7 @@ class Population:
             birthdays=self.birthdays[index],
             phenotypes=self.phenotypes[index],
             infection=self.infection[index],
+            sizes=self.sizes[index],
         )
 
     def __imul__(self, index):
@@ -78,15 +89,22 @@ class Population:
             pickle.dump(self, file_)
 
     @staticmethod
-    def initialize(N):
-        genomes = Genomes(hermes.modules.architect.architecture.init_genome_array(N))
-        ages = np.zeros(N, dtype=np.int32)
-        births = np.zeros(N, dtype=np.int32)
-        birthdays = np.zeros(N, dtype=np.int32)
+    def initialize(n):
+        genomes = Genomes(hermes.modules.architect.architecture.init_genome_array(n))
+        ages = np.zeros(n, dtype=np.int32)
+        births = np.zeros(n, dtype=np.int32)
+        birthdays = np.zeros(n, dtype=np.int32)
         phenotypes = hermes.modules.architect.__call__(genomes)
-        infection = np.zeros(N, dtype=np.int32)
+        infection = np.zeros(n, dtype=np.int32)
+        sizes = np.zeros(n, dtype=np.float32)
         return Population(
-            genomes=genomes, ages=ages, births=births, birthdays=birthdays, phenotypes=phenotypes, infection=infection
+            genomes=genomes,
+            ages=ages,
+            births=births,
+            birthdays=birthdays,
+            phenotypes=phenotypes,
+            infection=infection,
+            sizes=sizes,
         )
 
     @staticmethod
@@ -99,5 +117,6 @@ class Population:
             birthdays=np.zeros(n, dtype=np.int32) + stage,
             phenotypes=hermes.modules.architect.__call__(offspring_genomes),
             infection=np.zeros(n, dtype=np.int32),
+            sizes=np.zeros(n, dtype=np.float32),
         )
         return eggs

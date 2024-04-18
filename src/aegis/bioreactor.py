@@ -30,6 +30,7 @@ class Bioreactor:
         self.mortality_predation()
         self.mortality_starvation()
 
+        self.growth()  # size increase
         self.reproduction()  # reproduction
         self.age()  # age increment and potentially death
         self.hatch()
@@ -122,6 +123,12 @@ class Bioreactor:
             self.eggs = eggs
         else:
             self.eggs += eggs
+
+    def growth(self):
+        max_growth_potential = hermes.modules.architect.get_evaluation(self.population, "grow")
+        gathered_resources = np.ones(shape=max_growth_potential.shape)
+        realized_growth = np.clip(gathered_resources, a_min=0, a_max=max_growth_potential)
+        self.population.sizes += realized_growth
 
     def age(self):
         """Increase age of all by one and kill those that surpass age limit.

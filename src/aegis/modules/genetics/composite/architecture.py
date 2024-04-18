@@ -1,5 +1,6 @@
 import numpy as np
 from aegis.hermes import hermes
+from aegis import constants
 
 from aegis.modules.genetics.composite.interpreter import Interpreter
 
@@ -19,7 +20,7 @@ class CompositeArchitecture:
     def __init__(self, ploid, BITS_PER_LOCUS, AGE_LIMIT, THRESHOLD):
         self.ploid = ploid
         self.BITS_PER_LOCUS = BITS_PER_LOCUS
-        self.n_loci = 4 * AGE_LIMIT
+        self.n_loci = constants.TRAIT_N * AGE_LIMIT
         self.AGE_LIMIT = AGE_LIMIT
 
         self.evolvable = [trait for trait in hermes.traits.values() if trait.evolvable]
@@ -30,7 +31,7 @@ class CompositeArchitecture:
         )
 
     def get_number_of_phenotypic_values(self):
-        return self.AGE_LIMIT * 4
+        return self.AGE_LIMIT * constants.TRAIT_N
 
     def get_number_of_bits(self):
         return self.ploid.y * self.n_loci * self.BITS_PER_LOCUS

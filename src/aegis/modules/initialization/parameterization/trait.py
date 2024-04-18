@@ -1,3 +1,6 @@
+from aegis import constants
+
+
 class Trait:
     """Genetic trait
 
@@ -37,9 +40,7 @@ class Trait:
         # self.end = self.start + self.length
         # self.slice = slice(self.start, self.end)
 
-        self.start = (
-            cnf.AGE_LIMIT * {"surv": 0, "repr": 1, "muta": 2, "neut": 3}[self.name]
-        )  # TODO this should not be here
+        self.start = cnf.AGE_LIMIT * constants.starting_site(self.name)
         self.end = self.start + cnf.AGE_LIMIT
         self.slice = slice(self.start, self.end)
 

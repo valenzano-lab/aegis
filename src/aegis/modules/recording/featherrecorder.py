@@ -33,7 +33,7 @@ class FeatherRecorder:
         df_phe.to_feather(self.odir_phenotypes / f"{stage}.feather")
 
         # demography
-        dem_attrs = ["ages", "births", "birthdays"]
+        dem_attrs = ["ages", "births", "birthdays", "sizes"]
         demo = {attr: getattr(population, attr) for attr in dem_attrs}
         df_dem = pd.DataFrame(demo, columns=dem_attrs)
         df_dem.reset_index(drop=True, inplace=True)

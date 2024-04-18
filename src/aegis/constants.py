@@ -1,9 +1,11 @@
-EVOLVABLE_TRAITS = (
-    "surv",
-    "repr",
-    "muta",
-    "neut",
-)
+EVOLVABLE_TRAITS = ("surv", "repr", "muta", "neut", "grow")
+
+TRAIT_N = len(EVOLVABLE_TRAITS)
+
+
+def starting_site(trait_name):
+    return EVOLVABLE_TRAITS.index(trait_name)
+
 
 VALID_CAUSES_OF_DEATH = (
     "intrinsic",

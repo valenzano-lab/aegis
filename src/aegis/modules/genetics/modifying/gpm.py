@@ -30,7 +30,6 @@ class GPM:
 
         elif self.phenolist is not None:
             phenodiff = zeropheno.copy()
-            # phenodiff = np.zeros(shape=(popsize, self.AGE_LIMIT * 4))
             for vec_index, trait, age, magnitude in self.phenolist:
                 vec_state = vectors[:, vec_index]
                 phenotype_change = vec_state * magnitude

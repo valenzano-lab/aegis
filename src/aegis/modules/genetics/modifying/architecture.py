@@ -1,18 +1,21 @@
 import numpy as np
 
+from aegis import constants
+
 from aegis.modules.genetics.modifying.gpm_decoder import GPM_decoder
 from aegis.modules.genetics.modifying.gpm import GPM
 
 
 class ModifyingArchitecture:
     """
-    
+
     VISOR
     - when pleiotropy is needed
     - when all bits are 0, the phenotypic values are the ones set from parameters (baseline set in parameters);
     vs composite where it would be 0.
     - ... dev still required
     """
+
     def __init__(self, ploid, PHENOMAP, AGE_LIMIT):
         self.ploid = ploid
         self.PHENOMAP = PHENOMAP
@@ -29,7 +32,7 @@ class ModifyingArchitecture:
         )
 
     def get_number_of_phenotypic_values(self):
-        return self.AGE_LIMIT * 4
+        return self.AGE_LIMIT * constants.TRAIT_N
 
     def get_number_of_bits(self):
         return self.length

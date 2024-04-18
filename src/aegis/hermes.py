@@ -57,7 +57,7 @@ class Hermes:
         from aegis.modules.initialization.parameterization.trait import Trait
 
         traits = {}
-        for traitname in ("surv", "repr", "muta", "neut"):
+        for traitname in constants.EVOLVABLE_TRAITS:
             trait = Trait(name=traitname, cnf=self.parameters)
             traits[traitname] = trait
         return traits

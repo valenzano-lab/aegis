@@ -196,7 +196,7 @@ class Container:
 
     def get_snapshot_demography(self, record_index):
         """
-        columns .. ages, births, birthdays
+        columns .. ages, births, birthdays, sizes
         index .. individual index
         """
         return self._read_snapshot("demography", record_index=record_index)

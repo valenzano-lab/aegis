@@ -37,7 +37,7 @@ class Manager:
     @staticmethod
     def initialize_population(pickle_path):
         if pickle_path is None:  # Fresh population
-            return Population.initialize(N=hermes.parameters.CARRYING_CAPACITY)
+            return Population.initialize(n=hermes.parameters.CARRYING_CAPACITY)
         else:  # Pickled population
             return Population.load_pickle_from(pickle_path)
 

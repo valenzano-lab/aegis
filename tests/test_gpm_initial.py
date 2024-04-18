@@ -23,13 +23,6 @@ pan.init_minimal(
 )
 
 
-# def test_gpm():
-#     from aegis.init import phenomap
-
-#     for bit, trait, age, magnitude in phenomap.phenolist:
-#         assert trait in ("surv", "repr", "muta", "neut")
-
-
 def test_call():
     from aegis.modules.setup.init import architecture
     from aegis.modules.genetics.architecture.gpm import GPM
