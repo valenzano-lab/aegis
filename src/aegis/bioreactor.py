@@ -114,16 +114,21 @@ class Bioreactor:
         self.population.births += mask_repr
 
         # Generate offspring genomes
-        parental_genomes = self.population.genomes.get(individuals=mask_repr)  # parental genomes
+        parental_genomes = self.population.genomes.get(individuals=mask_repr)
+        parental_sexes = self.population.sexes[mask_repr]
         muta_prob = hermes.modules.architect.get_evaluation(self.population, "muta", part=mask_repr)[mask_repr]
         offspring_genomes = hermes.modules.reproduction.generate_offspring_genomes(
             genomes=parental_genomes,
             muta_prob=muta_prob,
             ages=ages_repr,
+            parental_sexes=parental_sexes,
         )
+        offspring_sexes = hermes.modules.sexsystem.get_sex(len(offspring_genomes))
 
         # Get eggs
-        eggs = Population.make_eggs(offspring_genomes=offspring_genomes, stage=hermes.get_stage())
+        eggs = Population.make_eggs(
+            offspring_genomes=offspring_genomes, stage=hermes.get_stage(), offspring_sexes=offspring_sexes
+        )
         if self.eggs is None:
             self.eggs = eggs
         else:

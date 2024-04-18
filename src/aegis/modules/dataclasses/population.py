@@ -19,11 +19,12 @@ class Population:
         "phenotypes",
         "infection",
         "sizes",
+        "sexes",
     )
 
     # NOTE Add sex
 
-    def __init__(self, genomes, ages, births, birthdays, phenotypes, infection, sizes):
+    def __init__(self, genomes, ages, births, birthdays, phenotypes, infection, sizes, sexes):
         self.genomes = genomes
         self.ages = ages
         self.births = births
@@ -31,6 +32,7 @@ class Population:
         self.phenotypes = phenotypes
         self.infection = infection
         self.sizes = sizes
+        self.sexes = sexes
 
         if not (
             len(genomes)
@@ -40,6 +42,7 @@ class Population:
             == len(phenotypes)
             == len(infection)
             == len(sizes)
+            == len(sexes)
         ):
             raise ValueError("Population attributes must have equal length")
 
@@ -57,6 +60,7 @@ class Population:
             phenotypes=self.phenotypes[index],
             infection=self.infection[index],
             sizes=self.sizes[index],
+            sexes=self.sexes[index],
         )
 
     def __imul__(self, index):
@@ -97,6 +101,7 @@ class Population:
         phenotypes = hermes.modules.architect.__call__(genomes)
         infection = np.zeros(n, dtype=np.int32)
         sizes = np.zeros(n, dtype=np.float32)
+        sexes = hermes.modules.sexsystem.get_sex(n)
         return Population(
             genomes=genomes,
             ages=ages,
@@ -105,10 +110,11 @@ class Population:
             phenotypes=phenotypes,
             infection=infection,
             sizes=sizes,
+            sexes=sexes,
         )
 
     @staticmethod
-    def make_eggs(offspring_genomes, stage):
+    def make_eggs(offspring_genomes, stage, offspring_sexes):
         n = len(offspring_genomes)
         eggs = Population(
             genomes=offspring_genomes,
@@ -118,5 +124,6 @@ class Population:
             phenotypes=hermes.modules.architect.__call__(offspring_genomes),
             infection=np.zeros(n, dtype=np.int32),
             sizes=np.zeros(n, dtype=np.float32),
+            sexes=offspring_sexes,
         )
         return eggs

@@ -81,6 +81,8 @@ class Hermes:
         from aegis.modules.genetics.architect import Architect
         from aegis.utilities.popgenstats import PopgenStats
         from aegis.modules.resources.resources import Resources
+        from aegis.modules.reproduction.sexsystem import SexSystem
+        from aegis.modules.reproduction.matingmanager import MatingManager
 
         modules = types.SimpleNamespace()
         # Mortality
@@ -123,6 +125,8 @@ class Hermes:
             mutator=modules.mutator,
         )
 
+        modules.matingmanager = MatingManager()
+
         # Genetic architecture
         modules.ploidy = Ploider(
             REPRODUCTION_MODE=self.parameters.REPRODUCTION_MODE,
@@ -136,6 +140,7 @@ class Hermes:
             THRESHOLD=self.parameters.THRESHOLD,
             ENVDRIFT_RATE=self.parameters.ENVDRIFT_RATE,
         )
+        modules.sexsystem = SexSystem()
 
         # Other
         modules.popgenstats = PopgenStats()
