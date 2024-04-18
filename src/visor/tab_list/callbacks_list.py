@@ -3,6 +3,9 @@ import subprocess
 import logging
 from visor import utilities
 from visor.tab_list.layout import make_table
+import yaml
+
+from aegis.utilities.container import Container
 
 
 # SHOW SIMS
@@ -31,6 +34,23 @@ def show_sims(n_clicks1, n_clicks2, data):
     selection_states = {l[0]: l[1] for l in data}
 
     return [make_table(selection_states=selection_states, sim_data=None)]
+
+
+@callback(
+    Output({"type": "config-dcc-download", "index": MATCH}, "data"),
+    Input({"type": "config-download-button", "index": MATCH}, "n_clicks"),
+    State({"type": "config-download-basepath", "index": MATCH}, "children"),
+)
+def config_file_download_button(n_clicks, basepath):
+    if n_clicks is None:
+        return n_clicks
+
+    container = Container(basepath)
+    config = container.get_config()
+    return {
+        "content": yaml.dump(config),
+        "filename": container.name + ".yml",
+    }
 
 
 # CHOOSE
