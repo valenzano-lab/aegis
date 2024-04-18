@@ -11,7 +11,7 @@ class Envdrift:
     """
     
     VISOR
-    Environmental drift is deactivated when ENVDRIFT_RATE is 0.
+    Environmental drift is deactivated when [[ENVDRIFT_RATE]] is 0.
     Conceptually, environmental drift simulates long-term environmental change such as climate change, resource depletion, pollution, etc.
     The main purpose of environmental drift is to allow the population to keep evolving adaptively.
     When the environment does not change, the fitness landscape is static – initially, the population evolves adaptively as it climbs the fitness landscape but once it approaches the fitness peak,

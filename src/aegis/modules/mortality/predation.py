@@ -5,9 +5,9 @@ class Predation:
     """
     VISOR
     Predation is an optional source of mortality, useful for modeling death with prey-predator dynamics.
-    PREDATION_RATE specifies how deadly the predators are; thus if set to 0, no predation deaths will occur.
-    Apart from PREDATION_RATE, the probability that an individual actually gets predated depends also on the number of predators; the response curve is logistic.
-    The predator population grows according to the logistic Verhulst growth model, whose slope is parameterized by PREDATOR_GROWTH.
+    [[PREDATION_RATE]] specifies how deadly the predators are; thus if set to 0, no predation deaths will occur.
+    Apart from [[PREDATION_RATE]], the probability that an individual actually gets predated depends also on the number of predators; the response curve is logistic.
+    The predator population grows according to the logistic Verhulst growth model, whose slope is parameterized by [[PREDATOR_GROWTH]].
     All individuals are equally susceptible to predation; age and genetics have no impact.
     """
 

@@ -98,7 +98,7 @@ def get_config_layout() -> html.Div:
                                 ],
                             ),
                             html.Div(
-                                html.P(TEXTS_DOMAIN[domain], className="config-domain-desc"),
+                                html.Div(children=TEXTS_DOMAIN[domain], className="config-domain-desc"),
                                 style={"margin-left": "1.5rem"},
                             ),
                         ],

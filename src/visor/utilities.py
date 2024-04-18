@@ -4,6 +4,9 @@ import subprocess
 import pathlib
 import yaml
 import logging
+import re
+
+from dash import html, dcc
 
 from aegis.modules.initialization.parameterization.default_parameters import DEFAULT_PARAMETERS
 
@@ -91,4 +94,33 @@ def sim_exists(filename: str) -> bool:
 def extract_visor_from_docstring(class_):
     docstring = class_.__doc__
     visor_section = docstring.split("VISOR")[1]
-    return visor_section
+    # text = replace_params_in_brackets_with_span(visor_section)
+    parsed = parse_visor_docstrings(visor_section)
+    return list(parsed)
+
+
+def parse_visor_docstrings(text):
+    pattern = r"(\[\[|\]\])"
+    parts = re.split(pattern, text)
+    is_parameter = False
+    for part in parts:
+        if part == "[[":
+            is_parameter = True
+        elif part == "]]":
+            is_parameter = False
+        else:
+            if is_parameter:
+                yield get_parameter_span(part)
+            else:
+                yield html.Span(part)
+
+
+def get_parameter_span(name):
+    reformatted_name = name.replace("_", " ").lower()
+    param = DEFAULT_PARAMETERS[name]
+    info = param.info
+    return html.Span(
+        reformatted_name,
+        title=info,
+        # style={"font-style": "italic"},
+    )

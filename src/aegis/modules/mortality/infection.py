@@ -15,17 +15,17 @@ class Infection:
 
     VISOR
     Infection is an optional source of mortality.
-    FATALITY_RATE specifies how deadly the infection is; thus if set to 0, no deaths from infection will occur.
+    [[FATALITY_RATE]] specifies how deadly the infection is; thus if set to 0, no deaths from infection will occur.
     The infection modeling is inspired by the SIR (susceptible-infectious-removed) model.
 
     Individuals cannot gain immunity, thus can get reinfected many times.
     The probability to die from an infection is constant as long as the individual is infected; there is no incubation period nor disease progression.
-    The same is true for recovering from the disease, which is equal to RECOVERY_RATE.
+    The same is true for recovering from the disease, which is equal to [[RECOVERY_RATE]].
 
     Both of these are independent of age and genetics.
 
     The infectious agent can be transmitted from an individual to an individual but can also be contracted from the environment (and can therefore not be fully eradicated).
-    The probability to acquire the infection from the environment is equal to BACKGROUND_INFECTIVITY, and from other infected individuals it grows with TRANSMISSIBILITY
+    The probability to acquire the infection from the environment is equal to [[BACKGROUND_INFECTIVITY]], and from other infected individuals it grows with [[TRANSMISSIBILITY]]
     but also (logistically) with the proportion of the infected population.
     """
 
