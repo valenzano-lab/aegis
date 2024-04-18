@@ -143,30 +143,26 @@ def get_input_element(param):
         )
 
     elif param.dtype == bool:
-        return dcc.Checklist([""])
-
-    # elif param.dtype == str:
-    #     return (
-    #         dcc.Input(
-    #             type="text",
-    #             list=param.drange.strip("{").strip("}").split(", "),
-    #             placeholder=param.default,
-    #             id={"type": "config-input", "index": param.key},
-    #             autoComplete="off",
-    #             className="config-input-class",
-    #         ),
-    #     )
-
-    return (
-        dcc.Input(
-            type="text",
-            placeholder=str(param.default) if param.default is not None else "",
-            # id=f"config-{v.key}",
-            id={"type": "config-input", "index": param.key},
-            autoComplete="off",
+        return dcc.Checklist(
+            [""],
             className="config-input-class",
-        ),
-    )
+            id={"type": "config-input", "index": param.key},
+            value=[""] if param.default else [],
+        )
+
+    elif param.dtype == str:
+        options = param.drange.strip("{").strip("}").split(", ")
+        return dcc.Dropdown(
+            options=options,
+            value=param.default,
+            className="config-input-class",
+            id={"type": "config-input", "index": param.key},
+            searchable=False,
+            clearable=False,
+        )
+
+    # TODO resolve dict parameter
+    return
 
 
 # @utilities.log_debug
