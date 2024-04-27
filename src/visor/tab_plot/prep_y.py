@@ -74,4 +74,5 @@ def get_derived_allele_freq(container: Container, iloc=-1):
 
 
 def get_bit_states(container: Container):
-    return genome.get_sorted_allele_frequencies(container.get_genotypes_intrinsic_interval())
+    return container.get_genotypes_intrinsic_interval() # unsorted
+    return genome.get_sorted_allele_frequencies(container.get_genotypes_intrinsic_interval()) # sorted
