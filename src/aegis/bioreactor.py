@@ -34,7 +34,7 @@ class Bioreactor:
         self.reproduction()  # reproduction
         self.age()  # age increment and potentially death
         self.hatch()
-        hermes.modules.architect.envdrift.evolve(stage=hermes.get_stage())
+        hermes.architect.envdrift.evolve(stage=hermes.get_stage())
         hermes.modules.resources.replenish()
 
         # Record data
@@ -44,7 +44,7 @@ class Bioreactor:
         hermes.recorder.visorrecorder.record(self.population)
         hermes.recorder.flushrecorder.flush()
         hermes.recorder.popgenstatsrecorder.write(
-            self.population.genomes, hermes.modules.architect.get_evaluation(self.population, "muta")
+            self.population.genomes, hermes.architect.get_evaluation(self.population, "muta")
         )  # TODO defers calculation of mutation rates; hacky
         hermes.recorder.summaryrecorder.record_memuse()
         hermes.recorder.terecorder.record(self.population.ages, "alive")
@@ -54,7 +54,7 @@ class Bioreactor:
     ###############
 
     def mortality_intrinsic(self):
-        probs_surv = hermes.modules.architect.get_evaluation(self.population, "surv")
+        probs_surv = hermes.architect.get_evaluation(self.population, "surv")
         mask_surv = hermes.rng.random(len(probs_surv), dtype=np.float32) < probs_surv
         self._kill(mask_kill=~mask_surv, causeofdeath="intrinsic")
 
@@ -99,7 +99,7 @@ class Bioreactor:
             return
 
         # Check if reproducing
-        probs_repr = hermes.modules.architect.get_evaluation(self.population, "repr", part=mask_fertile)
+        probs_repr = hermes.architect.get_evaluation(self.population, "repr", part=mask_fertile)
         mask_repr = hermes.rng.random(len(probs_repr), dtype=np.float32) < probs_repr
 
         # Forgo if not at least two available parents
@@ -116,7 +116,7 @@ class Bioreactor:
         # Generate offspring genomes
         parental_genomes = self.population.genomes.get(individuals=mask_repr)
         parental_sexes = self.population.sexes[mask_repr]
-        muta_prob = hermes.modules.architect.get_evaluation(self.population, "muta", part=mask_repr)[mask_repr]
+        muta_prob = hermes.architect.get_evaluation(self.population, "muta", part=mask_repr)[mask_repr]
         offspring_genomes = hermes.modules.reproduction.generate_offspring_genomes(
             genomes=parental_genomes,
             muta_prob=muta_prob,
@@ -135,7 +135,7 @@ class Bioreactor:
             self.eggs += eggs
 
     def growth(self):
-        max_growth_potential = hermes.modules.architect.get_evaluation(self.population, "grow")
+        max_growth_potential = hermes.architect.get_evaluation(self.population, "grow")
         gathered_resources = hermes.modules.resources.scavenge(max_growth_potential)
         self.population.sizes += gathered_resources
 

@@ -32,7 +32,7 @@ class Parameter:
         if value is None or value == "":
             return self.default
         elif self.dtype == bool:
-            return value == "True" or value == "true"
+            return value in ("True", "true", True)
         else:
             return self.dtype(value)
 

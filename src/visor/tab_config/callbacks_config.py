@@ -3,6 +3,8 @@ from visor import utilities
 import logging
 from aegis.modules.initialization.parameterization.default_parameters import DEFAULT_PARAMETERS
 
+# from aegis.modules.initialization.parameterization.parameter import Parameter
+
 
 @callback(
     Output("config-make-text", "value"),
@@ -21,13 +23,24 @@ def click_sim_button(n_clicks, filename, values, ids_):
         return
 
     # make config file
-    input_config = {id_["index"]: value for id_, value in zip(ids_, values)}
+
+    decoded_pairs = list(decode_config_tab_values(values=values, ids_=ids_))
+    input_config = {i: v for i, v in decoded_pairs}
     utilities.make_config_file(filename, input_config)
 
     # run simulation
     utilities.run(filename)
 
     return ""
+
+
+def decode_config_tab_values(values, ids_):
+    for value, id_ in zip(values, ids_):
+        param = DEFAULT_PARAMETERS[id_["index"]]
+        if param.dtype == bool:
+            yield id_["index"], bool(value)
+        else:
+            yield id_["index"], value
 
 
 def is_sim_name_valid(sim_name: str) -> bool:

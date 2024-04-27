@@ -26,11 +26,11 @@ class VisorRecorder:
 
     def init_headers(self):
         with open(self.odir / "genotypes.csv", "ab") as f:
-            array = np.arange(hermes.modules.architect.architecture.get_number_of_bits())
+            array = np.arange(hermes.architect.architecture.get_number_of_bits())
             np.savetxt(f, [array], delimiter=",", fmt="%i")
 
         with open(self.odir / "phenotypes.csv", "ab") as f:
-            age_limit = hermes.modules.architect.architecture.AGE_LIMIT
+            age_limit = hermes.architect.architecture.AGE_LIMIT
             trait_list = list(hermes.traits.keys())
             n_traits = len(trait_list)
             header0 = np.repeat(trait_list, age_limit)

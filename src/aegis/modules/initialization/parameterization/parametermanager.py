@@ -34,6 +34,7 @@ class ParameterManager:
 
         # convert to types.SimpleNamespace
         params = types.SimpleNamespace(**params)
+        logging.info(params)
         return params
 
     def read_config_file(self):

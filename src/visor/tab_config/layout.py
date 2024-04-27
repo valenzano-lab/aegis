@@ -147,7 +147,7 @@ def get_input_element(param):
             [""],
             className="config-input-class",
             id={"type": "config-input", "index": param.key},
-            value=[""] if param.default else [],
+            value=[""] if param.default else [], # important for decode_config_tab_values()
         )
 
     elif param.dtype == str:

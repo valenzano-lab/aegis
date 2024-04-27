@@ -94,11 +94,11 @@ class Population:
 
     @staticmethod
     def initialize(n):
-        genomes = Genomes(hermes.modules.architect.architecture.init_genome_array(n))
+        genomes = Genomes(hermes.architect.architecture.init_genome_array(n))
         ages = np.zeros(n, dtype=np.int32)
         births = np.zeros(n, dtype=np.int32)
         birthdays = np.zeros(n, dtype=np.int32)
-        phenotypes = hermes.modules.architect.__call__(genomes)
+        phenotypes = hermes.architect.__call__(genomes)
         infection = np.zeros(n, dtype=np.int32)
         sizes = np.zeros(n, dtype=np.float32)
         sexes = hermes.modules.sexsystem.get_sex(n)
@@ -121,7 +121,7 @@ class Population:
             ages=np.zeros(n, dtype=np.int32),
             births=np.zeros(n, dtype=np.int32),
             birthdays=np.zeros(n, dtype=np.int32) + stage,
-            phenotypes=hermes.modules.architect.__call__(offspring_genomes),
+            phenotypes=hermes.architect.__call__(offspring_genomes),
             infection=np.zeros(n, dtype=np.int32),
             sizes=np.zeros(n, dtype=np.float32),
             sexes=offspring_sexes,

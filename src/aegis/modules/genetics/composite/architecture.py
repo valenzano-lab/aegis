@@ -7,7 +7,7 @@ from aegis.modules.genetics.composite.interpreter import Interpreter
 
 class CompositeArchitecture:
     """
-    
+
     VISOR
     - when pleiotropy is not needed;
     - it is quick, easy to analyze, delivers a diversity of phenotypes
@@ -17,6 +17,7 @@ class CompositeArchitecture:
     - probability of a trait at each age is determined by a BITS_PER_LOCUS adjacent bits forming a "locus" / gene
     - the method by which these loci are converted into a phenotypic value is the Interpreter type
     """
+
     def __init__(self, ploid, BITS_PER_LOCUS, AGE_LIMIT, THRESHOLD):
         self.ploid = ploid
         self.BITS_PER_LOCUS = BITS_PER_LOCUS

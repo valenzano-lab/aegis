@@ -132,7 +132,7 @@ class Hermes:
             REPRODUCTION_MODE=self.parameters.REPRODUCTION_MODE,
             DOMINANCE_FACTOR=self.parameters.DOMINANCE_FACTOR,
         )
-        modules.architect = Architect(
+        self.architect = Architect(
             ploid=modules.ploidy,
             BITS_PER_LOCUS=self.parameters.BITS_PER_LOCUS,
             PHENOMAP=self.parameters.PHENOMAP,

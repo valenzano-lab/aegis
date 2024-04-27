@@ -14,7 +14,7 @@ class PhenomapRecorder:
 
     def write(self):
 
-        architecture = hermes.modules.architect.architecture
+        architecture = hermes.architect.architecture
 
         if hasattr(architecture, "phenomap"):
             phenolist = architecture.phenomap.phenolist
