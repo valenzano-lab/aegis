@@ -27,6 +27,7 @@ class FeatherRecorder:
         df_gen.to_feather(self.odir_genotypes / f"{stage}.feather")
 
         # phenotypes
+        # TODO bugged, wrong header
         df_phe = pd.DataFrame(np.array(population.phenotypes))
         df_phe.reset_index(drop=True, inplace=True)
         df_phe.columns = [str(c) for c in df_phe.columns]

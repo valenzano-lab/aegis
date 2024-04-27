@@ -62,7 +62,7 @@ FIG_SETUP = {
     },
     "intrinsic mortality": {
         "title": "intrinsic mortality",
-        "prep_y": prep_y.get_intrinsic_mortality,
+        "prep_y": prep_y.get_mortality_intrinsic,
         "prep_x": prep_x.get_ages,
         "prep_figure": "make_scatter_figure",
         "description": dcc.Markdown(
@@ -81,7 +81,7 @@ FIG_SETUP = {
     },
     "total mortality": {
         "title": "total mortality",
-        "prep_y": prep_y.get_total_mortality,
+        "prep_y": prep_y.get_mortality_observed,
         "prep_x": prep_x.get_ages,
         "prep_figure": "make_scatter_figure",
         "description": dcc.Markdown(
@@ -178,45 +178,45 @@ FIG_SETUP = {
             "yaxis_title": "intrinsic fertility",
         },
     },
-    "cumulative reproduction": {
-        "title": "cumulative reproduction",
-        "prep_y": prep_y.get_cumulative_reproduction,
-        "prep_x": prep_x.get_ages,
-        "prep_figure": "make_scatter_figure",
-        "description": dcc.Markdown(
-            """
-            The expected number of offspring produced per individual until a given age class.
-            \n
-            Population averages.
-            """,
-            # \n$\sum_{x=0}^{a^*}m(x)l(x)$
-            mathjax=True,
-        ),
-        # graph
-        "figure_layout": {
-            "xaxis_title": "age class",
-            "yaxis_title": "cumulative number of offspring",
-        },
-    },
-    "lifetime reproduction": {
-        "title": "lifetime reproduction",
-        "prep_y": prep_y.get_lifetime_reproduction,
-        "prep_x": prep_x.get_stages,
-        "prep_figure": "make_scatter_figure",
-        "description": dcc.Markdown(
-            """
-            The expected number of offspring produced per individual until death. Plotted over the course of the simulation.
-            \n
-            Population averages.
-            """,
-            mathjax=True,
-        ),
-        # graph
-        "figure_layout": {
-            "xaxis_title": "simulation stage",
-            "yaxis_title": "lifetime number of offspring",
-        },
-    },
+    # "cumulative reproduction": {
+    #     "title": "cumulative reproduction",
+    #     "prep_y": prep_y.get_cumulative_reproduction,
+    #     "prep_x": prep_x.get_ages,
+    #     "prep_figure": "make_scatter_figure",
+    #     "description": dcc.Markdown(
+    #         """
+    #         The expected number of offspring produced per individual until a given age class.
+    #         \n
+    #         Population averages.
+    #         """,
+    #         # \n$\sum_{x=0}^{a^*}m(x)l(x)$
+    #         mathjax=True,
+    #     ),
+    #     # graph
+    #     "figure_layout": {
+    #         "xaxis_title": "age class",
+    #         "yaxis_title": "cumulative number of offspring",
+    #     },
+    # },
+    # "lifetime reproduction": {
+    #     "title": "lifetime reproduction",
+    #     "prep_y": prep_y.get_lifetime_reproduction,
+    #     "prep_x": prep_x.get_stages,
+    #     "prep_figure": "make_scatter_figure",
+    #     "description": dcc.Markdown(
+    #         """
+    #         The expected number of offspring produced per individual until death. Plotted over the course of the simulation.
+    #         \n
+    #         Population averages.
+    #         """,
+    #         mathjax=True,
+    #     ),
+    #     # graph
+    #     "figure_layout": {
+    #         "xaxis_title": "simulation stage",
+    #         "yaxis_title": "lifetime number of offspring",
+    #     },
+    # },
     "birth structure": {
         "title": "birth structure",
         "prep_y": prep_y.get_birth_structure,

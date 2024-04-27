@@ -3,17 +3,15 @@
 # TODO add functions that convert mortality to survival to survivorship to counts, etc.
 
 
-def get_intrinsic_mortality(interval_phenotypes, AGE_LIMIT):
+def get_mortality(survival):
     # TODO Ensure that you are slicing the phenotype array at right places
-    pdf = interval_phenotypes.iloc[:, :AGE_LIMIT]
-    y = 1 - pdf
+    y = 1 - survival
     return y
 
 
-def get_intrinsic_survivorship(interval_phenotypes, AGE_LIMIT):
+def get_survivorship(survival):
     # TODO Ensure that you are slicing the phenotype array at right places
-    pdf = interval_phenotypes.iloc[:, :AGE_LIMIT]
-    y = pdf.cumprod(axis=1)
+    y = survival.cumprod(axis=1)
     return y
 
 

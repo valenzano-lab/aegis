@@ -4,6 +4,7 @@ import logging
 import json
 import yaml
 from typing import Union
+import numpy as np
 
 from aegis.modules.initialization.parameterization.default_parameters import get_default_parameters
 from aegis.modules.dataclasses.population import Population
@@ -112,7 +113,7 @@ class Container:
     # TABLES #
     ##########
 
-    def get_interval_birth_table(self, normalize=False):
+    def get_birth_table_observed_interval(self, normalize=False):
         """
         Observed data.
         Number of births (int) per parental age during an interval of length VISOR_RATE.
@@ -127,7 +128,7 @@ class Container:
         table.columns = table.columns.astype(int)
         return table
 
-    def get_interval_life_table(self, normalize=False):
+    def get_life_table_observed_interval(self, normalize=False):
         """
         Observed data.
         Number of individuals (int) per age class observed during an interval of length VISOR_RATE.
@@ -142,7 +143,7 @@ class Container:
             table = table.div(table.iloc[:, 0], axis=0)
         return table
 
-    def get_snapshot_life_table(self, record_index: int, normalize=False):
+    def get_life_table_observed_snapshot(self, record_index: int, normalize=False):
         """
         Observed data. Series.
         Number of individuals (int) per age class observed at some simulation stage captured by the record of index record_index.
@@ -150,11 +151,15 @@ class Container:
         index.name == age_class
         """
         AGE_LIMIT = self.get_config()["AGE_LIMIT"]
-        table = self.get_snapshot_demography(record_index).ages.value_counts().reindex(range(AGE_LIMIT), fill_value=0)
+        table = (
+            self.get_demography_observed_snapshot(record_index)
+            .ages.value_counts()
+            .reindex(range(AGE_LIMIT), fill_value=0)
+        )
         table.index.names = ["age_class"]
         return table
 
-    def get_interval_death_table(self, normalize=False):
+    def get_death_table_observed_interval(self, normalize=False):
         """
         Observed data. Has a MultiIndex.
         Number of deaths (int) per age class observed during an interval of length VISOR_RATE.
@@ -172,13 +177,27 @@ class Container:
         table.columns = table.columns.astype(int)
         return table
 
+    #######################
+    # TABLES : derivative #
+    #######################
+
+    def get_surv_observed_interval(self, record_index):
+        lt = self.get_life_table_observed_interval()
+        lt = lt.pct_change(axis=1).shift(-1, axis=1).add(1).replace(np.inf, 1)
+        return lt.iloc[record_index]
+
+    def get_fert_observed_interval(self, record_index):
+        lt = self.get_life_table_observed_interval()
+        bt = self.get_birth_table_observed_interval()
+        return (bt / lt).iloc[record_index]
+
     ##########
     # BASICS #
     ##########
 
     # TODO add better column and index names
 
-    def get_snapshot_genotypes(self, record_index):
+    def get_genotypes_intrinsic_snapshot(self, record_index):
         """
         columns .. bit index
         index .. individual index
@@ -186,22 +205,24 @@ class Container:
         """
         return self._read_snapshot("genotypes", record_index=record_index)
 
-    def get_snapshot_phenotypes(self, record_index):
+    def get_phenotype_intrinsic_snapshot(self, trait, record_index):
         """
         columns .. phenotypic trait index
         index .. individual index
         value .. phenotypic trait value
         """
-        return self._read_snapshot("phenotypes", record_index=record_index)
+        df = self._read_snapshot("phenotypes", record_index=record_index)
+        # df.columns = df.columns.str.split("_")
+        return df
 
-    def get_snapshot_demography(self, record_index):
+    def get_demography_observed_snapshot(self, record_index):
         """
         columns .. ages, births, birthdays, sizes, sexes
         index .. individual index
         """
         return self._read_snapshot("demography", record_index=record_index)
 
-    def get_interval_genotypes(self, reload=True):
+    def get_genotypes_intrinsic_interval(self, reload=True):
         """
         columns .. bit index
         index .. record index
@@ -214,9 +235,9 @@ class Container:
         df.columns.names = ["bit_index"]
         return df
 
-    def get_interval_phenotypes(self, reload=True):
+    def get_phenotype_intrinsic_interval(self, trait, reload=True):
         """
-        columns .. phenotypic trait index
+        columns .. age
         index .. record index
         value .. median phenotypic trait value
         """
@@ -226,9 +247,9 @@ class Container:
         df.index = df.index.astype(int)
         df.columns.names = ["trait", "age_class"]
         # TODO age_class is str
-        return df
+        return df.xs(trait, axis=1)
 
-    def get_survival_analysis_TE(self, record_index):
+    def get_survival_analysis_TE_observed_interval(self, record_index):
         """
         columns .. T, E
         index .. individual
@@ -239,6 +260,15 @@ class Container:
         data = pd.read_csv(self.paths["te"][record_index], header=0)
         data.index.names = ["individual"]
         return data
+
+    ###############
+    # DERIVATIVES #
+    ###############
+
+    def get_lifetime_reproduction(self):
+        survivorship = self.get_surv_observed_interval(slice(None)).cumprod(1)
+        fertility = self.get_fert_observed_interval(slice(None))
+        return (survivorship * fertility).sum(axis=1)
 
     #############
     # UTILITIES #
