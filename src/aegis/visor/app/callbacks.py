@@ -1,5 +1,5 @@
 from dash import callback, Output, Input, ctx
-from visor import utilities
+from aegis.visor import utilities
 
 
 @callback(

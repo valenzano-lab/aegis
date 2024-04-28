@@ -3,12 +3,12 @@ Import callbacks. They modify Output's when Input's are triggered. Callbacks add
 """
 
 from dash import Dash
-from visor.app.layout import app_layout
-import visor.app.callbacks
-import visor.tab_config.callbacks_config
-import visor.tab_plot.callbacks_plot
-import visor.tab_plot.callbacks_download
-import visor.tab_list.callbacks_list
+from aegis.visor.app.layout import app_layout
+import aegis.visor.app.callbacks
+import aegis.visor.tab_config.callbacks_config
+import aegis.visor.tab_plot.callbacks_plot
+import aegis.visor.tab_plot.callbacks_download
+import aegis.visor.tab_list.callbacks_list
 
 
 def run():

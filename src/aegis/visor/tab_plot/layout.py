@@ -1,5 +1,5 @@
 from dash import html, dcc
-from visor.tab_plot.prep_setup import FIG_SETUP
+from aegis.visor.tab_plot.prep_setup import FIG_SETUP
 
 
 PREFACE = [

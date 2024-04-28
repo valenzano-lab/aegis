@@ -1,5 +1,5 @@
 from dash import html, dcc
-from visor import utilities
+from aegis.visor import utilities
 import datetime
 from aegis.utilities.container import Container
 

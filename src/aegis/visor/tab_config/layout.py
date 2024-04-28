@@ -1,5 +1,5 @@
 from dash import html, dcc
-from visor import utilities
+from aegis.visor import utilities
 from aegis.modules.initialization.parameterization.default_parameters import DEFAULT_PARAMETERS
 from aegis.modules.initialization.parameterization.parameter import Parameter
 

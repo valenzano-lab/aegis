@@ -1,5 +1,5 @@
 from dash import callback, Output, Input, State, ALL, MATCH, ctx
-from visor import utilities
+from aegis.visor import utilities
 import logging
 from aegis.modules.initialization.parameterization.default_parameters import DEFAULT_PARAMETERS
 

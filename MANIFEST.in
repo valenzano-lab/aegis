@@ -5,5 +5,6 @@ include src/aegis/visor/assets/*.svg
 include src/aegis/visor/assets/*.ttf
 include src/aegis/visor/assets/*.css
 include src/aegis/parameters/default.yml
+include src/aegis/documentation/*
 recursive-include tests *.py
 recursive-include tests *.yml

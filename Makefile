@@ -33,7 +33,7 @@ build:
 	rm -rf dist/*
 	python3 -m build
 
-# Test aegis installed in .venv
+# Test aegis installed in .venvp
 test:
 	. .venv/bin/activate ; \
 	python3 -m pytest tests/ --log-cli-level=DEBUG

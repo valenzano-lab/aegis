@@ -1,5 +1,5 @@
 from dash import dcc
-from visor.tab_plot import prep_x, prep_y
+from aegis.visor.tab_plot import prep_x, prep_y
 
 FIG_SETUP = {
     "bit states": {

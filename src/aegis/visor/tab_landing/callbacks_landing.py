@@ -1,5 +1,5 @@
 # from dash import html, dcc, callback, Output, Input, State, ALL, MATCH, ctx
-# from visor import funcs
+# from aegis.visor import funcs
 # from aegis.help import config
 
 

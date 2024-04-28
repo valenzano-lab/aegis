@@ -2,9 +2,9 @@ from dash import callback, Output, Input, ctx, ALL, State
 
 import logging
 from aegis.utilities.container import Container
-from visor.utilities import default_selection_states, log_debug, get_sim_dir
-from visor.tab_plot import prep_fig
-from visor.tab_plot.prep_setup import FIG_SETUP
+from aegis.visor.utilities import default_selection_states, log_debug, get_sim_dir
+from aegis.visor.tab_plot import prep_fig
+from aegis.visor.tab_plot.prep_setup import FIG_SETUP
 
 
 def gen_fig(fig_name, selected_sims, containers):

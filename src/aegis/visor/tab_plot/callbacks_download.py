@@ -1,7 +1,7 @@
 import logging
 from dash import callback, Output, Input, ctx, State, MATCH, dcc
 from plotly.io import write_image
-from visor.utilities import get_figure_dir
+from aegis.visor.utilities import get_figure_dir
 
 
 @callback(

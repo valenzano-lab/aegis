@@ -1,8 +1,8 @@
 from dash import callback, Output, Input, State, ALL, MATCH, ctx
 import subprocess
 import logging
-from visor import utilities
-from visor.tab_list.layout import make_table
+from aegis.visor import utilities
+from aegis.visor.tab_list.layout import make_table
 import yaml
 
 from aegis.utilities.container import Container

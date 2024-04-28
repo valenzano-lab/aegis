@@ -1,6 +1,6 @@
 from dash import html, dcc
-from visor import utilities
-from documentation.documenter import Documenter
+from aegis.visor import utilities
+from aegis.documentation.documenter import Documenter
 
 
 @utilities.log_debug
