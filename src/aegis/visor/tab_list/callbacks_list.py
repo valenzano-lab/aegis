@@ -53,6 +53,16 @@ def config_file_download_button(n_clicks, basepath):
     }
 
 
+@callback(
+    Output({"type": "delete-simulation-button", "index": MATCH}, "disabled"),
+    Input({"type": "delete-simulation-button", "index": MATCH}, "n_clicks"),
+)
+def disable_delete_simulation_button(n_clicks):
+    if n_clicks is None:
+        return False
+    return True
+
+
 # CHOOSE
 @callback(
     Output({"type": "selection-state", "index": MATCH}, "data"),

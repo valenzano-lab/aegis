@@ -145,8 +145,8 @@ def make_table_row(selection_state, sim_data, log, input_summary, output_summary
                         id={"type": "delete-simulation-button", "index": filename},
                         value=filename,
                     )
-                    # if filename != "default"
-                    # else None
+                    if filename != "default"
+                    else None
                 ),
                 style={"padding-right": "1rem"},
             ),
