@@ -61,8 +61,12 @@ def make_scatter_figure(id_, xs, ys, selected_sims):
 
 
 def make_hist_figure(id_, xs, ys, selected_sims):
+    fig_setup = FIG_SETUP[id_]
     figure = go.Figure(
-        data=[go.Histogram(x=y, name=sim) for y, sim in zip(ys, selected_sims)],
+        data=[
+            go.Histogram(x=y, name=sim, nbinsx=fig_setup["nbinsx"] if "nbinsx" in fig_setup else None)
+            for y, sim in zip(ys, selected_sims)
+        ],
         layout=go.Layout({**FIG_LAYOUT, **FIG_SETUP[id_]["figure_layout"]}),
     )
 

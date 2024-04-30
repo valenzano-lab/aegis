@@ -59,10 +59,18 @@ FIG_SETUP = {
             """,
             mathjax=True,
         ),
+        "nbinsx": 10,
         # graph
         "figure_layout": {
             "xaxis_title": "derived allele frequency",
             "yaxis_title": "number of genome sites",
+            "xaxis": {
+                "range": [0, 1],
+            },
+            # Change log scale of y axis
+            # "yaxis": {
+            #     "type": "log",
+            # },
         },
     },
     "intrinsic mortality": {
