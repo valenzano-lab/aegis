@@ -1,6 +1,5 @@
 from dash import html, dcc
-from aegis.visor.tab_plot.prep_setup import FIG_SETUP
-
+from aegis.visor.tab_plot.prep_setup import FIG_SETUP, needs_slider
 
 PREFACE = [
     html.Div(
@@ -41,6 +40,19 @@ def get_plot_layout():
                                         id={"type": "graph-figure", "index": figure_id},
                                         config={"displayModeBar": False},
                                         className="figure",
+                                    ),
+                                    (
+                                        dcc.Slider(
+                                            min=0,
+                                            max=1,
+                                            step=1,
+                                            value=0,
+                                            marks=None,
+                                            tooltip={},
+                                            id={"type": "graph-slider", "index": figure_id},
+                                        )
+                                        if needs_slider(figure_id)
+                                        else None
                                     ),
                                 ],
                                 style={"padding-right": "0.9rem", "margin-left": "0.6rem"},
