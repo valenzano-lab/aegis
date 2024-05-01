@@ -9,6 +9,7 @@ import numpy as np
 from aegis.modules.initialization.parameterization.default_parameters import get_default_parameters
 from aegis.modules.dataclasses.population import Population
 from aegis.constants import VALID_CAUSES_OF_DEATH
+from aegis.modules.recording.ticker import Ticker
 
 
 # TODO for analysis:
@@ -27,13 +28,16 @@ class Container:
         self.name = self.basepath.stem
         self.data = {}
         self.set_paths()
+        self.ticker = None
 
     def set_paths(self):
         # TODO smarter way of listing paths; you are capturing te files with number keys e.g. '6': ... /te/6.csv; that's silly
+        # TODO these are repeated elsewhere, e.g. path for ticker
         self.paths = {
             path.stem: path for path in self.basepath.glob("**/*") if path.is_file() and path.suffix == ".csv"
         }
         self.paths["log"] = self.basepath / "progress.log"
+        self.paths["ticker"] = self.basepath / "ticker.txt"
         self.paths["output_summary"] = self.basepath / "output_summary.json"
         self.paths["input_summary"] = self.basepath / "input_summary.json"
         self.paths["snapshots"] = {}
@@ -87,6 +91,12 @@ class Container:
                 df[["ETA", "t1M", "runtime"]].applymap(dhm_inverse)
             self.data["log"] = df
         return self.data["log"]
+
+    def get_ticker(self):
+        if self.ticker is None:
+            TICKER_RATE = self.get_config()["TICKER_RATE"]
+            self.ticker = Ticker(TICKER_RATE=TICKER_RATE, output_directory=self.paths["ticker"].parent)
+        return self.ticker
 
     def get_config(self):
         if "config" not in self.data:
@@ -273,6 +283,9 @@ class Container:
     #############
     # UTILITIES #
     #############
+
+    def has_ticker_stopped(self):
+        return self.get_ticker().has_stopped()
 
     def _get_path(self, stem):
         return self.paths[stem]
