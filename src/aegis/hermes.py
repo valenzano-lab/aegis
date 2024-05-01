@@ -34,7 +34,7 @@ class Hermes:
         self.rng = self.init_random_number_generator()
         self.traits = self.init_traits()
         self.modules = self.init_modules()
-        self.recorder = self.init_recorder(custom_config_path=custom_config_path, overwrite=overwrite)
+        self.recording_manager = self.init_recorder(custom_config_path=custom_config_path, overwrite=overwrite)
         # self.logger = self.init_logger()  # TODO
 
     ##############
@@ -65,8 +65,9 @@ class Hermes:
     def init_recorder(self, custom_config_path, overwrite):
         # NOTE Circular import if put on top
         from aegis.modules.recording.recordingmanager import RecordingManager
-
-        return RecordingManager(custom_config_path, overwrite)
+        recorder_manager = RecordingManager(custom_config_path, overwrite)
+        recorder_manager.initialize_recorders(TICKER_RATE=self.parameters.TICKER_RATE)
+        return recorder_manager
 
     def init_modules(self):
         # NOTE Circular import if put on top

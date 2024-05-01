@@ -21,6 +21,7 @@ from .featherrecorder import FeatherRecorder
 from .phenomaprecorder import PhenomapRecorder
 from .summaryrecorder import SummaryRecorder
 from .progressrecorder import ProgressRecorder
+from .ticker import Ticker
 
 # TODO write tests
 
@@ -53,7 +54,6 @@ class RecordingManager:
         odir = self.make_odir(custom_config_path=custom_config_path, overwrite=overwrite)
         self.paths = self.get_paths(odir)
         self.make_subfolders(paths=self.paths.values())
-        self.initialize_recorders()
 
     @staticmethod
     def get_paths(odir: pathlib.Path) -> dict:
@@ -70,7 +70,7 @@ class RecordingManager:
             "te": odir / "te",
         }
 
-    def initialize_recorders(self):
+    def initialize_recorders(self, TICKER_RATE):
         self.terecorder = TERecorder(self.paths["te"])
         self.picklerecorder = PickleRecorder(self.paths["pickles"])
         self.popgenstatsrecorder = PopgenStatsRecorder(self.paths["popgen"])
@@ -84,6 +84,7 @@ class RecordingManager:
         self.phenomaprecorder = PhenomapRecorder(self.paths["phenomap"])
         self.summaryrecorder = SummaryRecorder(self.paths["BASE_DIR"])
         self.progressrecorder = ProgressRecorder(self.paths["BASE_DIR"])
+        self.ticker = Ticker(output_directory=self.paths["BASE_DIR"], TICKER_RATE=TICKER_RATE)
 
     #############
     # UTILITIES #

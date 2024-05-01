@@ -51,6 +51,17 @@ DEFAULT_PARAMETERS = {
         inrange=lambda x: x >= 0,
         evalrange=[1, 10000],
     ),
+    "TICKER_RATE": Parameter(
+        key="TICKER_RATE",
+        name="",
+        domain="recording",
+        default=1,
+        info="Tick every ? seconds",
+        dtype=float,
+        drange="[0, inf)",
+        inrange=lambda x: x >= 0,
+        evalrange=[1, 10000],
+    ),
     "PICKLE_RATE": Parameter(
         key="PICKLE_RATE",
         name="",

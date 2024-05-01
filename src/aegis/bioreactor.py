@@ -21,7 +21,7 @@ class Bioreactor:
         # If extinct (no living individuals nor eggs left), do nothing
         if len(self) == 0:
             logging.debug("went extinct")
-            hermes.recorder.summaryrecorder.extinct = True
+            hermes.recording_manager.summaryrecorder.extinct = True
 
         # Mortality sources
         self.mortality_intrinsic()
@@ -38,16 +38,16 @@ class Bioreactor:
         hermes.modules.resources.replenish()
 
         # Record data
-        hermes.recorder.flushrecorder.collect("additive_age_structure", self.population.ages)  # population census
-        hermes.recorder.picklerecorder.write(self.population)
-        hermes.recorder.featherrecorder.write(self.population)
-        hermes.recorder.visorrecorder.record(self.population)
-        hermes.recorder.flushrecorder.flush()
-        hermes.recorder.popgenstatsrecorder.write(
+        hermes.recording_manager.flushrecorder.collect("additive_age_structure", self.population.ages)  # population census
+        hermes.recording_manager.picklerecorder.write(self.population)
+        hermes.recording_manager.featherrecorder.write(self.population)
+        hermes.recording_manager.visorrecorder.record(self.population)
+        hermes.recording_manager.flushrecorder.flush()
+        hermes.recording_manager.popgenstatsrecorder.write(
             self.population.genomes, hermes.architect.get_evaluation(self.population, "muta")
         )  # TODO defers calculation of mutation rates; hacky
-        hermes.recorder.summaryrecorder.record_memuse()
-        hermes.recorder.terecorder.record(self.population.ages, "alive")
+        hermes.recording_manager.summaryrecorder.record_memuse()
+        hermes.recording_manager.terecorder.record(self.population.ages, "alive")
 
     ###############
     # STAGE LOGIC #
@@ -108,7 +108,7 @@ class Bioreactor:
 
         # Count ages at reproduction
         ages_repr = self.population.ages[mask_repr]
-        hermes.recorder.flushrecorder.collect("age_at_birth", ages_repr)
+        hermes.recording_manager.flushrecorder.collect("age_at_birth", ages_repr)
 
         # Increase births statistics
         self.population.births += mask_repr
@@ -183,8 +183,8 @@ class Bioreactor:
         # Count ages at death
         if causeofdeath != "age_limit":
             ages_death = self.population.ages[mask_kill]
-            hermes.recorder.flushrecorder.collect(f"age_at_{causeofdeath}", ages_death)
-            hermes.recorder.terecorder.record(ages_death, "dead")
+            hermes.recording_manager.flushrecorder.collect(f"age_at_{causeofdeath}", ages_death)
+            hermes.recording_manager.terecorder.record(ages_death, "dead")
 
         # Retain survivors
         self.population *= ~mask_kill
