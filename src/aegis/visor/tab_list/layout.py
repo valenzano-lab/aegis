@@ -39,6 +39,7 @@ def make_table(selection_states={}, sim_data=None):
             html.Th("CREATED"),
             html.Th("FINISHED"),
             html.Th("EXTINCT"),
+            html.Th("RUNNING"),
             html.Th("ETA"),
             html.Th("FILEPATH"),
             html.Th("CONFIG FILE"),
@@ -60,6 +61,7 @@ def make_table(selection_states={}, sim_data=None):
             output_summary=container.get_output_summary(),
             basepath=container.basepath,
             filename=filename,
+            ticker_stopped=container.has_ticker_stopped(),
         )
         table.append(element)
 
@@ -67,7 +69,7 @@ def make_table(selection_states={}, sim_data=None):
 
 
 # @utilities.log_debug
-def make_table_row(selection_state, sim_data, log, input_summary, output_summary, basepath, filename):
+def make_table_row(selection_state, sim_data, log, input_summary, output_summary, basepath, filename, ticker_stopped):
     if len(log) > 0:
         logline = log.iloc[-1].to_dict()
     else:
@@ -93,6 +95,7 @@ def make_table_row(selection_state, sim_data, log, input_summary, output_summary
     )
 
     extinct = status[1]
+    running = "no" if ticker_stopped else "yes"
     eta = logline["ETA"]
 
     row = html.Tr(
@@ -125,6 +128,7 @@ def make_table_row(selection_state, sim_data, log, input_summary, output_summary
             html.Td(html.P(time_of_creation)),
             html.Td(html.P(time_of_finishing)),
             html.Td(html.P(extinct)),
+            html.Td(html.P(running)),
             html.Td(html.P(eta if time_of_finishing is None else "       ")),
             html.Td(html.P(str(basepath), id={"type": "config-download-basepath", "index": filename})),
             html.Td(

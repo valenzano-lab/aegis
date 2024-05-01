@@ -20,11 +20,13 @@ class Ticker:
 
     def tick(self):
         while True:
-            print("tick")
-            with open(self.ticker_path, "w") as file:
-                timestamp = time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime())
-                file.write(timestamp)
+            self.write()
             time.sleep(self.TICKER_RATE)
+
+    def write(self):
+        with open(self.ticker_path, "w") as file:
+            timestamp = time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime())
+            file.write(timestamp)
 
     def read(self):
         with open(self.ticker_path, "r") as file:
