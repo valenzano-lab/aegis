@@ -5,9 +5,26 @@ def get_default_parameters():
     return {p.key: p.default for p in DEFAULT_PARAMETERS.values()}
 
 
+def get_species_parameters(SPECIES_PRESET):
+    return {p.key: p.presets[SPECIES_PRESET] for p in DEFAULT_PARAMETERS.values() if SPECIES_PRESET in p.presets}
+
+
+# TODO test these
+# TODO value interpolation between ages?
+
+PRESET_INFO = {
+    "human": "One cycle corresponds to 2 years.",
+    "mouse": "One cycle corresponds to one month. Source: https://genomics.senescence.info/species/entry.php?species=Mus_musculus",
+    "killifish": "One cycle corresponds to one week.",
+    "yeast": "",
+    "arabidopsis": "",
+    "worm": "One cycle corresponds to one day. Up to 300 eggs in optimal conditions.",
+    "fruitfly": "One cycle corresponds to one day. Up to 100 eggs per day.",
+}
+
 # You need the keys so you can find the param (in a list, you cannot)
 DEFAULT_PARAMETERS = {
-    # "": Param(
+    # "": Parameter(
     #     key="",
     #     name="",
     #     domain="",
@@ -16,6 +33,10 @@ DEFAULT_PARAMETERS = {
     #     dtype=float,
     #     drange="[0, inf)",
     #     inrange=lambda x: x >= 0,
+    #     serverrange=lambda x: x <= 1000000,
+    #     serverrange_info="[1,1000000]",
+    #     evalrange=[1, 10000000],
+    #      presets={},
     # ),
     "RANDOM_SEED": Parameter(
         key="RANDOM_SEED",
@@ -215,6 +236,7 @@ DEFAULT_PARAMETERS = {
         dtype=int,
         drange="[-1, inf)",
         inrange=lambda x: x >= -1,
+        presets={},
     ),
     "AGE_LIMIT": Parameter(
         key="AGE_LIMIT",
@@ -239,6 +261,9 @@ DEFAULT_PARAMETERS = {
         drange="[1, inf)",
         inrange=lambda x: x >= 1,
         evalrange=[0, 50],
+        presets={
+            "mouse": 1,  # 1 cycle .. 1 month
+        },
     ),
     "MENOPAUSE": Parameter(
         key="MENOPAUSE",
@@ -249,6 +274,9 @@ DEFAULT_PARAMETERS = {
         dtype=int,
         drange="[0, inf)",
         inrange=lambda x: x >= 0,
+        presets={
+            "human": 50,
+        },
     ),
     # "GENOME_FREE": Parameter(
     #     key="GENOME_FREE",
@@ -287,22 +315,30 @@ DEFAULT_PARAMETERS = {
         key="REPRODUCTION_MODE",
         name="",
         domain="reproduction",
-        default="asexual",
+        default="sexual",
         info="Mode of reproduction",
         dtype=str,
         drange="{sexual, asexual, asexual_diploid}",
         inrange=lambda x: x in ("sexual", "asexual", "asexual_diploid"),
+        presets={
+            "yeast": "asexual_diploid",
+            "bacterium": "asexual",
+        },
     ),
     "RECOMBINATION_RATE": Parameter(
         key="RECOMBINATION_RATE",
         name="",
         domain="reproduction",
-        default=0,
+        default=0.1,
         info="Rate of recombination; 0 if no recombination",
         dtype=float,
         drange="[0, inf)",
         inrange=lambda x: x >= 0,
         evalrange=[0, 1],
+        presets={
+            "yeast": 0,
+            "bacterium": 0,
+        },
     ),
     "MUTATION_RATIO": Parameter(
         key="MUTATION_RATIO",
@@ -565,6 +601,7 @@ DEFAULT_PARAMETERS = {
         dtype=float,
         drange="",
     ),
+    # TODO model litter size
     "G_repr_hi": Parameter(
         key="G_repr_hi",
         name="",
@@ -574,6 +611,16 @@ DEFAULT_PARAMETERS = {
         dtype=float,
         drange="",
         evalrange=[0.5, 1],
+        presets={
+            "mouse": 3.5,  # litter size of 7; 5.4 litters per year; https://genomics.senescence.info/species/entry.php?species=Mus_musculus
+            "human": 1,  # litter size of 1,
+            "mouse": 5.5,  # litter size of 5-6
+            "killifish": 50,  # 1x-1xx eggs, depending on species
+            "yeast": 1,
+            "athaliana": 1,  # 1xx seeds per plant
+            "worm": 1,  # up to 300 eggs in optimal conditions
+            "fruitfly": 100,  # up to 100 eggs per day in optimal conditions
+        },
     ),
     "G_repr_initgeno": Parameter(
         key="G_repr_initgeno",
@@ -808,6 +855,16 @@ DEFAULT_PARAMETERS = {
         info="",
         dtype=dict,
         drange="",
+    ),
+    "SPECIES_PRESET": Parameter(
+        key="SPECIES_PRESET",
+        name="",
+        domain="other",
+        default="human",
+        info="",
+        dtype=str,
+        drange="[" + ",".join(PRESET_INFO.keys()) + "]",
+        inrange=lambda x: x in PRESET_INFO.keys(),
     ),
     "NOTES": Parameter(
         key="NOTES",

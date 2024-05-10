@@ -2,7 +2,11 @@ import logging
 import yaml
 import types
 
-from aegis.modules.initialization.parameterization.default_parameters import get_default_parameters, DEFAULT_PARAMETERS
+from aegis.modules.initialization.parameterization.default_parameters import (
+    get_default_parameters,
+    DEFAULT_PARAMETERS,
+    get_species_parameters,
+)
 
 
 class ParameterManager:
@@ -23,9 +27,15 @@ class ParameterManager:
         default_parameters = get_default_parameters()
         custom_config_params = self.read_config_file()
 
+        SPECIES_PRESET = custom_config_params.get("SPECIES_PRESET", default_parameters["SPECIES_PRESET"])
+        species_config_params = get_species_parameters(SPECIES_PRESET)
+
+        logging.info(f"Using {SPECIES_PRESET} as species preset: " + repr(species_config_params))
+
         # Fuse
         params = {}
         params.update(default_parameters)
+        params.update(species_config_params)
         params.update(custom_config_params)
         params.update(self.custom_input_params)
 
@@ -34,7 +44,7 @@ class ParameterManager:
 
         # convert to types.SimpleNamespace
         params = types.SimpleNamespace(**params)
-        logging.info(params)
+        logging.info("Final parameters to use in the simulation: " + repr(params))
         return params
 
     def read_config_file(self):

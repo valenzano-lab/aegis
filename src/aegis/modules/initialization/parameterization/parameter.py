@@ -15,6 +15,7 @@ class Parameter:
         serverrange=lambda x: True,
         serverrange_info="",
         evalrange=None,
+        presets={},
     ):
         self.key = key
         self.name = name
@@ -27,6 +28,7 @@ class Parameter:
         self.serverrange = serverrange
         self.serverrange_info = serverrange_info
         self.evalrange = evalrange
+        self.presets = presets
 
     def convert(self, value):
         if value is None or value == "":
