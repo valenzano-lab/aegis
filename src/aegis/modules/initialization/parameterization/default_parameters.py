@@ -322,7 +322,6 @@ DEFAULT_PARAMETERS = {
         inrange=lambda x: x in ("sexual", "asexual", "asexual_diploid"),
         presets={
             "yeast": "asexual_diploid",
-            "bacterium": "asexual",
         },
     ),
     "RECOMBINATION_RATE": Parameter(
@@ -337,7 +336,6 @@ DEFAULT_PARAMETERS = {
         evalrange=[0, 1],
         presets={
             "yeast": 0,
-            "bacterium": 0,
         },
     ),
     "MUTATION_RATIO": Parameter(
@@ -612,14 +610,14 @@ DEFAULT_PARAMETERS = {
         drange="",
         evalrange=[0.5, 1],
         presets={
-            "mouse": 3.5,  # litter size of 7; 5.4 litters per year; https://genomics.senescence.info/species/entry.php?species=Mus_musculus
+            "mouse": 1,  # 3.5; litter size of 7; 5.4 litters per year; https://genomics.senescence.info/species/entry.php?species=Mus_musculus
             "human": 1,  # litter size of 1,
-            "mouse": 5.5,  # litter size of 5-6
-            "killifish": 50,  # 1x-1xx eggs, depending on species
+            "mouse": 1,  # 5.5; litter size of 5-6
+            "killifish": 1,  # 50; 1x-1xx eggs, depending on species
             "yeast": 1,
             "athaliana": 1,  # 1xx seeds per plant
             "worm": 1,  # up to 300 eggs in optimal conditions
-            "fruitfly": 100,  # up to 100 eggs per day in optimal conditions
+            "fruitfly": 1,  # 100; up to 100 eggs per day in optimal conditions
         },
     ),
     "G_repr_initgeno": Parameter(
