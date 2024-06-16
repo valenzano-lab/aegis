@@ -25,17 +25,18 @@ class ModifyingArchitecture:
 
         self.length = self.gpm_decoder.n
 
+        phenolist = self.gpm_decoder.get_total_phenolist()
         self.phenomap = GPM(
             AGE_LIMIT=AGE_LIMIT,
             phenomatrix=None,
-            phenolist=self.gpm_decoder.get_total_phenolist(),
+            phenolist=phenolist,
         )
 
     def get_number_of_phenotypic_values(self):
         return self.AGE_LIMIT * constants.TRAIT_N
 
     def get_number_of_bits(self):
-        return self.length
+        return self.length * self.ploid.y
 
     def get_shape(self):
         return (self.ploid.y, self.length, 1)

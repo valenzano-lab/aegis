@@ -22,6 +22,7 @@ class CompositeArchitecture:
         self.ploid = ploid
         self.BITS_PER_LOCUS = BITS_PER_LOCUS
         self.n_loci = constants.TRAIT_N * AGE_LIMIT
+        self.length = self.n_loci * BITS_PER_LOCUS
         self.AGE_LIMIT = AGE_LIMIT
 
         self.evolvable = [trait for trait in hermes.traits.values() if trait.evolvable]
