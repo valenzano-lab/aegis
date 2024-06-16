@@ -22,9 +22,7 @@ class Population:
         "sexes",
     )
 
-    # NOTE Add sex
-
-    def __init__(self, genomes, ages, births, birthdays, phenotypes, infection, sizes, sexes):
+    def __init__(self, genomes: Genomes, ages, births, birthdays, phenotypes, infection, sizes, sexes):
         self.genomes = genomes
         self.ages = ages
         self.births = births

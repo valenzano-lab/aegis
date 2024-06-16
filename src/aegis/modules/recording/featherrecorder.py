@@ -3,6 +3,7 @@ import pandas as pd
 import numpy as np
 
 from aegis.hermes import hermes
+from aegis.modules.dataclasses.population import Population
 
 
 class FeatherRecorder:
@@ -11,7 +12,7 @@ class FeatherRecorder:
         self.odir_phenotypes = odir_phenotypes
         self.odir_demography = odir_demography
 
-    def write(self, population):
+    def write(self, population: Population):
         """Record demographic, genetic and phenotypic data from the current population."""
         if hermes.skip("SNAPSHOT_RATE") or len(population) == 0:
             return
