@@ -43,7 +43,7 @@ test:
 # _ is the basic configuration
 profile:
 	. .venv/bin/activate ; \
-	python3 -m cProfile -o profiler/$(yml).prof src/aegis/__main__.py -c profiler/$(yml).yml
+	python3 -m cProfile -o profiler/$(yml).prof src/aegis/__main__.py -oc profiler/$(yml).yml
 	rm -r profiler/$(yml) ; \
 	snakeviz profiler/$(yml).prof
 
