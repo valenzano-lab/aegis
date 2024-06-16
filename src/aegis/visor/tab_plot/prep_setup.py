@@ -79,7 +79,7 @@ FIG_SETUP = {
         "title": "intrinsic mortality",
         "prep_y": prep_y.get_mortality_intrinsic,
         "prep_x": prep_x.get_ages,
-        "prep_figure": "make_scatter_figure",
+        "prep_figure": "make_line_figure",
         "description": dcc.Markdown(
             """
             Genetic (individual-specific, heritable) mortality at a given age.
@@ -98,7 +98,7 @@ FIG_SETUP = {
         "title": "total mortality",
         "prep_y": prep_y.get_mortality_observed,
         "prep_x": prep_x.get_ages,
-        "prep_figure": "make_scatter_figure",
+        "prep_figure": "make_line_figure",
         "description": dcc.Markdown(
             """
             Observed (individual-specific, heritable) mortality at a given age (all sources of mortality considered).
@@ -119,7 +119,7 @@ FIG_SETUP = {
         "title": "total survivorship",
         "prep_y": prep_y.get_total_survivorship,
         "prep_x": prep_x.get_ages,
-        "prep_figure": "make_scatter_figure",
+        "prep_figure": "make_line_figure",
         "description": dcc.Markdown(
             """
             Observed expected probability to survive to a specific age (when all sources of mortality are considered).
@@ -138,7 +138,7 @@ FIG_SETUP = {
         "title": "intrinsic survivorship",
         "prep_y": prep_y.get_intrinsic_survivorship,
         "prep_x": prep_x.get_ages,
-        "prep_figure": "make_scatter_figure",
+        "prep_figure": "make_line_figure",
         "description": dcc.Markdown(
             # TODO clarify
             """
@@ -158,7 +158,7 @@ FIG_SETUP = {
         "title": "life expectancy at age 0",
         "prep_y": prep_y.get_life_expectancy,
         "prep_x": prep_x.get_stages,
-        "prep_figure": "make_scatter_figure",
+        "prep_figure": "make_line_figure",
         "description": dcc.Markdown(
             # TODO check this
             """
@@ -178,7 +178,7 @@ FIG_SETUP = {
         "title": "intrinsic fertility",
         "prep_y": prep_y.get_fertility,
         "prep_x": prep_x.get_ages,
-        "prep_figure": "make_scatter_figure",
+        "prep_figure": "make_line_figure",
         "description": dcc.Markdown(
             """
             The intrinsic probability to produce a single offspring at each age class.
@@ -197,7 +197,7 @@ FIG_SETUP = {
     #     "title": "cumulative reproduction",
     #     "prep_y": prep_y.get_cumulative_reproduction,
     #     "prep_x": prep_x.get_ages,
-    #     "prep_figure": "make_scatter_figure",
+    #     "prep_figure": "make_line_figure",
     #     "description": dcc.Markdown(
     #         """
     #         The expected number of offspring produced per individual until a given age class.
@@ -217,7 +217,7 @@ FIG_SETUP = {
     #     "title": "lifetime reproduction",
     #     "prep_y": prep_y.get_lifetime_reproduction,
     #     "prep_x": prep_x.get_stages,
-    #     "prep_figure": "make_scatter_figure",
+    #     "prep_figure": "make_line_figure",
     #     "description": dcc.Markdown(
     #         """
     #         The expected number of offspring produced per individual until death. Plotted over the course of the simulation.
@@ -236,7 +236,7 @@ FIG_SETUP = {
         "title": "birth structure",
         "prep_y": prep_y.get_birth_structure,
         "prep_x": prep_x.get_ages,
-        "prep_figure": "make_scatter_figure",
+        "prep_figure": "make_line_figure",
         "description": dcc.Markdown(
             """
             The number of newborns produced by parents of a given age class.
@@ -254,7 +254,7 @@ FIG_SETUP = {
     #     "title": "death structure",
     #     "prep_y": prep_y.get_death_structure,
     #     "prep_x": prep_x.get_ages,
-    #     "prep_figure": "make_scatter_figure",
+    #     "prep_figure": "make_line_figure",
     #     "description": dcc.Markdown(
     #         """The measured ratio of intrinsic deaths versus total deaths, grouped by age.""",
     #         mathjax=True,

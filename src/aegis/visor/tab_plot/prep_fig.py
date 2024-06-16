@@ -60,6 +60,31 @@ def make_scatter_figure(id_, xs, ys, selected_sims):
     return figure
 
 
+def make_line_figure(id_, xs, ys, selected_sims):
+    figure = go.Figure(
+        data=[go.Scatter(x=x, y=y, mode="lines", name=sim) for x, y, sim in zip(xs, ys, selected_sims)],
+        layout=go.Layout({**FIG_LAYOUT, **FIG_SETUP[id_]["figure_layout"]}),
+    )
+
+    # Compute maximum axes limits
+    maxx = max(max(x) for x in xs) if xs else 1
+    maxy = max(max(y) for y in ys) if ys else 1
+
+    # Update axes
+    figure.update_xaxes(
+        range=[0, 1 if maxx < 1 else maxx * 1.05],
+    )
+    figure.update_yaxes(
+        range=[0, 1.05 if maxy < 1 else maxy * 1.1],
+    )
+
+    # Custom plots
+    if id_ == "birth structure":
+        figure.update_yaxes(range=[0, maxy * 1.05])
+
+    return figure
+
+
 def make_hist_figure(id_, xs, ys, selected_sims):
     fig_setup = FIG_SETUP[id_]
     figure = go.Figure(
