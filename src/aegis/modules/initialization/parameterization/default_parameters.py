@@ -609,16 +609,16 @@ DEFAULT_PARAMETERS = {
         dtype=float,
         drange="",
         evalrange=[0.5, 1],
-        presets={
-            "mouse": 1,  # 3.5; litter size of 7; 5.4 litters per year; https://genomics.senescence.info/species/entry.php?species=Mus_musculus
-            "human": 1,  # litter size of 1,
-            "mouse": 1,  # 5.5; litter size of 5-6
-            "killifish": 1,  # 50; 1x-1xx eggs, depending on species
-            "yeast": 1,
-            "athaliana": 1,  # 1xx seeds per plant
-            "worm": 1,  # up to 300 eggs in optimal conditions
-            "fruitfly": 1,  # 100; up to 100 eggs per day in optimal conditions
-        },
+        # presets={
+        #     "mouse": 1,  # 3.5; litter size of 7; 5.4 litters per year; https://genomics.senescence.info/species/entry.php?species=Mus_musculus
+        #     "human": 1,  # litter size of 1,
+        #     "mouse": 1,  # 5.5; litter size of 5-6
+        #     "killifish": 1,  # 50; 1x-1xx eggs, depending on species
+        #     "yeast": 1,
+        #     "athaliana": 1,  # 1xx seeds per plant
+        #     "worm": 1,  # up to 300 eggs in optimal conditions
+        #     "fruitfly": 1,  # 100; up to 100 eggs per day in optimal conditions
+        # },
     ),
     "G_repr_initgeno": Parameter(
         key="G_repr_initgeno",
@@ -858,11 +858,11 @@ DEFAULT_PARAMETERS = {
         key="SPECIES_PRESET",
         name="",
         domain="other",
-        default="human",
+        default=None,
         info="",
         dtype=str,
-        drange="[" + ",".join(PRESET_INFO.keys()) + "]",
-        inrange=lambda x: x in PRESET_INFO.keys(),
+        drange="None or [" + ",".join(PRESET_INFO.keys()) + "]",
+        inrange=lambda x: x in PRESET_INFO.keys() or x is None,
     ),
     "NOTES": Parameter(
         key="NOTES",
