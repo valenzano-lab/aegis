@@ -92,6 +92,7 @@ def make_heatmap_figure(id_, xs, ys, selected_sims):
 
 
 def make_bar_figure(id_, xs, ys, selected_sims):
+    assert len(ys) > 0, f"{id_}"
     y = ys[0]
     figure = go.Figure(
         data=[go.Bar(x=y.index, y=y.loc[:, i], name=i) for i in y.columns],

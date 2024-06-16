@@ -191,15 +191,15 @@ class Container:
     # TABLES : derivative #
     #######################
 
-    def get_surv_observed_interval(self, record_index):
+    def get_surv_observed_interval(self):
         lt = self.get_life_table_observed_interval()
         lt = lt.pct_change(axis=1).shift(-1, axis=1).add(1).replace(np.inf, 1)
-        return lt.iloc[record_index]
+        return lt
 
-    def get_fert_observed_interval(self, record_index):
+    def get_fert_observed_interval(self):
         lt = self.get_life_table_observed_interval()
         bt = self.get_birth_table_observed_interval()
-        return (bt / lt).iloc[record_index]
+        return (bt / lt)
 
     ##########
     # BASICS #
@@ -239,10 +239,11 @@ class Container:
         value .. mean bit value
         """
         # TODO check that they exist
-        df = pd.read_csv(self._get_path("genotypes"), header=[0])
-        df.index.names = ["interval"]
+        df = pd.read_csv(self._get_path("genotypes"), header=[0,1], index_col=None)
         df.index = df.index.astype(int)
-        df.columns.names = ["bit_index"]
+        df.columns = df.columns.set_levels([df.columns.levels[0].astype(int), df.columns.levels[1].astype(int)])
+        df.index.names = ["interval"]
+        df.columns.names = ["bit_index", "ploidy"]
         return df
 
     def get_phenotype_intrinsic_interval(self, trait, reload=True):
@@ -276,8 +277,8 @@ class Container:
     ###############
 
     def get_lifetime_reproduction(self):
-        survivorship = self.get_surv_observed_interval(slice(None)).cumprod(1)
-        fertility = self.get_fert_observed_interval(slice(None))
+        survivorship = self.get_surv_observed_interval().cumprod(1)
+        fertility = self.get_fert_observed_interval()
         return (survivorship * fertility).sum(axis=1)
 
     #############

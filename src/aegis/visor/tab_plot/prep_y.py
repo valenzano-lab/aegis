@@ -4,14 +4,16 @@ from aegis.utilities.analysis import survival, reproduction, genome
 
 # x-axis is age
 def get_total_survivorship(container: Container, iloc=-1):
-    ys = container.get_surv_observed_interval(record_index=iloc).cumprod()
-    max_iloc = 100
+    ys = container.get_surv_observed_interval()
+    max_iloc = ys.shape[0]
+    ys = ys.iloc[iloc].cumprod()
     return ys, max_iloc
 
 
 def get_mortality_observed(container: Container, iloc=-1):
-    ys = container.get_surv_observed_interval(record_index=iloc).pipe(lambda x: 1 - x)
-    max_iloc = 100
+    ys = container.get_surv_observed_interval()
+    max_iloc = ys.shape[0]
+    ys = ys.iloc[iloc].pipe(lambda x: 1 - x)
     return ys, max_iloc
 
 
@@ -30,8 +32,9 @@ def get_intrinsic_survivorship(container: Container, iloc=-1):
 
 
 def get_fertility(container: Container, iloc=-1):
-    ys = container.get_fert_observed_interval(record_index=iloc)
-    max_iloc = 100
+    ys = container.get_fert_observed_interval()
+    max_iloc = ys.shape[0]
+    ys = ys.iloc[iloc]
     return ys, max_iloc
 
 
@@ -55,8 +58,8 @@ def get_birth_structure(container: Container, iloc=-1):
 
 def get_causes_of_death(container: Container, iloc=-1):
     ys = container.get_death_table_observed_interval().unstack("cause_of_death")
-    max_iloc = ys.shape[0]
-    ys = ys.iloc[iloc].unstack("cause_of_death")
+    max_iloc = None
+    ys = ys.iloc[-1].unstack("cause_of_death")
     return ys, max_iloc
 
 

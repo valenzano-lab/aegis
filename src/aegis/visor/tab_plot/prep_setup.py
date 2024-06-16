@@ -3,6 +3,8 @@ from aegis.visor.tab_plot import prep_x, prep_y
 
 
 def needs_slider(fig_name):
+    if fig_name == "causes of death":
+        return False
     return FIG_SETUP[fig_name]["prep_x"] == prep_x.get_ages
 
 

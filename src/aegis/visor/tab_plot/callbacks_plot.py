@@ -41,8 +41,8 @@ def gen_fig(fig_name, selected_sims, containers, iloc):
 
         if max_iloc is not None:
             max_iloc -= 1  # before this, it is length
+            max_ilocs.append(max_iloc)
 
-        max_ilocs.append(max_iloc)
         xsi = prep_x(containers[sim], y=ysi)
         xs.append(xsi)
 

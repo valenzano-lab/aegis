@@ -3,6 +3,7 @@ from aegis.visor import utilities
 import datetime
 from aegis.utilities.container import Container
 
+CAN_DELETE_DEFAULT = True
 
 PREFACE = [
     html.Div(
@@ -149,7 +150,7 @@ def make_table_row(selection_state, sim_data, log, input_summary, output_summary
                         id={"type": "delete-simulation-button", "index": filename},
                         value=filename,
                     )
-                    if filename != "default"
+                    if ~CAN_DELETE_DEFAULT or filename != "default"
                     else None
                 ),
                 style={"padding-right": "1rem"},
