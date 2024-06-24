@@ -1,6 +1,7 @@
 import numpy as np
 
 from aegis.hermes import hermes
+from aegis.modules.dataclasses.population import Population
 
 
 class VisorRecorder:
@@ -14,15 +15,8 @@ class VisorRecorder:
         if hermes.skip("VISOR_RATE") or len(population) == 0:
             return
 
-        # genotypes.csv | Record allele frequency
-        with open(self.odir / "genotypes.csv", "ab") as f:
-            array = population.genomes.flatten().mean(0)
-            np.savetxt(f, [array], delimiter=",", fmt="%1.3e")
-
-        # phenotypes.csv | Record median phenotype
-        with open(self.odir / "phenotypes.csv", "ab") as f:
-            array = np.median(population.phenotypes, 0)
-            np.savetxt(f, [array], delimiter=",", fmt="%1.3e")
+        self.write_genotypes(population=population)
+        self.write_phenotypes(population=population)
 
     def init_headers(self):
         with open(self.odir / "genotypes.csv", "ab") as f:
@@ -41,3 +35,37 @@ class VisorRecorder:
             header1 = list(np.arange(age_limit)) * n_traits
             np.savetxt(f, [header0], delimiter=",", fmt="%s")
             np.savetxt(f, [header1], delimiter=",", fmt="%i")
+
+    def write_genotypes(self, population: Population):
+        """
+        genotypes.csv | Record allele frequency
+
+        # OUTPUT SPECIFICATION
+        format: csv
+        content: allele frequencies across genome, across time
+        dtype: float
+        index: interval
+        header: two levels -- bit index, ploidy
+        column: site
+        rows: interval
+        """
+        with open(self.odir / "genotypes.csv", "ab") as f:
+            array = population.genomes.flatten().mean(0)
+            np.savetxt(f, [array], delimiter=",", fmt="%1.3e")
+
+    def write_phenotypes(self, population: Population):
+        """
+        phenotypes.csv | Record median phenotype
+
+        # OUTPUT SPECIFICATION
+        format: csv
+        content: median phenotypes, across time
+        dtype: float
+        index:
+        header: two levels -- trait, age
+        column:
+        rows: interval
+        """
+        with open(self.odir / "phenotypes.csv", "ab") as f:
+            array = np.median(population.phenotypes, 0)
+            np.savetxt(f, [array], delimiter=",", fmt="%1.3e")

@@ -58,7 +58,7 @@ class Manager:
 
     @staticmethod
     def log_pre_simulation():
-        hermes.recording_manager.summaryrecorder.record_input_summary()
+        hermes.recording_manager.summaryrecorder.write_input_summary()
 
     def run_simulation_stages(self) -> None:
         hermes.recording_manager.phenomaprecorder.write()
@@ -69,7 +69,7 @@ class Manager:
 
     @staticmethod
     def log_post_simulation() -> None:
-        hermes.recording_manager.summaryrecorder.record_output_summary()
+        hermes.recording_manager.summaryrecorder.write_output_summary()
         logging.info("Simulation finished")
 
     def is_extinct(self) -> bool:

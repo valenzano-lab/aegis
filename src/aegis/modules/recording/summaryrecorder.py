@@ -9,7 +9,7 @@ from aegis.hermes import hermes
 
 class SummaryRecorder:
     """
-    
+
     Records once.
     """
 
@@ -26,7 +26,18 @@ class SummaryRecorder:
         result = subprocess.run(["du", "-sh", folder_path], stdout=subprocess.PIPE, text=True)
         return result.stdout.split()[0]
 
-    def record_output_summary(self):
+    def write_output_summary(self):
+        """
+
+        # OUTPUT SPECIFICATION
+        format: json
+        content: info summary at simulation end
+        dtype:
+        index:
+        header:
+        column:
+        rows:
+        """
         try:
             storage_use = self.get_folder_size_with_du(self.odir)
         except:
@@ -44,7 +55,18 @@ class SummaryRecorder:
         with open(self.odir / "output_summary.json", "w") as f:
             json.dump(summary, f, indent=4)
 
-    def record_input_summary(self):
+    def write_input_summary(self):
+        """
+
+        # OUTPUT SPECIFICATION
+        format: json
+        content: info summary at simulation start
+        dtype:
+        index:
+        header:
+        column:
+        rows:
+        """
         summary = {
             # "extinct": extinct,
             "random_seed": hermes.random_seed,

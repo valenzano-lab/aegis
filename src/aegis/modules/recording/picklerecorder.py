@@ -7,6 +7,17 @@ class PickleRecorder:
         self.odir = odir
 
     def write(self, population):
+        """
+
+        # OUTPUT SPECIFICATION
+        format: pickle
+        content: pickled population
+        dtype: (not a matrix)
+        index: (not a matrix)
+        header: (not a matrix)
+        column: (not a matrix)
+        rows: (not a matrix)
+        """
 
         stage = hermes.get_stage()
         should_skip = hermes.skip("PICKLE_RATE")

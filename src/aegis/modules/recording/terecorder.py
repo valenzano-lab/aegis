@@ -25,7 +25,6 @@ class TERecorder:
 
         You can compare this to observed survivorship curves:
             analyzer.get_total_survivorship(container).plot()
-
         """
 
         assert e in ("alive", "dead")
@@ -55,6 +54,17 @@ class TERecorder:
             self.TE_number += 1
 
     def write(self, data, fmt):
+        """
+
+        # OUTPUT SPECIFICATION
+        format: csv
+        content: T (time until event), E (event; 1 if death, 0 if still alive)
+        dtype:
+        index:
+        header:
+        column:
+        rows:
+        """
         path = self.odir_path / f"{self.TE_number}.csv"
         with open(path, "ab") as file_:
             np.savetxt(file_, data, delimiter=",", fmt=fmt)

@@ -13,7 +13,17 @@ class PhenomapRecorder:
         self.odir = odir
 
     def write(self):
+        """
 
+        # OUTPUT SPECIFICATION
+        format: csv
+        content: genotype-phenotype mapping
+        dtype: int
+        index: none
+        header: effector site index, affected trait, affected age, effect magnitude
+        column: a specification
+        rows: one effect of one site
+        """
         architecture = hermes.architect.architecture
 
         if hasattr(architecture, "phenomap"):

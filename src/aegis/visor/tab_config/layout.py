@@ -3,6 +3,7 @@ from aegis.visor import utilities
 from aegis.modules.initialization.parameterization.default_parameters import DEFAULT_PARAMETERS
 from aegis.modules.initialization.parameterization.parameter import Parameter
 
+# Documentation sources
 from aegis.modules.recording.recordingmanager import RecordingManager
 from aegis.modules.reproduction.reproduction import Reproducer
 from aegis.modules.mortality import starvation, predation, infection, abiotic
@@ -147,7 +148,7 @@ def get_input_element(param):
             [""],
             className="config-input-class",
             id={"type": "config-input", "index": param.key},
-            value=[""] if param.default else [], # important for decode_config_tab_values()
+            value=[""] if param.default else [],  # important for decode_config_tab_values()
         )
 
     elif param.dtype == str:

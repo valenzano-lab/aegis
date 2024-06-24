@@ -8,7 +8,18 @@ class PopgenStatsRecorder:
         self.odir = odir
 
     def write(self, genomes, mutation_rates):
-        """Record population size in popgenstats, and record popgen statistics."""
+        """
+        Record population size in popgenstats, and record popgen statistics
+
+        # OUTPUT SPECIFICATION
+        format: csv
+        content: population genetic stats
+        dtype:
+        index:
+        header:
+        column:
+        rows: 
+        """
         hermes.modules.popgenstats.record_pop_size_history(genomes.array)
 
         if hermes.skip("POPGENSTATS_RATE") or len(genomes) == 0:

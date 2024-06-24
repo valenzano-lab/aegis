@@ -40,6 +40,20 @@ class ProgressRecorder:
 
         # Save time estimations
         content = (stage, eta, time_per_1M, runtime, stages_per_min, popsize)
+        self.write_to_progress_log(content)
+
+    def write_to_progress_log(self, content):
+        """
+
+        # OUTPUT SPECIFICATION
+        format: txt
+        content: stats of simulation progress
+        dtype: complex
+        index: none
+        header: stage, ETA (estimated time until finished), t1M (time to run one million steps), runtime (runtime until the time of recording), stg/min (number of stages simulated per minute), popsize (population size)
+        column:
+        rows: one record
+        """
         with open(self.odir / "progress.log", "ab") as f:
             np.savetxt(f, [content], fmt="%-10s", delimiter="| ")
 

@@ -99,6 +99,18 @@ def extract_visor_from_docstring(class_):
     return list(parsed)
 
 
+def extract_output_specification_from_docstring(method):
+    """Extract information about the output file created by the method"""
+    docstring = method.__doc__
+    print(method)
+    text = docstring.split("# OUTPUT SPECIFICATION")[1]
+    parsed = {}
+    for pair in text.strip().split("\n"):
+        k, v = pair.split(":")
+        parsed[k.strip()] = v.strip()
+    return parsed
+
+
 def parse_visor_docstrings(text):
     pattern = r"(\[\[|\]\])"
     parts = re.split(pattern, text)
@@ -124,3 +136,55 @@ def get_parameter_span(name):
         title=info,
         # style={"font-style": "italic"},
     )
+
+
+# Output specification sources
+from aegis.modules.recording.featherrecorder import FeatherRecorder
+from aegis.modules.recording.flushrecorder import FlushRecorder
+from aegis.modules.recording.phenomaprecorder import PhenomapRecorder
+from aegis.modules.recording.picklerecorder import PickleRecorder
+from aegis.modules.recording.popgenstatsrecorder import PopgenStatsRecorder
+from aegis.modules.recording.summaryrecorder import SummaryRecorder
+from aegis.modules.recording.terecorder import TERecorder
+from aegis.modules.recording.ticker import Ticker
+from aegis.modules.recording.visorrecorder import VisorRecorder
+
+OUTPUT_SPECIFICATIONS = [
+    extract_output_specification_from_docstring(method=method)
+    for method in (
+        FeatherRecorder.write_demography,
+        FeatherRecorder.write_genotypes,
+        FeatherRecorder.write_phenotypes,
+        FlushRecorder.write_age_at,
+        PhenomapRecorder.write,
+        PickleRecorder.write,
+        PopgenStatsRecorder.write,
+        SummaryRecorder.write_input_summary,
+        SummaryRecorder.write_output_summary,
+        TERecorder.write,
+        Ticker.write,
+        VisorRecorder.write_genotypes,
+        VisorRecorder.write_phenotypes,
+    )
+]
+
+
+def dict_to_markdown_table(data_dict):
+    # Define the headers of the table
+    headers = ["Format", "Content", "Dtype", "Columns", "Rows"]
+    # Create the table with headers
+    table = "| " + " | ".join(headers) + " |\n"
+    table += "| " + " | ".join(["---"] * len(headers)) + " |\n"
+
+    # Iterate through the dictionary and append each row to the table
+    for data in data_dict:
+        row = [
+            data.get("format", ""),
+            data.get("content", ""),
+            data.get("dtype", ""),
+            data.get("columns", ""),
+            data.get("rows", ""),
+        ]
+        table += "| " + " | ".join(row) + " |\n"
+
+    return table

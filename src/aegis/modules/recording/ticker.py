@@ -24,6 +24,16 @@ class Ticker:
             time.sleep(self.TICKER_RATE)
 
     def write(self):
+        """
+        # OUTPUT SPECIFICATION
+        format: custom
+        content: date, time; this file gets updated every TICKER_RATE seconds; useful to determine if the simulation is still running (it is running while the ticker.txt file is updating)
+        dtype:
+        index:
+        header:
+        column:
+        rows:
+        """
         with open(self.ticker_path, "w") as file:
             timestamp = time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime())
             file.write(timestamp)

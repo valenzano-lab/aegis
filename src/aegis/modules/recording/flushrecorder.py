@@ -6,9 +6,10 @@ from aegis.constants import VALID_CAUSES_OF_DEATH
 
 class FlushRecorder:
     """
-    
+
     Records collections.
     """
+
     def __init__(self, odir):
 
         self.odir = odir
@@ -38,12 +39,27 @@ class FlushRecorder:
             return
 
         for key, val in self.collection.items():
-            with open(self.odir / f"{key}.csv", "ab") as f:
-                array = np.array(val)
-                np.savetxt(f, [array], delimiter=",", fmt="%i")
+            self.write_age_at(filename=key, collected_values=val)
+            # with open(self.odir / f"{key}.csv", "ab") as f:
+            #     array = np.array(val)
+            #     np.savetxt(f, [array], delimiter=",", fmt="%i")
 
         # Reinitialize the collection
         self.collection = copy.deepcopy(self._collection)
+
+    def write_age_at(self, filename, collected_values):
+        """
+
+        # OUTPUT SPECIFICATION
+        format: csv
+        content: number of deaths by record index and age
+        dtype: int
+        columns: int; age
+        rows: int; record index
+        """
+        with open(self.odir / f"{filename}.csv", "ab") as f:
+            array = np.array(collected_values)
+            np.savetxt(f, [array], delimiter=",", fmt="%i")
 
     def init_headers(self):
         for key in self._collection.keys():
