@@ -3,6 +3,7 @@ import json
 import time
 import psutil
 import numpy as np
+import pathlib
 
 from aegis.hermes import hermes
 
@@ -13,7 +14,7 @@ class SummaryRecorder:
     Records once.
     """
 
-    def __init__(self, odir):
+    def __init__(self, odir:pathlib.Path):
         self.odir = odir
         self.time_start = time.time()
         self.extinct = False
@@ -37,6 +38,7 @@ class SummaryRecorder:
         header:
         column:
         rows:
+        path: /output_summary.json
         """
         try:
             storage_use = self.get_folder_size_with_du(self.odir)
@@ -66,6 +68,7 @@ class SummaryRecorder:
         header:
         column:
         rows:
+        path: /input_summary.json
         """
         summary = {
             # "extinct": extinct,

@@ -1,12 +1,13 @@
 import logging
 import time
 import numpy as np
+import pathlib
 
 from aegis.hermes import hermes
 
 
 class ProgressRecorder:
-    def __init__(self, odir):
+    def __init__(self, odir: pathlib.Path):
         self.odir = odir
         self.time_start = time.time()
         self.init_headers()
@@ -53,6 +54,7 @@ class ProgressRecorder:
         header: stage, ETA (estimated time until finished), t1M (time to run one million steps), runtime (runtime until the time of recording), stg/min (number of stages simulated per minute), popsize (population size)
         column:
         rows: one record
+        path: /progress.log
         """
         with open(self.odir / "progress.log", "ab") as f:
             np.savetxt(f, [content], fmt="%-10s", delimiter="| ")

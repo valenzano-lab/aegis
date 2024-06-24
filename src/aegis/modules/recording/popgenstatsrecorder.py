@@ -5,7 +5,7 @@ from aegis.hermes import hermes
 
 class PopgenStatsRecorder:
     def __init__(self, odir):
-        self.odir = odir
+        self.odir = odir / "popgen"
 
     def write(self, genomes, mutation_rates):
         """

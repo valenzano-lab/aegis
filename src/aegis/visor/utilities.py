@@ -144,6 +144,7 @@ from aegis.modules.recording.flushrecorder import FlushRecorder
 from aegis.modules.recording.phenomaprecorder import PhenomapRecorder
 from aegis.modules.recording.picklerecorder import PickleRecorder
 from aegis.modules.recording.popgenstatsrecorder import PopgenStatsRecorder
+from aegis.modules.recording.progressrecorder import ProgressRecorder
 from aegis.modules.recording.summaryrecorder import SummaryRecorder
 from aegis.modules.recording.terecorder import TERecorder
 from aegis.modules.recording.ticker import Ticker
@@ -159,6 +160,7 @@ OUTPUT_SPECIFICATIONS = [
         PhenomapRecorder.write,
         PickleRecorder.write,
         PopgenStatsRecorder.write,
+        ProgressRecorder.write_to_progress_log,
         SummaryRecorder.write_input_summary,
         SummaryRecorder.write_output_summary,
         TERecorder.write,

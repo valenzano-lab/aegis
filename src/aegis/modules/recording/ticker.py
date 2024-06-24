@@ -5,9 +5,9 @@ from datetime import datetime
 
 
 class Ticker:
-    def __init__(self, TICKER_RATE, output_directory: pathlib.Path):
+    def __init__(self, TICKER_RATE, odir: pathlib.Path):
         self.TICKER_RATE = TICKER_RATE
-        self.ticker_path = output_directory / "ticker.txt"
+        self.ticker_path = odir / "ticker.txt"
         self.process = None
 
     def start_process(self):
@@ -33,6 +33,7 @@ class Ticker:
         header:
         column:
         rows:
+        path: /ticker.txt
         """
         with open(self.ticker_path, "w") as file:
             timestamp = time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime())

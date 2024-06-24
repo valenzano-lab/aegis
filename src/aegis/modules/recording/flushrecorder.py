@@ -2,7 +2,7 @@ import copy
 import numpy as np
 from aegis.hermes import hermes
 from aegis.constants import VALID_CAUSES_OF_DEATH
-
+import pathlib
 
 class FlushRecorder:
     """
@@ -10,9 +10,9 @@ class FlushRecorder:
     Records collections.
     """
 
-    def __init__(self, odir):
+    def __init__(self, odir: pathlib.Path):
 
-        self.odir = odir
+        self.odir = odir / "visor" / "spectra",
 
         self._collection = {
             "age_at_birth": [0] * hermes.parameters.AGE_LIMIT,
@@ -56,6 +56,7 @@ class FlushRecorder:
         dtype: int
         columns: int; age
         rows: int; record index
+        path: /visor/spectra/age_at_{cause}.csv
         """
         with open(self.odir / f"{filename}.csv", "ab") as f:
             array = np.array(collected_values)

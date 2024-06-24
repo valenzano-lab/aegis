@@ -4,9 +4,9 @@ from aegis.hermes import hermes
 
 
 class TERecorder:
-    def __init__(self, odir_path):
+    def __init__(self, odir):
         self.TE_number = 0
-        self.odir_path = odir_path
+        self.odir_path = odir / "te"
 
     def record(self, T, e):
         """
@@ -64,6 +64,7 @@ class TERecorder:
         header:
         column:
         rows:
+        path: /te/{te_number}.csv
         """
         path = self.odir_path / f"{self.TE_number}.csv"
         with open(path, "ab") as file_:

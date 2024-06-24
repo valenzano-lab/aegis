@@ -1,15 +1,17 @@
 import pandas as pd
 import logging
+import pathlib
 
 from aegis.hermes import hermes
 
 
 class PhenomapRecorder:
     """
-    
+
     Records once.
     """
-    def __init__(self, odir):
+
+    def __init__(self, odir: pathlib.Path):
         self.odir = odir
 
     def write(self):
@@ -23,6 +25,7 @@ class PhenomapRecorder:
         header: effector site index, affected trait, affected age, effect magnitude
         column: a specification
         rows: one effect of one site
+        path: /phenomap.csv
         """
         architecture = hermes.architect.architecture
 

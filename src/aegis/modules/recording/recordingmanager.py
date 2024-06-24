@@ -55,36 +55,27 @@ class RecordingManager:
         self.paths = self.get_paths(odir)
         self.make_subfolders(paths=self.paths.values())
 
-    @staticmethod
-    def get_paths(odir: pathlib.Path) -> dict:
-        return {
-            "BASE_DIR": odir,
-            "snapshots_genotypes": odir / "snapshots" / "genotypes",
-            "snapshots_phenotypes": odir / "snapshots" / "phenotypes",
-            "snapshots_demography": odir / "snapshots" / "demography",
-            "visor": odir / "visor",
-            "visor_spectra": odir / "visor" / "spectra",
-            "pickles": odir / "pickles",
-            "popgen": odir / "popgen",
-            "phenomap": odir,
-            "te": odir / "te",
-        }
+    # @staticmethod
+    # def get_paths(odir: pathlib.Path) -> dict:
+    #     return {
+    #         "BASE_DIR": odir,
+    #         "visor_spectra": odir / "visor" / "spectra",
+    #         "pickles": odir / "pickles",
+    #         "popgen": odir / "popgen",
+    #         "te": odir / "te",
+    #     }
 
     def initialize_recorders(self, TICKER_RATE):
-        self.terecorder = TERecorder(self.paths["te"])
-        self.picklerecorder = PickleRecorder(self.paths["pickles"])
-        self.popgenstatsrecorder = PopgenStatsRecorder(self.paths["popgen"])
-        self.visorrecorder = VisorRecorder(self.paths["visor"])
-        self.flushrecorder = FlushRecorder(self.paths["visor_spectra"])
-        self.featherrecorder = FeatherRecorder(
-            self.paths["snapshots_genotypes"],
-            self.paths["snapshots_phenotypes"],
-            self.paths["snapshots_demography"],
-        )
-        self.phenomaprecorder = PhenomapRecorder(self.paths["phenomap"])
-        self.summaryrecorder = SummaryRecorder(self.paths["BASE_DIR"])
-        self.progressrecorder = ProgressRecorder(self.paths["BASE_DIR"])
-        self.ticker = Ticker(output_directory=self.paths["BASE_DIR"], TICKER_RATE=TICKER_RATE)
+        self.terecorder = TERecorder(odir=self.odir)
+        self.picklerecorder = PickleRecorder(odir=self.odir)
+        self.popgenstatsrecorder = PopgenStatsRecorder(odir=self.odir)
+        self.visorrecorder = VisorRecorder(odir=self.odir)
+        self.flushrecorder = FlushRecorder(odir=self.odir)
+        self.featherrecorder = FeatherRecorder(odir=self.odir)
+        self.phenomaprecorder = PhenomapRecorder(odir=self.odir)
+        self.summaryrecorder = SummaryRecorder(odir=self.odir)
+        self.progressrecorder = ProgressRecorder(odir=self.odir)
+        self.ticker = Ticker(odir=self.odir, TICKER_RATE=TICKER_RATE)
 
     #############
     # UTILITIES #
@@ -103,5 +94,6 @@ class RecordingManager:
 
     @staticmethod
     def make_subfolders(paths):
+        # TODO relink paths that are now in classes
         for path in paths:
             path.mkdir(exist_ok=True, parents=True)

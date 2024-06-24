@@ -1,10 +1,11 @@
 import logging
+import pathlib
 from aegis.hermes import hermes
 
 
 class PickleRecorder:
-    def __init__(self, odir):
-        self.odir = odir
+    def __init__(self, odir: pathlib.Path):
+        self.odir = odir / "pickles"
 
     def write(self, population):
         """
@@ -17,6 +18,7 @@ class PickleRecorder:
         header: (not a matrix)
         column: (not a matrix)
         rows: (not a matrix)
+        path: /pickles/{stage}
         """
 
         stage = hermes.get_stage()

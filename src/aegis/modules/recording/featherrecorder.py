@@ -2,15 +2,17 @@ import logging
 import pandas as pd
 import numpy as np
 
+import pathlib
+
 from aegis.hermes import hermes
 from aegis.modules.dataclasses.population import Population
 
 
 class FeatherRecorder:
-    def __init__(self, odir_genotypes, odir_phenotypes, odir_demography):
-        self.odir_genotypes = odir_genotypes
-        self.odir_phenotypes = odir_phenotypes
-        self.odir_demography = odir_demography
+    def __init__(self, odir: pathlib.Path):
+        self.odir_genotypes = odir / "snapshots" / "genotypes"
+        self.odir_phenotypes = odir / "snapshots" / "phenotypes"
+        self.odir_demography = odir / "snapshots" / "demography"
 
     def write(self, population: Population):
         """Record demographic, genetic and phenotypic data from the current population."""
@@ -35,6 +37,7 @@ class FeatherRecorder:
         dtype: bool
         columns: int; site index
         rows: int; individual index
+        path: /snapshots/genotypes/{stage}.feather
         """
         df_gen = pd.DataFrame(np.array(population.genomes.flatten()))
         df_gen.reset_index(drop=True, inplace=True)
@@ -51,6 +54,7 @@ class FeatherRecorder:
         dtype: float
         columns: int; phenotype index
         rows: int; individual index
+        path: /snapshots/phenotypes/{stage}.feather
         """
         # TODO bugged, wrong header
         df_phe = pd.DataFrame(np.array(population.phenotypes))
@@ -68,6 +72,7 @@ class FeatherRecorder:
         dtype: float
         columns: age, number of offspring, stage at which the individual was born, size, sex
         rows: int; individual index
+        path: /snapshots/demography/{stage}.feather
         """
         dem_attrs = ["ages", "births", "birthdays", "sizes", "sexes"]
         demo = {attr: getattr(population, attr) for attr in dem_attrs}

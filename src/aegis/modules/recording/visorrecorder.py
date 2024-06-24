@@ -1,12 +1,14 @@
 import numpy as np
 
+import pathlib
+
 from aegis.hermes import hermes
 from aegis.modules.dataclasses.population import Population
 
 
 class VisorRecorder:
-    def __init__(self, odir):
-        self.odir = odir
+    def __init__(self, odir: pathlib.Path):
+        self.odir = odir / "visor"
         self.init_headers()
 
     def record(self, population):
@@ -48,6 +50,7 @@ class VisorRecorder:
         header: two levels -- bit index, ploidy
         column: site
         rows: interval
+        path: /visor/genotypes.csv
         """
         with open(self.odir / "genotypes.csv", "ab") as f:
             array = population.genomes.flatten().mean(0)
@@ -65,6 +68,7 @@ class VisorRecorder:
         header: two levels -- trait, age
         column:
         rows: interval
+        path: /visor/genotypes.csv
         """
         with open(self.odir / "phenotypes.csv", "ab") as f:
             array = np.median(population.phenotypes, 0)
