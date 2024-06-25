@@ -12,7 +12,10 @@ class PopgenStatsRecorder:
         Record population size in popgenstats, and record popgen statistics
 
         # OUTPUT SPECIFICATION
-        format: csv
+        filetype: csv
+        domain: genotype
+        short description:
+        long description:
         content: population genetic stats
         dtype:
         index:

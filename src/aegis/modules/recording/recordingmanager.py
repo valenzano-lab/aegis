@@ -52,8 +52,9 @@ class RecordingManager:
 
     def __init__(self, custom_config_path, overwrite):
         odir = self.make_odir(custom_config_path=custom_config_path, overwrite=overwrite)
-        self.paths = self.get_paths(odir)
-        self.make_subfolders(paths=self.paths.values())
+        # self.paths = self.get_paths(odir)
+        # TODO make subfolders
+        self.make_subfolders(paths=[])
 
     # @staticmethod
     # def get_paths(odir: pathlib.Path) -> dict:

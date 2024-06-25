@@ -18,7 +18,10 @@ class PhenomapRecorder:
         """
 
         # OUTPUT SPECIFICATION
-        format: csv
+        filetype: csv
+        domain: genotype
+        short description:
+        long description:
         content: genotype-phenotype mapping
         dtype: int
         index: none

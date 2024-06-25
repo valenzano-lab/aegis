@@ -47,7 +47,10 @@ class ProgressRecorder:
         """
 
         # OUTPUT SPECIFICATION
-        format: txt
+        filetype: txt
+        domain: log
+        short description:
+        long description:
         content: stats of simulation progress
         dtype: complex
         index: none

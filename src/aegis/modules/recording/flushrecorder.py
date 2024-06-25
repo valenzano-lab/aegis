@@ -51,7 +51,10 @@ class FlushRecorder:
         """
 
         # OUTPUT SPECIFICATION
-        format: csv
+        filetype: csv
+        domain: demography
+        short description:
+        long description:
         content: number of deaths by record index and age
         dtype: int
         columns: int; age

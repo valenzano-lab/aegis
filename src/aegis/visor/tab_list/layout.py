@@ -10,9 +10,19 @@ CAN_DELETE_DEFAULT = True
 
 @utilities.log_debug
 def make_output_specification_table():
-    data = [{key: specs.get(key, "!!! nan") for key in OUTPUT_SPECIFICATIONS[0].keys()} for specs in OUTPUT_SPECIFICATIONS]
+    """
+
+    Documentation for plotly datatables: https://dash.plotly.com/datatable
+    """
+    data = [
+        {key: specs.get(key, "!!! nan") for key in OUTPUT_SPECIFICATIONS[0].keys()} for specs in OUTPUT_SPECIFICATIONS
+    ]
     columns = [{"id": c, "name": c} for c in OUTPUT_SPECIFICATIONS[0].keys()]
-    return dash_table.DataTable(data=data, columns=columns)
+    return dash_table.DataTable(
+        data=data,
+        columns=columns,
+        style_data={"whiteSpace": "normal", "height": "auto"},
+    )
 
 
 PREFACE = [

@@ -26,7 +26,10 @@ class Ticker:
     def write(self):
         """
         # OUTPUT SPECIFICATION
-        format: custom
+        filetype: txt
+        domain: log
+        short description:
+        long description:
         content: date, time; this file gets updated every TICKER_RATE seconds; useful to determine if the simulation is still running (it is running while the ticker.txt file is updating)
         dtype:
         index:

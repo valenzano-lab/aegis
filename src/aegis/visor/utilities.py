@@ -102,7 +102,6 @@ def extract_visor_from_docstring(class_):
 def extract_output_specification_from_docstring(method):
     """Extract information about the output file created by the method"""
     docstring = method.__doc__
-    print(method)
     text = docstring.split("# OUTPUT SPECIFICATION")[1]
     parsed = {}
     for pair in text.strip().split("\n"):
@@ -153,9 +152,9 @@ from aegis.modules.recording.visorrecorder import VisorRecorder
 OUTPUT_SPECIFICATIONS = [
     extract_output_specification_from_docstring(method=method)
     for method in (
-        FeatherRecorder.write_demography,
         FeatherRecorder.write_genotypes,
         FeatherRecorder.write_phenotypes,
+        FeatherRecorder.write_demography,
         FlushRecorder.write_age_at,
         PhenomapRecorder.write,
         PickleRecorder.write,
@@ -172,6 +171,7 @@ OUTPUT_SPECIFICATIONS = [
 
 
 def dict_to_markdown_table(data_dict):
+    # TODO update
     # Define the headers of the table
     headers = ["Format", "Content", "Dtype", "Columns", "Rows"]
     # Create the table with headers

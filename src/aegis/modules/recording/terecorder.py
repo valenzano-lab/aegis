@@ -57,7 +57,10 @@ class TERecorder:
         """
 
         # OUTPUT SPECIFICATION
-        format: csv
+        filetype: csv
+        domain: demography
+        short description:
+        long description:
         content: T (time until event), E (event; 1 if death, 0 if still alive)
         dtype:
         index:

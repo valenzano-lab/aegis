@@ -11,7 +11,10 @@ class PickleRecorder:
         """
 
         # OUTPUT SPECIFICATION
-        format: pickle
+        filetype: pickle
+        domain: log
+        short description:
+        long description:
         content: pickled population
         dtype: (not a matrix)
         index: (not a matrix)

@@ -32,12 +32,15 @@ class FeatherRecorder:
         """
 
         # OUTPUT SPECIFICATION
-        format: feather
+        path: /snapshots/genotypes/{stage}.feather
+        filetype: feather
+        domain: genotype
+        short description:
+        long description:
         content: complete snapshot of genomes of all individuals
         dtype: bool
         columns: int; site index
         rows: int; individual index
-        path: /snapshots/genotypes/{stage}.feather
         """
         df_gen = pd.DataFrame(np.array(population.genomes.flatten()))
         df_gen.reset_index(drop=True, inplace=True)
@@ -49,7 +52,10 @@ class FeatherRecorder:
         """
 
         # OUTPUT SPECIFICATION
-        format: feather
+        filetype: feather
+        domain: phenotype
+        short description:
+        long description:
         content: complete snapshot of phenotypes of all individuals
         dtype: float
         columns: int; phenotype index
@@ -67,7 +73,10 @@ class FeatherRecorder:
         """
 
         # OUTPUT SPECIFICATION
-        format: feather
+        filetype: feather
+        domain: demography
+        short description:
+        long description:
         content: snapshot of previous life history of all individuals
         dtype: float
         columns: age, number of offspring, stage at which the individual was born, size, sex

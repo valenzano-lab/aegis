@@ -31,7 +31,10 @@ class SummaryRecorder:
         """
 
         # OUTPUT SPECIFICATION
-        format: json
+        filetype: json
+        domain: log
+        short description:
+        long description:
         content: info summary at simulation end
         dtype:
         index:
@@ -61,7 +64,10 @@ class SummaryRecorder:
         """
 
         # OUTPUT SPECIFICATION
-        format: json
+        filetype: json
+        domain: genotype
+        short description:
+        long description:
         content: info summary at simulation start
         dtype:
         index:

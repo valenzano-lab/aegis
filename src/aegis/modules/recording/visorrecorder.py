@@ -43,7 +43,10 @@ class VisorRecorder:
         genotypes.csv | Record allele frequency
 
         # OUTPUT SPECIFICATION
-        format: csv
+        filetype: csv
+        domain: genotype
+        short description:
+        long description:
         content: allele frequencies across genome, across time
         dtype: float
         index: interval
@@ -61,7 +64,10 @@ class VisorRecorder:
         phenotypes.csv | Record median phenotype
 
         # OUTPUT SPECIFICATION
-        format: csv
+        filetype: csv
+        domain: phenotype
+        short description:
+        long description:
         content: median phenotypes, across time
         dtype: float
         index:
