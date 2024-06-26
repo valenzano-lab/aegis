@@ -2,9 +2,10 @@ from multiprocessing import Process
 import time
 import pathlib
 from datetime import datetime
+from .recorder import Recorder
 
 
-class Ticker:
+class Ticker(Recorder):
     def __init__(self, TICKER_RATE, odir: pathlib.Path):
         self.TICKER_RATE = TICKER_RATE
         self.ticker_path = odir / "ticker.txt"

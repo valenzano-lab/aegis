@@ -5,10 +5,13 @@ import pathlib
 from aegis.hermes import hermes
 from aegis.modules.dataclasses.population import Population
 
+from .recorder import Recorder
 
-class VisorRecorder:
+class VisorRecorder(Recorder):
+
     def __init__(self, odir: pathlib.Path):
         self.odir = odir / "visor"
+        self.init_odir()
         self.init_headers()
 
     def record(self, population):

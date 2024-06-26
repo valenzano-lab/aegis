@@ -3,9 +3,10 @@ import logging
 import pathlib
 
 from aegis.hermes import hermes
+from .recorder import Recorder
 
 
-class PhenomapRecorder:
+class PhenomapRecorder(Recorder):
     """
 
     Records once.
@@ -13,6 +14,7 @@ class PhenomapRecorder:
 
     def __init__(self, odir: pathlib.Path):
         self.odir = odir
+        self.init_odir()
 
     def write(self):
         """

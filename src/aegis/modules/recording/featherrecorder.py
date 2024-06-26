@@ -6,13 +6,17 @@ import pathlib
 
 from aegis.hermes import hermes
 from aegis.modules.dataclasses.population import Population
+from .recorder import Recorder
 
 
-class FeatherRecorder:
+class FeatherRecorder(Recorder):
     def __init__(self, odir: pathlib.Path):
         self.odir_genotypes = odir / "snapshots" / "genotypes"
         self.odir_phenotypes = odir / "snapshots" / "phenotypes"
         self.odir_demography = odir / "snapshots" / "demography"
+        self.init_dir(self.odir_genotypes)
+        self.init_dir(self.odir_phenotypes)
+        self.init_dir(self.odir_demography)
 
     def write(self, population: Population):
         """Record demographic, genetic and phenotypic data from the current population."""

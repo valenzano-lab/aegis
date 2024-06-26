@@ -27,11 +27,12 @@ def parse_terminal():
         help="overwrite old data with new simulation",
         default=None,
     )
+    # TODO split argument parser into multiple; e.g. depending on whether the user wants to run a sim directly or run visor (locally vs server)
     parser.add_argument(
-        "--visor",
-        "-v",
+        "--server",
+        "-s",
         action="store_true",
-        help="run visor – the interactive GUI",
+        help="run visor – the interactive GUI – in server mode",
         default=False,
     )
 
@@ -42,4 +43,4 @@ def parse_terminal():
     config_path = pathlib.Path(args.config_path).absolute() if args.config_path else None
     pickle_path = pathlib.Path(args.pickle_path).absolute() if args.pickle_path else None
 
-    return config_path, pickle_path, args.overwrite, args.visor
+    return config_path, pickle_path, args.overwrite, args.server

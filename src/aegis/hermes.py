@@ -65,6 +65,7 @@ class Hermes:
     def init_recorder(self, custom_config_path, overwrite):
         # NOTE Circular import if put on top
         from aegis.modules.recording.recordingmanager import RecordingManager
+
         recorder_manager = RecordingManager(custom_config_path, overwrite)
         recorder_manager.initialize_recorders(TICKER_RATE=self.parameters.TICKER_RATE)
         return recorder_manager

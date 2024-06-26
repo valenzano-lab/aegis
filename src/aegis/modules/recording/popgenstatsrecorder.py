@@ -3,9 +3,13 @@ import numpy as np
 from aegis.hermes import hermes
 
 
-class PopgenStatsRecorder:
+from .recorder import Recorder
+
+
+class PopgenStatsRecorder(Recorder):
     def __init__(self, odir):
         self.odir = odir / "popgen"
+        self.init_odir()
 
     def write(self, genomes, mutation_rates):
         """
@@ -21,7 +25,7 @@ class PopgenStatsRecorder:
         index:
         header:
         column:
-        rows: 
+        rows:
         """
         hermes.modules.popgenstats.record_pop_size_history(genomes.array)
 

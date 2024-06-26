@@ -4,7 +4,10 @@ from aegis.hermes import hermes
 from aegis.constants import VALID_CAUSES_OF_DEATH
 import pathlib
 
-class FlushRecorder:
+from .recorder import Recorder
+
+
+class FlushRecorder(Recorder):
     """
 
     Records collections.
@@ -12,7 +15,8 @@ class FlushRecorder:
 
     def __init__(self, odir: pathlib.Path):
 
-        self.odir = odir / "visor" / "spectra",
+        self.odir = odir / "visor" / "spectra"
+        self.init_odir()
 
         self._collection = {
             "age_at_birth": [0] * hermes.parameters.AGE_LIMIT,

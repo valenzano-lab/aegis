@@ -1,12 +1,14 @@
 import logging
 import numpy as np
 from aegis.hermes import hermes
+from .recorder import Recorder
 
 
-class TERecorder:
+class TERecorder(Recorder):
     def __init__(self, odir):
+        self.odir = odir / "te"
+        self.init_odir()
         self.TE_number = 0
-        self.odir_path = odir / "te"
 
     def record(self, T, e):
         """
@@ -69,6 +71,6 @@ class TERecorder:
         rows:
         path: /te/{te_number}.csv
         """
-        path = self.odir_path / f"{self.TE_number}.csv"
+        path = self.odir / f"{self.TE_number}.csv"
         with open(path, "ab") as file_:
             np.savetxt(file_, data, delimiter=",", fmt=fmt)

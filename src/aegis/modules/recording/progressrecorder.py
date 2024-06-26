@@ -4,11 +4,13 @@ import numpy as np
 import pathlib
 
 from aegis.hermes import hermes
+from .recorder import Recorder
 
 
-class ProgressRecorder:
+class ProgressRecorder(Recorder):
     def __init__(self, odir: pathlib.Path):
         self.odir = odir
+        self.init_odir()
         self.time_start = time.time()
         self.init_headers()
 

@@ -2,10 +2,13 @@ import logging
 import pathlib
 from aegis.hermes import hermes
 
+from .recorder import Recorder
 
-class PickleRecorder:
+
+class PickleRecorder(Recorder):
     def __init__(self, odir: pathlib.Path):
         self.odir = odir / "pickles"
+        self.init_odir()
 
     def write(self, population):
         """
