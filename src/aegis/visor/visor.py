@@ -10,8 +10,12 @@ import aegis.visor.tab_plot.callbacks_plot
 import aegis.visor.tab_plot.callbacks_download
 import aegis.visor.tab_list.callbacks_list
 
+from .config import get_config
 
-def run():
+
+def run(environment):
+
+    config = get_config(environment=environment)
 
     app = Dash(
         __name__,
@@ -23,4 +27,4 @@ def run():
     app._favicon = "favicon.ico"
     app.title = "AEGIS visualizer"
     app.layout = app_layout
-    app.run(debug=True)
+    app.run(debug=config.debug)

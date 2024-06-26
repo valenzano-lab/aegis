@@ -33,11 +33,16 @@ def run_from_main():
 
 
 def run_from_terminal():
-    custom_config_path, pickle_path, overwrite, run_visor = parse_terminal()
+    custom_config_path, pickle_path, overwrite, server_mode = parse_terminal()
 
-    if run_visor or (custom_config_path, pickle_path, overwrite) == (None, None, None):
+    if (custom_config_path, pickle_path, overwrite) == (None, None, None):
+        # TODO end logging with period or not
         logging.info("Starting run_visor.")
-        visor.run()
+        logging.info(f"Server mode is {'ON' if server_mode else 'OFF'}.")
+        if server_mode:
+            run_from_server_visor()
+        else:
+            run_from_local_visor()
     else:
         manager = Manager(
             custom_config_path=custom_config_path,
@@ -49,8 +54,8 @@ def run_from_terminal():
 
 
 def run_from_server_visor():
-    pass
+    visor.run(environment="server")
 
 
 def run_from_local_visor():
-    visor.run()
+    visor.run(environment="dev")
