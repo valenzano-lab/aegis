@@ -47,6 +47,8 @@ profile:
 	rm -r profiler/$(yml) ; \
 	snakeviz profiler/$(yml).prof
 
+pdoc:
+	python3 -m pdoc aegis -o ./docs
 
 # ========================================
 # TESTPYPI

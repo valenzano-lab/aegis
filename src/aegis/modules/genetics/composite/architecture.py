@@ -16,6 +16,36 @@ class CompositeArchitecture:
     - if evolvable, it can be agespecific or age-independent
     - probability of a trait at each age is determined by a BITS_PER_LOCUS adjacent bits forming a "locus" / gene
     - the method by which these loci are converted into a phenotypic value is the Interpreter type
+
+    
+    ### COMPOSITE GENETIC ARCHITECTURE ###
+    In AEGIS, genetic architecture refers to the structure of the pseudogenome.
+
+    Every pseudogenome is a threedimensional bitstring (/ 3D array of bits).
+    It is a bitstring because it consists 0's and 1's with a fixed order.
+    It is threedimensional because the position of every site is expressed using three numbers:
+    `chromosome set`, `locus index`, `bit index`
+
+
+    ### COMPUTATION ###
+
+    Translation of pseudogenome into a phenotype requires two steps.
+    First is the application of inheritance patterns (done by class Ploid), the second is the locus computation.
+
+
+    phenotype(age, trait) = sum_{i=0}^{BITS_PER_LOCUS}(haplogenotype[age, i] * weight(i))
+
+    Under a composite genetic architecture, 
+    
+    Under a composite genetic architecture, the pseudogenome has three dimensions;
+    i.e. to reference a certain site, we need to specify three numbers:
+    the chromosome set index, locus index and sublocus index.
+    
+    The chromosome set index exists because the individuals might be diploid or polyploid,
+    so they might carry two or more chromosome sets.
+
+    The locus index 
+
     """
 
     def __init__(self, ploid, BITS_PER_LOCUS, AGE_LIMIT, THRESHOLD):

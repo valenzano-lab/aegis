@@ -9,8 +9,10 @@ def stan_age(age):
 
 
 class GPM_decoder:
-    """
-    Example input...
+    """Converter of simple user input into a genotype-phenotype map (as a list or a matrix).
+
+    --- Example input ---
+
     PHENOMAP:
         "AP1, 7":
             - - "surv"
@@ -23,6 +25,8 @@ class GPM_decoder:
             - - "surv"
             - "agespec"
             - - 0.1
+
+    ---
     """
 
     def __init__(self, config_PHENOMAP):

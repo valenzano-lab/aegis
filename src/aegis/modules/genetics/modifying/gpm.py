@@ -4,8 +4,30 @@ from aegis.hermes import hermes
 
 
 class GPM:
-    """
-    Order of elements in the vector does not matter.
+    """Genotype-phenotype map
+
+    Order of elements in the vector does not matter. # TODO Explain better
+
+    ### GENOTYPE-PHENOTYPE MAP (GPM) ###
+    In AEGIS, every individual carries a genome which encodes an intrinsic phenotype.
+    A genome can be converted into an intrinsic phenotype using the genotype-phenotype map (GPM).
+    Conceptually, the GPM contains the information on how each site affects the intrinsic phenotype
+    of the individual (e.g. the first site decreases fertility by 0.15% at age class 28).
+
+    The GPM can be saved in two formats: a list or a matrix.
+
+    If it is a list, it will be a list of quadruple (4-tuple) with the following structure: `index`, `trait`, `age`, `magnitude`.
+    Thus a single quadruple encodes an effect of a single site at the index `index` (e.g. 1)
+    on the trait `trait` (e.g. fertility) expressed at the age `age` (e.g. 28). The change to the trait is of magnitude `magnitude` (0.85).
+    When a site is pleiotropic, there will be multiple quadruples with the same `index`.
+    We distringuish between age-pleiotropy (a single site affecting at least one trait at multiple ages) and trait-pleiotropy (a single site affecting multiple traits).
+
+    If the GPM is encoded as a matrix, it is a 3D matrix where dimensions encode `index`, `trait` and `age`,
+    while the matrix values encode the `magnitude`s.
+
+    When most sites are age-pleiotropic and trait-pleiotropic, the optimal encoding format is a matrix.
+    When most sites have age-specific and trait-specific effects, the optimal encoding format is a list
+    rather than a matrix because the matrix will be very sparse (it will carry a lot of 0's).
     """
 
     def __init__(self, AGE_LIMIT, phenomatrix, phenolist):

@@ -14,6 +14,22 @@ class ModifyingArchitecture:
     - when all bits are 0, the phenotypic values are the ones set from parameters (baseline set in parameters);
     vs composite where it would be 0.
     - ... dev still required
+
+    
+    ### MODIFYING GENETIC ARCHITECTURE (MGA) ###
+
+    
+    A modifying genetic architecture (MGA) is useful when age-pleiotropy or trait-pleiotropy are needed.
+    A composite genetic architecture (CGA) cannot simulate pleiotropic sites, it can only simulate non-pleiotropic sites;
+    while an MGA can simulate both.
+    
+    
+
+    Similarly to the composite genetic architecture (CGA; class CompositeArchitecture),
+    in an MGA every site affects the 
+    To specify 
+    Under a modifying genetic architecture, a 0-genome (a genome that is only composed of zeros)
+
     """
 
     def __init__(self, ploid, PHENOMAP, AGE_LIMIT):

@@ -1,4 +1,19 @@
 class Ploider:
+    """
+
+    ### COMPUTATION ###
+
+    This class compresses a diploid/polyploid genome into an array of haploid length.
+    It does so depending on the dominance factor given by the user (parameter `DOMINANCE_FACTOR`).
+
+    For homozygous sites, the compressed site has the same value as the input sites.
+
+    For heterozygous sites, the compressed site will have the `DOMINANCE_FACTOR` value.
+    The dominance factor will define the inheritance pattern.
+    When the dominance factor is 0, the inheritance pattern is recessive; 0.5 is for true additive, 1 for dominant, 1+ for overdominant, and other values between 0 and 1 for partial dominant.
+    The inheritance pattern will be applied to all sites (it is not gene-specific).
+    """
+
     def __init__(self, REPRODUCTION_MODE, DOMINANCE_FACTOR):
         self.REPRODUCTION_MODE = REPRODUCTION_MODE
         self.DOMINANCE_FACTOR = DOMINANCE_FACTOR
