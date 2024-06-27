@@ -61,7 +61,7 @@ To check if installation is successful, run `aegis -h`. If it is, the output wil
     # custom.yml
 
     RANDOM_SEED: 42
-    STAGES_PER_SIMULATION: 10000
+    STEPS_PER_SIMULATION: 10000
     AGE_LIMIT: 50
     ```
 
@@ -83,13 +83,13 @@ To check if installation is successful, run `aegis -h`. If it is, the output wil
             output-summary.json
             snapshots/
                 demography/
-                    {stage}.feather
+                    {step}.feather
                     ...
                 genotypes/
-                    {stage}.feather
+                    {step}.feather
                     ...
                 phenotypes/
-                    {stage}.feather
+                    {step}.feather
             visor/
                 genotypes.csv
                 phenotypes.csv

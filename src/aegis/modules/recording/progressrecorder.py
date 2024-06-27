@@ -15,7 +15,7 @@ class ProgressRecorder(Recorder):
         self.init_headers()
 
     def init_headers(self):
-        content = ("stage", "ETA", "t1M", "runtime", "stg/min", "popsize")
+        content = ("step", "ETA", "t1M", "runtime", "stg/min", "popsize")
         with open(self.odir / "progress.log", "ab") as f:
             np.savetxt(f, [content], fmt="%-10s", delimiter="| ")
 
@@ -25,24 +25,24 @@ class ProgressRecorder(Recorder):
         if hermes.skip("LOGGING_RATE"):
             return
 
-        stage = hermes.get_stage()
+        step = hermes.get_step()
 
-        logging.info("%8s / %s / N=%s", stage, hermes.parameters.STAGES_PER_SIMULATION, popsize)
+        logging.info("%8s / %s / N=%s", step, hermes.parameters.STEPS_PER_SIMULATION, popsize)
 
         # Get time estimations
         time_diff = time.time() - self.time_start
 
-        seconds_per_100 = time_diff / stage * 100
-        eta = (hermes.parameters.STAGES_PER_SIMULATION - stage) / 100 * seconds_per_100
+        seconds_per_100 = time_diff / step * 100
+        eta = (hermes.parameters.STEPS_PER_SIMULATION - step) / 100 * seconds_per_100
 
-        stages_per_min = int(stage / (time_diff / 60))
+        steps_per_min = int(step / (time_diff / 60))
 
         runtime = self.get_dhm(time_diff)
-        time_per_1M = self.get_dhm(time_diff / stage * 1000000)
+        time_per_1M = self.get_dhm(time_diff / step * 1000000)
         eta = self.get_dhm(eta)
 
         # Save time estimations
-        content = (stage, eta, time_per_1M, runtime, stages_per_min, popsize)
+        content = (step, eta, time_per_1M, runtime, steps_per_min, popsize)
         self.write_to_progress_log(content)
 
     def write_to_progress_log(self, content):
@@ -56,7 +56,7 @@ class ProgressRecorder(Recorder):
         content: stats of simulation progress
         dtype: complex
         index: none
-        header: stage, ETA (estimated time until finished), t1M (time to run one million steps), runtime (runtime until the time of recording), stg/min (number of stages simulated per minute), popsize (population size)
+        header: step, ETA (estimated time until finished), t1M (time to run one million steps), runtime (runtime until the time of recording), stg/min (number of steps simulated per minute), popsize (population size)
         column:
         rows: one record
         path: /progress.log

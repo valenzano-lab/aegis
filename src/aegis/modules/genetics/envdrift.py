@@ -26,9 +26,9 @@ class Envdrift:
         else:
             self.map = np.zeros(genome_shape, dtype=np.bool_)
 
-    def evolve(self, stage):
+    def evolve(self, step):
         """Modify the envdrift"""
-        if (self.map is None) or (stage % self.ENVDRIFT_RATE > 0):
+        if (self.map is None) or (step % self.ENVDRIFT_RATE > 0):
             return
 
         indices = tuple(hermes.rng.integers(self.map.shape))

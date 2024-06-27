@@ -31,25 +31,25 @@ class TERecorder(Recorder):
 
         assert e in ("alive", "dead")
 
-        stage = hermes.get_stage()
+        step = hermes.get_step()
 
         # open new file and add header
-        if (stage % hermes.parameters.TE_RATE) == 0 or stage == 1:
+        if (step % hermes.parameters.TE_RATE) == 0 or step == 1:
             data = [["T", "E"]]
             self.write(data, "%s")
 
         # record deaths
-        elif ((stage % hermes.parameters.TE_RATE) < hermes.parameters.TE_DURATION) and e == "dead":
+        elif ((step % hermes.parameters.TE_RATE) < hermes.parameters.TE_DURATION) and e == "dead":
             E = np.repeat(1, len(T))
             data = np.array([T, E]).T
             self.write(data, "%i")
 
         # flush
         elif (
-            ((stage % hermes.parameters.TE_RATE) == hermes.parameters.TE_DURATION)
-            or stage == hermes.parameters.STAGES_PER_SIMULATION
+            ((step % hermes.parameters.TE_RATE) == hermes.parameters.TE_DURATION)
+            or step == hermes.parameters.STEPS_PER_SIMULATION
         ) and e == "alive":
-            logging.debug(f"Data for survival analysis (T,E) flushed at stage {stage}.")
+            logging.debug(f"Data for survival analysis (T,E) flushed at step {step}.")
             E = np.repeat(0, len(T))
             data = np.array([T, E]).T
             self.write(data, "%i")

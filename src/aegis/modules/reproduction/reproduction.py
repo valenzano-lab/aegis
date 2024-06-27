@@ -17,7 +17,7 @@ class Reproducer:
     If the population is oviparous, [[INCUBATION_PERIOD]] should be set to -1, 1 or greater.
     When it is set to -1, all laid eggs hatch only once all living individuals die.
     When it is set to 0 or greater, eggs hatch after that specified time.
-    Thus, when 0, the population has no egg life stage.
+    Thus, when 0, the population has no egg life step.
     """
 
     # TODO INCUBATION_PERIOD set to -1 or 1 or greater is stupid

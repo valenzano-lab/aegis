@@ -12,7 +12,7 @@ class PopgenStats:
         self.pop_size_history = []
 
     def record_pop_size_history(self, genomes):
-        """Records population sizes at last 1000 stages"""
+        """Records population sizes at last 1000 steps"""
         if len(self.pop_size_history) >= 1000:
             del self.pop_size_history[0]
         self.pop_size_history.append(len(genomes))

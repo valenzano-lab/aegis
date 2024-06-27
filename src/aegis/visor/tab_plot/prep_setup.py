@@ -12,11 +12,11 @@ FIG_SETUP = {
     "bit states": {
         "title": "bit states",
         "prep_y": prep_y.get_bit_states,
-        "prep_x": prep_x.get_stages,
+        "prep_x": prep_x.get_steps,
         "prep_figure": "make_heatmap_figure",
         "description": dcc.Markdown(
             """
-            Bit states for each site at a given stage.
+            Bit states for each site at a given step.
             \n
             Population averages. Interval averages.
             """,
@@ -25,7 +25,7 @@ FIG_SETUP = {
         "timespecific": True,
         # graph
         "figure_layout": {
-            "xaxis_title": "simulation stage",
+            "xaxis_title": "simulation step",
             "yaxis_title": "genome site",
         },
     },
@@ -157,7 +157,7 @@ FIG_SETUP = {
     "life expectancy": {
         "title": "life expectancy at age 0",
         "prep_y": prep_y.get_life_expectancy,
-        "prep_x": prep_x.get_stages,
+        "prep_x": prep_x.get_steps,
         "prep_figure": "make_line_figure",
         "description": dcc.Markdown(
             # TODO check this
@@ -170,7 +170,7 @@ FIG_SETUP = {
         ),
         # graph
         "figure_layout": {
-            "xaxis_title": "simulation stage",
+            "xaxis_title": "simulation step",
             "yaxis_title": "life expectancy",
         },
     },
@@ -216,7 +216,7 @@ FIG_SETUP = {
     # "lifetime reproduction": {
     #     "title": "lifetime reproduction",
     #     "prep_y": prep_y.get_lifetime_reproduction,
-    #     "prep_x": prep_x.get_stages,
+    #     "prep_x": prep_x.get_steps,
     #     "prep_figure": "make_line_figure",
     #     "description": dcc.Markdown(
     #         """
@@ -228,7 +228,7 @@ FIG_SETUP = {
     #     ),
     #     # graph
     #     "figure_layout": {
-    #         "xaxis_title": "simulation stage",
+    #         "xaxis_title": "simulation step",
     #         "yaxis_title": "lifetime number of offspring",
     #     },
     # },

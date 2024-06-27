@@ -63,7 +63,7 @@ def get_causes_of_death(container: Container, iloc=-1):
     return ys, max_iloc
 
 
-# x-axis is stage
+# x-axis is step
 def get_lifetime_reproduction(container: Container, iloc=None):
     ys = container.get_lifetime_reproduction()
     max_iloc = None

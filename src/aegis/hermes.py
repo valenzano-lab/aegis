@@ -22,7 +22,7 @@ class Hermes:
     """ """
 
     def initialize(self, custom_config_path, custom_input_params, overwrite):
-        self.stage = 1
+        self.step = 1
         self.constants = constants
 
         self.parameters = ParameterManager(
@@ -153,11 +153,11 @@ class Hermes:
     # UTILITIES #
     #############
 
-    def get_stage(self) -> int:
-        return self.stage
+    def get_step(self) -> int:
+        return self.step
 
-    def increment_stage(self) -> None:
-        self.stage += 1
+    def increment_step(self) -> None:
+        self.step += 1
 
     def skip(self, rate_name) -> bool:
         """Should you skip an action performed at a certain rate"""
@@ -168,12 +168,12 @@ class Hermes:
         if rate <= 0:
             return True
 
-        # Do not skip first stage
-        if self.stage == 1:
+        # Do not skip first step
+        if self.step == 1:
             return False
 
-        # Skip unless stage is divisible by rate
-        return self.stage % rate > 0
+        # Skip unless step is divisible by rate
+        return self.step % rate > 0
 
 
 hermes = Hermes()

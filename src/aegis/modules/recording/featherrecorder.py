@@ -23,20 +23,20 @@ class FeatherRecorder(Recorder):
         if hermes.skip("SNAPSHOT_RATE") or len(population) == 0:
             return
 
-        stage = hermes.get_stage()
+        step = hermes.get_step()
 
-        logging.debug(f"Snapshots recorded at stage {stage}.")
+        logging.debug(f"Snapshots recorded at step {step}.")
 
-        self.write_genotypes(stage=stage, population=population)
-        self.write_phenotypes(stage=stage, population=population)
-        self.write_demography(stage=stage, population=population)
+        self.write_genotypes(step=step, population=population)
+        self.write_phenotypes(step=step, population=population)
+        self.write_demography(step=step, population=population)
 
-    def write_genotypes(self, stage: int, population: Population):
+    def write_genotypes(self, step: int, population: Population):
         # TODO add more info to columns and rows
         """
 
         # OUTPUT SPECIFICATION
-        path: /snapshots/genotypes/{stage}.feather
+        path: /snapshots/genotypes/{step}.feather
         filetype: feather
         domain: genotype
         short description:
@@ -49,9 +49,9 @@ class FeatherRecorder(Recorder):
         df_gen = pd.DataFrame(np.array(population.genomes.flatten()))
         df_gen.reset_index(drop=True, inplace=True)
         df_gen.columns = [str(c) for c in df_gen.columns]
-        df_gen.to_feather(self.odir_genotypes / f"{stage}.feather")
+        df_gen.to_feather(self.odir_genotypes / f"{step}.feather")
 
-    def write_phenotypes(self, stage: int, population: Population):
+    def write_phenotypes(self, step: int, population: Population):
         # TODO add more info to columns and rows
         """
 
@@ -64,15 +64,15 @@ class FeatherRecorder(Recorder):
         dtype: float
         columns: int; phenotype index
         rows: int; individual index
-        path: /snapshots/phenotypes/{stage}.feather
+        path: /snapshots/phenotypes/{step}.feather
         """
         # TODO bugged, wrong header
         df_phe = pd.DataFrame(np.array(population.phenotypes))
         df_phe.reset_index(drop=True, inplace=True)
         df_phe.columns = [str(c) for c in df_phe.columns]
-        df_phe.to_feather(self.odir_phenotypes / f"{stage}.feather")
+        df_phe.to_feather(self.odir_phenotypes / f"{step}.feather")
 
-    def write_demography(self, stage: int, population: Population):
+    def write_demography(self, step: int, population: Population):
         # TODO add more info to columns and rows
         """
 
@@ -83,12 +83,12 @@ class FeatherRecorder(Recorder):
         long description:
         content: snapshot of previous life history of all individuals
         dtype: float
-        columns: age, number of offspring, stage at which the individual was born, size, sex
+        columns: age, number of offspring, step at which the individual was born, size, sex
         rows: int; individual index
-        path: /snapshots/demography/{stage}.feather
+        path: /snapshots/demography/{step}.feather
         """
         dem_attrs = ["ages", "births", "birthdays", "sizes", "sexes"]
         demo = {attr: getattr(population, attr) for attr in dem_attrs}
         df_dem = pd.DataFrame(demo, columns=dem_attrs)
         df_dem.reset_index(drop=True, inplace=True)
-        df_dem.to_feather(self.odir_demography / f"{stage}.feather")
+        df_dem.to_feather(self.odir_demography / f"{step}.feather")

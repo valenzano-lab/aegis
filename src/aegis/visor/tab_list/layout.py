@@ -95,7 +95,7 @@ def make_table_row(selection_state, sim_data, log, input_summary, output_summary
     if len(log) > 0:
         logline = log.iloc[-1].to_dict()
     else:
-        logline = {"ETA": None, "stage": None, "stg/min": None}
+        logline = {"ETA": None, "step": None, "stg/min": None}
 
     if not output_summary:
         status = ["not finished", "not extinct"]

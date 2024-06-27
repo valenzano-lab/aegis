@@ -156,7 +156,7 @@ class Container:
     def get_life_table_observed_snapshot(self, record_index: int, normalize=False):
         """
         Observed data. Series.
-        Number of individuals (int) per age class observed at some simulation stage captured by the record of index record_index.
+        Number of individuals (int) per age class observed at some simulation step captured by the record of index record_index.
         name == count
         index.name == age_class
         """

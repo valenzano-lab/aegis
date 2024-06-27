@@ -44,35 +44,35 @@ class Abiotic:
                 """
             )
 
-    def __call__(self, stage):
-        return self.func(stage) + self.ABIOTIC_HAZARD_OFFSET
+    def __call__(self, step):
+        return self.func(step) + self.ABIOTIC_HAZARD_OFFSET
 
-    def _flat(self, stage):
+    def _flat(self, step):
         return self.ABIOTIC_HAZARD_AMPLITUDE
 
-    def _sinusoidal(self, stage):
-        return self.ABIOTIC_HAZARD_AMPLITUDE * math.sin(2 * math.pi * stage / self.ABIOTIC_HAZARD_PERIOD)
+    def _sinusoidal(self, step):
+        return self.ABIOTIC_HAZARD_AMPLITUDE * math.sin(2 * math.pi * step / self.ABIOTIC_HAZARD_PERIOD)
 
-    def _triangle(self, stage):
+    def _triangle(self, step):
         return self.ABIOTIC_HAZARD_AMPLITUDE * (
-            1 - 4 * abs(round(stage / self.ABIOTIC_HAZARD_PERIOD - 0.5) - (stage / self.ABIOTIC_HAZARD_PERIOD - 0.5))
+            1 - 4 * abs(round(step / self.ABIOTIC_HAZARD_PERIOD - 0.5) - (step / self.ABIOTIC_HAZARD_PERIOD - 0.5))
         )
 
-    def _square(self, stage):
+    def _square(self, step):
         return self.ABIOTIC_HAZARD_AMPLITUDE * (
-            1 if (stage % self.ABIOTIC_HAZARD_PERIOD) < (self.ABIOTIC_HAZARD_PERIOD / 2) else -1
+            1 if (step % self.ABIOTIC_HAZARD_PERIOD) < (self.ABIOTIC_HAZARD_PERIOD / 2) else -1
         )
 
-    def _sawtooth(self, stage):
+    def _sawtooth(self, step):
         return self.ABIOTIC_HAZARD_AMPLITUDE * (
-            2 * (stage / self.ABIOTIC_HAZARD_PERIOD - math.floor(stage / self.ABIOTIC_HAZARD_PERIOD + 0.5))
+            2 * (step / self.ABIOTIC_HAZARD_PERIOD - math.floor(step / self.ABIOTIC_HAZARD_PERIOD + 0.5))
         )
 
-    def _ramp(self, stage):
-        return self.ABIOTIC_HAZARD_AMPLITUDE * (stage % self.ABIOTIC_HAZARD_PERIOD) / self.ABIOTIC_HAZARD_PERIOD
+    def _ramp(self, step):
+        return self.ABIOTIC_HAZARD_AMPLITUDE * (step % self.ABIOTIC_HAZARD_PERIOD) / self.ABIOTIC_HAZARD_PERIOD
 
-    def _instant(self, stage):
-        """Mortality function that every ABIOTIC_HAZARD_PERIOD stages kills ABIOTIC_HAZARD_AMPLITUDE of the total living population; stage 0 is unaffected"""
-        if stage == 0 or stage % self.ABIOTIC_HAZARD_PERIOD:
+    def _instant(self, step):
+        """Mortality function that every ABIOTIC_HAZARD_PERIOD steps kills ABIOTIC_HAZARD_AMPLITUDE of the total living population; step 0 is unaffected"""
+        if step == 0 or step % self.ABIOTIC_HAZARD_PERIOD:
             return 0
         return self.ABIOTIC_HAZARD_AMPLITUDE

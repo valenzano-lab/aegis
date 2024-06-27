@@ -15,8 +15,8 @@ class Bioreactor:
     # MAIN LOGIC #
     ##############
 
-    def run_stage(self):
-        """Perform one stage of simulation."""
+    def run_step(self):
+        """Perform one step of simulation."""
 
         # If extinct (no living individuals nor eggs left), do nothing
         if len(self) == 0:
@@ -34,7 +34,7 @@ class Bioreactor:
         self.reproduction()  # reproduction
         self.age()  # age increment and potentially death
         self.hatch()
-        hermes.architect.envdrift.evolve(stage=hermes.get_stage())
+        hermes.architect.envdrift.evolve(step=hermes.get_step())
         hermes.modules.resources.replenish()
 
         # Record data
@@ -50,7 +50,7 @@ class Bioreactor:
         hermes.recording_manager.terecorder.record(self.population.ages, "alive")
 
     ###############
-    # STAGE LOGIC #
+    # STEP LOGIC #
     ###############
 
     def mortality_intrinsic(self):
@@ -59,7 +59,7 @@ class Bioreactor:
         self._kill(mask_kill=~mask_surv, causeofdeath="intrinsic")
 
     def mortality_abiotic(self):
-        hazard = hermes.modules.abiotic(hermes.get_stage())
+        hazard = hermes.modules.abiotic(hermes.get_step())
         mask_kill = hermes.rng.random(len(self.population), dtype=np.float32) < hazard
         self._kill(mask_kill=mask_kill, causeofdeath="abiotic")
 
@@ -127,7 +127,7 @@ class Bioreactor:
 
         # Get eggs
         eggs = Population.make_eggs(
-            offspring_genomes=offspring_genomes, stage=hermes.get_stage(), offspring_sexes=offspring_sexes
+            offspring_genomes=offspring_genomes, step=hermes.get_step(), offspring_sexes=offspring_sexes
         )
         if self.eggs is None:
             self.eggs = eggs
@@ -161,7 +161,7 @@ class Bioreactor:
             or (hermes.parameters.INCUBATION_PERIOD == 0)  # hatch immediately
             or (
                 hermes.parameters.INCUBATION_PERIOD > 0
-                and hermes.get_stage() % hermes.parameters.INCUBATION_PERIOD == 0
+                and hermes.get_step() % hermes.parameters.INCUBATION_PERIOD == 0
             )  # hatch with delay
         ):
             self.population += self.eggs

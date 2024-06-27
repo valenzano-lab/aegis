@@ -9,6 +9,6 @@ def get_ages(container, **_):
     return np.arange(1, container.get_config()["AGE_LIMIT"] + 1)
 
 
-def get_stages(container, **kwargs):
+def get_steps(container, **kwargs):
     y = kwargs["y"]
     return np.arange(1, len(y) + 1) * container.get_config()["VISOR_RATE"]

@@ -10,7 +10,7 @@
 #     def init_progress_log(self):
 #         # Set up progress log
 #         progress_path = self.output_path / "progress.log"
-#         content = ("stage", "ETA", "t1M", "runtime", "stg/min", "popsize")
+#         content = ("step", "ETA", "t1M", "runtime", "stg/min", "popsize")
 #         with open(progress_path, "wb") as f:
 #             np.savetxt(f, [content], fmt="%-10s", delimiter="| ")
 

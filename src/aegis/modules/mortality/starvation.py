@@ -23,7 +23,7 @@ class Starvation:
 
     Under other [[STARVATION_RESPONSE]]s, starvation affects all ages equally, but the dynamics of starvation are different.
     When response is set to gradual, death from starvation is at first low, but increases with each subsequent
-    stage of insufficient resources (the speed of increase is parameterized by [[STARVATION_MAGNITUDE]]).
+    step of insufficient resources (the speed of increase is parameterized by [[STARVATION_MAGNITUDE]]).
     When response is set to treadmill_random, whenever population exceeds the [[CARRYING_CAPACITY]], it is immediately
     and precisely cut down to [[CARRYING_CAPACITY]]. In contrast, when response is set to cliff,
     whenever [[CARRYING_CAPACITY]] is exceeded, the population is cut down to a fraction of the [[CARRYING_CAPACITY]];
@@ -80,7 +80,7 @@ class Starvation:
         """Kill random individuals with time-increasing probability.
 
         The choice of individuals is random.
-        The probability of dying increases each consecutive stage of overcrowding.
+        The probability of dying increases each consecutive step of overcrowding.
         The probability of dying resets to the base value once the population dips under the maximum allowed size.
         """
         surv_probability = (1 - self.STARVATION_MAGNITUDE) ** self.consecutive_overshoot_n

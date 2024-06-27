@@ -94,7 +94,7 @@ def update_plot_on_sliding(drag_value, selection_states):
 #     new_maxs = []
 
 #     for fig_setup in FIG_SETUP.values():
-#         if fig_setup["prep_x"] == prep_x.get_stages:
+#         if fig_setup["prep_x"] == prep_x.get_steps:
 #             new_max = 100
 #         elif fig_setup["prep_x"] == prep_x.get_ages:
 #             new_max = 10

@@ -112,13 +112,13 @@ class Population:
         )
 
     @staticmethod
-    def make_eggs(offspring_genomes, stage, offspring_sexes):
+    def make_eggs(offspring_genomes, step, offspring_sexes):
         n = len(offspring_genomes)
         eggs = Population(
             genomes=offspring_genomes,
             ages=np.zeros(n, dtype=np.int32),
             births=np.zeros(n, dtype=np.int32),
-            birthdays=np.zeros(n, dtype=np.int32) + stage,
+            birthdays=np.zeros(n, dtype=np.int32) + step,
             phenotypes=hermes.architect.__call__(offspring_genomes),
             infection=np.zeros(n, dtype=np.int32),
             sizes=np.zeros(n, dtype=np.float32),
