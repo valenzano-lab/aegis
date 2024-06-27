@@ -32,7 +32,6 @@ class FeatherRecorder(Recorder):
         self.write_demography(step=step, population=population)
 
     def write_genotypes(self, step: int, population: Population):
-        # TODO add more info to columns and rows
         """
 
         # OUTPUT SPECIFICATION
@@ -73,7 +72,6 @@ class FeatherRecorder(Recorder):
         df_phe.to_feather(self.odir_phenotypes / f"{step}.feather")
 
     def write_demography(self, step: int, population: Population):
-        # TODO add more info to columns and rows
         """
 
         # OUTPUT SPECIFICATION

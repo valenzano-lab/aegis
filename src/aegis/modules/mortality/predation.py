@@ -16,18 +16,17 @@ class Predation:
         self.PREDATOR_GROWTH = PREDATOR_GROWTH
         self.PREDATION_RATE = PREDATION_RATE
 
-    def __call__(self, K):
+    def __call__(self, prey_count):
 
         # TODO Add attrition penalty for when there are no living prey around (but there still are eggs)
-        # TODO Rename K; it appears it is the prey count
-        if K == 0:
+        if prey_count == 0:
             return 0
 
         # Use Verhulst model
-        change = self.N * self.PREDATOR_GROWTH * (1 - self.N / K)
+        change = self.N * self.PREDATOR_GROWTH * (1 - self.N / prey_count)
         self.N += change
 
-        ratio = np.log(self.N / K)
+        ratio = np.log(self.N / prey_count)
         # probability to get killed
         # compute logistically
         # multiplication with 2 so that when n_predators == n_prey, the mortality rate is equal to PREDATION_RATE
