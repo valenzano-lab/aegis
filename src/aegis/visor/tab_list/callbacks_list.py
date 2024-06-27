@@ -102,5 +102,5 @@ def stylize_display_buttons(data):
 def load_data(selection_state, data):
     filename, selected = selection_state
     if selected and data is None:
-        logging.info(f"Loading {filename} successful!")
+        logging.info(f"Loading {filename} successful.")
     return data

@@ -30,7 +30,7 @@ class ParameterManager:
         SPECIES_PRESET = custom_config_params.get("SPECIES_PRESET", default_parameters["SPECIES_PRESET"])
         species_config_params = get_species_parameters(SPECIES_PRESET)
 
-        logging.info(f"Using {SPECIES_PRESET} as species preset: " + repr(species_config_params))
+        logging.info(f"Using {SPECIES_PRESET} as species preset: " + repr(species_config_params) + ".")
 
         # Fuse
         params = {}
@@ -44,14 +44,14 @@ class ParameterManager:
 
         # convert to types.SimpleNamespace
         params = types.SimpleNamespace(**params)
-        logging.info("Final parameters to use in the simulation: " + repr(params))
+        logging.info("Final parameters to use in the simulation: " + repr(params) + ".")
         return params
 
     def read_config_file(self):
 
         # No configuration file specified
         if self.custom_config_path == "":
-            logging.info("No configuration file has been specified")
+            logging.info("No configuration file has been specified.")
             return {}
 
         # Configuration file specified...
@@ -60,7 +60,7 @@ class ParameterManager:
 
         # ... but it is empty
         if ccp is None:
-            logging.info("Configuration file is empty")
+            logging.info("Configuration file is empty.")
             ccp = {}
 
         return ccp

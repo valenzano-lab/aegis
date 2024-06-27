@@ -25,7 +25,7 @@ class FeatherRecorder(Recorder):
 
         stage = hermes.get_stage()
 
-        logging.debug(f"Snapshots recorded at stage {stage}")
+        logging.debug(f"Snapshots recorded at stage {stage}.")
 
         self.write_genotypes(stage=stage, population=population)
         self.write_phenotypes(stage=stage, population=population)

@@ -70,16 +70,16 @@ class Manager:
     @staticmethod
     def log_post_simulation() -> None:
         hermes.recording_manager.summaryrecorder.write_output_summary()
-        logging.info("Simulation finished")
+        logging.info("Simulation finished.")
 
     def is_extinct(self) -> bool:
         if hermes.recording_manager.summaryrecorder.extinct:
-            logging.info(f"Population went extinct (at stage {hermes.stage})")
+            logging.info(f"Population went extinct (at stage {hermes.stage}).")
             return True
         return False
 
     def is_finished(self) -> bool:
         if hermes.get_stage() <= hermes.parameters.STAGES_PER_SIMULATION:
             return False
-        logging.info("All simulation stages successfully simulated")
+        logging.info("All simulation stages successfully simulated.")
         return True

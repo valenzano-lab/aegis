@@ -360,7 +360,7 @@ class PopgenStats:
         segr_sites = self.segregating_sites_gsample
 
         if segr_sites == 0:
-            logging.info("Cannot compute Tajima's D because there are no segregating sites")
+            logging.info("Cannot compute Tajima's D because there are no segregating sites.")
             return
 
         a_1 = self.harmonic(self.nsample - 1)

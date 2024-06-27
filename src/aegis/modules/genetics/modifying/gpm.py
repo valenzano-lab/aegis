@@ -37,7 +37,7 @@ class GPM:
 
         self.dummy = self.phenolist == [] and self.phenomatrix is None
         if self.dummy:
-            logging.info("Phenomap inactive")
+            logging.info("Phenomap inactive.")
 
     def phenodiff(self, vectors, zeropheno):
         """

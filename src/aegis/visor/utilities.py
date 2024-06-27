@@ -45,8 +45,7 @@ def get_config_path(filename):
 
 def run(filename):
     config_path = get_config_path(filename)
-    logging.info(f"Running a simulation at path {config_path}")
-    print(f"Running a simulation at path {config_path}")
+    logging.info(f"Running a simulation at path {config_path}.")
     subprocess.Popen(["python3", "-m", "aegis", "--config_path", config_path])
 
 
@@ -55,7 +54,7 @@ def make_config_file(filename, configs):
     configs["NOTES"] = []
     for k, v in configs.items():
         configs[k] = DEFAULT_PARAMETERS[k].convert(v)
-    logging.info("making config file")
+    logging.info("Making a config file.")
     config_path = get_config_path(filename)
     with open(config_path, "w") as file_:
         yaml.dump(configs, file_)
@@ -63,7 +62,7 @@ def make_config_file(filename, configs):
 
 def log_debug(func):
     def wrapper(*args, **kwargs):
-        logging.debug(f"executing function: {func.__name__}")
+        logging.debug(f"Executing function: {func.__name__}.")
         return func(*args, **kwargs)
 
     return wrapper
@@ -71,7 +70,7 @@ def log_debug(func):
 
 def log_info(func):
     def wrapper(*args, **kwargs):
-        logging.info(f"executing function: {func.__name__}")
+        logging.info(f"Executing function: {func.__name__}.")
         return func(*args, **kwargs)
 
     return wrapper

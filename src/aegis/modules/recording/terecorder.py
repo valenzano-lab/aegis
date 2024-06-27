@@ -49,7 +49,7 @@ class TERecorder(Recorder):
             ((stage % hermes.parameters.TE_RATE) == hermes.parameters.TE_DURATION)
             or stage == hermes.parameters.STAGES_PER_SIMULATION
         ) and e == "alive":
-            logging.debug(f"Data for survival analysis (T,E) flushed at stage {stage}")
+            logging.debug(f"Data for survival analysis (T,E) flushed at stage {stage}.")
             E = np.repeat(0, len(T))
             data = np.array([T, E]).T
             self.write(data, "%i")

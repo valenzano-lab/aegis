@@ -70,11 +70,11 @@ def update_plot_on_sliding(drag_value, selection_states):
     for filename, selected in selection_states:
         if selected and filename not in containers:
             results_path = base_dir / filename
-            logging.info(f"Fetching data from {results_path}")
+            logging.info(f"Fetching data from {results_path}.")
             containers[filename] = Container(base_dir / filename)
 
     selected_sims = [filename for filename, selected in selection_states if selected]
-    logging.info(f"Plotting {fig_name} at t={drag_value} : " + ", ".join(selected_sims))
+    logging.info(f"Plotting {fig_name} at t={drag_value} : " + ", ".join(selected_sims) + ".")
 
     # Prepare figures
     # BUG no data saved yet on running simulations or interrupted simulations
@@ -128,11 +128,11 @@ def update_plot_tab(n_clicks1, n_clicks2, selection_states, drag_maxs):
     for filename, selected in selection_states:
         if selected and filename not in containers:
             results_path = base_dir / filename
-            logging.info(f"Fetching data from {results_path}")
+            logging.info(f"Fetching data from {results_path}.")
             containers[filename] = Container(base_dir / filename)
 
     selected_sims = [filename for filename, selected in selection_states if selected]
-    logging.info("Plotting: " + ", ".join(selected_sims))
+    logging.info("Plotting: " + ", ".join(selected_sims) + ".")
 
     figures = []
     drag_maxs = []

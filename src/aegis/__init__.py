@@ -36,7 +36,6 @@ def run_from_terminal():
     custom_config_path, pickle_path, overwrite, server_mode = parse_terminal()
 
     if (custom_config_path, pickle_path, overwrite) == (None, None, None):
-        # TODO end logging with period or not
         logging.info("Starting run_visor.")
         logging.info(f"Server mode is {'ON' if server_mode else 'OFF'}.")
         if server_mode:

@@ -41,7 +41,7 @@ class Parameter:
     def valid(self, value):
         # Not valid if wrong data type
         if not isinstance(value, self.dtype):
-            logging.error(f"Value {value} is not of valid type {self.dtype} but of type {type(value)}")
+            logging.error(f"Value {value} is not of valid type {self.dtype} but of type {type(value)}.")
             return False
 
         # Not valid if not in range

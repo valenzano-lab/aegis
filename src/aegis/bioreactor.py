@@ -20,7 +20,7 @@ class Bioreactor:
 
         # If extinct (no living individuals nor eggs left), do nothing
         if len(self) == 0:
-            logging.debug("went extinct")
+            logging.debug("Population went extinct.")
             hermes.recording_manager.summaryrecorder.extinct = True
 
         # Mortality sources

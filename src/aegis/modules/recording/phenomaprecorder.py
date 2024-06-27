@@ -40,4 +40,4 @@ class PhenomapRecorder(Recorder):
                 self.odir / "phenomap.csv", index=None, header=["bit", "trait", "age", "weight"]
             )
         else:
-            logging.info("Phenomap is empty")
+            logging.info("Phenomap is empty.")

@@ -55,7 +55,7 @@ class Container:
             key=lambda path: int(path.stem),
         )
         if not self.paths["log"].is_file():
-            logging.error(f"No AEGIS log found at path {self.paths['log']}")
+            logging.error(f"No AEGIS log found at path {self.paths['log']}.")
 
     def get_record_structure():
         # TODO
@@ -297,7 +297,7 @@ class Container:
         # TODO Read also files that are not .csv
 
         if not file_exists:
-            logging.error(f"File {self.paths[stem]} does not exist")
+            logging.error(f"File {self.paths[stem]} does not exist.")
         elif (not file_read) or reload:
             self.data[stem] = pd.read_csv(self.paths[stem], header=0)
 

@@ -79,16 +79,16 @@ def disable_sim_button(filename, values, ids) -> bool:
         in_serverrange = is_input_in_serverrange(input_=value, param_name=param_name)
         if not in_serverrange:
             logging.info(
-                f"Simulation run button is blocked because parameter {param_name} has received an invalid input"
+                f"Simulation run button is blocked because parameter {param_name} has received an invalid input."
             )
             return True
 
     if not is_sim_name_valid(filename):
-        logging.info(f"Simulation run button is blocked because simulation name {filename} is not valid")
+        logging.info(f"Simulation run button is blocked because simulation name {filename} is not valid.")
         return True
 
     if utilities.sim_exists(filename):
-        logging.info(f"Simulation run button is blocked because simulation name {filename} already exists")
+        logging.info(f"Simulation run button is blocked because simulation name {filename} already exists.")
         return True
 
     return False
