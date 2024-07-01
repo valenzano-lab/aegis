@@ -1,5 +1,5 @@
 from dash import dcc
-from aegis.visor.tab_plot import prep_x, prep_y
+from aegis.visor.pages.tab_plot import prep_x, prep_y
 
 
 def needs_slider(fig_name):

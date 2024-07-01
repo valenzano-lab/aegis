@@ -1,6 +1,10 @@
+import dash
+
 from dash import html, dcc
 from aegis.visor import utilities
 from aegis.documentation.documenter import Documenter
+
+dash.register_page(__name__, name="landing", path="/")
 
 
 @utilities.log_debug
@@ -17,3 +21,6 @@ def get_landing_layout():
             dcc.Markdown(Documenter.read("4 about us and community.md")),
         ],
     )
+
+
+layout = get_landing_layout()

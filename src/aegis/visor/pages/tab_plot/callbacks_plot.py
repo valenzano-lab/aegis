@@ -3,9 +3,9 @@ from dash import callback, Output, Input, ctx, ALL, State, MATCH
 import logging
 from aegis.utilities.container import Container
 from aegis.visor.utilities import default_selection_states, log_debug, get_sim_dir
-from aegis.visor.tab_plot import prep_fig
-from aegis.visor.tab_plot.prep_setup import FIG_SETUP, needs_slider
-from aegis.visor.tab_plot import prep_x, prep_y
+from aegis.visor.pages.tab_plot import prep_fig
+from aegis.visor.pages.tab_plot.prep_setup import FIG_SETUP, needs_slider
+from aegis.visor.pages.tab_plot import prep_x, prep_y
 
 
 @callback(

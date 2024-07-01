@@ -1,3 +1,4 @@
+import dash
 from dash import html, dcc, dash_table
 from aegis.visor import utilities
 import datetime
@@ -6,6 +7,8 @@ from aegis.utilities.container import Container
 from aegis.visor.utilities import OUTPUT_SPECIFICATIONS
 
 CAN_DELETE_DEFAULT = True
+
+dash.register_page(__name__, path="/simlog", name="simlog")
 
 
 @utilities.log_debug
@@ -87,7 +90,7 @@ def make_table(selection_states={}, sim_data=None):
         )
         table.append(element)
 
-    return html.Table(children=table, id="list-table")
+    return html.Table(children=table, id="simlog-table")
 
 
 # @utilities.log_debug
@@ -121,7 +124,7 @@ def make_table_row(selection_state, sim_data, log, input_summary, output_summary
     eta = logline["ETA"]
 
     row = html.Tr(
-        id={"type": "list-table-row", "index": filename},
+        id={"type": "simlog-table-row", "index": filename},
         children=[
             dcc.Store(
                 {"type": "selection-state", "index": filename},
@@ -188,11 +191,14 @@ def get_list_layout():
     #     for sim in funcs.get_sims()
     # ]
     return html.Div(
-        id="list-section",
-        style={"display": "none"},
+        id="simlog-section",
+        # style={"display": "none"},
         children=PREFACE
         + [
             # html.Div(id="selection-states", children=selection_states),
-            html.Div(id="list-section-table", children=[]),
+            html.Div(id="simlog-section-table", children=[]),
         ],
     )
+
+
+layout = get_list_layout()

@@ -1,5 +1,8 @@
+import dash
 from dash import html, dcc
-from aegis.visor.tab_plot.prep_setup import FIG_SETUP, needs_slider
+from aegis.visor.pages.tab_plot.prep_setup import FIG_SETUP, needs_slider
+
+dash.register_page(__name__, path="/plot", name="plot")
 
 PREFACE = [
     html.Div(
@@ -25,7 +28,7 @@ PREFACE = [
 def get_plot_layout():
     return html.Div(
         id="plot-section",
-        style={"display": "none"},
+        # style={"display": "none"},
         children=PREFACE
         + [
             html.Div(
@@ -99,3 +102,16 @@ def get_plot_layout():
         #     ),
         # ],
     )
+
+
+layout = get_plot_layout()
+# layout = PREFACE
+
+# layout = [
+#     html.Div(
+#         # id="landing-section",
+#         children=[
+#             html.P("asdfe"),
+#         ],
+#     )
+# ]

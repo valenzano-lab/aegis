@@ -167,7 +167,7 @@ h1 {
 }
 
 .config-table,
-#list-table {
+#simlog-table {
 }
 
 td,
@@ -190,7 +190,7 @@ tr:nth-of-type(odd) {
 }
 
 .config-table th,
-#list-table th {
+#simlog-table th {
   /* color: var(--prim); */
 }
 
@@ -260,7 +260,7 @@ table {
 table:hover {
 }
 
-#list-table {
+#simlog-table {
   /* border: solid black 0px; */
 }
 

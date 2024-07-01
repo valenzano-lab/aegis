@@ -1,8 +1,9 @@
+import dash
 from dash import html, dcc
-from aegis.visor.tab_config.layout import get_config_layout
-from aegis.visor.tab_list.layout import get_list_layout
-from aegis.visor.tab_plot.layout import get_plot_layout
-from aegis.visor.tab_landing.layout import get_landing_layout
+# from aegis.visor.pages.tab_config.layout import get_config_layout
+# from aegis.visor.pages.tab_simlog.layout import get_list_layout
+# from aegis.visor.pages.tab_plot.layout import get_plot_layout
+# from aegis.visor.pages.tab_landing.layout import get_landing_layout
 
 
 app_layout = html.Div(
@@ -26,50 +27,50 @@ app_layout = html.Div(
                             },
                             children=[
                                 html.H1("aegis"),
-                                html.Div(
-                                    [
-                                        html.Img(src="assets/sim.svg", className="svg-plot"),
-                                        html.Label("home"),
-                                        # html.Button("config view", id="config-view-button"),
-                                    ],
-                                    id="landing-view-button",
-                                    className="view-button",
-                                ),
-                                html.Div(
-                                    [
-                                        html.Img(src="assets/sim.svg", className="svg-plot"),
-                                        html.Label("run"),
-                                        # html.Button("config view", id="config-view-button"),
-                                    ],
-                                    id="config-view-button",
-                                    className="view-button",
-                                ),
-                                html.Div(
-                                    [
-                                        html.Img(
-                                            src="assets/list.svg",
-                                            className="svg-plot",
-                                            style={
-                                                "width": "30px",
-                                                "height": "34px",
-                                                "margin-top": "-2px",
-                                            },
-                                        ),
-                                        html.Label("list"),
-                                        # html.Button("list view", id="list-view-button"),
-                                    ],
-                                    id="list-view-button",
-                                    className="view-button",
-                                ),
-                                html.Div(
-                                    [
-                                        html.Img(src="assets/plot.svg", className="svg-plot"),
-                                        html.Label("plot"),
-                                        # html.Button("plot view", id="plot-view-button"),
-                                    ],
-                                    id="plot-view-button",
-                                    className="view-button",
-                                ),
+                                # html.Div(
+                                #     [
+                                #         html.Img(src="assets/sim.svg", className="svg-plot"),
+                                #         html.Label("home"),
+                                #         # html.Button("config view", id="config-view-button"),
+                                #     ],
+                                #     id="landing-view-button",
+                                #     className="view-button",
+                                # ),
+                                # html.Div(
+                                #     [
+                                #         html.Img(src="assets/sim.svg", className="svg-plot"),
+                                #         html.Label("run"),
+                                #         # html.Button("config view", id="config-view-button"),
+                                #     ],
+                                #     id="config-view-button",
+                                #     className="view-button",
+                                # ),
+                                # html.Div(
+                                #     [
+                                #         html.Img(
+                                #             src="assets/list.svg",
+                                #             className="svg-plot",
+                                #             style={
+                                #                 "width": "30px",
+                                #                 "height": "34px",
+                                #                 "margin-top": "-2px",
+                                #             },
+                                #         ),
+                                #         html.Label("list"),
+                                #         # html.Button("list view", id="simlog-view-button"),
+                                #     ],
+                                #     id="simlog-view-button",
+                                #     className="view-button",
+                                # ),
+                                # html.Div(
+                                #     [
+                                #         html.Img(src="assets/plot.svg", className="svg-plot"),
+                                #         html.Label("plot"),
+                                #         # html.Button("plot view", id="plot-view-button"),
+                                #     ],
+                                #     id="plot-view-button",
+                                #     className="view-button",
+                                # ),
                             ],
                         ),
                         html.Div(
@@ -100,7 +101,7 @@ app_layout = html.Div(
                                     ],
                                 ),
                                 html.Div(
-                                    id="list-section-control",
+                                    id="simlog-section-control",
                                     style={"display": "none"},
                                     children=[],
                                 ),
@@ -123,11 +124,14 @@ app_layout = html.Div(
                 ),
             ],
         ),
+        html.Div([dcc.Link(page["name"] + " ", href=page["path"]) for page in dash.page_registry.values()]),
+        dash.page_container,
+        html.Hr(),
         # TABS
-        get_landing_layout(),
-        get_config_layout(),
-        get_list_layout(),
-        get_plot_layout(),
+        # get_landing_layout(),
+        # get_config_layout(),
+        # get_list_layout(),
+        # get_plot_layout(),
         # FOOTER SECTION
         html.Div(
             [

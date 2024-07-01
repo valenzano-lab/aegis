@@ -15,7 +15,7 @@ th {
 }
 
 .config-table,
-#list-table {
+#simlog-table {
   border-spacing: 0px;
   font-size: 14px;
   width: 100%;
@@ -100,7 +100,7 @@ table {
 table:hover {
 }
 
-#list-table {
+#simlog-table {
   text-align: center;
 }
 

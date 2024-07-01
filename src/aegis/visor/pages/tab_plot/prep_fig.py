@@ -1,4 +1,4 @@
-from aegis.visor.tab_plot.prep_setup import FIG_SETUP
+from aegis.visor.pages.tab_plot.prep_setup import FIG_SETUP
 import plotly.graph_objs as go
 
 FIG_LAYOUT = dict(

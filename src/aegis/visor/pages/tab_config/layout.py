@@ -1,3 +1,5 @@
+import dash
+
 from dash import html, dcc
 from aegis.visor import utilities
 from aegis.modules.initialization.parameterization.default_parameters import DEFAULT_PARAMETERS
@@ -10,6 +12,8 @@ from aegis.modules.mortality import starvation, predation, infection, abiotic
 from aegis.modules.genetics.composite.architecture import CompositeArchitecture
 from aegis.modules.genetics.modifying.architecture import ModifyingArchitecture
 from aegis.modules.genetics.envdrift import Envdrift
+
+dash.register_page(__name__, path="/config", name="config")
 
 # TODO source from documentation
 TEXTS_DOMAIN = {
@@ -112,7 +116,7 @@ def get_config_layout() -> html.Div:
     # Generate layout
     return html.Div(
         id="sim-section",
-        style={"display": "none"},
+        # style={"display": "none"},
         children=PREFACE + tables,
     )
 
@@ -222,3 +226,6 @@ def get_table(params_subset) -> html.Table:
         + [HEADER]
         + [get_row(v) for v in params_subset if not isinstance(v.default, list)],
     )
+
+
+layout = get_config_layout()
