@@ -1,12 +1,6 @@
 import dash
 from dash import html, dcc
 
-# from aegis.visor.pages.tab_config.layout import get_config_layout
-# from aegis.visor.pages.tab_simlog.layout import get_list_layout
-# from aegis.visor.pages.tab_plot.layout import get_plot_layout
-# from aegis.visor.pages.tab_landing.layout import get_landing_layout
-
-
 app_layout = html.Div(
     id="main-container",
     children=[

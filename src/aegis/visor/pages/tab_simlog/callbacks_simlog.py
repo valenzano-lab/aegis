@@ -2,7 +2,7 @@ from dash import callback, Output, Input, State, ALL, MATCH, ctx
 import subprocess
 import logging
 from aegis.visor import utilities
-from aegis.visor.pages.tab_simlog.layout import make_table
+from aegis.visor.pages.tab_simlog.utilities import make_table
 import yaml
 
 from aegis.utilities.container import Container
@@ -12,12 +12,12 @@ from aegis.utilities.container import Container
 @callback(
     Output("simlog-section-table", "children"),
     Input({"type": "delete-simulation-button", "index": ALL}, "n_clicks"),
-    Input("simlog-view-button", "n_clicks"),
+    # Input("simlog-view-button", "n_clicks"),
     Input("main-url", "pathname"),
     State({"type": "selection-state", "index": ALL}, "data"),
 )
 @utilities.log_debug
-def show_sims(n_clicks1, n_clicks2, pathname, data):
+def show_sims(n_clicks1, pathname, data):
     print("yooooo", pathname)
     if ctx.triggered_id is None:  # If initial call
         return [make_table(selection_states={"default": True}, sim_data=None)]
