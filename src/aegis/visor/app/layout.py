@@ -1,5 +1,6 @@
 import dash
 from dash import html, dcc
+
 # from aegis.visor.pages.tab_config.layout import get_config_layout
 # from aegis.visor.pages.tab_simlog.layout import get_list_layout
 # from aegis.visor.pages.tab_plot.layout import get_plot_layout
@@ -9,6 +10,7 @@ from dash import html, dcc
 app_layout = html.Div(
     id="main-container",
     children=[
+        dcc.Location(id="main-url", refresh=False),
         # checkers
         # dcc.Interval(id="results-exist-interval", interval=1000, n_intervals=0),
         # dcc.Interval(id="process-monitor-interval", interval=1000, n_intervals=0),

@@ -21,7 +21,7 @@ def run(environment):
     import aegis.visor.pages.tab_config.callbacks_config
     import aegis.visor.pages.tab_plot.callbacks_plot
     import aegis.visor.pages.tab_plot.callbacks_download
-    import aegis.visor.pages.tab_simlog.callbacks_list
+    import aegis.visor.pages.tab_simlog.callbacks_simlog
 
     from .config import get_config
 

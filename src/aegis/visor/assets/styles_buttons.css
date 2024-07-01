@@ -1,43 +1,42 @@
 button,
-.view-button,
+/* .view-button, */
 .control-element {
   border-radius: 0.5rem;
   /* border: 1.5px solid var(--black); */
   height: 2rem;
 }
 
-button:hover,
-.view-button:hover {
+/* .view-button:hover, */
+button:hover {
   cursor: pointer;
 }
 
-.view-button label:hover {
+/* .view-button label:hover {
   cursor: pointer;
-}
+} */
 
-.view-button {
+/* .view-button {
   padding: 0.3rem 0.6rem;
   display: flex;
-  /* white-space: nowrap; */
   font-weight: bold;
   margin-right: 0.3rem;
-}
+} */
 
-.view-button label {
+/* .view-button label {
   font-size: 14px;
   margin: 2px 0;
-}
+} */
 
 button:disabled {
   cursor: not-allowed;
 }
 
-#plot-view-button.disabled {
+/* #plot-view-button.disabled {
   pointer-events: none;
-}
+} */
 
-button,
-.view-button {
+/* .view-button, */
+button {
   font-weight: bold;
   cursor: pointer;
 }

@@ -8,13 +8,16 @@ from aegis.visor.pages.tab_plot.prep_setup import FIG_SETUP, needs_slider
 from aegis.visor.pages.tab_plot import prep_x, prep_y
 
 
+# TODO rewrite to take account for multi-page setup
 @callback(
     Output("plot-view-button", "className"),
     Input({"type": "selection-state", "index": ALL}, "data"),
+    Input("main-url", "pathname"),
     State("plot-view-button", "className"),
 )
 @log_debug
-def disable_plot_tab(data, className):
+def disable_plot_tab(data, pathname, className):
+    print("yooo", pathname)
     className = className.replace(" disabled", "")
     if data == [] or all(not selected for filename, selected in data):
         return className + " disabled"
@@ -104,21 +107,24 @@ def update_plot_on_sliding(drag_value, selection_states):
 #     return new_maxs
 
 
+# BUG plot when triggered to plot
 @callback(
     [Output({"type": "graph-figure", "index": key}, "figure", allow_duplicate=True) for key in FIG_SETUP.keys()]
     + [Output({"type": "graph-slider", "index": ALL}, "max")],
-    Input("plot-view-button", "n_clicks"),
+    # Input("plot-view-button", "n_clicks"),
     Input("reload-plots-button", "n_clicks"),
+    # Input("main-url", "pathname"),
     State({"type": "selection-state", "index": ALL}, "data"),
     State({"type": "graph-slider", "index": ALL}, "max"),
     prevent_initial_call=True,
 )
 @log_debug
-def update_plot_tab(n_clicks1, n_clicks2, selection_states, drag_maxs):
+def update_plot_tab(n_clicks, selection_states, drag_maxs):
     """
     Update plots whenever someone clicks on the plot button or the reload button.
     """
-
+    # if pathname != "/plot":
+    #     return
     # If initial call, run the function so that the figures get initialized
     if ctx.triggered_id is None:  # if initial call
         selection_states = list(default_selection_states)
