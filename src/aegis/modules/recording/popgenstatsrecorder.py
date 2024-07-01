@@ -16,16 +16,11 @@ class PopgenStatsRecorder(Recorder):
         Record population size in popgenstats, and record popgen statistics
 
         # OUTPUT SPECIFICATION
+        path: /popgen/{metric}.csv
         filetype: csv
-        domain: genotype
+        keywords: genotype
         short description:
-        long description:
-        content: population genetic stats
-        dtype:
-        index:
-        header:
-        column:
-        rows:
+        structure:
         """
         hermes.modules.popgenstats.record_pop_size_history(genomes.array)
 

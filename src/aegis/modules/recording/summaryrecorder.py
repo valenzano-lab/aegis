@@ -33,17 +33,11 @@ class SummaryRecorder(Recorder):
         """
 
         # OUTPUT SPECIFICATION
-        filetype: json
-        domain: log
-        short description:
-        long description:
-        content: info summary at simulation end
-        dtype:
-        index:
-        header:
-        column:
-        rows:
         path: /output_summary.json
+        filetype: json
+        keywords: log
+        description: A json dictionary documenting a number of simulation traits at the end of the simulation; e.g. extinction status, random seed, time at start, total runtime, median memory use, total storage use.
+        structure: A json dictionary.
         """
         try:
             storage_use = self.get_folder_size_with_du(self.odir)
@@ -55,7 +49,7 @@ class SummaryRecorder(Recorder):
             "random_seed": hermes.random_seed,
             "time_start": self.time_start,
             "runtime": time.time() - self.time_start,
-            "jupyter_path": str(self.odir.absolute()),
+            "jupyter_path": str(self.odir.absolute()),  # TODO remove?
             "memory_use": self.get_median_memuse(),
             "storage_use": storage_use,
         }
@@ -66,24 +60,18 @@ class SummaryRecorder(Recorder):
         """
 
         # OUTPUT SPECIFICATION
-        filetype: json
-        domain: genotype
-        short description:
-        long description:
-        content: info summary at simulation start
-        dtype:
-        index:
-        header:
-        column:
-        rows:
         path: /input_summary.json
+        filetype: json
+        keywords: genotype
+        description: A json dictionary documenting a number of simulation traits at the start of the simulation; e.g. random seed, time at start.
+        structure: A json dictionary.
         """
         summary = {
             # "extinct": extinct,
             "random_seed": hermes.random_seed,
             "time_start": self.time_start,
             # "time_end": time.time(),
-            "jupyter_path": str(self.odir.absolute()),
+            "jupyter_path": str(self.odir.absolute()),  # TODO remove?
         }
         with open(self.odir / "input_summary.json", "w") as f:
             json.dump(summary, f, indent=4)

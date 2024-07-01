@@ -104,7 +104,7 @@ def extract_output_specification_from_docstring(method):
     text = docstring.split("# OUTPUT SPECIFICATION")[1]
     parsed = {}
     for pair in text.strip().split("\n"):
-        k, v = pair.split(":")
+        k, v = pair.split(":", maxsplit=1)
         parsed[k.strip()] = v.strip()
     return parsed
 

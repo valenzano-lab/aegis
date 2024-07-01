@@ -3,6 +3,7 @@ import numpy as np
 from aegis.hermes import hermes
 from .recorder import Recorder
 
+# BUG Header duplication; a copy ends up as first row
 
 class TERecorder(Recorder):
     def __init__(self, odir):
@@ -59,17 +60,11 @@ class TERecorder(Recorder):
         """
 
         # OUTPUT SPECIFICATION
-        filetype: csv
-        domain: demography
-        short description:
-        long description:
-        content: T (time until event), E (event; 1 if death, 0 if still alive)
-        dtype:
-        index:
-        header:
-        column:
-        rows:
         path: /te/{te_number}.csv
+        filetype: csv
+        keywords: demography
+        description: Data for survival analysis; time until event (age at death or current viable age) and the event type (1 if death, 0 if still alive).
+        structure: An int matrix.
         """
         path = self.odir / f"{self.TE_number}.csv"
         with open(path, "ab") as file_:

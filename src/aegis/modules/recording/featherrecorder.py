@@ -37,13 +37,9 @@ class FeatherRecorder(Recorder):
         # OUTPUT SPECIFICATION
         path: /snapshots/genotypes/{step}.feather
         filetype: feather
-        domain: genotype
-        short description:
-        long description:
-        content: complete snapshot of genomes of all individuals
-        dtype: bool
-        columns: int; site index
-        rows: int; individual index
+        keywords: genotype
+        description: A snapshot of complete binary genomes of all individuals at a certain simulation step.
+        structure: A bool matrix
         """
         df_gen = pd.DataFrame(np.array(population.genomes.flatten()))
         df_gen.reset_index(drop=True, inplace=True)
@@ -55,15 +51,12 @@ class FeatherRecorder(Recorder):
         """
 
         # OUTPUT SPECIFICATION
-        filetype: feather
-        domain: phenotype
-        short description:
-        long description:
-        content: complete snapshot of phenotypes of all individuals
-        dtype: float
-        columns: int; phenotype index
-        rows: int; individual index
         path: /snapshots/phenotypes/{step}.feather
+        filetype: feather
+        keywords: phenotype
+        description: A snapshot of complete intrinsic phenotypes of all individuals at a certain simulation step.
+        long description:
+        structure: A float matrix
         """
         # TODO bugged, wrong header
         df_phe = pd.DataFrame(np.array(population.phenotypes))
@@ -75,15 +68,11 @@ class FeatherRecorder(Recorder):
         """
 
         # OUTPUT SPECIFICATION
-        filetype: feather
-        domain: demography
-        short description:
-        long description:
-        content: snapshot of previous life history of all individuals
-        dtype: float
-        columns: age, number of offspring, step at which the individual was born, size, sex
-        rows: int; individual index
         path: /snapshots/demography/{step}.feather
+        filetype: feather
+        keywords: demography
+        description: A recording of life history metrics (age, number of births given, step at which born, current size, sex) of all individuals until a certain simulation step. 
+        structure: A matrix of ints and floats
         """
         dem_attrs = ["ages", "births", "birthdays", "sizes", "sexes"]
         demo = {attr: getattr(population, attr) for attr in dem_attrs}

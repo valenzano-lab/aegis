@@ -27,17 +27,11 @@ class Ticker(Recorder):
     def write(self):
         """
         # OUTPUT SPECIFICATION
-        filetype: txt
-        domain: log
-        short description:
-        long description:
-        content: date, time; this file gets updated every TICKER_RATE seconds; useful to determine if the simulation is still running (it is running while the ticker.txt file is updating)
-        dtype:
-        index:
-        header:
-        column:
-        rows:
         path: /ticker.txt
+        filetype: txt
+        keywords: log
+        description: A live file useful for determining whether the simulation is still running. It gets updated every TICKER_RATE seconds; if it is not updated, the simulation is not running.
+        structure: A txt file with datetime stamp (%Y-%m-%d %H:%M:%S) in one line)
         """
         with open(self.ticker_path, "w") as file:
             timestamp = time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime())

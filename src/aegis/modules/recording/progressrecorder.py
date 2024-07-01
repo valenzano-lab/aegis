@@ -49,17 +49,11 @@ class ProgressRecorder(Recorder):
         """
 
         # OUTPUT SPECIFICATION
-        filetype: txt
-        domain: log
-        short description:
-        long description:
-        content: stats of simulation progress
-        dtype: complex
-        index: none
-        header: step, ETA (estimated time until finished), t1M (time to run one million steps), runtime (runtime until the time of recording), stg/min (number of steps simulated per minute), popsize (population size)
-        column:
-        rows: one record
         path: /progress.log
+        filetype: txt
+        keywords: log
+        description: A table documenting the estimated time of simulation completion (ETA), time to run one million steps (t1M), time since simulation start (runtime), number of simulated steps per minute (stg/min) and population size (popsize).
+        structure: A str table with custom separator (` | `).
         """
         with open(self.odir / "progress.log", "ab") as f:
             np.savetxt(f, [content], fmt="%-10s", delimiter="| ")

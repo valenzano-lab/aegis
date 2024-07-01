@@ -14,17 +14,11 @@ class PickleRecorder(Recorder):
         """
 
         # OUTPUT SPECIFICATION
-        filetype: pickle
-        domain: log
-        short description:
-        long description:
-        content: pickled population
-        dtype: (not a matrix)
-        index: (not a matrix)
-        header: (not a matrix)
-        column: (not a matrix)
-        rows: (not a matrix)
         path: /pickles/{step}
+        filetype: pickle
+        keywords: log
+        description: A file that records the Population class instance which can be used to seed a future simulation.
+        structure: Binary python file.
         """
 
         step = hermes.get_step()

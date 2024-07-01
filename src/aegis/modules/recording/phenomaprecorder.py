@@ -20,17 +20,11 @@ class PhenomapRecorder(Recorder):
         """
 
         # OUTPUT SPECIFICATION
-        filetype: csv
-        domain: genotype
-        short description:
-        long description:
-        content: genotype-phenotype mapping
-        dtype: int
-        index: none
-        header: effector site index, affected trait, affected age, effect magnitude
-        column: a specification
-        rows: one effect of one site
         path: /phenomap.csv
+        filetype: csv
+        keywords: genotype
+        description: A static list of phenotypic effects of each genomic site. 
+        structure: A table with four columns: effector site index, affected trait, affected age, effect magnitude. Each row represents an effect of a single site on a specific trait expressed at a specific age.
         """
         architecture = hermes.architect.architecture
 

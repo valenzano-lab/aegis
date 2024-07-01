@@ -46,17 +46,11 @@ class VisorRecorder(Recorder):
         genotypes.csv | Record allele frequency
 
         # OUTPUT SPECIFICATION
-        filetype: csv
-        domain: genotype
-        short description:
-        long description:
-        content: allele frequencies across genome, across time
-        dtype: float
-        index: interval
-        header: two levels -- bit index, ploidy
-        column: site
-        rows: interval
         path: /visor/genotypes.csv
+        filetype: csv
+        keywords: genotype
+        description: A table of allele frequencies (frequency of 1's in the population for each site) across simulation intervals. Columns are sites, rows are simulation intervals (spanning VISOR_RATE steps).
+        structure: A float matrix.
         """
         with open(self.odir / "genotypes.csv", "ab") as f:
             array = population.genomes.flatten().mean(0)
@@ -67,17 +61,11 @@ class VisorRecorder(Recorder):
         phenotypes.csv | Record median phenotype
 
         # OUTPUT SPECIFICATION
-        filetype: csv
-        domain: phenotype
-        short description:
-        long description:
-        content: median phenotypes, across time
-        dtype: float
-        index:
-        header: two levels -- trait, age
-        column:
-        rows: interval
         path: /visor/genotypes.csv
+        filetype: csv
+        keywords: phenotype
+        description: A table of median intrinsic phenotypes (median phenotype rate for each trait at each age) across simulation intervals. Columns are traits, rows are simulation intervals (spanning VISOR_RATE steps).
+        structure: A float matrix
         """
         with open(self.odir / "phenotypes.csv", "ab") as f:
             array = np.median(population.phenotypes, 0)

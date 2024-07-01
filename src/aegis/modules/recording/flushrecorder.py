@@ -55,15 +55,11 @@ class FlushRecorder(Recorder):
         """
 
         # OUTPUT SPECIFICATION
-        filetype: csv
-        domain: demography
-        short description:
-        long description:
-        content: number of deaths by record index and age
-        dtype: int
-        columns: int; age
-        rows: int; record index
         path: /visor/spectra/age_at_{cause}.csv
+        filetype: csv
+        keywords: demography
+        description: Total number of deaths by age and cause of death, within a simulation interval.
+        structure: An int matrix.
         """
         with open(self.odir / f"{filename}.csv", "ab") as f:
             array = np.array(collected_values)
