@@ -172,12 +172,3 @@ OUTPUT_SPECIFICATIONS = [
         VisorRecorder.write_phenotypes,
     )
 ]
-
-
-def write_output_specifications_as_markdown_table(dict_list, path):
-    # Requires tabulate package
-    # dict_list like OUTPUT_SPECIFICATIONS; [{col1: val1, col2, val2, ...}, {col1: val1', col2: val2', ...}, ...]
-    df = pd.DataFrame(dict_list)
-    md = df.to_markdown()
-    with open(path, "w") as file_:
-        file_.writelines(md)
