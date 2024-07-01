@@ -55,7 +55,6 @@ class FeatherRecorder(Recorder):
         filetype: feather
         keywords: phenotype
         description: A snapshot of complete intrinsic phenotypes of all individuals at a certain simulation step.
-        long description:
         structure: A float matrix
         """
         # TODO bugged, wrong header

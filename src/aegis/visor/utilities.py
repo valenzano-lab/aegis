@@ -6,6 +6,8 @@ import yaml
 import logging
 import re
 
+import pandas as pd
+
 from dash import html, dcc
 
 from aegis.modules.initialization.parameterization.default_parameters import DEFAULT_PARAMETERS
@@ -109,6 +111,9 @@ def extract_output_specification_from_docstring(method):
     return parsed
 
 
+# def return_output_specifications_as_markdown_table(methods):
+
+
 def parse_visor_docstrings(text):
     pattern = r"(\[\[|\]\])"
     parts = re.split(pattern, text)
@@ -169,23 +174,10 @@ OUTPUT_SPECIFICATIONS = [
 ]
 
 
-def dict_to_markdown_table(data_dict):
-    # TODO update
-    # Define the headers of the table
-    headers = ["Format", "Content", "Dtype", "Columns", "Rows"]
-    # Create the table with headers
-    table = "| " + " | ".join(headers) + " |\n"
-    table += "| " + " | ".join(["---"] * len(headers)) + " |\n"
-
-    # Iterate through the dictionary and append each row to the table
-    for data in data_dict:
-        row = [
-            data.get("format", ""),
-            data.get("content", ""),
-            data.get("dtype", ""),
-            data.get("columns", ""),
-            data.get("rows", ""),
-        ]
-        table += "| " + " | ".join(row) + " |\n"
-
-    return table
+def write_output_specifications_as_markdown_table(dict_list, path):
+    # Requires tabulate package
+    # dict_list like OUTPUT_SPECIFICATIONS; [{col1: val1, col2, val2, ...}, {col1: val1', col2: val2', ...}, ...]
+    df = pd.DataFrame(dict_list)
+    md = df.to_markdown()
+    with open(path, "w") as file_:
+        file_.writelines(md)

@@ -43,6 +43,7 @@ setuptools.setup(
             "pytest==6.2.4",
             "flake8",
             "black",
+            "tabulate",
         ]
     },
 )

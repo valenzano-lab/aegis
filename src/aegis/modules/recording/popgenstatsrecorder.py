@@ -19,7 +19,6 @@ class PopgenStatsRecorder(Recorder):
         path: /popgen/{metric}.csv
         filetype: csv
         keywords: genotype
-        short description:
         structure:
         """
         hermes.modules.popgenstats.record_pop_size_history(genomes.array)
