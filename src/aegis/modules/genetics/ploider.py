@@ -37,6 +37,7 @@ class Ploider:
             A bool numpy array with shape (population size, genome length, BITS_PER_LOCUS)
         """
 
+        # TODO handle polyploidy too
         # compute homozygous (0, 1) or heterozygous (0.5)
         zygosity = loci.mean(1)
         mask = zygosity == 0.5
