@@ -5,6 +5,8 @@ from aegis.utilities.container import Container
 
 from aegis.visor.config import config
 
+from . import zip_button, folder_size
+
 
 @log_funcs.log_debug
 def make_table(selection_states={}, sim_data=None):
@@ -21,10 +23,12 @@ def make_table(selection_states={}, sim_data=None):
             html.Th("FINISHED"),
             html.Th("EXTINCT"),
             html.Th("RUNNING"),
+            html.Th("SIZE"),
             html.Th("ETA"),
             html.Th("FILEPATH"),
             html.Th("CONFIG FILE"),
             html.Th("DELETE", style={"padding-right": "1rem"}),
+            html.Th("ZIP DATA"),
         ],
     )
     table = [table_header]
@@ -110,12 +114,13 @@ def make_table_row(selection_state, sim_data, log, input_summary, output_summary
             html.Td(html.P(time_of_finishing)),
             html.Td(html.P(extinct)),
             html.Td(html.P(running)),
+            folder_size.get_layout(basepath),
             html.Td(html.P(eta if time_of_finishing is None else "       ")),
             html.Td(html.P(str(basepath), id={"type": "config-download-basepath", "index": filename})),
             html.Td(
                 children=[
                     html.Button(
-                        "config file",
+                        "download",
                         id={"type": "config-download-button", "index": filename},
                         value=filename,
                         # style={"padding-right": "1rem"},
@@ -135,6 +140,7 @@ def make_table_row(selection_state, sim_data, log, input_summary, output_summary
                 ),
                 style={"padding-right": "1rem"},
             ),
+            zip_button.get_layout(filename=filename),
         ],
     )
     return row

@@ -24,7 +24,9 @@ class Container:
     """
 
     def __init__(self, basepath):
-        self.basepath = pathlib.Path(basepath).absolute()
+        self.basepath = pathlib.Path(
+            basepath
+        ).absolute()  # If path to config file is /path/config.yml, then basepath is /path/config
         self.name = self.basepath.stem
         self.data = {}
         self.set_paths()
@@ -199,7 +201,7 @@ class Container:
     def get_fert_observed_interval(self):
         lt = self.get_life_table_observed_interval()
         bt = self.get_birth_table_observed_interval()
-        return (bt / lt)
+        return bt / lt
 
     ##########
     # BASICS #
@@ -239,7 +241,7 @@ class Container:
         value .. mean bit value
         """
         # TODO check that they exist
-        df = pd.read_csv(self._get_path("genotypes"), header=[0,1], index_col=None)
+        df = pd.read_csv(self._get_path("genotypes"), header=[0, 1], index_col=None)
         df.index = df.index.astype(int)
         df.columns = df.columns.set_levels([df.columns.levels[0].astype(int), df.columns.levels[1].astype(int)])
         df.index.names = ["interval"]

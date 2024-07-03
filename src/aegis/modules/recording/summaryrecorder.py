@@ -1,10 +1,11 @@
-import subprocess
 import json
 import time
 import psutil
 import numpy as np
 import pathlib
 import datetime
+
+from aegis.utilities.get_folder_size import get_folder_size_with_du
 
 from aegis.hermes import hermes
 from .recorder import Recorder
@@ -25,10 +26,10 @@ class SummaryRecorder(Recorder):
         self.memuse = []
         self.pp = psutil.Process()
 
-    @staticmethod
-    def get_folder_size_with_du(folder_path):
-        result = subprocess.run(["du", "-sh", folder_path], stdout=subprocess.PIPE, text=True)
-        return result.stdout.split()[0]
+    # @staticmethod
+    # def get_folder_size_with_du(folder_path):
+    #     result = subprocess.run(["du", "-sh", folder_path], stdout=subprocess.PIPE, text=True)
+    #     return result.stdout.split()[0]
 
     def write_output_summary(self):
         """
@@ -41,7 +42,7 @@ class SummaryRecorder(Recorder):
         structure: A json dictionary.
         """
         try:
-            storage_use = self.get_folder_size_with_du(self.odir)
+            storage_use = get_folder_size_with_du(self.odir)
         except:
             storage_use = ""
 
