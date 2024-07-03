@@ -39,9 +39,6 @@ class ParameterManager:
         params.update(custom_config_params)
         params.update(self.custom_input_params)
 
-        running_on_server = False  # TODO customize
-        ParameterManager.validate(params, validate_serverrange=running_on_server)
-
         # convert to types.SimpleNamespace
         params = types.SimpleNamespace(**params)
         logging.info("Final parameters to use in the simulation: " + repr(params) + ".")
