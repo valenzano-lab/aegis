@@ -1,6 +1,8 @@
 import dash
 from dash import html, dcc
 
+from . import run_simulation_button
+
 app_layout = html.Div(
     id="main-container",
     children=[
@@ -76,26 +78,7 @@ app_layout = html.Div(
                                     style={"display": "none"},
                                     children=[],
                                 ),
-                                html.Div(
-                                    id="sim-section-control",
-                                    style={"display": "flex"},
-                                    children=[
-                                        dcc.Input(
-                                            id="config-make-text",
-                                            className="control-element",
-                                            type="text",
-                                            placeholder="unique id",
-                                            autoComplete="off",
-                                        ),
-                                        html.Button(
-                                            "run simulation",
-                                            id="simulation-run-button",
-                                            className="control-element",
-                                        ),
-                                        html.P("", id="simulation-run-text"),
-                                        # html.Button("make config", id="config-make-button"),]
-                                    ],
-                                ),
+                                run_simulation_button.layout,
                                 html.Div(
                                     id="simlog-section-control",
                                     style={"display": "none"},
