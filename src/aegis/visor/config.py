@@ -9,6 +9,12 @@ class BaseConfig:
     can_delete_default_sim: bool
     default_selection_states: tuple
 
+    def can_run_more_simulations(self, currently_running):
+        if self.simulation_number_limit is None:
+            return True
+        else:
+            return self.simulation_number_limit > currently_running
+
 
 class LocalConfig(BaseConfig):
     env = "local"
@@ -34,8 +40,8 @@ config: Union[Type[LocalConfig], Type[ServerConfig], None] = None
 def set(environment: str):
     global config
     if environment == "local":
-        config = LocalConfig
+        config = LocalConfig()
     elif environment == "server":
-        config = ServerConfig
+        config = ServerConfig()
     else:
         raise ValueError("Invalid environment")

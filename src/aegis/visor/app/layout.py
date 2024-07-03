@@ -1,7 +1,7 @@
 import dash
 from dash import html, dcc
 
-from . import run_simulation_button
+from aegis.visor.pages.tab_config import run_simulation_button
 
 app_layout = html.Div(
     id="main-container",

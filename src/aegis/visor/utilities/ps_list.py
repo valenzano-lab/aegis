@@ -1,9 +1,14 @@
+"""Keeping track of running simulation processes"""
+
 import subprocess
 import re
 from typing import Set
 
+# TODO test this on different setups; is it picking up the python process line?
+
 
 def run_ps_af() -> Set[str]:
+    """Returns names of simulations whose processes are currently running"""
     config_files = set()
     try:
         # Run the 'ps -af' command
@@ -19,8 +24,3 @@ def run_ps_af() -> Set[str]:
         print(f"An error occurred: {e}")
 
     return config_files
-
-
-if __name__ == "__main__":
-    config_files = run_ps_af()
-    print(f"Found config files: {config_files}")
