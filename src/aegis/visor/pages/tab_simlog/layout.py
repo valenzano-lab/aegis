@@ -41,7 +41,7 @@ PREFACE = [
                 ],
                 style={"margin-bottom": "2rem"},
             ),
-            make_output_specification_table(),
+            # make_output_specification_table(),
         ],
     )
 ]
