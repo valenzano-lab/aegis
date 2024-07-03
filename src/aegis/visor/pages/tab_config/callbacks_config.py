@@ -1,5 +1,5 @@
 from dash import callback, Output, Input, State, ALL, MATCH, ctx
-from aegis.visor import utilities
+from aegis.visor.utilities import log_funcs, utilities
 import logging
 from aegis.visor.config import config
 
@@ -27,7 +27,7 @@ def is_input_in_valid_range(input_, param_name: str) -> bool:
     Input({"type": "config-input", "index": ALL}, "value"),
     State({"type": "config-input", "index": ALL}, "id"),
 )
-@utilities.log_debug
+@log_funcs.log_debug
 def disable_sim_button(filename, values, ids) -> bool:
     """
     Make simulation run button unclickable when any of these is true:
@@ -67,7 +67,7 @@ def disable_sim_button(filename, values, ids) -> bool:
     State({"type": "config-input", "index": MATCH}, "className"),
     prevent_initial_call=True,
 )
-@utilities.log_debug
+@log_funcs.log_debug
 def disable_config_input(value, className) -> str:
     """
     Change style of config input so that the user knows that the input value is outside of valid server range.

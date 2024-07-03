@@ -2,12 +2,14 @@ from dash import callback, Output, Input, ctx, ALL, State, MATCH
 
 import logging
 from aegis.utilities.container import Container
-from aegis.visor.utilities import log_debug, get_sim_dir
+from aegis.visor.utilities.utilities import get_sim_dir
+from aegis.visor.utilities.log_funcs import log_debug
 from aegis.visor.pages.tab_plot import prep_fig
 from aegis.visor.pages.tab_plot.prep_setup import FIG_SETUP, needs_slider
 from aegis.visor.pages.tab_plot import prep_x, prep_y
 
 from aegis.visor.config import config
+
 
 # TODO rewrite to take account for multi-page setup
 @callback(
@@ -18,7 +20,6 @@ from aegis.visor.config import config
 )
 @log_debug
 def disable_plot_tab(data, pathname, className):
-    print("yooo", pathname)
     className = className.replace(" disabled", "")
     if data == [] or all(not selected for filename, selected in data):
         return className + " disabled"

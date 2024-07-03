@@ -6,9 +6,7 @@ import yaml
 import logging
 import re
 
-import pandas as pd
-
-from dash import html, dcc
+from dash import html
 
 from aegis.modules.initialization.parameterization.default_parameters import DEFAULT_PARAMETERS
 
@@ -59,22 +57,6 @@ def make_config_file(filename, configs):
     config_path = get_config_path(filename)
     with open(config_path, "w") as file_:
         yaml.dump(configs, file_)
-
-
-def log_debug(func):
-    def wrapper(*args, **kwargs):
-        logging.debug(f"Executing function: {func.__name__}.")
-        return func(*args, **kwargs)
-
-    return wrapper
-
-
-def log_info(func):
-    def wrapper(*args, **kwargs):
-        logging.info(f"Executing function: {func.__name__}.")
-        return func(*args, **kwargs)
-
-    return wrapper
 
 
 def get_sim_paths():

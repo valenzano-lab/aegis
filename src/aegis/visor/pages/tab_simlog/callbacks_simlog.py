@@ -1,7 +1,7 @@
 from dash import callback, Output, Input, State, ALL, MATCH, ctx
 import subprocess
 import logging
-from aegis.visor import utilities
+from aegis.visor.utilities import log_funcs, utilities
 from aegis.visor.pages.tab_simlog.utilities import make_table
 import yaml
 
@@ -16,9 +16,8 @@ from aegis.utilities.container import Container
     Input("main-url", "pathname"),
     State({"type": "selection-state", "index": ALL}, "data"),
 )
-@utilities.log_debug
+@log_funcs.log_debug
 def show_sims(n_clicks1, pathname, data):
-    print("yooooo", pathname)
     if ctx.triggered_id is None:  # If initial call
         return [make_table(selection_states={"default": True}, sim_data=None)]
 
@@ -71,7 +70,7 @@ def disable_delete_simulation_button(n_clicks):
     Input({"type": "display-button", "index": MATCH}, "n_clicks"),
     State({"type": "selection-state", "index": MATCH}, "data"),
 )
-@utilities.log_debug
+@log_funcs.log_debug
 def click_display_button(n_clicks, data):
     if n_clicks is None:
         return data
@@ -84,7 +83,7 @@ def click_display_button(n_clicks, data):
     Output({"type": "display-button", "index": MATCH}, "className"),
     Input({"type": "selection-state", "index": MATCH}, "data"),
 )
-@utilities.log_debug
+@log_funcs.log_debug
 def stylize_display_buttons(data):
     selected = data[1]
     if selected:
@@ -100,7 +99,7 @@ def stylize_display_buttons(data):
     Input({"type": "selection-state", "index": MATCH}, "data"),
     State({"type": "sim-data", "index": MATCH}, "data"),
 )
-@utilities.log_debug
+@log_funcs.log_debug
 def load_data(selection_state, data):
     filename, selected = selection_state
     if selected and data is None:

@@ -1,13 +1,13 @@
 import dash
 
 from dash import html, dcc
-from aegis.visor import utilities
+from aegis.visor.utilities import log_funcs
 from aegis.documentation.documenter import Documenter
 
 dash.register_page(__name__, name="landing", path="/")
 
 
-@utilities.log_debug
+@log_funcs.log_debug
 def get_landing_layout():
     return html.Div(
         id="landing-section",

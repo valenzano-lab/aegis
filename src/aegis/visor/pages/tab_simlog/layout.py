@@ -1,14 +1,14 @@
 import dash
 from dash import html, dcc, dash_table
-from aegis.visor import utilities
+from aegis.visor.utilities import log_funcs
 
-from aegis.visor.utilities import OUTPUT_SPECIFICATIONS
+from aegis.visor.utilities.utilities import OUTPUT_SPECIFICATIONS
 
 
 dash.register_page(__name__, path="/simlog", name="simlog")
 
 
-@utilities.log_debug
+@log_funcs.log_debug
 def make_output_specification_table():
     """
 
@@ -47,7 +47,7 @@ PREFACE = [
 ]
 
 
-@utilities.log_debug
+@log_funcs.log_debug
 def get_list_layout():
     # selection_states = [
     #     dcc.Store({"type": "selection-state", "index": sim}, data=False)

@@ -1,7 +1,7 @@
 import dash
 
 from dash import html, dcc
-from aegis.visor import utilities
+from aegis.visor.utilities import log_funcs, utilities
 from aegis.modules.initialization.parameterization.default_parameters import DEFAULT_PARAMETERS
 from aegis.modules.initialization.parameterization.parameter import Parameter
 
@@ -77,7 +77,7 @@ HEADER = html.Tr(
 )
 
 
-@utilities.log_debug
+@log_funcs.log_debug
 def get_config_layout() -> html.Div:
     # Group parameters by domain
     subsets = {domain: [] for domain in TEXTS_DOMAIN.keys()}
@@ -170,7 +170,7 @@ def get_input_element(param):
     return
 
 
-# @utilities.log_debug
+# @log_funcs.log_debug
 def get_row(v: Parameter) -> html.Tr:
     if v.serverrange_info:
         serverrange_info_message = f"Allowed parameter range for the server is {v.serverrange_info}."
@@ -212,7 +212,7 @@ def get_row(v: Parameter) -> html.Tr:
     )
 
 
-@utilities.log_debug
+@log_funcs.log_debug
 def get_table(params_subset) -> html.Table:
     return html.Table(
         className="config-table",

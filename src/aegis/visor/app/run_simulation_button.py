@@ -1,5 +1,5 @@
 from dash import html, dcc, callback, Output, Input, State, ALL
-from aegis.visor import utilities
+from aegis.visor.utilities import log_funcs, utilities
 from aegis.modules.initialization.parameterization.default_parameters import DEFAULT_PARAMETERS
 
 layout = html.Div(
@@ -40,7 +40,7 @@ def decode_config_tab_values(values, ids_):
     State({"type": "config-input", "index": ALL}, "id"),
     prevent_initial_call=True,
 )
-@utilities.log_debug
+@log_funcs.log_debug
 def click_sim_button(n_clicks, filename, values, ids_):
     """
     Run simulation when sim button clicked (also, implicitly, not disabled).

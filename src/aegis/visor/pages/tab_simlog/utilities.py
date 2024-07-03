@@ -1,12 +1,12 @@
 from dash import html, dcc, dash_table
-from aegis.visor import utilities
+from aegis.visor.utilities import log_funcs, utilities
 import datetime
 from aegis.utilities.container import Container
 
 from aegis.visor.config import config
 
 
-@utilities.log_debug
+@log_funcs.log_debug
 def make_table(selection_states={}, sim_data=None):
     # Get data from folders
     paths = utilities.get_sim_paths()
@@ -49,7 +49,7 @@ def make_table(selection_states={}, sim_data=None):
     return html.Table(children=table, id="simlog-table")
 
 
-# @utilities.log_debug
+# @log_funcs.log_debug
 def make_table_row(selection_state, sim_data, log, input_summary, output_summary, basepath, filename, ticker_stopped):
     if len(log) > 0:
         logline = log.iloc[-1].to_dict()

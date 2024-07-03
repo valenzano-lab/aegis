@@ -1,5 +1,5 @@
 from dash import callback, Output, Input, ctx
-from aegis.visor import utilities
+from aegis.visor.utilities import log_funcs
 
 
 # @callback(
@@ -17,7 +17,7 @@ from aegis.visor import utilities
 #     Input("plot-view-button", "n_clicks"),
 #     prevent_initial_call=True,
 # )
-# @utilities.log_info
+# @log_funcs.log_info
 # def toggle_display(*_):
 #     triggered = ctx.triggered_id.split("-")[0]
 #     styles = {

@@ -6,7 +6,7 @@ Functions for dynamic generation of documentation from source code.
 import pathlib
 import pandas as pd
 from aegis.modules.initialization.parameterization.default_parameters import DEFAULT_PARAMETERS
-from aegis.visor.utilities import OUTPUT_SPECIFICATIONS  # already dict_list
+from aegis.visor.utilities.utilities import OUTPUT_SPECIFICATIONS  # already dict_list
 
 here = pathlib.Path(__file__).parent
 
