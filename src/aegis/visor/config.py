@@ -8,6 +8,7 @@ class BaseConfig:
     simulation_number_limit: Optional[int]
     can_delete_default_sim: bool
     default_selection_states: tuple
+    data_retention_days: int
 
     def can_run_more_simulations(self, currently_running):
         if self.simulation_number_limit is None:
@@ -23,6 +24,7 @@ class LocalConfig(BaseConfig):
     simulation_number_limit = None
     can_delete_default_sim = False
     default_selection_states = (["default", True],)
+    data_retention_days = 365
 
 
 class ServerConfig(BaseConfig):
@@ -32,6 +34,9 @@ class ServerConfig(BaseConfig):
     simulation_number_limit = 3
     can_delete_default_sim = False
     default_selection_states = (["default", True],)
+    data_retention_days = (
+        7  # input_summary.json, created during simulation initialization, contains the time when a simulation started
+    )
 
 
 config: Union[Type[LocalConfig], Type[ServerConfig], None] = None

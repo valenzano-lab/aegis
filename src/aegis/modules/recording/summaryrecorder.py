@@ -4,6 +4,7 @@ import time
 import psutil
 import numpy as np
 import pathlib
+import datetime
 
 from aegis.hermes import hermes
 from .recorder import Recorder
@@ -70,6 +71,7 @@ class SummaryRecorder(Recorder):
             # "extinct": extinct,
             "random_seed": hermes.random_seed,
             "time_start": self.time_start,
+            "time_start_formatted": datetime.datetime.fromtimestamp(self.time_start).strftime("%Y-%m-%d %H:%M:%S"),
             # "time_end": time.time(),
             "jupyter_path": str(self.odir.absolute()),  # TODO remove?
         }
