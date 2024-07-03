@@ -51,7 +51,8 @@ def is_input_in_serverrange(input_, param_name: str) -> bool:
     param = utilities.DEFAULT_PARAMETERS[param_name]
     input_ = param.convert(input_)
     in_serverrange = param.serverrange(input_)
-    return in_serverrange
+    in_inrange = param.inrange(input_)
+    return in_serverrange and in_inrange
 
 
 @callback(
