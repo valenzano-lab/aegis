@@ -1,6 +1,7 @@
 from dash import callback, Output, Input, State, ALL, MATCH, ctx
 from aegis.visor import utilities
 import logging
+from aegis.visor.config import config
 
 
 def is_sim_name_valid(sim_name: str) -> bool:
@@ -10,8 +11,13 @@ def is_sim_name_valid(sim_name: str) -> bool:
 def is_input_in_valid_range(input_, param_name: str) -> bool:
     param = utilities.DEFAULT_PARAMETERS[param_name]
     input_ = param.convert(input_)
-    in_serverrange = param.serverrange(input_)
     in_inrange = param.inrange(input_)
+
+    if config.env == "server":
+        in_serverrange = param.serverrange(input_)
+    else:
+        in_serverrange = True
+
     return in_serverrange and in_inrange
 
 

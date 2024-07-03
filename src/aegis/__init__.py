@@ -57,4 +57,4 @@ def run_from_server_visor():
 
 
 def run_from_local_visor():
-    visor.run(environment="dev")
+    visor.run(environment="local")
