@@ -2,11 +2,12 @@ from dash import callback, Output, Input, ctx, ALL, State, MATCH
 
 import logging
 from aegis.utilities.container import Container
-from aegis.visor.utilities import default_selection_states, log_debug, get_sim_dir
+from aegis.visor.utilities import log_debug, get_sim_dir
 from aegis.visor.pages.tab_plot import prep_fig
 from aegis.visor.pages.tab_plot.prep_setup import FIG_SETUP, needs_slider
 from aegis.visor.pages.tab_plot import prep_x, prep_y
 
+from aegis.visor.config import config
 
 # TODO rewrite to take account for multi-page setup
 @callback(
@@ -127,7 +128,7 @@ def update_plot_tab(n_clicks, selection_states, drag_maxs):
     #     return
     # If initial call, run the function so that the figures get initialized
     if ctx.triggered_id is None:  # if initial call
-        selection_states = list(default_selection_states)
+        selection_states = list(config.default_selection_states)
 
     containers = {}
     base_dir = get_sim_dir()

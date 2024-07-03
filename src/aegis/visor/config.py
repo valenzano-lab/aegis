@@ -6,6 +6,8 @@ class LocalConfig:
     debug = True
     loglevel = "debug"
     simulation_number_limit = None
+    can_delete_default_sim = False
+    default_selection_states = (["default", True],)
 
 
 class ServerConfig:
@@ -13,6 +15,8 @@ class ServerConfig:
     debug = False
     loglevel = "info"
     simulation_number_limit = 3
+    can_delete_default_sim = False
+    default_selection_states = (["default", True],)
 
 
 def set(environment):

@@ -3,7 +3,7 @@ from aegis.visor import utilities
 import datetime
 from aegis.utilities.container import Container
 
-CAN_DELETE_DEFAULT = True
+from aegis.visor.config import config
 
 
 @utilities.log_debug
@@ -130,7 +130,7 @@ def make_table_row(selection_state, sim_data, log, input_summary, output_summary
                         id={"type": "delete-simulation-button", "index": filename},
                         value=filename,
                     )
-                    if ~CAN_DELETE_DEFAULT or filename != "default"
+                    if ~config.can_delete_default_sim or filename != "default"
                     else None
                 ),
                 style={"padding-right": "1rem"},
