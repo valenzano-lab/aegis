@@ -29,4 +29,4 @@ def run(environment):
     app._favicon = "favicon.ico"
     app.title = "AEGIS visualizer"
     app.layout = app_layout
-    app.run(debug=config.config.debug)
+    app.run(debug=config.config.debug_mode)

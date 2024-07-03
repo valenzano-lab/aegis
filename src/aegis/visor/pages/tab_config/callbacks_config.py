@@ -78,8 +78,8 @@ def disable_config_input(value, className) -> str:
     param_name = ctx.triggered_id["index"]
     className = className.replace(" disabled", "")
 
-    in_serverrange = is_input_in_valid_range(input_=value, param_name=param_name)
-    if not in_serverrange:
+    in_valid_range = is_input_in_valid_range(input_=value, param_name=param_name)
+    if not in_valid_range:
         className += " disabled"
 
     return className
