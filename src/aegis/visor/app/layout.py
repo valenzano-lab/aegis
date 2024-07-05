@@ -1,7 +1,6 @@
 import dash
 from dash import html, dcc
 
-from aegis.visor.pages.tab_config import run_simulation_button
 
 app_layout = html.Div(
     id="main-container",
@@ -24,93 +23,24 @@ app_layout = html.Div(
                                 "margin-right": "2rem",
                             },
                             children=[
-                                html.H1("aegis"),
-                                # html.Div(
-                                #     [
-                                #         html.Img(src="assets/sim.svg", className="svg-plot"),
-                                #         html.Label("home"),
-                                #         # html.Button("config view", id="config-view-button"),
-                                #     ],
-                                #     id="landing-view-button",
-                                #     className="view-button",
-                                # ),
-                                # html.Div(
-                                #     [
-                                #         html.Img(src="assets/sim.svg", className="svg-plot"),
-                                #         html.Label("run"),
-                                #         # html.Button("config view", id="config-view-button"),
-                                #     ],
-                                #     id="config-view-button",
-                                #     className="view-button",
-                                # ),
-                                # html.Div(
-                                #     [
-                                #         html.Img(
-                                #             src="assets/list.svg",
-                                #             className="svg-plot",
-                                #             style={
-                                #                 "width": "30px",
-                                #                 "height": "34px",
-                                #                 "margin-top": "-2px",
-                                #             },
-                                #         ),
-                                #         html.Label("list"),
-                                #         # html.Button("list view", id="simlog-view-button"),
-                                #     ],
-                                #     id="simlog-view-button",
-                                #     className="view-button",
-                                # ),
-                                # html.Div(
-                                #     [
-                                #         html.Img(src="assets/plot.svg", className="svg-plot"),
-                                #         html.Label("plot"),
-                                #         # html.Button("plot view", id="plot-view-button"),
-                                #     ],
-                                #     id="plot-view-button",
-                                #     className="view-button",
-                                # ),
-                            ],
-                        ),
-                        html.Div(
-                            children=[
-                                html.Div(
-                                    id="landing-section-control",
-                                    style={"display": "none"},
-                                    children=[],
-                                ),
-                                run_simulation_button.layout,
-                                html.Div(
-                                    id="simlog-section-control",
-                                    style={"display": "none"},
-                                    children=[],
-                                ),
-                                html.Div(
-                                    id="plot-section-control",
-                                    style={
-                                        "display": "none",
-                                    },
-                                    children=[
-                                        html.Button(
-                                            "reload",
-                                            "reload-plots-button",
-                                            className="control-element",
-                                        ),
-                                    ],
-                                ),
+                                html.H1(dcc.Link("aegis", href="/")),
                             ],
                         ),
                     ],
                 ),
             ],
         ),
-        html.Div([dcc.Link(page["name"] + " ", href=page["path"]) for page in dash.page_registry.values()]),
+        html.Div(
+            [
+                dcc.Link("home", href="/", id="link-nav-home"),
+                dcc.Link("config", href="config", id="link-nav-config"),
+                dcc.Link("plot", href="plot", id="link-nav-plot"),
+                dcc.Link("simlog", href="simlog", id="link-nav-simlog"),
+                dcc.Link("wiki", href="wiki", id="link-nav-wiki"),
+            ],
+        ),
         dash.page_container,
         html.Hr(),
-        # TABS
-        # get_landing_layout(),
-        # get_config_layout(),
-        # get_list_layout(),
-        # get_plot_layout(),
         # FOOTER SECTION
         html.Div(
             [

@@ -2,6 +2,7 @@ import dash
 
 from dash import html, dcc
 from aegis.visor.utilities import log_funcs, utilities
+from aegis.visor.pages.tab_config import run_simulation_button
 from aegis.modules.initialization.parameterization.default_parameters import DEFAULT_PARAMETERS
 from aegis.modules.initialization.parameterization.parameter import Parameter
 
@@ -44,6 +45,7 @@ TEXTS_DOMAIN = {
 PREFACE = [
     html.Div(
         children=[
+            run_simulation_button.layout,
             # TODO change text
             html.P(
                 [
@@ -61,7 +63,7 @@ PREFACE = [
                     """,
                 ],
                 style={"margin-bottom": "2rem"},
-            )
+            ),
         ],
     )
 ]
