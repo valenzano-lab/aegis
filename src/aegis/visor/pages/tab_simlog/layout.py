@@ -4,6 +4,8 @@ from aegis.visor.utilities import log_funcs
 
 from aegis.visor.utilities.utilities import OUTPUT_SPECIFICATIONS
 
+from aegis.visor.pages.tab_simlog.utilities import generate_initial_simlog
+
 
 dash.register_page(__name__, path="/simlog", name="simlog")
 
@@ -48,20 +50,14 @@ PREFACE = [
 
 
 @log_funcs.log_debug
-def get_list_layout():
-    # selection_states = [
-    #     dcc.Store({"type": "selection-state", "index": sim}, data=False)
-    #     for sim in funcs.get_sims()
-    # ]
+def get_simlog_layout():
     return html.Div(
         id="simlog-section",
-        # style={"display": "none"},
         children=PREFACE
         + [
-            # html.Div(id="selection-states", children=selection_states),
-            html.Div(id="simlog-section-table", children=[]),
+            html.Div(id="simlog-section-table", children=generate_initial_simlog()),
         ],
     )
 
 
-layout = get_list_layout()
+layout = get_simlog_layout()

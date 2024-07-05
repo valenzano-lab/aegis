@@ -6,7 +6,7 @@ from aegis.visor.utilities import log_funcs
 
 
 @log_funcs.log_debug
-def get_layout(filename):
+def get_zip_button_layout(filename):
     return html.Td(
         children=[
             html.Button(
@@ -30,7 +30,6 @@ def generate_zip(n_clicks, basepath):
     if n_clicks is None:
         return
     folder_path = pathlib.Path(basepath)
-    print(folder_path)
     zip_buffer = zip_folder(folder_path)
     return dcc.send_bytes(zip_buffer.getvalue(), f"{folder_path.name}.zip")
 

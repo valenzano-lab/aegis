@@ -5,6 +5,6 @@ from aegis.visor.utilities import log_funcs
 
 
 @log_funcs.log_debug
-def get_layout(path: pathlib.Path):
+def get_simlog_layout(path: pathlib.Path):
     folder_size = get_folder_size_with_du(path)
     return html.Td(html.P(folder_size))

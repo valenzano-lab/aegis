@@ -9,8 +9,7 @@ from . import zip_button, folder_size
 
 
 @log_funcs.log_debug
-def make_table(selection_states={}, sim_data=None):
-    # Get data from folders
+def make_simlog_table():
     paths = utilities.get_sim_paths()
 
     # Make table
@@ -18,7 +17,6 @@ def make_table(selection_states={}, sim_data=None):
     table_header = html.Tr(
         [
             html.Th("ID", style={"padding-left": "1.3rem", "padding-right": "0.8rem"}),
-            html.Th("DISPLAY"),
             html.Th("CREATED"),
             html.Th("FINISHED"),
             html.Th("EXTINCT"),
@@ -37,10 +35,7 @@ def make_table(selection_states={}, sim_data=None):
     for path in paths:
         container = Container(path)
         filename = container.basepath.stem
-        selection_state = selection_states.get(filename, False)
         element = make_table_row(
-            selection_state=selection_state,
-            sim_data=sim_data,
             log=container.get_log(),
             input_summary=container.get_input_summary(),
             output_summary=container.get_output_summary(),
@@ -54,7 +49,7 @@ def make_table(selection_states={}, sim_data=None):
 
 
 # @log_funcs.log_debug
-def make_table_row(selection_state, sim_data, log, input_summary, output_summary, basepath, filename, ticker_stopped):
+def make_table_row(log, input_summary, output_summary, basepath, filename, ticker_stopped):
     if len(log) > 0:
         logline = log.iloc[-1].to_dict()
     else:
@@ -86,35 +81,15 @@ def make_table_row(selection_state, sim_data, log, input_summary, output_summary
     row = html.Tr(
         id={"type": "simlog-table-row", "index": filename},
         children=[
-            dcc.Store(
-                {"type": "selection-state", "index": filename},
-                data=(filename, selection_state),
-            ),
-            dcc.Store(
-                {"type": "sim-data", "index": filename},
-                data=sim_data,
-            ),
             html.Td(
                 filename,
                 style={"padding-left": "1.3rem", "padding-right": "0.8rem"},
-            ),
-            html.Td(
-                children=[
-                    html.Button(
-                        children="display",
-                        id={
-                            "type": "display-button",
-                            "index": filename,
-                        },
-                        className="checklist checked" if selection_state else "checklist",
-                    ),
-                ]
             ),
             html.Td(html.P(time_of_creation)),
             html.Td(html.P(time_of_finishing)),
             html.Td(html.P(extinct)),
             html.Td(html.P(running)),
-            folder_size.get_layout(basepath),
+            folder_size.get_simlog_layout(basepath),
             html.Td(html.P(eta if time_of_finishing is None else "       ")),
             html.Td(html.P(str(basepath), id={"type": "config-download-basepath", "index": filename})),
             html.Td(
@@ -140,7 +115,11 @@ def make_table_row(selection_state, sim_data, log, input_summary, output_summary
                 ),
                 style={"padding-right": "1rem"},
             ),
-            zip_button.get_layout(filename=filename),
+            zip_button.get_zip_button_layout(filename=filename),
         ],
     )
     return row
+
+
+def generate_initial_simlog():
+    return [make_simlog_table()]

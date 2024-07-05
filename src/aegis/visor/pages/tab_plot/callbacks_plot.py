@@ -3,29 +3,29 @@ from dash import callback, Output, Input, ctx, ALL, State, MATCH
 import logging
 from aegis.utilities.container import Container
 from aegis.visor.utilities.utilities import get_sim_dir
-from aegis.visor.utilities.log_funcs import log_debug
+from aegis.visor.utilities import log_funcs
 from aegis.visor.pages.tab_plot import prep_fig
 from aegis.visor.pages.tab_plot.prep_setup import FIG_SETUP, needs_slider
-from aegis.visor.pages.tab_plot import prep_x, prep_y
 
 from aegis.visor.config import config
 
 
-# TODO rewrite to take account for multi-page setup
-@callback(
-    Output("plot-view-button", "className"),
-    Input({"type": "selection-state", "index": ALL}, "data"),
-    Input("main-url", "pathname"),
-    State("plot-view-button", "className"),
-)
-@log_debug
-def disable_plot_tab(data, pathname, className):
-    className = className.replace(" disabled", "")
-    if data == [] or all(not selected for filename, selected in data):
-        return className + " disabled"
-    return className
+# TODO Disable access to plot page unless a simulation is chosen which is to be plotted
+# @callback(
+#     Output("plot-view-button", "className"),
+#     Input({"type": "selection-state", "index": ALL}, "data"),
+#     Input("main-url", "pathname"),
+#     State("plot-view-button", "className"),
+# )
+# @log_funcs.log_debug
+# def disable_plot_tab(data, pathname, className):
+#     className = className.replace(" disabled", "")
+#     if data == [] or all(not selected for filename, selected in data):
+#         return className + " disabled"
+#     return className
 
 
+@log_funcs.log_debug
 def gen_fig(fig_name, selected_sims, containers, iloc):
     """Generates a figure using the figure setup"""
 
@@ -64,6 +64,7 @@ def gen_fig(fig_name, selected_sims, containers, iloc):
     Input({"type": "graph-slider", "index": MATCH}, "drag_value"),
     State({"type": "selection-state", "index": ALL}, "data"),
 )
+@log_funcs.log_debug
 def update_plot_on_sliding(drag_value, selection_states):
     if ctx.triggered_id is None:
         return None
@@ -109,6 +110,16 @@ def update_plot_on_sliding(drag_value, selection_states):
 #     return new_maxs
 
 
+@callback(
+    Output("dropdown", "value"),
+    Input("dropdown", "value"),
+)
+@log_funcs.log_debug
+def triggered_dropdown(value):
+    print(value, "oy")
+    return value
+
+
 # BUG plot when triggered to plot
 @callback(
     [Output({"type": "graph-figure", "index": key}, "figure", allow_duplicate=True) for key in FIG_SETUP.keys()]
@@ -120,16 +131,16 @@ def update_plot_on_sliding(drag_value, selection_states):
     State({"type": "graph-slider", "index": ALL}, "max"),
     prevent_initial_call=True,
 )
-@log_debug
+@log_funcs.log_debug
 def update_plot_tab(n_clicks, selection_states, drag_maxs):
     """
     Update plots whenever someone clicks on the plot button or the reload button.
     """
-    # if pathname != "/plot":
-    #     return
     # If initial call, run the function so that the figures get initialized
     if ctx.triggered_id is None:  # if initial call
         selection_states = list(config.default_selection_states)
+
+    logging.debug(f"oyyyyyyyyyyyy: {selection_states}")
 
     containers = {}
     base_dir = get_sim_dir()
