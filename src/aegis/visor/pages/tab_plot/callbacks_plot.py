@@ -10,21 +10,6 @@ from aegis.visor.pages.tab_plot.prep_setup import FIG_SETUP, needs_slider
 from aegis.visor.config import config
 
 
-# TODO Disable access to plot page unless a simulation is chosen which is to be plotted
-# @callback(
-#     Output("plot-view-button", "className"),
-#     Input({"type": "selection-state", "index": ALL}, "data"),
-#     Input("main-url", "pathname"),
-#     State("plot-view-button", "className"),
-# )
-# @log_funcs.log_debug
-# def disable_plot_tab(data, pathname, className):
-#     className = className.replace(" disabled", "")
-#     if data == [] or all(not selected for filename, selected in data):
-#         return className + " disabled"
-#     return className
-
-
 @log_funcs.log_debug
 def gen_fig(fig_name, selected_sims, containers, iloc):
     """Generates a figure using the figure setup"""
@@ -59,33 +44,33 @@ def gen_fig(fig_name, selected_sims, containers, iloc):
     return figure, max_iloc
 
 
-@callback(
-    Output({"type": "graph-figure", "index": MATCH}, "figure"),
-    Input({"type": "graph-slider", "index": MATCH}, "drag_value"),
-    State({"type": "selection-state", "index": ALL}, "data"),
-)
-@log_funcs.log_debug
-def update_plot_on_sliding(drag_value, selection_states):
-    if ctx.triggered_id is None:
-        return None
+# @callback(
+#     Output({"type": "graph-figure", "index": MATCH}, "figure"),
+#     Input({"type": "graph-slider", "index": MATCH}, "drag_value"),
+#     State({"type": "selection-state", "index": ALL}, "data"),
+# )
+# @log_funcs.log_debug
+# def update_plot_on_sliding(drag_value, selection_states):
+#     if ctx.triggered_id is None:
+#         return None
 
-    fig_name = ctx.triggered_id["index"]
+#     fig_name = ctx.triggered_id["index"]
 
-    containers = {}
-    base_dir = get_sim_dir()
-    for filename, selected in selection_states:
-        if selected and filename not in containers:
-            results_path = base_dir / filename
-            logging.info(f"Fetching data from {results_path}.")
-            containers[filename] = Container(base_dir / filename)
+#     containers = {}
+#     base_dir = get_sim_dir()
+#     for filename, selected in selection_states:
+#         if selected and filename not in containers:
+#             results_path = base_dir / filename
+#             logging.info(f"Fetching data from {results_path}.")
+#             containers[filename] = Container(base_dir / filename)
 
-    selected_sims = [filename for filename, selected in selection_states if selected]
-    logging.info(f"Plotting {fig_name} at t={drag_value} : " + ", ".join(selected_sims) + ".")
+#     selected_sims = [filename for filename, selected in selection_states if selected]
+#     logging.info(f"Plotting {fig_name} at t={drag_value} : " + ", ".join(selected_sims) + ".")
 
-    # Prepare figures
-    # BUG no data saved yet on running simulations or interrupted simulations
-    figure, max_iloc = gen_fig(fig_name, selected_sims, containers, iloc=drag_value)
-    return figure
+#     # Prepare figures
+#     # BUG no data saved yet on running simulations or interrupted simulations
+#     figure, max_iloc = gen_fig(fig_name, selected_sims, containers, iloc=drag_value)
+#     return figure
 
 
 # @callback(
@@ -111,13 +96,33 @@ def update_plot_on_sliding(drag_value, selection_states):
 
 
 @callback(
-    Output("dropdown", "value"),
+    # [Output({"type": "graph-figure", "index": key}, "figure", allow_duplicate=True) for key in FIG_SETUP.keys()],
+    Output({"type": "graph-figure", "index": "intrinsic mortality"}, "figure", allow_duplicate=True),
     Input("dropdown", "value"),
+    prevent_initial_call=True,
 )
 @log_funcs.log_debug
-def triggered_dropdown(value):
-    print(value, "oy")
-    return value
+def triggered_dropdown(simnames):
+    print(f"plotting {simnames}")
+
+    base_dir = get_sim_dir()
+    containers = {simname: Container(base_dir / simname) for simname in simnames}
+
+    drag_maxs = []
+    figures = []
+    # for fig_name in FIG_SETUP:
+    for fig_name in [
+        "intrinsic mortality",
+    ]:
+        figure, max_iloc = gen_fig(fig_name, simnames, containers, iloc=-1)
+        figures.append(figure)
+        if needs_slider(fig_name):
+            drag_maxs.append(max_iloc)
+            assert max_iloc is not None
+
+    # Prepare figures
+    # BUG no data saved yet on running simulations or interrupted simulations
+    return figures[0]
 
 
 # BUG plot when triggered to plot
@@ -139,8 +144,6 @@ def update_plot_tab(n_clicks, selection_states, drag_maxs):
     # If initial call, run the function so that the figures get initialized
     if ctx.triggered_id is None:  # if initial call
         selection_states = list(config.default_selection_states)
-
-    logging.debug(f"oyyyyyyyyyyyy: {selection_states}")
 
     containers = {}
     base_dir = get_sim_dir()

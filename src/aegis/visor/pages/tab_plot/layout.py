@@ -1,35 +1,50 @@
 import dash
 from dash import html, dcc
 from aegis.visor.pages.tab_plot.prep_setup import FIG_SETUP, needs_slider
+from aegis.visor.utilities import log_funcs, utilities
+from aegis.utilities.container import Container
 
 dash.register_page(__name__, path="/plot", name="plot")
 
-PREFACE = [
-    html.Div(
-        children=[
-            # TODO change text
-            html.P(
-                [
-                    """
-                    This is the plot tab. Here you can explore the simulation visually.
-                    You can also download the figures and the data used for plotting.
-                    The figures are interactive – if multiple simulations are displayed, you can click on
-                    simulation IDs to toggle their visibility; you can also zoom in and out.
-                    For figures that show time-specific data, you can use sliders to change the time point plotted.
-                    """,
-                ],
-                style={"margin-bottom": "2rem"},
-            )
-        ],
-    )
-]
+
+def get_preface():
+    simnames = [Container(path).basepath.stem for path in utilities.get_sim_paths()]
+    dropdown_options = [simname for simname in simnames]
+
+    preface = [
+        html.Div(
+            children=[
+                # TODO change text
+                html.P(
+                    [
+                        """
+                        This is the plot tab. Here you can explore the simulation visually.
+                        You can also download the figures and the data used for plotting.
+                        The figures are interactive – if multiple simulations are displayed, you can click on
+                        simulation IDs to toggle their visibility; you can also zoom in and out.
+                        For figures that show time-specific data, you can use sliders to change the time point plotted.
+                        """,
+                    ],
+                    style={"margin-bottom": "2rem"},
+                ),
+                html.Button(
+                    "reload",
+                    "reload-plots-button",
+                    className="control-element",
+                ),
+                dcc.Dropdown(id="dropdown", options=dropdown_options, value=[], multi=True),
+            ],
+        )
+    ]
+    return preface
 
 
+@log_funcs.log_debug
 def get_plot_layout():
     return html.Div(
         id="plot-section",
         # style={"display": "none"},
-        children=PREFACE
+        children=get_preface()
         + [
             html.Div(
                 id="figure-container",
