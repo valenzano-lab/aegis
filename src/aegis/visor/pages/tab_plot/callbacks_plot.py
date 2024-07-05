@@ -96,8 +96,7 @@ def gen_fig(fig_name, selected_sims, containers, iloc):
 
 
 @callback(
-    # [Output({"type": "graph-figure", "index": key}, "figure", allow_duplicate=True) for key in FIG_SETUP.keys()],
-    Output({"type": "graph-figure", "index": "intrinsic mortality"}, "figure", allow_duplicate=True),
+    [Output({"type": "graph-figure", "index": key}, "figure", allow_duplicate=True) for key in FIG_SETUP.keys()],
     Input("dropdown", "value"),
     prevent_initial_call=True,
 )
@@ -110,10 +109,7 @@ def triggered_dropdown(simnames):
 
     drag_maxs = []
     figures = []
-    # for fig_name in FIG_SETUP:
-    for fig_name in [
-        "intrinsic mortality",
-    ]:
+    for fig_name in FIG_SETUP:
         figure, max_iloc = gen_fig(fig_name, simnames, containers, iloc=-1)
         figures.append(figure)
         if needs_slider(fig_name):
@@ -122,7 +118,7 @@ def triggered_dropdown(simnames):
 
     # Prepare figures
     # BUG no data saved yet on running simulations or interrupted simulations
-    return figures[0]
+    return figures
 
 
 # BUG plot when triggered to plot

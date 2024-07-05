@@ -9,26 +9,26 @@ def needs_slider(fig_name):
 
 
 FIG_SETUP = {
-    # "bit states": {
-    #     "title": "bit states",
-    #     "prep_y": prep_y.get_bit_states,
-    #     "prep_x": prep_x.get_steps,
-    #     "prep_figure": "make_heatmap_figure",
-    #     "description": dcc.Markdown(
-    #         """
-    #         Bit states for each site at a given step.
-    #         \n
-    #         Population averages. Interval averages.
-    #         """,
-    #         mathjax=True,
-    #     ),
-    #     "timespecific": True,
-    #     # graph
-    #     "figure_layout": {
-    #         "xaxis_title": "simulation step",
-    #         "yaxis_title": "genome site",
-    #     },
-    # },
+    "bit states": {
+        "title": "bit states",
+        "prep_y": prep_y.get_bit_states,
+        "prep_x": prep_x.get_steps,
+        "prep_figure": "make_heatmap_figure",
+        "description": dcc.Markdown(
+            """
+            Bit states for each site at a given step.
+            \n
+            Population averages. Interval averages.
+            """,
+            mathjax=True,
+        ),
+        "timespecific": True,
+        # graph
+        "figure_layout": {
+            "xaxis_title": "simulation step",
+            "yaxis_title": "genome site",
+        },
+    },
     "causes of death": {
         "title": "death table",
         "prep_y": prep_y.get_causes_of_death,
