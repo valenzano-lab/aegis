@@ -1,3 +1,4 @@
+import dash
 from dash import callback, Output, Input, ctx, ALL, State, MATCH
 
 import logging
@@ -95,29 +96,34 @@ def gen_fig(fig_name, selected_sims, containers, iloc):
 #     return new_maxs
 
 
+# BUG plotting error when dropdown is empty; replace with stylized empty figures
 @callback(
-    [Output({"type": "graph-figure", "index": key}, "figure", allow_duplicate=True) for key in FIG_SETUP.keys()],
+    # [Output({"type": "graph-figure", "index": key}, "figure", allow_duplicate=True) for key in FIG_SETUP.keys()],
+    Output({"type": "graph-figure", "index": dash.dependencies.ALL}, "figure", allow_duplicate=True),
     Input("dropdown", "value"),
+    Input("tabs", "value"),
     prevent_initial_call=True,
 )
 @log_funcs.log_debug
-def triggered_dropdown(simnames):
-    print(f"plotting {simnames}")
+def triggered_dropdown(dropdown_values, tabs_value):
+    print(f"plotting {dropdown_values}")
+
+    # BUG apply this logic everywhere. so elegant!
+    if not dropdown_values:
+        return dash.no_update
 
     base_dir = get_sim_dir()
-    containers = {simname: Container(base_dir / simname) for simname in simnames}
+    containers = {simname: Container(base_dir / simname) for simname in dropdown_values}
 
     drag_maxs = []
     figures = []
-    for fig_name in FIG_SETUP:
-        figure, max_iloc = gen_fig(fig_name, simnames, containers, iloc=-1)
-        figures.append(figure)
-        if needs_slider(fig_name):
-            drag_maxs.append(max_iloc)
-            assert max_iloc is not None
 
-    # Prepare figures
-    # BUG no data saved yet on running simulations or interrupted simulations
+    for fig_name in FIG_SETUP:
+        if fig_name == tabs_value:  # Only update the figure that matches the selected tab
+            figure, max_iloc = gen_fig(fig_name, dropdown_values, containers, iloc=-1)
+            figures.append(figure)
+        else:
+            figures.append(dash.no_update)
     return figures
 
 
