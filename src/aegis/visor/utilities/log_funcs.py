@@ -15,3 +15,11 @@ def log_info(func):
         return func(*args, **kwargs)
 
     return wrapper
+
+
+def log_error(func):
+    def wrapper(*args, **kwargs):
+        logging.error(f"Executing function: {func.__name__}.")
+        return func(*args, **kwargs)
+
+    return wrapper
