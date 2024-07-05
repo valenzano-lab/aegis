@@ -4,20 +4,20 @@ Import callbacks. They modify Output's when Input's are triggered. Callbacks add
 
 from dash import Dash
 
-app = Dash(
-    __name__,
-    suppress_callback_exceptions=True,
-    update_title="",
-    # *.css in assets are automatically imported; they need to be explicitly ignored
-    assets_ignore="styles-dark.css",
-    use_pages=True,
-)
-
 
 def run(environment):
     from . import config
 
     config.set(environment=environment)
+
+    app = Dash(
+        __name__,
+        suppress_callback_exceptions=True,
+        update_title="",
+        # *.css in assets are automatically imported; they need to be explicitly ignored
+        assets_ignore="styles-dark.css",
+        use_pages=True,
+    )
 
     from aegis.visor.app.layout import app_layout
     import aegis.visor.app.callbacks
