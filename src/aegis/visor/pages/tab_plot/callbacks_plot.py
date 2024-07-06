@@ -96,16 +96,8 @@ def gen_fig(fig_name, selected_sims, containers, iloc):
 #     return new_maxs
 
 
-# BUG plotting error when dropdown is empty; replace with stylized empty figures
-@callback(
-    # [Output({"type": "graph-figure", "index": key}, "figure", allow_duplicate=True) for key in FIG_SETUP.keys()],
-    Output({"type": "graph-figure", "index": dash.dependencies.ALL}, "figure", allow_duplicate=True),
-    Input("dropdown", "value"),
-    Input("tabs", "value"),
-    prevent_initial_call=True,
-)
-@log_funcs.log_debug
-def triggered_dropdown(dropdown_values, tabs_value):
+# Define a helper function to handle the logic
+def handle_trigger(dropdown_values, tabs_value, ismulti):
     print(f"plotting {dropdown_values}")
 
     # BUG apply this logic everywhere. so elegant!
@@ -119,12 +111,37 @@ def triggered_dropdown(dropdown_values, tabs_value):
     figures = []
 
     for fig_name in FIG_SETUP:
-        if fig_name == tabs_value:  # Only update the figure that matches the selected tab
+        supports_multi = FIG_SETUP[fig_name]["supports_multi"]
+        if fig_name == tabs_value and ismulti == supports_multi:  # Only update the figure that matches the selected tab
             figure, max_iloc = gen_fig(fig_name, dropdown_values, containers, iloc=-1)
             figures.append(figure)
         else:
             figures.append(dash.no_update)
     return figures
+
+
+# Multi Dropdown and Tabs
+@callback(
+    Output({"type": "graph-figure", "index": ALL}, "figure", allow_duplicate=True),
+    Input("dropdown-multi", "value"),
+    Input("tabs-multi", "value"),
+    prevent_initial_call=True,
+)
+@log_funcs.log_debug
+def triggered_dropdown_multi(dropdown_values, tabs_value):
+    return handle_trigger(dropdown_values, tabs_value, ismulti=True)
+
+
+# Single Dropdown and Tabs
+@callback(
+    Output({"type": "graph-figure", "index": ALL}, "figure", allow_duplicate=True),
+    Input("dropdown-single", "value"),
+    Input("tabs-single", "value"),
+    prevent_initial_call=True,
+)
+@log_funcs.log_debug
+def triggered_dropdown_single(dropdown_value, tabs_value):
+    return handle_trigger([dropdown_value], tabs_value, ismulti=False)
 
 
 # BUG plot when triggered to plot

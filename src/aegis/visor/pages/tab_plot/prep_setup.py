@@ -11,6 +11,7 @@ def needs_slider(fig_name):
 FIG_SETUP = {
     "bit states": {
         "title": "bit states",
+        "supports_multi": False,
         "prep_y": prep_y.get_bit_states,
         "prep_x": prep_x.get_steps,
         "prep_figure": "make_heatmap_figure",
@@ -31,6 +32,7 @@ FIG_SETUP = {
     },
     "causes of death": {
         "title": "death table",
+        "supports_multi": False,
         "prep_y": prep_y.get_causes_of_death,
         "prep_x": prep_x.get_ages,
         "prep_figure": "make_bar_figure",
@@ -50,6 +52,7 @@ FIG_SETUP = {
     },
     "derived allele frequencies": {
         "title": "derived allele frequencies",
+        "supports_multi": False,
         "prep_y": prep_y.get_derived_allele_freq,
         "prep_x": prep_x.get_ages,
         "prep_figure": "make_hist_figure",
@@ -77,6 +80,7 @@ FIG_SETUP = {
     },
     "intrinsic mortality": {
         "title": "intrinsic mortality",
+        "supports_multi": True,
         "prep_y": prep_y.get_mortality_intrinsic,
         "prep_x": prep_x.get_ages,
         "prep_figure": "make_line_figure",
@@ -96,6 +100,7 @@ FIG_SETUP = {
     },
     "total mortality": {
         "title": "total mortality",
+        "supports_multi": True,
         "prep_y": prep_y.get_mortality_observed,
         "prep_x": prep_x.get_ages,
         "prep_figure": "make_line_figure",
@@ -117,6 +122,7 @@ FIG_SETUP = {
     },
     "total survivorship": {
         "title": "total survivorship",
+        "supports_multi": True,
         "prep_y": prep_y.get_total_survivorship,
         "prep_x": prep_x.get_ages,
         "prep_figure": "make_line_figure",
@@ -136,6 +142,7 @@ FIG_SETUP = {
     },
     "intrinsic survivorship": {
         "title": "intrinsic survivorship",
+        "supports_multi": True,
         "prep_y": prep_y.get_intrinsic_survivorship,
         "prep_x": prep_x.get_ages,
         "prep_figure": "make_line_figure",
@@ -156,6 +163,7 @@ FIG_SETUP = {
     },
     "life expectancy": {
         "title": "life expectancy at age 0",
+        "supports_multi": True,
         "prep_y": prep_y.get_life_expectancy,
         "prep_x": prep_x.get_steps,
         "prep_figure": "make_line_figure",
@@ -176,6 +184,7 @@ FIG_SETUP = {
     },
     "fertility": {
         "title": "intrinsic fertility",
+        "supports_multi": True,
         "prep_y": prep_y.get_fertility,
         "prep_x": prep_x.get_ages,
         "prep_figure": "make_line_figure",
@@ -195,7 +204,8 @@ FIG_SETUP = {
     },
     # "cumulative reproduction": {
     #     "title": "cumulative reproduction",
-    #     "prep_y": prep_y.get_cumulative_reproduction,
+    # "supports_multi": True,    
+    # "prep_y": prep_y.get_cumulative_reproduction,
     #     "prep_x": prep_x.get_ages,
     #     "prep_figure": "make_line_figure",
     #     "description": dcc.Markdown(
@@ -215,7 +225,8 @@ FIG_SETUP = {
     # },
     # "lifetime reproduction": {
     #     "title": "lifetime reproduction",
-    #     "prep_y": prep_y.get_lifetime_reproduction,
+    # "supports_multi": True,    
+    # "prep_y": prep_y.get_lifetime_reproduction,
     #     "prep_x": prep_x.get_steps,
     #     "prep_figure": "make_line_figure",
     #     "description": dcc.Markdown(
@@ -234,6 +245,7 @@ FIG_SETUP = {
     # },
     "birth structure": {
         "title": "birth structure",
+        "supports_multi": True,
         "prep_y": prep_y.get_birth_structure,
         "prep_x": prep_x.get_ages,
         "prep_figure": "make_line_figure",
@@ -252,7 +264,8 @@ FIG_SETUP = {
     },
     # "death structure": {
     #     "title": "death structure",
-    #     "prep_y": prep_y.get_death_structure,
+    # "supports_multi": True,    
+    # "prep_y": prep_y.get_death_structure,
     #     "prep_x": prep_x.get_ages,
     #     "prep_figure": "make_line_figure",
     #     "description": dcc.Markdown(
@@ -267,7 +280,8 @@ FIG_SETUP = {
     # },
     # "total survivorship": {
     #     "title": "total survivorship",
-    #     "description": dcc.Markdown(
+    # "supports_multi": True,    
+    # "description": dcc.Markdown(
     #         """xxx.""",
     #         mathjax=True,
     #     ),

@@ -3,7 +3,7 @@ from dash import html, dcc
 from aegis.visor.pages.tab_plot.prep_setup import FIG_SETUP, needs_slider
 from aegis.visor.utilities import log_funcs, utilities
 from aegis.utilities.container import Container
-from aegis.visor.pages.tab_plot.tabs import get_tabs_layout
+from aegis.visor.pages.tab_plot.tabs import get_tabs_multi_layout, get_tabs_single_layout
 
 dash.register_page(__name__, path="/plot", name="plot")
 
@@ -12,14 +12,6 @@ def get_preface():
     simnames = [Container(path).basepath.stem for path in utilities.get_sim_paths()]
     dropdown_options = [simname for simname in simnames]
     # TODO plot initially
-    if dropdown_options:
-        if "default" in dropdown_options:
-            dropdown_option_chosen = "default"
-        else:
-            dropdown_option_chosen = dropdown_options[0]
-    else:
-        dropdown_option_chosen = None
-    dropdown_option_chosen = None
     preface = [
         html.Div(
             children=[
@@ -41,8 +33,11 @@ def get_preface():
                     "reload-plots-button",
                     className="control-element",
                 ),
-                dcc.Dropdown(id="dropdown", options=dropdown_options, value=dropdown_option_chosen, multi=True),
-                get_tabs_layout(),
+                # TODO the order of figures is set by FIG_SETUP; thats how the tabs are generated and how you should return them
+                dcc.Dropdown(id="dropdown-single", options=dropdown_options, value=None),
+                get_tabs_single_layout(),
+                dcc.Dropdown(id="dropdown-multi", options=dropdown_options, value=None, multi=True),
+                get_tabs_multi_layout(),
             ],
         )
     ]

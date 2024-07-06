@@ -41,12 +41,23 @@ def get_graph(figure_id):
     ]
 
 
-def get_tabs_layout():
+def get_tabs_multi_layout():
     tabs = []
-    for graph_name in FIG_SETUP:
+    graph_names = [graph_name for graph_name, d in FIG_SETUP.items() if d["supports_multi"]]
+    for graph_name in graph_names:
         children = get_graph(graph_name)
         tab = dcc.Tab(label=graph_name, value=graph_name, children=children)
         tabs.append(tab)
-    chosen_tab = next(iter(FIG_SETUP.keys()))
-    layout = dcc.Tabs(id="tabs", children=tabs, value=chosen_tab)
+    layout = dcc.Tabs(id="tabs-multi", children=tabs, value=graph_names[0])
+    return layout
+
+
+def get_tabs_single_layout():
+    tabs = []
+    graph_names = [graph_name for graph_name, d in FIG_SETUP.items() if not d["supports_multi"]]
+    for graph_name in graph_names:
+        children = get_graph(graph_name)
+        tab = dcc.Tab(label=graph_name, value=graph_name, children=children)
+        tabs.append(tab)
+    layout = dcc.Tabs(id="tabs-single", children=tabs, value=graph_names[0])
     return layout
