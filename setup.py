@@ -37,7 +37,8 @@ setuptools.setup(
         "dash",
         "urllib3==1.26.18",
         "psutil",
-    ],  # for dash
+        "kaleido",  # for image export for dash figures TODO use a simpler method
+    ],
     extras_require={
         "dev": [
             "pytest==6.2.4",
