@@ -12,7 +12,7 @@ from aegis.visor.utilities.utilities import get_figure_dir
 def figure_download_button_click(n_clicks, figure):
 
     if n_clicks is None:
-        return n_clicks
+        return
 
     fig_name = ctx.triggered_id["index"]
     path_figure = get_figure_dir() / f"{fig_name}.png"

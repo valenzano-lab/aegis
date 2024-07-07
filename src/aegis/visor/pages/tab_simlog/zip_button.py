@@ -24,6 +24,7 @@ def get_zip_button_layout(filename):
     Input({"type": "zip-download-button", "index": MATCH}, "n_clicks"),
     State({"type": "config-download-basepath", "index": MATCH}, "children"),
     prevent_initial_call=True,
+    # running=[(Output({"type": "zip-download-button", "index": MATCH}, "disabled"), True, False)],
 )
 @log_funcs.log_debug
 def generate_zip(n_clicks, basepath):

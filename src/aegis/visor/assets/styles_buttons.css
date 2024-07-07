@@ -29,6 +29,7 @@ button:hover {
 
 button:disabled {
   cursor: not-allowed;
+  background-color: red;
 }
 
 /* #plot-view-button.disabled {
