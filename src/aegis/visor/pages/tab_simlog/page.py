@@ -2,7 +2,7 @@ import dash
 from dash import html
 from aegis.visor.utilities import log_funcs
 
-from aegis.visor.utilities.utilities import OUTPUT_SPECIFICATIONS
+from aegis.visor.pages.tab_simlog_dcc import table
 
 from aegis.visor.pages.tab_simlog.table import generate_initial_simlog
 
@@ -38,5 +38,6 @@ def layout():
         children=PREFACE
         + [
             html.Div(id="simlog-section-table", children=generate_initial_simlog()),
+            table.make_table(),
         ],
     )

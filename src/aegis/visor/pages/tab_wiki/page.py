@@ -3,6 +3,7 @@ from dash import html, dash_table
 from aegis.visor.utilities.utilities import OUTPUT_SPECIFICATIONS
 from aegis.visor.utilities import log_funcs
 
+
 dash.register_page(__name__, path="/wiki", name="wiki")
 
 
