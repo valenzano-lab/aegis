@@ -1,8 +1,8 @@
 from dash import callback, Output, Input, ctx, ALL, State, MATCH, html
-from aegis.visor.pages.tab_plot.prep_setup import FIG_SETUP, needs_slider
+from aegis.visor.pages.tab_plot.plot.prep_setup import FIG_SETUP, needs_slider
 from aegis.visor.config import config
 from aegis.visor.utilities.utilities import get_sim_dir
-from aegis.visor.pages.tab_plot.gen_fig import gen_fig
+from aegis.visor.pages.tab_plot.plot.gen_fig import gen_fig
 from aegis.utilities.container import Container
 from aegis.visor.utilities import log_funcs
 import logging

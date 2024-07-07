@@ -4,8 +4,8 @@ from dash import callback, Output, Input, ctx, ALL, State, MATCH, dcc
 from aegis.utilities.container import Container
 from aegis.visor.utilities.utilities import get_sim_dir
 from aegis.visor.utilities import log_funcs
-from aegis.visor.pages.tab_plot.prep_setup import FIG_SETUP
-from aegis.visor.pages.tab_plot.gen_fig import gen_fig
+from aegis.visor.pages.tab_plot.plot.prep_setup import FIG_SETUP
+from aegis.visor.pages.tab_plot.plot.gen_fig import gen_fig
 
 
 def make_single_dropdown(dropdown_options):

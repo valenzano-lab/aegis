@@ -1,5 +1,5 @@
-from aegis.visor.pages.tab_plot.prep_setup import FIG_SETUP
-from aegis.visor.pages.tab_plot import prep_fig
+from aegis.visor.pages.tab_plot.plot.prep_setup import FIG_SETUP
+from aegis.visor.pages.tab_plot.plot import prep_fig
 from aegis.visor.utilities import log_funcs
 
 @log_funcs.log_debug

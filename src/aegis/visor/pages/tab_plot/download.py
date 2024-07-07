@@ -1,5 +1,5 @@
 import logging
-from dash import callback, Output, Input, ctx, State, MATCH, dcc
+from dash import callback, Output, Input, ctx, State, MATCH, dcc, html
 from plotly.io import write_image
 from aegis.visor.utilities.utilities import get_figure_dir
 
@@ -21,3 +21,11 @@ def figure_download_button_click(n_clicks, figure):
     logging.info(f"'{fig_name}' has been recorded successfully.")
 
     return dcc.send_file(path_figure)
+
+
+def get_figure_download_button(figure_id):
+    return html.Button("download figure", id={"type": "figure-download-button", "index": figure_id})
+
+
+def get_figure_download_dcc(figure_id):
+    return dcc.Download(id={"type": "figure-dcc-download", "index": figure_id})

@@ -1,5 +1,7 @@
 from dash import Dash, dcc, html, Input, Output, callback
-from aegis.visor.pages.tab_plot.prep_setup import FIG_SETUP, needs_slider
+from aegis.visor.pages.tab_plot.plot.prep_setup import FIG_SETUP, needs_slider
+
+from aegis.visor.pages.tab_plot import download
 
 
 def get_graph(figure_id):
@@ -32,12 +34,8 @@ def get_graph(figure_id):
             children=info["description"],
             className="figure-description",
         ),
-        html.Button(
-            "download figure",
-            id={"type": "figure-download-button", "index": figure_id},
-        ),
-        dcc.Download(id={"type": "figure-dcc-download", "index": figure_id}),
-        # dcc.Slider(0,100)
+        download.get_figure_download_button(figure_id=figure_id),
+        download.get_figure_download_dcc(figure_id=figure_id),
     ]
 
 

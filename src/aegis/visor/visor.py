@@ -22,8 +22,7 @@ def run(environment):
     from aegis.visor.app.layout import app_layout
     import aegis.visor.app.callbacks
     import aegis.visor.pages.tab_config.config_input
-    import aegis.visor.pages.tab_plot.callbacks_plot
-    import aegis.visor.pages.tab_plot.callbacks_download
+    import aegis.visor.pages.tab_plot.download
     import aegis.visor.pages.tab_simlog.callbacks_simlog
 
     app._favicon = "favicon.ico"
