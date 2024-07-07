@@ -8,7 +8,7 @@ dash.register_page(__name__, name="landing", path="/")
 
 
 @log_funcs.log_debug
-def get_landing_layout():
+def layout():
     return html.Div(
         id="landing-section",
         children=[
@@ -21,6 +21,3 @@ def get_landing_layout():
             dcc.Markdown(Documenter.read("4 about us and community.md")),
         ],
     )
-
-
-layout = get_landing_layout()

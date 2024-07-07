@@ -50,7 +50,7 @@ PREFACE = [
 
 
 @log_funcs.log_debug
-def get_simlog_layout():
+def layout():
     return html.Div(
         id="simlog-section",
         children=PREFACE
@@ -60,4 +60,3 @@ def get_simlog_layout():
     )
 
 
-layout = get_simlog_layout()

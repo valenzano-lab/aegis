@@ -2,7 +2,9 @@ import dash
 
 from dash import html, dcc
 from aegis.visor.utilities import log_funcs, utilities
-from aegis.visor.pages.tab_config import run_simulation_button
+from aegis.visor.pages.tab_config import config_input, run_simulation_button
+
+
 from aegis.modules.initialization.parameterization.default_parameters import DEFAULT_PARAMETERS
 from aegis.modules.initialization.parameterization.parameter import Parameter
 
@@ -80,7 +82,7 @@ HEADER = html.Tr(
 
 
 @log_funcs.log_debug
-def get_config_layout() -> html.Div:
+def layout() -> html.Div:
     # Group parameters by domain
     subsets = {domain: [] for domain in TEXTS_DOMAIN.keys()}
     for param in DEFAULT_PARAMETERS.values():
@@ -123,55 +125,6 @@ def get_config_layout() -> html.Div:
     )
 
 
-def get_input_element(param):
-
-    if param.dtype == int:
-        return (
-            dcc.Input(
-                type="number",
-                value=param.default,
-                step=0,
-                id={"type": "config-input", "index": param.key},
-                autoComplete="off",
-                className="config-input-class",
-            ),
-        )
-
-    elif param.dtype == float:
-        return (
-            dcc.Input(
-                type="number",
-                value=param.default,
-                step=0.01,
-                id={"type": "config-input", "index": param.key},
-                autoComplete="off",
-                className="config-input-class",
-            ),
-        )
-
-    elif param.dtype == bool:
-        return dcc.Checklist(
-            [""],
-            className="config-input-class",
-            id={"type": "config-input", "index": param.key},
-            value=[""] if param.default else [],  # important for decode_config_tab_values()
-        )
-
-    elif param.dtype == str:
-        options = param.drange.strip("{").strip("}").split(", ")
-        return dcc.Dropdown(
-            options=options,
-            value=param.default,
-            className="config-input-class",
-            id={"type": "config-input", "index": param.key},
-            searchable=False,
-            clearable=False,
-        )
-
-    # TODO resolve dict parameter
-    return
-
-
 # @log_funcs.log_debug
 def get_row(v: Parameter) -> html.Tr:
     if v.serverrange_info:
@@ -197,7 +150,7 @@ def get_row(v: Parameter) -> html.Tr:
             # RANGE
             html.Td(children=v.drange, className="data-range"),
             # VALUE
-            html.Td(children=get_input_element(param=v)),
+            html.Td(children=config_input.get_input_element(param=v)),
             # DESCRIPTION
             # html.Td(
             #     children=[
@@ -228,6 +181,3 @@ def get_table(params_subset) -> html.Table:
         + [HEADER]
         + [get_row(v) for v in params_subset if not isinstance(v.default, list)],
     )
-
-
-layout = get_config_layout()

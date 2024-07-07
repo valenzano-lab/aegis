@@ -23,9 +23,10 @@ def make_output_specification_table():
     )
 
 
-layout = html.Div(
-    [
-        html.P("""This is the wiki tab."""),
-        make_output_specification_table(),
-    ]
-)
+def layout() -> html.Div:
+    return html.Div(
+        [
+            html.P("""This is the wiki tab."""),
+            make_output_specification_table(),
+        ]
+    )
