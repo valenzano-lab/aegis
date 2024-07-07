@@ -2,10 +2,13 @@ from dash import html, dcc, dash_table
 from aegis.visor.utilities import log_funcs, utilities
 import datetime
 from aegis.utilities.container import Container
+from aegis.utilities.get_folder_size import get_folder_size_with_du
+
+from . import download
 
 from aegis.visor.config import config
 
-from . import zip_button, folder_size
+from . import zip, delete
 
 
 @log_funcs.log_debug
@@ -89,33 +92,29 @@ def make_table_row(log, input_summary, output_summary, basepath, filename, ticke
             html.Td(html.P(time_of_finishing)),
             html.Td(html.P(extinct)),
             html.Td(html.P(running)),
-            folder_size.get_simlog_layout(basepath),
+            html.Td(html.P(get_folder_size_with_du(basepath))),
             html.Td(html.P(eta if time_of_finishing is None else "       ")),
             html.Td(html.P(str(basepath), id={"type": "config-download-basepath", "index": filename})),
             html.Td(
                 children=[
-                    html.Button(
-                        "download",
-                        id={"type": "config-download-button", "index": filename},
-                        value=filename,
-                        # style={"padding-right": "1rem"},
-                    ),
-                    dcc.Download(id={"type": "config-dcc-download", "index": filename}),
+                    download.make_button(filename),
+                    download.make_dcc(filename),
                 ],
             ),
             html.Td(
                 (
-                    html.Button(
-                        "delete",
-                        id={"type": "delete-simulation-button", "index": filename},
-                        value=filename,
-                    )
+                    delete.make(filename)
+                    # html.Button(
+                    #     "delete",
+                    #     id={"type": "delete-simulation-button", "index": filename},
+                    #     value=filename,
+                    # )
                     if ~config.can_delete_default_sim or filename != "default"
                     else None
                 ),
                 style={"padding-right": "1rem"},
             ),
-            zip_button.get_zip_button_layout(filename=filename),
+            zip.get_zip_button_layout(filename=filename),
         ],
     )
     return row

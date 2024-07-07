@@ -2,7 +2,7 @@ import dash
 from dash import html, dcc
 from aegis.visor.utilities import log_funcs, utilities
 from aegis.utilities.container import Container
-from aegis.visor.pages.tab_plot import dropdowns, tabs, replot_button
+from aegis.visor.pages.tab_plot import dropdowns, reload, tabs
 
 
 dash.register_page(__name__, path="/plot", name="plot")
@@ -30,7 +30,7 @@ def layout():  # use function to ensure statelessness
                     ],
                     style={"margin-bottom": "2rem"},
                 ),
-                replot_button.make_reload_button(),
+                reload.make_reload_button(),
                 # TODO the order of figures is set by FIG_SETUP; thats how the tabs are generated and how you should return them
                 dropdowns.make_single_dropdown(dropdown_options),
                 tabs.get_tabs_single_layout(),

@@ -1,30 +1,13 @@
 import dash
-from dash import html, dcc, dash_table
+from dash import html
 from aegis.visor.utilities import log_funcs
 
 from aegis.visor.utilities.utilities import OUTPUT_SPECIFICATIONS
 
-from aegis.visor.pages.tab_simlog.utilities import generate_initial_simlog
+from aegis.visor.pages.tab_simlog.table import generate_initial_simlog
 
 
 dash.register_page(__name__, path="/simlog", name="simlog")
-
-
-@log_funcs.log_debug
-def make_output_specification_table():
-    """
-
-    Documentation for plotly datatables: https://dash.plotly.com/datatable
-    """
-    data = [
-        {key: specs.get(key, "!!! nan") for key in OUTPUT_SPECIFICATIONS[0].keys()} for specs in OUTPUT_SPECIFICATIONS
-    ]
-    columns = [{"id": c, "name": c} for c in OUTPUT_SPECIFICATIONS[0].keys()]
-    return dash_table.DataTable(
-        data=data,
-        columns=columns,
-        style_data={"whiteSpace": "normal", "height": "auto"},
-    )
 
 
 PREFACE = [
@@ -43,7 +26,6 @@ PREFACE = [
                 ],
                 style={"margin-bottom": "2rem"},
             ),
-            # make_output_specification_table(),
         ],
     )
 ]
@@ -58,5 +40,3 @@ def layout():
             html.Div(id="simlog-section-table", children=generate_initial_simlog()),
         ],
     )
-
-
