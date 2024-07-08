@@ -17,43 +17,49 @@ def make_multi_dropdown(dropdown_options):
 
 
 # Define a helper function to handle the logic
-def handle_trigger(dropdown_values, tabs_value, ismulti):
+def handle_trigger(dropdown_values, tabs_value, dropdown_multi_triggered):
     # BUG apply this logic everywhere. so elegant!
     if not dropdown_values or dropdown_values == [None]:
         return dash.no_update
 
-    # drag_maxs = []
+    drag_maxs = []
     figures = []
 
     for fig_name in FIG_SETUP:
         supports_multi = FIG_SETUP[fig_name]["supports_multi"]
-        if fig_name == tabs_value and ismulti == supports_multi:  # Only update the figure that matches the selected tab
+        if (
+            fig_name == tabs_value and dropdown_multi_triggered == supports_multi
+        ):  # Only update the figure that matches the selected tab
             figure, max_iloc = gen_fig(fig_name, dropdown_values, iloc=-1)
             figures.append(figure)
+            drag_maxs.append(max_iloc)
         else:
             figures.append(dash.no_update)
-    return figures
+            drag_maxs.append(dash.no_update)
+    return figures, drag_maxs
 
 
 # Multi Dropdown and Tabs
 @callback(
     Output({"type": "graph-figure", "index": ALL}, "figure", allow_duplicate=True),
+    Output({"type": "graph-slider", "index": ALL}, "max", allow_duplicate=True),
     Input("dropdown-multi", "value"),
     Input("tabs-multi", "value"),
     prevent_initial_call=True,
 )
 @log_funcs.log_debug
 def triggered_dropdown_multi(dropdown_values, tabs_value):
-    return handle_trigger(dropdown_values, tabs_value, ismulti=True)
+    return handle_trigger(dropdown_values, tabs_value, dropdown_multi_triggered=True)
 
 
 # Single Dropdown and Tabs
 @callback(
     Output({"type": "graph-figure", "index": ALL}, "figure", allow_duplicate=True),
+    Output({"type": "graph-slider", "index": ALL}, "max", allow_duplicate=True),
     Input("dropdown-single", "value"),
     Input("tabs-single", "value"),
     prevent_initial_call=True,
 )
 @log_funcs.log_debug
 def triggered_dropdown_single(dropdown_value, tabs_value):
-    return handle_trigger([dropdown_value], tabs_value, ismulti=False)
+    return handle_trigger([dropdown_value], tabs_value, dropdown_multi_triggered=False)

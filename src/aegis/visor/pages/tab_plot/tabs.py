@@ -14,7 +14,8 @@ def get_graph(figure_id):
             config={"displayModeBar": False},
             className="figure",
         ),
-        (slider.make_slider(figure_id) if slider.needs_slider(figure_id) else None),
+        slider.make_slider(figure_id),
+        # (slider.make_slider(figure_id) if slider.needs_slider(figure_id) else None),
         html.P(
             children=info["title"],
             className="figure-title",
