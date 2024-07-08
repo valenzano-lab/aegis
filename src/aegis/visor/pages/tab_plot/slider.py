@@ -7,14 +7,15 @@ from aegis.visor.utilities import log_funcs
 
 def make_slider(figure_id):
     return dcc.Slider(
+        id={"type": "graph-slider", "index": figure_id},
+        className="" if needs_slider(figure_id) else "invisible",
         min=0,
         max=1,
         step=1,
         value=0,
         marks=None,
         tooltip={},
-        id={"type": "graph-slider", "index": figure_id},
-        className="" if needs_slider(figure_id) else "invisible",
+        updatemode="drag",
     )
 
 
