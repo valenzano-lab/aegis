@@ -38,6 +38,7 @@ def handle_trigger(dropdown_values, tabs_value, dropdown_multi_triggered):
             drag_maxs.append(dash.no_update)
     return figures, drag_maxs
 
+# TODO take into consideration the existing slider value
 
 # Multi Dropdown and Tabs
 @callback(

@@ -24,23 +24,19 @@ def needs_slider(fig_name):
     return FIG_SETUP[fig_name]["prep_x"] == prep_x.get_ages
 
 
-# # Single Dropdown and Tabs
-# @callback(
-#     Output({"type": "graph-figure", "index": MATCH}, "figure"),
-#     Input({"type": "graph-slider", "index": MATCH}, "value"),
-#     State({"type": "graph-slider", "index": MATCH}, "id"),
-#     State("dropdown-multi", "value"),
-#     State("dropdown-single", "value"),
-#     prevent_initial_call=True,
-# )
-# @log_funcs.log_debug
-# def update(slider_value, slider_id, dropdown_multi_value, dropdown_single_value):
-
-#     fig_name = slider_id["index"]
-
-#     supports_multi = FIG_SETUP[fig_name]["supports_multi"]
-#     dropdown_values = dropdown_multi_value if supports_multi else [dropdown_single_value]
-
-#     fig, max_iloc = gen_fig.gen_fig(fig_name, dropdown_values, iloc=-1)
-
-#     return dash.no_update
+# Single Dropdown and Tabs
+@callback(
+    Output({"type": "graph-figure", "index": MATCH}, "figure"),
+    Input({"type": "graph-slider", "index": MATCH}, "value"),
+    State({"type": "graph-slider", "index": MATCH}, "id"),
+    State("dropdown-multi", "value"),
+    State("dropdown-single", "value"),
+    prevent_initial_call=True,
+)
+@log_funcs.log_debug
+def update(slider_value, slider_id, dropdown_multi_value, dropdown_single_value):
+    fig_name = slider_id["index"]
+    supports_multi = FIG_SETUP[fig_name]["supports_multi"]
+    dropdown_values = dropdown_multi_value if supports_multi else [dropdown_single_value]
+    fig, max_iloc = gen_fig.gen_fig(fig_name, dropdown_values, iloc=slider_value)
+    return fig
