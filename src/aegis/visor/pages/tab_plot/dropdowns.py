@@ -9,11 +9,17 @@ from aegis.visor.pages.tab_plot.plot.gen_fig import gen_fig
 
 
 def make_single_dropdown(dropdown_options):
-    return dcc.Dropdown(id="dropdown-single", options=dropdown_options, value=None)
+    # TODO plot initial plots
+    initial_value = dropdown_options[0] if dropdown_options else None
+    initial_value = None
+    return dcc.Dropdown(id="dropdown-single", options=dropdown_options, value=initial_value)
 
 
 def make_multi_dropdown(dropdown_options):
-    return dcc.Dropdown(id="dropdown-multi", options=dropdown_options, value=None, multi=True)
+    # TODO plot initial plots
+    initial_value = dropdown_options[:2]
+    initial_value = None
+    return dcc.Dropdown(id="dropdown-multi", options=dropdown_options, value=initial_value, multi=True)
 
 
 # Define a helper function to handle the logic
@@ -38,7 +44,9 @@ def handle_trigger(dropdown_values, tabs_value, dropdown_multi_triggered):
             drag_maxs.append(dash.no_update)
     return figures, drag_maxs
 
+
 # TODO take into consideration the existing slider value
+
 
 # Multi Dropdown and Tabs
 @callback(
