@@ -4,7 +4,7 @@ name: aegis-sim
 on:
   push:
     branches:
-      - main
+      - v2
     # Alternative: only build for tags.
     # tags:
     #   - '*'
