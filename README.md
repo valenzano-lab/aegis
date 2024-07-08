@@ -7,106 +7,51 @@
 
 Numerical model for life history evolution of age-structured populations under customizable ecological scenarios.
 
-## How to install
+## How to use
+You can run AEGIS simulations on a webserver or locally. The webserver is especially useful if you want to try AEGIS out and run a couple of simple simulations. For more demanding simulations, it is best to install and run AEGIS on your local machine.
 
-We recommend that you install `aegis-sim` from [PyPI](https://pypi.org/project/aegis-sim/) into a [virtual environment](https://docs.python.org/3/library/venv.html).
+### Webserver use
+
+You can access the AEGIS webserver [here](). The server is running AEGIS GUI.<!-- TODO update link -->
+
+### Local use
+
+You can install AEGIS locally using pip (`pip install aegis-sim`). The package is available on https://pypi.org/project/aegis-sim/. You can use AEGIS with a GUI or in a terminal. GUI is useful for running individual simulations, while the terminal is useful for running batches of simulations.
 
 ```bash
-$ pip install aegis-sim
+python3 -m aegis # starts GUI
+python3 -m aegis -c {path/to/config_file} # runs a simulation within a terminal
+python3 -m aegis --help # shows help documentation
 ```
 
-If you will using the jupyter notebook visualization script, you might need to run `jupyter nbextension enable --py widgetsnbextension` to activate widgets.
-
-<details>
-  <summary>Cheat sheet</summary>
-
-```bash
-# Unix/macOS
-python3 -m venv aegis-venv
-. aegis-venv/bin/activate
-python3 -m pip install aegis-sim
+To run simulations within a terminal, you need to prepare config files in [YAML](https://en.wikipedia.org/wiki/YAML) format
+which contain custom values for simulation parameters. The list of parameters, including their descriptions and default values you can find [here](). <!-- TODO update link -->
+An example of a config file:
+```yml
+RANDOM_SEED: 42
+STEPS_PER_SIMULATION: 10000
+AGE_LIMIT: 50
 ```
-```bash
-# Windows
-python -m venv aegis-venv
-.\aegis-venv\Scripts\activate
-python -m pip install aegis-sim
-```
-</details>
 
-<details> 
-<summary>For developers</summary>
+
+### Developer installation
+
+If you want to contribute to the codebase, install AEGIS from github:
 
 ```bash
-# Unix/macOS
 git clone git@github.com:valenzano-lab/aegis.git
 cd aegis
 make install_dev
 ```
-</details>
+<!-- TODO update install_dev script -->
 
-To check if installation is successful, run `aegis -h`. If it is, the output will contain `Aging of Evolving Genomes In Silico`; if not, it will say `aegis: command not found`.
-
-## How to run
-
-1. __Create a configuration file__
-
-    Before running a custom AEGIS simulation, you must create a configuration file (in [YAML](https://en.wikipedia.org/wiki/YAML) format) which will contain your custom parameter values. 
-    List of modifiable parameters, and all relevant details can be found in the [wiki](https://github.com/valenzano-lab/aegis/wiki/Input).
-    Default parameter values are set in the file [default.yml](src/aegis/parameters/default.yml).
-    
-
-    An example of a YAML file:
-    ```yml
-    # custom.yml
-
-    RANDOM_SEED: 42
-    STEPS_PER_SIMULATION: 10000
-    AGE_LIMIT: 50
-    ```
-
-
-1. __Start the simulation__
-
-    ```sh
-    $ aegis {path/to/file}.yml # In this case, `aegis custom.yml`
-    ```
-
-<!-- 
-1. __Inspect the output__
-
-    Output files will be created in the `{path/to/file}` directory (in this case, in the `custom` directory) which will have the following structure:
-    ```bash
-    {path/to/file}/
-        progress.log
-        {ecosystem-number}/
-            output-summary.json
-            snapshots/
-                demography/
-                    {step}.feather
-                    ...
-                genotypes/
-                    {step}.feather
-                    ...
-                phenotypes/
-                    {step}.feather
-            visor/
-                genotypes.csv
-                phenotypes.csv
-                spectra/
-                    age_at_birth.csv
-                    age_at_end_of_sim.csv
-                    age_at_overshoot.csv
-                    additive_age_structure.csv
-    ```
-
-    Detailed description of the content and format of output files can be found in the [wiki](https://github.com/valenzano-lab/aegis/wiki/Output).
-     -->
+## Model description
+To learn about how the model works, consult the documentation within AEGIS GUI or papers listed below. API documentation is available [here]()
+<!-- TODO update link -->
 
 ## Related articles
-
-- [An In Silico Model to Simulate the Evolution of Biological Aging (2016)](https://www.biorxiv.org/content/10.1101/037952v1)
 - [AEGIS: An In Silico Tool to model Genome Evolution in Age-Structured Populations (2019)](https://www.biorxiv.org/content/10.1101/646877v1)
+- [An In Silico Model to Simulate the Evolution of Biological Aging (2016)](https://www.biorxiv.org/content/10.1101/037952v1)
 
 ## Authors
 
