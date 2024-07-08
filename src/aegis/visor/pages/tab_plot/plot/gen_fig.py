@@ -1,9 +1,18 @@
 from aegis.visor.pages.tab_plot.plot.prep_setup import FIG_SETUP
 from aegis.visor.pages.tab_plot.plot import prep_fig
 from aegis.visor.utilities import log_funcs
+from aegis.utilities.container import Container
+from aegis.visor.utilities.utilities import get_sim_dir
+
+
+def get_container(sim_name):
+    base_dir = get_sim_dir()
+    container = Container(base_dir / sim_name)
+    return container
+
 
 @log_funcs.log_debug
-def gen_fig(fig_name, selected_sims, containers, iloc):
+def gen_fig(fig_name, selected_sims, iloc):
     """Generates a figure using the figure setup"""
 
     # Extract setup
@@ -18,14 +27,15 @@ def gen_fig(fig_name, selected_sims, containers, iloc):
     xs = []
 
     for sim in selected_sims:
-        ysi, max_iloc = prep_y(containers[sim], iloc=iloc)
+        container = get_container(sim)
+        ysi, max_iloc = prep_y(container, iloc=iloc)
         ys.append(ysi)
 
         if max_iloc is not None:
             max_iloc -= 1  # before this, it is length
             max_ilocs.append(max_iloc)
 
-        xsi = prep_x(containers[sim], y=ysi)
+        xsi = prep_x(container, y=ysi)
         xs.append(xsi)
 
     max_iloc = min(max_ilocs) if max_ilocs else None

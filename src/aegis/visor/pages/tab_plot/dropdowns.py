@@ -19,19 +19,16 @@ def make_multi_dropdown(dropdown_options):
 # Define a helper function to handle the logic
 def handle_trigger(dropdown_values, tabs_value, ismulti):
     # BUG apply this logic everywhere. so elegant!
-    if not dropdown_values:
+    if not dropdown_values or dropdown_values == [None]:
         return dash.no_update
 
-    base_dir = get_sim_dir()
-    containers = {simname: Container(base_dir / simname) for simname in dropdown_values}
-
-    drag_maxs = []
+    # drag_maxs = []
     figures = []
 
     for fig_name in FIG_SETUP:
         supports_multi = FIG_SETUP[fig_name]["supports_multi"]
         if fig_name == tabs_value and ismulti == supports_multi:  # Only update the figure that matches the selected tab
-            figure, max_iloc = gen_fig(fig_name, dropdown_values, containers, iloc=-1)
+            figure, max_iloc = gen_fig(fig_name, dropdown_values, iloc=-1)
             figures.append(figure)
         else:
             figures.append(dash.no_update)

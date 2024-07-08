@@ -30,7 +30,7 @@ def layout():  # use function to ensure statelessness
                     ],
                     style={"margin-bottom": "2rem"},
                 ),
-                reload.make_reload_button(),
+                # reload.make_reload_button(),
                 # TODO the order of figures is set by FIG_SETUP; thats how the tabs are generated and how you should return them
                 dropdowns.make_single_dropdown(dropdown_options),
                 tabs.get_tabs_single_layout(),

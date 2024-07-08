@@ -1,5 +1,6 @@
 from dash import Dash, dcc, html, Input, Output, callback
-from aegis.visor.pages.tab_plot.plot.prep_setup import FIG_SETUP, needs_slider
+from aegis.visor.pages.tab_plot.plot.prep_setup import FIG_SETUP
+from aegis.visor.pages.tab_plot import slider
 
 from aegis.visor.pages.tab_plot import download
 
@@ -13,19 +14,7 @@ def get_graph(figure_id):
             config={"displayModeBar": False},
             className="figure",
         ),
-        (
-            dcc.Slider(
-                min=0,
-                max=1,
-                step=1,
-                value=0,
-                marks=None,
-                tooltip={},
-                id={"type": "graph-slider", "index": figure_id},
-            )
-            if needs_slider(figure_id)
-            else None
-        ),
+        (slider.make_slider(figure_id) if slider.needs_slider(figure_id) else None),
         html.P(
             children=info["title"],
             className="figure-title",

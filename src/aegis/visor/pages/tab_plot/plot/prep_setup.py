@@ -3,12 +3,6 @@ from aegis.visor.pages.tab_plot.plot import prep_y
 from aegis.visor.pages.tab_plot.plot import prep_x
 
 
-def needs_slider(fig_name):
-    if fig_name == "causes of death":
-        return False
-    return FIG_SETUP[fig_name]["prep_x"] == prep_x.get_ages
-
-
 FIG_SETUP = {
     "bit states": {
         "title": "bit states",
@@ -24,7 +18,6 @@ FIG_SETUP = {
             """,
             mathjax=True,
         ),
-        "timespecific": True,
         # graph
         "figure_layout": {
             "xaxis_title": "simulation step",
@@ -205,7 +198,7 @@ FIG_SETUP = {
     },
     # "cumulative reproduction": {
     #     "title": "cumulative reproduction",
-    # "supports_multi": True,    
+    # "supports_multi": True,
     # "prep_y": prep_y.get_cumulative_reproduction,
     #     "prep_x": prep_x.get_ages,
     #     "prep_figure": "make_line_figure",
@@ -226,7 +219,7 @@ FIG_SETUP = {
     # },
     # "lifetime reproduction": {
     #     "title": "lifetime reproduction",
-    # "supports_multi": True,    
+    # "supports_multi": True,
     # "prep_y": prep_y.get_lifetime_reproduction,
     #     "prep_x": prep_x.get_steps,
     #     "prep_figure": "make_line_figure",
@@ -265,7 +258,7 @@ FIG_SETUP = {
     },
     # "death structure": {
     #     "title": "death structure",
-    # "supports_multi": True,    
+    # "supports_multi": True,
     # "prep_y": prep_y.get_death_structure,
     #     "prep_x": prep_x.get_ages,
     #     "prep_figure": "make_line_figure",
@@ -281,7 +274,7 @@ FIG_SETUP = {
     # },
     # "total survivorship": {
     #     "title": "total survivorship",
-    # "supports_multi": True,    
+    # "supports_multi": True,
     # "description": dcc.Markdown(
     #         """xxx.""",
     #         mathjax=True,
