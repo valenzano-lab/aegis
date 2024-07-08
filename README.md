@@ -7,6 +7,8 @@
 
 Numerical model for life history evolution of age-structured populations under customizable ecological scenarios.
 
+<!-- TODO describe what aegis is for and whom is it for -->
+
 ## How to use
 You can run AEGIS simulations on a webserver or locally. The webserver is especially useful if you want to try AEGIS out and run a couple of simple simulations. For more demanding simulations, it is best to install and run AEGIS on your local machine.
 
@@ -35,7 +37,6 @@ AGE_LIMIT: 50
 
 
 ### Developer installation
-
 If you want to contribute to the codebase, install AEGIS from github:
 
 ```bash
@@ -45,17 +46,19 @@ make install_dev
 ```
 <!-- TODO update install_dev script -->
 
-## Model description
-To learn about how the model works, consult the documentation within AEGIS GUI or papers listed below. API documentation is available [here]()
-<!-- TODO update link -->
-
-## Related articles
+## Documentation
+### Model description
+Most documentation about the model is available within the GUI itself, including description of submodels, configuration parameters, output data and output file structure. Use the [webserver]() or a local installation to access the GUI. <!-- TODO update link --> Further information is available in scientific articles:
 - [AEGIS: An In Silico Tool to model Genome Evolution in Age-Structured Populations (2019)](https://www.biorxiv.org/content/10.1101/646877v1)
 - [An In Silico Model to Simulate the Evolution of Biological Aging (2016)](https://www.biorxiv.org/content/10.1101/037952v1)
+<!-- TODO including ODD as modeled by https://www.jasss.org/23/2/7.html-->
 
-## Authors
+### API reference
+Exhaustive, searchable API reference made by pdoc is available [here](https://valenzano-lab.github.io/aegis/aegis.html).
 
+## Contributors
 - **Martin Bagić** (v2): [email](martin.bagic@outlook.com), [github](https://github.com/martinbagic)
 - **Dario Valenzano** (v1, v2): [github](https://github.com/dvalenzano)
+- **Erik Boelen Theile** (v2)
 - **Arian Šajina** (v1): [github](https://github.com/ariansajina)
 - **William Bradshaw** (v1): [github](https://github.com/willbradshaw)
