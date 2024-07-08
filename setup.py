@@ -45,6 +45,7 @@ setuptools.setup(
             "flake8",
             "black",
             "tabulate",
+            "pdoc",
         ]
     },
 )
