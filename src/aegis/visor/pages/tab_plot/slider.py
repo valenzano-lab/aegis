@@ -28,6 +28,7 @@ def needs_slider(fig_name):
 # Single Dropdown and Tabs
 @callback(
     Output({"type": "graph-figure", "index": MATCH}, "figure"),
+    Output({"type": "graph-slider", "index": MATCH}, "max"), # updates slider max as you use it
     Input({"type": "graph-slider", "index": MATCH}, "value"),
     State({"type": "graph-slider", "index": MATCH}, "id"),
     State("dropdown-multi", "value"),
@@ -40,4 +41,4 @@ def update(slider_value, slider_id, dropdown_multi_value, dropdown_single_value)
     supports_multi = FIG_SETUP[fig_name]["supports_multi"]
     dropdown_values = dropdown_multi_value if supports_multi else [dropdown_single_value]
     fig, max_iloc = gen_fig.gen_fig(fig_name, dropdown_values, iloc=slider_value)
-    return fig
+    return fig, max_iloc
