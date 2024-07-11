@@ -16,9 +16,39 @@ class PopgenStatsRecorder(Recorder):
         Record population size in popgenstats, and record popgen statistics
 
         # OUTPUT SPECIFICATION
-        path: /popgen/{metric}.csv
+        path: /popgen/simple.csv
         filetype: csv
-        keywords: genotype
+        keywords: population genetics
+        structure: A matrix containing the population size, effective population size, mu, segregating sites, segregating sites using a genomic sample, theta, theta_w, theta_pi, tajimas_d, theta_h, and fayandwu_h.
+
+        # OUTPUT SPECIFICATION
+        path: /popgen/allele_frequencies.csv
+        filetype: csv
+        keywords: population genetics
+        structure:
+
+        # OUTPUT SPECIFICATION
+        path: /popgen/genotype_frequencies.csv
+        filetype: csv
+        keywords: population genetics
+        structure:
+
+        # OUTPUT SPECIFICATION
+        path: /popgen/sfs.csv
+        filetype: csv
+        keywords: population genetics
+        structure:
+
+        # OUTPUT SPECIFICATION
+        path: /popgen/reference_genome.csv
+        filetype: csv
+        keywords: population genetics
+        structure:
+
+        # OUTPUT SPECIFICATION
+        path: /popgen/reference_genome_gsample.csv
+        filetype: csv
+        keywords: population genetics
         structure:
         """
         hermes.modules.popgenstats.record_pop_size_history(genomes.array)

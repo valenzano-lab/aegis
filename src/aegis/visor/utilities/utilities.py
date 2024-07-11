@@ -84,12 +84,13 @@ def extract_visor_from_docstring(class_):
 def extract_output_specification_from_docstring(method):
     """Extract information about the output file created by the method"""
     docstring = method.__doc__
-    text = docstring.split("# OUTPUT SPECIFICATION")[1]
-    parsed = {}
-    for pair in text.strip().split("\n"):
-        k, v = pair.split(":", maxsplit=1)
-        parsed[k.strip()] = v.strip()
-    return parsed
+    texts = docstring.split("# OUTPUT SPECIFICATION")[1:]
+    for text in texts:
+        parsed = {}
+        for pair in text.strip().split("\n"):
+            k, v = pair.split(":", maxsplit=1)
+            parsed[k.strip()] = v.strip()
+        yield parsed
 
 
 # def return_output_specifications_as_markdown_table(methods):
@@ -135,7 +136,7 @@ from aegis.modules.recording.ticker import Ticker
 from aegis.modules.recording.visorrecorder import VisorRecorder
 
 OUTPUT_SPECIFICATIONS = [
-    extract_output_specification_from_docstring(method=method)
+    specification
     for method in (
         FeatherRecorder.write_genotypes,
         FeatherRecorder.write_phenotypes,
@@ -152,4 +153,7 @@ OUTPUT_SPECIFICATIONS = [
         VisorRecorder.write_genotypes,
         VisorRecorder.write_phenotypes,
     )
+    for specification in extract_output_specification_from_docstring(
+        method=method
+    )  # This loop is necessary in case there are multiple output specifications in one method
 ]
