@@ -71,6 +71,9 @@ class PopgenStats:
             ) = [None] * 8
 
     def emit_simple(self):
+        # TODO add headers
+        # TODO add headers and indices to all output files; and index and column names
+
         attrs = [
             "n",
             "ne",

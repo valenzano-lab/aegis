@@ -19,37 +19,64 @@ class PopgenStatsRecorder(Recorder):
         path: /popgen/simple.csv
         filetype: csv
         keywords: population genetics
-        structure: A matrix containing the population size, effective population size, mu, segregating sites, segregating sites using a genomic sample, theta, theta_w, theta_pi, tajimas_d, theta_h, and fayandwu_h.
+        description: Simple population metrics including population size, effective population size, mu, segregating sites, segregating sites using a genomic sample, theta, theta_w, theta_pi, tajimas_d, theta_h, and fayandwu_h.
+        structure: A float matrix.
 
         # OUTPUT SPECIFICATION
         path: /popgen/allele_frequencies.csv
         filetype: csv
         keywords: population genetics
-        structure:
+        description: 1-allele population-frequencies of every genomic site.
+        structure: A float matrix.
 
         # OUTPUT SPECIFICATION
         path: /popgen/genotype_frequencies.csv
         filetype: csv
         keywords: population genetics
-        structure:
+        description: Genotype frequencies at site resolution (e.g. for a diploid genome, number of 00, 01 and 11 for each site).
+        structure: A float matrix.
 
         # OUTPUT SPECIFICATION
         path: /popgen/sfs.csv
         filetype: csv
         keywords: population genetics
-        structure:
+        description: A site frequency spectrum.
+        structure: A float matrix.
+
+        # OUTPUT SPECIFICATION
+        path: /popgen/mean_h_per_bit_expected.csv
+        filetype: csv
+        keywords: population genetics
+        description: Heterozygosity per bit.
+        structure: A float matrix.
+
+        # OUTPUT SPECIFICATION
+        path: /popgen/mean_h_per_bit.csv
+        filetype: csv
+        keywords: population genetics
+        description: Expected mean heterozygosity per bit under Hardy-Weinberg-Equilibrium.
+        structure: A float matrix.
+
+        # OUTPUT SPECIFICATION
+        path: /popgen/mean_h_per_locus.csv
+        filetype: csv
+        keywords: population genetics
+        description: Mean bit heterozygosity per locus.
+        structure: A float matrix.
 
         # OUTPUT SPECIFICATION
         path: /popgen/reference_genome.csv
         filetype: csv
         keywords: population genetics
-        structure:
+        description: Reference genome based on which allele is most common at each position.
+        structure: A float matrix.
 
         # OUTPUT SPECIFICATION
         path: /popgen/reference_genome_gsample.csv
         filetype: csv
         keywords: population genetics
-        structure:
+        description: Reference genome based on which allele is most common at each position in a sample of genomes.
+        structure: A float matrix.
         """
         hermes.modules.popgenstats.record_pop_size_history(genomes.array)
 
@@ -65,6 +92,8 @@ class PopgenStatsRecorder(Recorder):
 
         with open(self.odir / "simple.csv", "ab") as f:
             np.savetxt(f, [array], delimiter=",", fmt="%1.3e")
+
+        # TODO when writing some metrics (e.g. reference genome, reference genome gsample) use the appropriate dtype (bool in that case)
 
         # Record complex statistics
         complex_statistics = hermes.modules.popgenstats.emit_complex()
