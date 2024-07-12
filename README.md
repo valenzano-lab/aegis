@@ -48,7 +48,7 @@ make install_dev
 
 ## Documentation
 ### Model description
-Most documentation about the model is available within the GUI itself, including description of submodels, configuration parameters, output data and output file structure. Use the [webserver]() or a local installation to access the GUI. <!-- TODO update link --> Further information is available in scientific articles:
+Most documentation about the model is available within the GUI itself, including description of submodels, [configuration parameters](src/aegis/documentation/dynamic/default_parameters.md), and [output specification](src/aegis/documentation/dynamic/output_specifications.md). Use the [webserver]() or a local installation to access the GUI. <!-- TODO update link --> Further information is available in scientific articles:
 - [AEGIS: An In Silico Tool to model Genome Evolution in Age-Structured Populations (2019)](https://www.biorxiv.org/content/10.1101/646877v1)
 - [An In Silico Model to Simulate the Evolution of Biological Aging (2016)](https://www.biorxiv.org/content/10.1101/037952v1)
 <!-- TODO including ODD as modeled by https://www.jasss.org/23/2/7.html-->
