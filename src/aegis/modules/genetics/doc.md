@@ -96,7 +96,7 @@ This step is important in simulating environmental drift; i.e. a non-cyclic, pro
 
 #### Computation
 
-$$g \oplus \epsilon \rarr o^1_{i,j,k}$$
+$$g \oplus \epsilon \rightarrow o^1_{i,j,k}$$
 
 #### Explanation
 
@@ -107,8 +107,8 @@ The state of the environment is saved in the array $\epsilon$ which has the same
 
 
 Note that $\oplus$ is a XOR operation which acts as a flip; i.e.
-$$g_{i,j,k} \oplus \epsilon_{i,j,k} \rarr o^1_{i,j,k} \text{ when } \epsilon_{i,j,k} = 0$$
-$$g_{i,j,k} \oplus \epsilon_{i,j,k} \rarr \neg\ o^1_{i,j,k} \text{ when } \epsilon_{i,j,k} = 1.$$
+$$g_{i,j,k} \oplus \epsilon_{i,j,k} \rightarrow o^1_{i,j,k} \text{ when } \epsilon_{i,j,k} = 0$$
+$$g_{i,j,k} \oplus \epsilon_{i,j,k} \rightarrow \neg\ o^1_{i,j,k} \text{ when } \epsilon_{i,j,k} = 1.$$
 
 When $\epsilon$ is 1, this computation flips the homologous genomic bit, and when $\epsilon$ is 0, the computation keeps the value of the homologous genomic bit.
 
@@ -119,8 +119,8 @@ This step is important in handling diploidy and simulating inheritance patterns 
 
 #### Computation
 
-$$o^1_{i,j,0} = o^1_{i,j,1} \rarr o^2_{i,j} := o^1_{i,j,0}$$
-$$o^1_{i,j,0} \ne o^1_{i,j,1} \rarr o^2_{i,j} := DF$$
+$$o^1_{i,j,0} = o^1_{i,j,1} \rightarrow o^2_{i,j} := o^1_{i,j,0}$$
+$$o^1_{i,j,0} \ne o^1_{i,j,1} \rightarrow o^2_{i,j} := DF$$
 
 
 #### Explanation
@@ -148,11 +148,11 @@ In AEGIS, there are two kinds of architectures – a _composite_ and a _modifyin
 
 We can resolve the genetic architecture as a weighted sum
 
-$$o^3_{t,a} \larr \sum_{i,j} o^2_{i,j} * GA_{i,j,t,a}$$
+$$o^3_{t,a} \leftarrow \sum_{i,j} o^2_{i,j} * GA_{i,j,t,a}$$
 
 or as a matrix multiplication
 
-$$ GA \times o^2 \rarr o^3$$
+$$ GA \times o^2 \rightarrow o^3$$
 
 where the intermediate pseudogenome $o^2$ is flattened (to one dimensions) and the $GA$ is flattened to have $_{i,j}$ on one axis (as $o^2$) and $_{t,a}$ on the other.
 
@@ -166,7 +166,7 @@ Note that $GA$ is only a concept. The user does not enter individual weights of 
 Under composite architecture, each locus is responsible for setting a phenotypic value of one trait at one age. Each locus has a user-defined number of bits, $BPL$ (parameter `BITS_PER_LOCUS`). Each bit has a weight, determined by the locus architecture $LA_i$. Under the simplest locus architecture, every bit has the same weight; i.e. $LA_{i} = \frac{1}{BPL}$. More complex locus architectures can be made where bits are increasingly more important within a locus.
 <!-- # TODO use := instead of arrows -->
 
-$$o^{2*}_{j} \larr \sum_{i=0}^{BPL} o^{2}_{i,j} \cdot LA_i$$
+$$o^{2*}_{j} \leftarrow \sum_{i=0}^{BPL} o^{2}_{i,j} \cdot LA_i$$
 
 The sequence $o^{2*}_j$ contains locus values. These are now mapped onto various traits. Per code convention, traits are encoded in the following sequence – intrinsic mortality, intrinsic fertility, intrinsic mutation rate and intrinsic growth rate.
 
@@ -181,10 +181,10 @@ These formulas simply mean that the phenotypic values for mortality are encoded 
 ##### Computation for modifying architecture
 
 Under modifying architecture, the computation is simpler. `BITS_PER_LOCUS` is set to 1, so
-$$ o^2_{i,j} = o^2_{i,0} \rarr o^{2*}_i.$$
+$$ o^2_{i,j} = o^2_{i,0} \rightarrow o^{2*}_i.$$
 
 The weighted sum formula then becomes
-$$o^3_{t,a} \larr \sum_{i} o^{2*}_{i} * GA_{i,t,a}$$
+$$o^3_{t,a} \leftarrow \sum_{i} o^{2*}_{i} * GA_{i,t,a}$$
 which means that setting $GA$ becomes simpler.
 
 Weights of the genetic architecture ($GA_{i,t,a}$) are sampled from user-specified distributions.
@@ -196,9 +196,9 @@ Weights of the genetic architecture ($GA_{i,t,a}$) are sampled from user-specifi
 In case probability traits (intrinsic survival, reproduction and mutation rates) compute to values over 1 or under 0, they are cut back to the valid interval of [0,1].
 
 #### Computation
-$$ o^4_{t,a} \larr 1 \text{ when } o^3_{t,a} > 1$$
-$$ o^4_{t,a} \larr 0 \text{ when } o^3_{t,a} < 0$$
-$$ o^4_{t,a} \larr o^3_{t,a} \text{ otherwise}$$
+$$ o^4_{t,a} \leftarrow 1 \text{ when } o^3_{t,a} > 1$$
+$$ o^4_{t,a} \leftarrow 0 \text{ when } o^3_{t,a} < 0$$
+$$ o^4_{t,a} \leftarrow o^3_{t,a} \text{ otherwise}$$
 
 Note that these are equivalent:
 
