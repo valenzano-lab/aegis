@@ -154,7 +154,7 @@ or as a matrix multiplication
 
 $$ GA \times o^2 \rightarrow o^3$$
 
-where the intermediate pseudogenome $o^2$ is flattened (to one dimensions) and the $GA$ is flattened to have $_{i,j}$ on one axis (as $o^2$) and $_{t,a}$ on the other.
+where the intermediate pseudogenome $o^2$ is flattened (to one dimensions) and the $GA$ is flattened to have $`_{i,j}`$ on one axis (as $o^2$) and $`_{t,a}`$ on the other.
 
 Conceptually, it is simpler to think of it as a weighted sum. $GA_{i,j,t,a}$ are user-set inputs, the weights of the weighted sum. When $o^2_{i,j}$ is greater than 0, it contributes to a trait $t$ at an age $a$ with the weight of $GA_{i,j,t,a}$.
 
@@ -166,25 +166,35 @@ Note that $GA$ is only a concept. The user does not enter individual weights of 
 Under composite architecture, each locus is responsible for setting a phenotypic value of one trait at one age. Each locus has a user-defined number of bits, $BPL$ (parameter `BITS_PER_LOCUS`). Each bit has a weight, determined by the locus architecture $LA_i$. Under the simplest locus architecture, every bit has the same weight; i.e. $LA_{i} = \frac{1}{BPL}$. More complex locus architectures can be made where bits are increasingly more important within a locus.
 <!-- # TODO use := instead of arrows -->
 
-$$o^{2*}_{j} \leftarrow \sum_{i=0}^{BPL} o^{2}_{i,j} \cdot LA_i$$
+$$o^{2*}\_{j} \leftarrow \sum_{i=0}^{BPL} o^{2}_{i,j} \cdot LA_i$$
 
 The sequence $o^{2*}_j$ contains locus values. These are now mapped onto various traits. Per code convention, traits are encoded in the following sequence – intrinsic mortality, intrinsic fertility, intrinsic mutation rate and intrinsic growth rate.
 
-$$o^{3}_{mortality, a} := o^{2*}_{a}$$
-$$o^{3}_{fertility, a} := o^{2*}_{a+\Delta A}$$
-$$o^{3}_{mutation\ rate, a} := o^{2*}_{a+2\Delta A}$$
-$$o^{3}_{growth\ rate, a} := o^{2*}_{a+3\Delta A}$$
+$$
+o^{3}_{mortality, a} := o^{2*}\_{a}
+$$
+
+$$
+o^{3}_{fertility, a} := o^{2*}\_{a+\Delta A}
+$$
+
+$$
+o^{3}_{mutation\ rate, a} := o^{2*}\_{a+2\Delta A}
+$$
+
+$$
+o^{3}_{growth\ rate, a} := o^{2*}\_{a+3\Delta A}
+$$
 
 Factor $\Delta A$ is the parameter `AGE_LIMIT`, the maximum age that can be obtained by any individual within a custom simulation.
 These formulas simply mean that the phenotypic values for mortality are encoded in the first $\Delta A$ loci, values for fertility in the second $\Delta A$ loci, etc.
 
 ##### Computation for modifying architecture
 
-Under modifying architecture, the computation is simpler. `BITS_PER_LOCUS` is set to 1, so
-$$ o^2_{i,j} = o^2_{i,0} \rightarrow o^{2*}_i.$$
+Under modifying architecture, the computation is simpler. `BITS_PER_LOCUS` is set to 1, so $o^2_{i,j} = o^2_{i,0} \rightarrow o^{2*}_i.$
 
 The weighted sum formula then becomes
-$$o^3_{t,a} \leftarrow \sum_{i} o^{2*}_{i} * GA_{i,t,a}$$
+$o^3_{t,a} \leftarrow \sum_{i} o^{2*}_{i} * GA\_{i,t,a}$
 which means that setting $GA$ becomes simpler.
 
 Weights of the genetic architecture ($GA_{i,t,a}$) are sampled from user-specified distributions.
@@ -203,9 +213,13 @@ $$ o^4_{t,a} \leftarrow o^3_{t,a} \text{ otherwise}$$
 Note that these are equivalent:
 
 $$o^4_{mortality, a} = m_{a}$$
+
 $$o^4_{fertility, a} = f_{a}$$
+
 $$o^4_{mutation\ rate, a} = mut_{a}$$
+
 $$o^4_{growth\ rate, a} = grw_{a}$$
+
 
 <!-- ### What is the rationale behind a three-number index (versus a simpler two-number of one-number index)?
 
