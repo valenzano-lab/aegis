@@ -11,6 +11,7 @@ class Parameter:
         info,
         dtype,
         drange,
+        info_extended=None,
         inrange=lambda x: True,
         serverrange=lambda x: True,
         serverrange_info="",
@@ -22,6 +23,7 @@ class Parameter:
         self.domain = domain
         self.default = default
         self.info = info
+        self.info_extended = info_extended
         self.dtype = dtype
         self.drange = drange
         self.inrange = inrange

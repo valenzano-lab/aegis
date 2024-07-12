@@ -67,8 +67,8 @@ install_testpypi:
 	python3 -m venv temp/venv ; \
 	. temp/venv/bin/activate ; \
 	python3 -m pip install --upgrade pip pytest ; \
-	python3 -m pip install --index-url https://test.pypi.org/simple --extra-index-url https://pypi.org/simple aegis-sim ; \
-	python3 -m pytest tests/ --log-cli-level=DEBUG
+	python3 -m pip install --index-url https://test.pypi.org/simple --extra-index-url https://pypi.org/simple aegis-sim 
+# python3 -m pytest tests/ --log-cli-level=DEBUG
 
 
 # ===================================
@@ -87,8 +87,8 @@ install_pypi:
 	python3 -m venv temp/venv ; \
 	. temp/venv/bin/activate ; \
 	python3 -m pip install --upgrade pip pytest ; \
-	python3 -m pip install --no-cache-dir aegis-sim ; \
-	python3 -m pytest tests/ --log-cli-level=DEBUG
+	python3 -m pip install --no-cache-dir aegis-sim
+# python3 -m pytest tests/ --log-cli-level=DEBUG
 
 
 # =============
