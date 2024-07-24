@@ -8,13 +8,21 @@
   src: url("fonts/Inter.ttf") format("truetype");
 }
 
+html,
 body {
   font-family: Inter;
   margin: 0;
+  height: 100%;
+}
+
+#body-container {
+  padding: 0 0;
+  height: 100vh;
+  display: flex;
 }
 
 #main-container {
-  padding: 0 10%;
+  overflow-y: scroll;
 }
 
 /* LANDING TAB */
@@ -31,4 +39,12 @@ body {
   text-decoration-color: gray;
   text-decoration-thickness: 0.1rem;
   cursor: help;
+}
+
+#sidebar {
+  min-width: 200px;
+  height: 100%;
+  background-color: beige;
+  display: flex;
+  flex-direction: column;
 }

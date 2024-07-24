@@ -56,11 +56,6 @@ body::-webkit-scrollbar {
   /* for Chrome, Safari, and Opera */
 }
 
-#main-container {
-  /* min-height: 100%; */
-  /* width: 100%; */
-}
-
 td {
   /* color: rgb(200, 200, 200); */
   /* td.td-info { */
