@@ -34,7 +34,8 @@ setuptools.setup(
         "PyYAML",
         "pyarrow",
         "platformdirs",
-        "dash",
+        "dash",  # GUI
+        "dash-bootstrap-components",  # GUI
         "urllib3==1.26.19",
         "psutil",
         "kaleido",  # for image export for dash figures TODO use a simpler method
