@@ -1,4 +1,5 @@
 import dash
+import logging
 
 from dash import html, dcc
 from aegis.visor.utilities import log_funcs, utilities
@@ -40,7 +41,8 @@ TEXTS_DOMAIN = {
     "composite genetic architecture": utilities.extract_visor_from_docstring(CompositeArchitecture),
     "modifying genetic architecture": utilities.extract_visor_from_docstring(ModifyingArchitecture),
     "environmental drift": utilities.extract_visor_from_docstring(Envdrift),
-    "other": "",
+    # "technical": "",
+    # "other": "",
 }
 
 
@@ -86,6 +88,9 @@ def layout() -> html.Div:
     # Group parameters by domain
     subsets = {domain: [] for domain in TEXTS_DOMAIN.keys()}
     for param in DEFAULT_PARAMETERS.values():
+        if param.domain not in subsets:
+            logging.error("Parameter domain {param.domain} has no documentation.")
+            subsets[param.domain] = []
         subsets[param.domain].append(param)
 
     # Generate layout
@@ -107,7 +112,7 @@ def layout() -> html.Div:
                                 ],
                             ),
                             html.Div(
-                                html.Div(children=TEXTS_DOMAIN[domain], className="config-domain-desc"),
+                                html.Div(children=TEXTS_DOMAIN.get(domain, ""), className="config-domain-desc"),
                                 style={"margin-left": "1.5rem"},
                             ),
                         ],
