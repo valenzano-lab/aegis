@@ -40,11 +40,3 @@ body {
   text-decoration-thickness: 0.1rem;
   cursor: help;
 }
-
-#sidebar {
-  min-width: 200px;
-  height: 100%;
-  background-color: beige;
-  display: flex;
-  flex-direction: column;
-}
