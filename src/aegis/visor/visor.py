@@ -3,6 +3,7 @@ Import callbacks. They modify Output's when Input's are triggered. Callbacks add
 """
 
 from dash import Dash
+import dash_bootstrap_components as dbc
 
 
 def run(environment):
@@ -17,6 +18,7 @@ def run(environment):
         # *.css in assets are automatically imported; they need to be explicitly ignored
         assets_ignore="styles-dark.css",
         use_pages=True,
+        external_stylesheets=[dbc.themes.BOOTSTRAP],
     )
 
     from aegis.visor.app.layout import app_layout

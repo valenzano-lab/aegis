@@ -1,6 +1,20 @@
 import dash
 from dash import html, dcc
+import dash_bootstrap_components as dbc
 
+
+nav = dbc.Nav(
+    [
+        dbc.NavItem(dbc.NavLink("home", href="/", id="link-nav-home")),
+        dbc.NavItem(dbc.NavLink("config", href="config", id="link-nav-config")),
+        dbc.NavItem(dbc.NavLink("plot", href="plot", id="link-nav-plot")),
+        dbc.NavItem(dbc.NavLink("simlog", href="simlog", id="link-nav-simlog")),
+        dbc.NavItem(dbc.NavLink("wiki", href="wiki", id="link-nav-wiki")),
+    ],
+    id="sidebar",
+    vertical="md",
+    pills=True,
+)
 
 app_layout = html.Div(
     id="body-container",
@@ -10,17 +24,18 @@ app_layout = html.Div(
         # dcc.Interval(id="results-exist-interval", interval=1000, n_intervals=0),
         # dcc.Interval(id="process-monitor-interval", interval=1000, n_intervals=0),
         # TITLE SECTION
-        html.Nav(
-            id="sidebar",
-            children=[
-                html.H1(dcc.Link("aegis", href="/")),
-                dcc.Link("home", href="/", id="link-nav-home", className="nav-item"),
-                dcc.Link("config", href="config", id="link-nav-config", className="nav-item"),
-                dcc.Link("plot", href="plot", id="link-nav-plot", className="nav-item"),
-                dcc.Link("simlog", href="simlog", id="link-nav-simlog", className="nav-item"),
-                dcc.Link("wiki", href="wiki", id="link-nav-wiki", className="nav-item"),
-            ],
-        ),
+        # html.Nav(
+        #     id="sidebar",
+        #     children=[
+        #         html.H1(dbc.NavItem(dbc.NavLink("aegis", href="/")),
+        #         dbc.NavItem(dbc.NavLink("home", href="/", id="link-nav-home"),
+        #         dbc.NavItem(dbc.NavLink("config", href="config", id="link-nav-config"),
+        #         dbc.NavItem(dbc.NavLink("plot", href="plot", id="link-nav-plot"),
+        #         dbc.NavItem(dbc.NavLink("simlog", href="simlog", id="link-nav-simlog"),
+        #         dbc.NavItem(dbc.NavLink("wiki", href="wiki", id="link-nav-wiki"),
+        #     ],
+        # ),
+        nav,
         html.Div(id="main-container", children=[dash.page_container]),
     ],
 )
