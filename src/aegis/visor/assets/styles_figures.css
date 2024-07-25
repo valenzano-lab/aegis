@@ -19,3 +19,7 @@
 .figure-description {
   margin-bottom: 2rem;
 }
+
+.graph-invisible {
+  display: none;
+}
