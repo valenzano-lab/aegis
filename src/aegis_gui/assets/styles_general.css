@@ -8,22 +8,6 @@
   src: url("fonts/Inter.ttf") format("truetype");
 }
 
-html,
-body {
-  font-family: Inter;
-  margin: 0;
-  height: 100%;
-}
-
-#body-container {
-  padding: 0 0;
-  height: 100vh;
-  display: flex;
-}
-
-#main-container {
-  overflow-y: scroll;
-}
 
 /* LANDING TAB */
 #landing-section {
