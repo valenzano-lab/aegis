@@ -31,7 +31,7 @@ def layout():  # use function to ensure statelessness
                             For figures that show time-specific data, you can use sliders to change the time point plotted.
                             """
                         ),
-                        dropdowns.make_single_dropdown(dropdown_options),
+                        # dropdowns.make_single_dropdown(dropdown_options),
                         dropdowns.make_multi_dropdown(dropdown_options),
                         buttons.select,
                     ],
