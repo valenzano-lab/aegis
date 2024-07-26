@@ -6,7 +6,7 @@ from aegis_gui.pages.tab_plot import download, select_graph
 
 def get_graph(graph_name):
     info = FIG_SETUP[graph_name]
-    return dash.html.Div(
+    graph_div = dash.html.Div(
         children=[
             dash.dcc.Graph(
                 # id=figure_id,
@@ -28,7 +28,16 @@ def get_graph(graph_name):
             download.get_figure_download_dcc(figure_id=graph_name),
         ],
         id={"type": "graph-div", "index": graph_name},
-        className="graph-invisible" if graph_name != select_graph.initial_graph else "",
+    )
+
+    return dash.dcc.Loading(
+        id={"type": "loading-graph-div", "index": graph_name},
+        children=[graph_div],
+        overlay_style={"visibility": "visible", "filter": "blur(2px)"},
+        parent_style={"display": "none"},
+        delay_show=0,
+        delay_hide=250,
+        type="dot",
     )
 
 

@@ -1,8 +1,6 @@
 import dash
-from dash import callback, Output, Input, ctx, ALL, State, MATCH, dcc
+from dash import callback, Output, Input, ALL, State, dcc
 
-from aegis.utilities.container import Container
-from aegis_gui.utilities.utilities import get_sim_dir
 from aegis_gui.utilities import log_funcs
 from aegis_gui.pages.tab_plot.plot.prep_setup import FIG_SETUP
 from aegis_gui.pages.tab_plot.plot.gen_fig import gen_fig
@@ -80,20 +78,25 @@ def triggered_dropdown_multi(dropdown_values, figure_selected):
 
 
 @callback(
-    Output({"type": "graph-div", "index": ALL}, "className", allow_duplicate=True),
+    Output({"type": "loading-graph-div", "index": ALL}, "parent_style"),
     Input("figure-select", "value"),
-    State({"type": "graph-div", "index": ALL}, "className"),
-    State({"type": "graph-div", "index": ALL}, "id"),
-    prevent_initial_call=True,
+    State({"type": "loading-graph-div", "index": ALL}, "id"),
+    State({"type": "loading-graph-div", "index": ALL}, "parent_style"),
 )
 @log_funcs.log_debug
-def change_visibility(figure_selected, class_names, graph_ids):
-    new = []
-    for class_name, graph_id in zip(class_names, graph_ids):
-        class_name_without_invisible = " ".join([c for c in class_name.split() if c != "graph-invisible"])
+def change_visibility(figure_selected, graph_ids, parent_styles):
+
+    new_parent_styles = []
+
+    for graph_id, parent_style in zip(graph_ids, parent_styles):
+        new_parent_style = parent_style.copy() if parent_style else {}
         should_be_invisible = graph_id["index"] != figure_selected
+
         if should_be_invisible:
-            class_name_without_invisible += " graph-invisible"
-        new.append(class_name_without_invisible)
-    print(new)
-    return new
+            new_parent_style["display"] = "none"
+        elif "display" in new_parent_style:
+            del new_parent_style["display"]
+
+        new_parent_styles.append(new_parent_style)
+
+    return new_parent_styles

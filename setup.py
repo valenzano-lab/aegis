@@ -34,7 +34,7 @@ setuptools.setup(
         "PyYAML",
         "pyarrow",
         "platformdirs",
-        "dash",  # GUI
+        "dash>=2.17.1",  # GUI
         "dash-bootstrap-components",  # GUI
         "urllib3==1.26.19",
         "psutil",

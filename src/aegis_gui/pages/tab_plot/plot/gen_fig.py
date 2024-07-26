@@ -26,6 +26,8 @@ def gen_fig(fig_name, selected_sims, iloc):
     max_ilocs = []
     xs = []
 
+    # TODO you might not have to read all the data again when you slide!
+
     for sim in selected_sims:
         container = get_container(sim)
         ysi, max_iloc = prep_y(container, iloc=iloc)
