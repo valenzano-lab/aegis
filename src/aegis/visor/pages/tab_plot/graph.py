@@ -1,7 +1,7 @@
 import dash
 from aegis.visor.pages.tab_plot.plot.prep_setup import FIG_SETUP
 from aegis.visor.pages.tab_plot import slider
-from aegis.visor.pages.tab_plot import download
+from aegis.visor.pages.tab_plot import download, select_graph
 
 
 def get_graph(graph_name):
@@ -28,7 +28,7 @@ def get_graph(graph_name):
             download.get_figure_download_dcc(figure_id=graph_name),
         ],
         id={"type": "graph-div", "index": graph_name},
-        className="graph-invisible",
+        className="graph-invisible" if graph_name != select_graph.initial_graph else "",
     )
 
 

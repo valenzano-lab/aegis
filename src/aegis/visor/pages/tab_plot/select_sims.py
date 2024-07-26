@@ -17,12 +17,10 @@ from aegis.visor.pages.tab_plot.plot.gen_fig import gen_fig
 
 def make_multi_dropdown(dropdown_options):
     # TODO plot initial plots
-    initial_value = dropdown_options[:2]
-    initial_value = None
     return dcc.Dropdown(
         id="dropdown-multi",
         options=dropdown_options,
-        value=initial_value,
+        value="default" if "default" in dropdown_options else None,
         multi=True,
         className="bootstrap-dropdown",
     )
@@ -62,7 +60,6 @@ def handle_trigger(dropdown_values, selected_fig):
 )
 @log_funcs.log_debug
 def triggered_dropdown_multi(dropdown_values, figure_selected):
-    print(figure_selected)
     return handle_trigger(dropdown_values, figure_selected)
 
 

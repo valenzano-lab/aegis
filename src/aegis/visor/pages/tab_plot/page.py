@@ -2,7 +2,7 @@ import dash
 from dash import html, dcc
 from aegis.visor.utilities import log_funcs, utilities
 from aegis.utilities.container import Container
-from aegis.visor.pages.tab_plot import dropdowns, reload, tabs, buttons, graph
+from aegis.visor.pages.tab_plot import reload, select_graph, select_sims, tabs, graph
 
 
 dash.register_page(__name__, path="/plot", name="plot")
@@ -32,8 +32,8 @@ def layout():  # use function to ensure statelessness
                             """
                         ),
                         # dropdowns.make_single_dropdown(dropdown_options),
-                        dropdowns.make_multi_dropdown(dropdown_options),
-                        buttons.select,
+                        select_sims.make_multi_dropdown(dropdown_options),
+                        select_graph.select,
                     ],
                 ),
                 html.Div(
