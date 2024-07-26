@@ -6,7 +6,7 @@ AEGIS can be started in multiple ways; each of these functions starts AEGIS from
 import logging
 
 from aegis.manager import Manager
-from aegis.modules.initialization.terminalmanager import parse_terminal
+from aegis.argparser import parse_terminal
 
 
 def run_from_script(custom_config_path, pickle_path, overwrite, custom_input_params):
