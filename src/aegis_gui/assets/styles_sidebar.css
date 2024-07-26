@@ -1,9 +1,8 @@
 #sidebar {
   min-width: 200px;
   height: 100%;
-  background-color: beige;
-  display: flex;
-  flex-direction: column;
+  /* display: flex;
+  flex-direction: column; */
 }
 
 /* .nav-item {
@@ -13,3 +12,7 @@
 /* .nav-item:hover {
     background-color: blue;
 } */
+
+#sidebar i {
+  margin-right: 10px;
+}

@@ -23,7 +23,7 @@ import logging
 #     + [Output({"type": "graph-slider", "index": ALL}, "max")],
 #     # Input("plot-view-button", "n_clicks"),
 #     Input("reload-plots-button", "n_clicks"),
-#     # Input("main-url", "pathname"),
+#     # Input("url", "pathname"),
 #     State({"type": "selection-state", "index": ALL}, "data"),
 #     State({"type": "graph-slider", "index": ALL}, "max"),
 #     prevent_initial_call=True,

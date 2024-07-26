@@ -1,63 +1,56 @@
 import dash
 from dash import html, dcc
 import dash_bootstrap_components as dbc
+from aegis_gui.utilities import log_funcs
 
 
 nav = dbc.Nav(
-    [
+    children=[
+        dbc.NavItem([dbc.NavLink([html.I(className="bi bi-house-door-fill"), "home"], href="/", id="link-nav-home")]),
         dbc.NavItem(
-            [
-                html.I(className="bi bi-house-door-fill"),
-                dbc.NavLink("home", href="/", id="link-nav-home"),
-            ]
+            [dbc.NavLink([html.I(className="bi bi-gear-fill"), "config"], href="/config", id="link-nav-config")]
         ),
         dbc.NavItem(
-            [
-                html.I(className="bi bi-gear-fill"),
-                dbc.NavLink("config", href="config", id="link-nav-config"),
-            ]
+            [dbc.NavLink([html.I(className="bi bi-bar-chart-fill"), "plot"], href="/plot", id="link-nav-plot")]
         ),
+        dbc.NavItem([dbc.NavLink([html.I(className="bi bi-list-ul"), "simlog"], href="/simlog", id="link-nav-simlog")]),
         dbc.NavItem(
-            [
-                html.I(className="bi bi-bar-chart-fill"),
-                dbc.NavLink("plot", href="plot", id="link-nav-plot"),
-            ]
-        ),
-        dbc.NavItem(
-            [
-                html.I(className="bi bi-list-ul"),
-                dbc.NavLink("simlog", href="simlog", id="link-nav-simlog"),
-            ]
-        ),
-        dbc.NavItem(
-            [
-                html.I(className="bi bi-info-square-fill"),
-                dbc.NavLink("wiki", href="wiki", id="link-nav-wiki"),
-            ]
+            [dbc.NavLink([html.I(className="bi bi-info-square-fill"), "wiki"], href="/wiki", id="link-nav-wiki")]
         ),
     ],
     id="sidebar",
     vertical="md",
     pills=True,
+    # fill=True,
 )
+
+
+@dash.callback(
+    [dash.Output(f"link-nav-{page}", "active") for page in ["home", "config", "plot", "simlog", "wiki"]],
+    [dash.Input("url", "pathname")],
+)
+@log_funcs.log_debug
+def toggle_active_links(pathname):
+    if pathname is None:
+        # Default to home if pathname is None
+        pathname = "/"
+    return [
+        pathname == f"/{page}" or (page == "home" and pathname == "/")
+        for page in ["home", "config", "plot", "simlog", "wiki"]
+    ]
+
 
 app_layout = html.Div(
     id="body-container",
     children=[
-        dcc.Location(id="main-url", refresh=False),
+        dcc.Location(id="url", refresh=False),
         # checkers
         # dcc.Interval(id="results-exist-interval", interval=1000, n_intervals=0),
         # dcc.Interval(id="process-monitor-interval", interval=1000, n_intervals=0),
         # TITLE SECTION
         # html.Nav(
         #     id="sidebar",
-        #     children=[
-        #         html.H1(dbc.NavItem([dbc.NavLink("aegis", href="/"),]),
-        #         dbc.NavItem([dbc.NavLink("home", href="/", id="link-nav-home"),
-        #         dbc.NavItem([dbc.NavLink("config", href="config", id="link-nav-config"),
-        #         dbc.NavItem([dbc.NavLink("plot", href="plot", id="link-nav-plot"),
-        #         dbc.NavItem([dbc.NavLink("simlog", href="simlog", id="link-nav-simlog"),
-        #         dbc.NavItem([dbc.NavLink("wiki", href="wiki", id="link-nav-wiki"),
+        #     children=[Item([dbc.NavLink("wiki", href="wiki", id="link-nav-wiki"),
         #     ],
         # ),
         nav,

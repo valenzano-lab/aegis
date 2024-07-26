@@ -33,10 +33,10 @@ def get_graph(graph_name):
     return dash.dcc.Loading(
         id={"type": "loading-graph-div", "index": graph_name},
         children=[graph_div],
-        overlay_style={"visibility": "visible", "filter": "blur(2px)"},
+        overlay_style={"visibility": "visible", "filter": "blur(0px)"},
         parent_style={"display": "none"},
-        delay_show=0,
-        delay_hide=250,
+        # delay_show=0,
+        # delay_hide=250,
         type="dot",
     )
 
