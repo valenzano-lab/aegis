@@ -24,7 +24,10 @@ def figure_download_button_click(n_clicks, figure):
 
 
 def get_figure_download_button(figure_id):
-    return html.Button("download figure", id={"type": "figure-download-button", "index": figure_id})
+    return html.Button(
+        [html.I(className="bi bi-file-arrow-down-fill"), "download figure"],
+        id={"type": "figure-download-button", "index": figure_id},
+    )
 
 
 def get_figure_download_dcc(figure_id):
