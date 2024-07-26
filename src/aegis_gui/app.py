@@ -39,3 +39,21 @@ app_layout = html.Div(
         html.Div(id="main-container", children=[dash.page_container]),
     ],
 )
+
+
+def get_app():
+    app = dash.Dash(
+        __name__,
+        suppress_callback_exceptions=True,
+        update_title="",
+        # *.css in assets are automatically imported; they need to be explicitly ignored
+        assets_ignore="styles-dark.css",
+        use_pages=True,
+        external_stylesheets=[dbc.themes.BOOTSTRAP],
+    )
+
+    app._favicon = "favicon.ico"
+    app.title = "AEGIS visualizer"
+    app.layout = app_layout
+
+    return app
