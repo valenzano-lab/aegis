@@ -15,7 +15,7 @@ class FlushRecorder(Recorder):
 
     def __init__(self, odir: pathlib.Path):
 
-        self.odir = odir / "visor" / "spectra"
+        self.odir = odir / "gui" / "spectra"
         self.init_odir()
 
         self._collection = {
@@ -39,7 +39,7 @@ class FlushRecorder(Recorder):
         """Record data that has been collected over time."""
         # spectra/*.csv | Age distribution of various subpopulations (e.g. population that died of genetic causes)
 
-        if hermes.skip("VISOR_RATE"):
+        if hermes.skip("INTERVAL_RATE"):
             return
 
         for key, val in self.collection.items():
@@ -55,7 +55,7 @@ class FlushRecorder(Recorder):
         """
 
         # OUTPUT SPECIFICATION
-        path: /visor/spectra/age_at_{cause}.csv
+        path: /gui/spectra/age_at_{cause}.csv
         filetype: csv
         keywords: demography
         description: Total number of deaths by age and cause of death, within a simulation interval.

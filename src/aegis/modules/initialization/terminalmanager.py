@@ -27,12 +27,12 @@ def parse_terminal():
         help="overwrite old data with new simulation",
         default=None,
     )
-    # TODO split argument parser into multiple; e.g. depending on whether the user wants to run a sim directly or run visor (locally vs server)
+    # TODO split argument parser into multiple; e.g. depending on whether the user wants to run a sim directly or run gui (locally vs server)
     parser.add_argument(
         "--server",
         "-s",
         action="store_true",
-        help="run visor – the interactive GUI – in server mode",
+        help="run gui – the interactive GUI – in server mode",
         default=False,
     )
 

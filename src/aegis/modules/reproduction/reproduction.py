@@ -5,7 +5,7 @@ from aegis.modules.reproduction.recombination import recombination
 
 class Reproducer:
     """
-    VISOR
+    GUI
     Individuals are fertile starting with [[MATURATION_AGE]] (can be 0) until [[MENOPAUSE]] (if 0, no menopause occurs).
     Reproduction can be sexual (with diploid genomes) or asexual (with diploid or haploid genomes).
     When reproduction is sexual, recombination occurs in gametes at a rate of [[RECOMBINATION_RATE]]

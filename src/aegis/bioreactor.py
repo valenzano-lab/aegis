@@ -41,7 +41,7 @@ class Bioreactor:
         hermes.recording_manager.flushrecorder.collect("additive_age_structure", self.population.ages)  # population census
         hermes.recording_manager.picklerecorder.write(self.population)
         hermes.recording_manager.featherrecorder.write(self.population)
-        hermes.recording_manager.visorrecorder.record(self.population)
+        hermes.recording_manager.guirecorder.record(self.population)
         hermes.recording_manager.flushrecorder.flush()
         hermes.recording_manager.popgenstatsrecorder.write(
             self.population.genomes, hermes.architect.get_evaluation(self.population, "muta")

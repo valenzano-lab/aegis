@@ -8,8 +8,6 @@ import logging
 from aegis.manager import Manager
 from aegis.modules.initialization.terminalmanager import parse_terminal
 
-from aegis.visor import visor
-
 
 def run_from_script(custom_config_path, pickle_path, overwrite, custom_input_params):
     """
@@ -36,12 +34,12 @@ def run_from_terminal():
     custom_config_path, pickle_path, overwrite, server_mode = parse_terminal()
 
     if (custom_config_path, pickle_path, overwrite) == (None, None, None):
-        logging.info("Starting run_visor.")
+        logging.info("Starting run_gui.")
         logging.info(f"Server mode is {'ON' if server_mode else 'OFF'}.")
         if server_mode:
-            run_from_server_visor()
+            run_from_server_gui()
         else:
-            run_from_local_visor()
+            run_from_local_gui()
     else:
         manager = Manager(
             custom_config_path=custom_config_path,
@@ -52,9 +50,13 @@ def run_from_terminal():
         manager.run()
 
 
-def run_from_server_visor():
-    visor.run(environment="server")
+def run_from_server_gui():
+    import aegis_gui
+
+    aegis_gui.run(environment="server")
 
 
-def run_from_local_visor():
-    visor.run(environment="local")
+def run_from_local_gui():
+    import aegis_gui
+
+    aegis_gui.run(environment="local")

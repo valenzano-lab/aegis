@@ -9,7 +9,7 @@ from aegis.modules.genetics.modifying.gpm import GPM
 class ModifyingArchitecture:
     """
 
-    VISOR
+    GUI
     - when pleiotropy is needed
     - when all bits are 0, the phenotypic values are the ones set from parameters (baseline set in parameters);
     vs composite where it would be 0.

@@ -80,13 +80,13 @@ DEFAULT_PARAMETERS = {
         serverrange_info="0 or [1000, inf)",
         evalrange=[1, 10000],
     ),
-    "VISOR_RATE": Parameter(
-        key="VISOR_RATE",
+    "INTERVAL_RATE": Parameter(
+        key="INTERVAL_RATE",
         name="",
         domain="recording",
         default=1000,
         info="Frequency of recording interval data (in steps)",
-        info_extended="0 for no visor records",
+        info_extended="0 for no gui records",
         dtype=int,
         drange="[0, inf)",
         inrange=lambda x: x >= 0,

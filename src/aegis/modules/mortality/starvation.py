@@ -10,7 +10,7 @@ from aegis.hermes import hermes
 class Starvation:
     """
 
-    VISOR
+    GUI
     Starvation is an obligatory source of mortality, useful for modeling death from lack of resources.
     The parameter [[CARRYING_CAPACITY]] specifies the amount of resources.
     Generally, each individual requires one unit of resources; otherwise, they are at risk of starvation.

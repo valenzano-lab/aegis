@@ -13,7 +13,7 @@ from aegis.hermes import hermes
 class Infection:
     """
 
-    VISOR
+    GUI
     Infection is an optional source of mortality.
     [[FATALITY_RATE]] specifies how deadly the infection is; thus if set to 0, no deaths from infection will occur.
     The infection modeling is inspired by the SIR (susceptible-infectious-removed) model.

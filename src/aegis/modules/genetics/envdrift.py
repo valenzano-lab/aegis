@@ -10,7 +10,7 @@ from aegis.hermes import hermes
 class Envdrift:
     """
     
-    VISOR
+    GUI
     Environmental drift is deactivated when [[ENVDRIFT_RATE]] is 0.
     Conceptually, environmental drift simulates long-term environmental change such as climate change, resource depletion, pollution, etc.
     The main purpose of environmental drift is to allow the population to keep evolving adaptively.

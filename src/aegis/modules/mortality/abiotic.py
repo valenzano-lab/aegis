@@ -8,7 +8,7 @@ import logging
 class Abiotic:
     """
 
-    VISOR
+    GUI
     Abiotic mortality is an optional source of mortality, useful for modeling death by periodic environmental phenomena such as water availability and temperature.
     It has no effect when [[ABIOTIC_HAZARD_OFFSET]] and [[ABIOTIC_HAZARD_AMPLITUDE]] are set to 0.
     It is modeled using periodic functions with a period of [[ABIOTIC_HAZARD_PERIOD]], amplitude of [[ABIOTIC_HAZARD_AMPLITUDE]],

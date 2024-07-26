@@ -128,7 +128,7 @@ class Container:
     def get_birth_table_observed_interval(self, normalize=False):
         """
         Observed data.
-        Number of births (int) per parental age during an interval of length VISOR_RATE.
+        Number of births (int) per parental age during an interval of length INTERVAL_RATE.
         columns.name == parental_age (int)
         index.name == interval (int)
         """
@@ -143,7 +143,7 @@ class Container:
     def get_life_table_observed_interval(self, normalize=False):
         """
         Observed data.
-        Number of individuals (int) per age class observed during an interval of length VISOR_RATE.
+        Number of individuals (int) per age class observed during an interval of length INTERVAL_RATE.
         columns.name == age_class (int)
         index.name == interval (int)
         """
@@ -174,7 +174,7 @@ class Container:
     def get_death_table_observed_interval(self, normalize=False):
         """
         Observed data. Has a MultiIndex.
-        Number of deaths (int) per age class observed during an interval of length VISOR_RATE.
+        Number of deaths (int) per age class observed during an interval of length INTERVAL_RATE.
         columns.name == age_class (int)
         index.names == ["interval", "cause_of_death"] (int, str)
         """

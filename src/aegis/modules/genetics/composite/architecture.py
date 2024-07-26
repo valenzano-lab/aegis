@@ -8,7 +8,7 @@ from aegis.modules.genetics.composite.interpreter import Interpreter
 class CompositeArchitecture:
     """
 
-    VISOR
+    GUI
     - when pleiotropy is not needed;
     - it is quick, easy to analyze, delivers a diversity of phenotypes
     - every trait (surv repr muta neut) can be evolvable or not

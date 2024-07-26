@@ -15,7 +15,7 @@ import shutil
 from .terecorder import TERecorder
 from .picklerecorder import PickleRecorder
 from .popgenstatsrecorder import PopgenStatsRecorder
-from .visorrecorder import VisorRecorder
+from .intervalrecorder import IntervalRecorder
 from .flushrecorder import FlushRecorder
 from .featherrecorder import FeatherRecorder
 from .phenomaprecorder import PhenomapRecorder
@@ -34,7 +34,7 @@ class RecordingManager:
     Headers and indexes of all tabular files are explicitly recorded.
 
     -----
-    VISOR
+    GUI
     AEGIS records a lot of different data.
     In brief, AEGIS records
     genomic data (population-level allele frequencies and individual-level binary sequences) and
@@ -60,7 +60,7 @@ class RecordingManager:
     # def get_paths(odir: pathlib.Path) -> dict:
     #     return {
     #         "BASE_DIR": odir,
-    #         "visor_spectra": odir / "visor" / "spectra",
+    #         "gui_spectra": odir / "gui" / "spectra",
     #         "pickles": odir / "pickles",
     #         "popgen": odir / "popgen",
     #         "te": odir / "te",
@@ -70,7 +70,7 @@ class RecordingManager:
         self.terecorder = TERecorder(odir=self.odir)
         self.picklerecorder = PickleRecorder(odir=self.odir)
         self.popgenstatsrecorder = PopgenStatsRecorder(odir=self.odir)
-        self.visorrecorder = VisorRecorder(odir=self.odir)
+        self.guirecorder = IntervalRecorder(odir=self.odir)
         self.flushrecorder = FlushRecorder(odir=self.odir)
         self.featherrecorder = FeatherRecorder(odir=self.odir)
         self.phenomaprecorder = PhenomapRecorder(odir=self.odir)
