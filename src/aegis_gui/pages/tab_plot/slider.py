@@ -27,8 +27,8 @@ def needs_slider(fig_name):
 
 # Single Dropdown and Tabs
 @callback(
-    Output({"type": "graph-figure", "index": MATCH}, "figure"),
-    Output({"type": "graph-slider", "index": MATCH}, "max"),  # updates slider max as you use it
+    Output({"type": "graph-figure", "index": MATCH}, "figure", allow_duplicate=True),
+    Output({"type": "graph-slider", "index": MATCH}, "max", allow_duplicate=True),  # updates slider max as you use it
     Input({"type": "graph-slider", "index": MATCH}, "value"),
     State({"type": "graph-slider", "index": MATCH}, "id"),
     State("dropdown-multi", "value"),

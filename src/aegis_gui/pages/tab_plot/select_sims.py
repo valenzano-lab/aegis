@@ -51,12 +51,12 @@ def handle_trigger(dropdown_values, selected_fig):
 
 # Multi Dropdown and Tabs
 @callback(
-    Output({"type": "graph-figure", "index": ALL}, "figure", allow_duplicate=True),
-    Output({"type": "graph-slider", "index": ALL}, "max", allow_duplicate=True),
+    Output({"type": "graph-figure", "index": ALL}, "figure"),
+    Output({"type": "graph-slider", "index": ALL}, "max"),
     Input("dropdown-multi", "value"),
     Input("figure-select", "value"),
     # Input("tabs-multi", "value"),
-    prevent_initial_call=True,
+    # prevent_initial_call=True,
 )
 @log_funcs.log_debug
 def triggered_dropdown_multi(dropdown_values, figure_selected):
