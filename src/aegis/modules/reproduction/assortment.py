@@ -5,6 +5,8 @@ from aegis.hermes import hermes
 def assortment(genomes, parental_sexes):
     """Return assorted chromatids."""
 
+    # TODO rename
+
     # Get pairs
     males, females = hermes.modules.matingmanager.pair_up(parental_sexes)
     assert len(males) == len(females)
