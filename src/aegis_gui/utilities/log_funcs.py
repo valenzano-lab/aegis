@@ -1,9 +1,17 @@
 import logging
+import sys
+
+
+def get_location_of_func(func):
+    module_name = func.__module__
+    module = sys.modules[module_name]
+    module_path = module.__file__
+    return f"{module_path}, line {func.__code__.co_firstlineno}"
 
 
 def log_debug(func):
     def wrapper(*args, **kwargs):
-        logging.debug(f"Executing function: {func.__name__}.")
+        logging.debug(f"function {func.__name__} ({get_location_of_func(func)})")
         return func(*args, **kwargs)
 
     return wrapper

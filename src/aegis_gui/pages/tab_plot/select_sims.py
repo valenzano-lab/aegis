@@ -20,7 +20,7 @@ def make_multi_dropdown(dropdown_options):
     return dcc.Dropdown(
         id="dropdown-multi",
         options=dropdown_options,
-        value="default" if "default" in dropdown_options else None,
+        value=["default"] if "default" in dropdown_options else [],
         multi=True,
         className="bootstrap-dropdown",
     )
