@@ -1,6 +1,17 @@
 from aegis_gui.pages.tab_plot.plot.prep_setup import FIG_SETUP
 import plotly.graph_objs as go
 
+bootstrap_colors = [
+    "#007bff",  # primary
+    "#6c757d",  # secondary
+    "#28a745",  # success
+    "#dc3545",  # danger
+    "#ffc107",  # warning
+    "#17a2b8",  # info
+    "#f8f9fa",  # light
+    "#343a40",  # dark
+]
+
 FIG_LAYOUT = dict(
     width=300 * 1.1,
     height=300 * 1.1,
@@ -42,7 +53,12 @@ FIG_LAYOUT = dict(
 
 def make_scatter_figure(id_, xs, ys, selected_sims):
     figure = go.Figure(
-        data=[go.Scatter(x=x, y=y, mode="markers", name=sim) for x, y, sim in zip(xs, ys, selected_sims)],
+        data=[
+            go.Scatter(
+                x=x, y=y, mode="markers", name=sim, marker=dict(color=bootstrap_colors[i % len(bootstrap_colors)])
+            )
+            for i, (x, y, sim) in enumerate(zip(xs, ys, selected_sims))
+        ],
         layout=go.Layout({**FIG_LAYOUT, **FIG_SETUP[id_]["figure_layout"]}),
     )
 
@@ -67,7 +83,10 @@ def make_scatter_figure(id_, xs, ys, selected_sims):
 
 def make_line_figure(id_, xs, ys, selected_sims):
     figure = go.Figure(
-        data=[go.Scatter(x=x, y=y, mode="lines", name=sim) for x, y, sim in zip(xs, ys, selected_sims)],
+        data=[
+            go.Scatter(x=x, y=y, mode="lines", name=sim, line=dict(color=bootstrap_colors[i % len(bootstrap_colors)]))
+            for i, (x, y, sim) in enumerate(zip(xs, ys, selected_sims))
+        ],
         layout=go.Layout({**FIG_LAYOUT, **FIG_SETUP[id_]["figure_layout"]}),
     )
 
@@ -94,8 +113,13 @@ def make_hist_figure(id_, xs, ys, selected_sims):
     fig_setup = FIG_SETUP[id_]
     figure = go.Figure(
         data=[
-            go.Histogram(x=y, name=sim, nbinsx=fig_setup["nbinsx"] if "nbinsx" in fig_setup else None)
-            for y, sim in zip(ys, selected_sims)
+            go.Histogram(
+                x=y,
+                name=sim,
+                nbinsx=fig_setup["nbinsx"] if "nbinsx" in fig_setup else None,
+                marker_color=bootstrap_colors[i % len(bootstrap_colors)],
+            )
+            for i, (y, sim) in enumerate(zip(ys, selected_sims))
         ],
         layout=go.Layout({**FIG_LAYOUT, **FIG_SETUP[id_]["figure_layout"]}),
     )
