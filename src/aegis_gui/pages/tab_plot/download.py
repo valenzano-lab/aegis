@@ -1,4 +1,5 @@
 import logging
+import dash_bootstrap_components as dbc
 from dash import callback, Output, Input, ctx, State, MATCH, dcc, html
 from plotly.io import write_image
 from aegis_gui.utilities.utilities import get_figure_dir
@@ -24,8 +25,8 @@ def figure_download_button_click(n_clicks, figure):
 
 
 def get_figure_download_button(figure_id):
-    return html.Button(
-        [html.I(className="bi bi-file-arrow-down-fill"), "download figure"],
+    return dbc.Button(
+        [html.I(className="bi bi-file-arrow-down-fill"), "Download figure"],
         id={"type": "figure-download-button", "index": figure_id},
     )
 

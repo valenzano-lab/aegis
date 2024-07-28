@@ -1,5 +1,6 @@
 import dash
 from dash import html, dcc
+import dash_bootstrap_components as dbc
 from aegis_gui.utilities import log_funcs, utilities
 from aegis.utilities.container import Container
 from aegis_gui.pages.tab_plot import reload, select_graph, select_sims, tabs, graph
@@ -32,8 +33,26 @@ def layout():  # use function to ensure statelessness
                             """
                         ),
                         # dropdowns.make_single_dropdown(dropdown_options),
-                        select_sims.make_multi_dropdown(dropdown_options),
-                        select_graph.select,
+                        html.Div(
+                            [
+                                dbc.Row(
+                                    [
+                                        dbc.Col(select_graph.select, width=5),
+                                        dbc.Col(html.Label("(plotting function)"), width=3),
+                                    ],
+                                    className="g-0",
+                                    style={"margin-bottom": "0.3rem"},
+                                ),
+                                dbc.Row(
+                                    [
+                                        dbc.Col(select_sims.make_multi_dropdown(dropdown_options), width=5),
+                                        dbc.Col(html.Label("(plotted simulations)"), width=3),
+                                    ],
+                                    className="g-0",
+                                ),
+                            ],
+                            style={"margin": "2rem 0"},
+                        ),
                     ],
                 ),
                 html.Div(

@@ -1,4 +1,3 @@
-button,
 /* .view-button, */
 .control-element {
   border-radius: 0.5rem;
@@ -6,45 +5,8 @@ button,
   height: 2rem;
 }
 
-/* .view-button:hover, */
-button:hover {
-  cursor: pointer;
-}
-
-/* .view-button label:hover {
-  cursor: pointer;
-} */
-
-/* .view-button {
-  padding: 0.3rem 0.6rem;
-  display: flex;
-  font-weight: bold;
-  margin-right: 0.3rem;
-} */
-
-/* .view-button label {
-  font-size: 14px;
-  margin: 2px 0;
-} */
-
-button:disabled {
-  cursor: not-allowed;
-  background-color: red;
-}
-
-/* #plot-view-button.disabled {
-  pointer-events: none;
-} */
-
-/* .view-button, */
-button {
-  font-weight: bold;
-  cursor: pointer;
-}
-
-button {
-  /* font-family: Quicksand; */
-  font-weight: 700;
+i.bi-file-arrow-down-fill {
+  margin-right: 5px;
 }
 
 .control-element {

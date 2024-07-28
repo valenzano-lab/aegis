@@ -1,1 +1,15 @@
+/* PLOT TAB */
 
+.col-3 label {
+  vertical-align: middle;
+  margin-top: 0.4rem;
+  margin-left: 0.1rem;
+}
+
+.plot-dropdown {
+  height: 2.5rem;
+}
+
+#dropdown-multi {
+  height: 2.5rem;
+}

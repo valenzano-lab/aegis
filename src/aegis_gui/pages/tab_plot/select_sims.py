@@ -20,7 +20,8 @@ def make_multi_dropdown(dropdown_options):
         options=dropdown_options,
         value=["default"] if "default" in dropdown_options else [],
         multi=True,
-        className="bootstrap-dropdown",
+        placeholder="Select simulations to plot...",
+        className="plot-dropdown",
     )
 
 

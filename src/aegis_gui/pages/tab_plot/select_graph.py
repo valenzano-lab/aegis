@@ -18,4 +18,5 @@ select = dbc.Select(
     id="figure-select",
     options=[{"label": gn, "value": gn} for gn in gns],
     value=initial_graph,
+    className="plot-dropdown",
 )
