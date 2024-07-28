@@ -3,7 +3,7 @@ from dash import html, dcc
 import dash_bootstrap_components as dbc
 from aegis_gui.utilities import log_funcs, utilities
 from aegis.utilities.container import Container
-from aegis_gui.pages.tab_plot import reload, select_graph, select_sims, tabs, graph
+from aegis_gui.pages.tab_plot import reload, select_graph, select_sims, graph
 
 
 dash.register_page(__name__, path="/plot", name="plot")
@@ -23,14 +23,17 @@ def layout():  # use function to ensure statelessness
                     id="plot-top-panel",
                     style={"width": "100%"},
                     children=[
+                        html.H1("Plot tab"),
                         html.P(
                             """
-                            This is the plot tab. Here you can explore the simulation visually.
-                            You can also download the figures and the data used for plotting.
-                            The figures are interactive – if multiple simulations are displayed, you can click on
-                            simulation IDs to toggle their visibility; you can also zoom in and out.
-                            For figures that show time-specific data, you can use sliders to change the time point plotted.
+                            Explore simulations and export figures.
                             """
+                            # This is the plot tab. Here you can explore the simulation visually.
+                            # You can also download the figures and the data used for plotting.
+                            # The figures are interactive – if multiple simulations are displayed, you can click on
+                            # simulation IDs to toggle their visibility; you can also zoom in and out.
+                            # For figures that show time-specific data, you can use sliders to change the time point plotted.
+                            # """
                         ),
                         # dropdowns.make_single_dropdown(dropdown_options),
                         html.Div(
@@ -57,8 +60,8 @@ def layout():  # use function to ensure statelessness
                 ),
                 html.Div(
                     [
-                        html.Div(children=graph.get_graphs(), id="plot-bottom-left-panel", style={"width": "50%"}),
-                        html.Div(children=[], id="plot-bottom-right-panel", style={"width": "50%"}),
+                        html.Div(children=graph.get_graphs(), id="plot-bottom-left-panel", style={"width": "auto"}),
+                        html.Div(children=[], id="plot-bottom-right-panel", style={"margin-left": "2rem"}),
                     ],
                     style={"width": "100%", "display": "flex"},
                 ),

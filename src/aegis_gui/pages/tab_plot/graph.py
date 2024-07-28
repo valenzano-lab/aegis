@@ -15,8 +15,7 @@ def get_graph(graph_name):
                 config={"displayModeBar": False},
                 className="figure",
             ),
-            slider.make_slider(graph_name),
-            # (slider.make_slider(figure_id) if slider.needs_slider(figure_id) else None),
+            dash.html.Div(slider.make_slider(graph_name), style={"width": "50%"}),
         ],
         id={"type": "graph-div", "index": graph_name},
     )
