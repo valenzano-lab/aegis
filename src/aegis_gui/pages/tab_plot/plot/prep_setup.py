@@ -1,4 +1,5 @@
-from dash import dcc
+import dash
+import dash_bootstrap_components as dbc
 from aegis_gui.pages.tab_plot.plot import prep_y
 from aegis_gui.pages.tab_plot.plot import prep_x
 
@@ -10,7 +11,7 @@ FIG_SETUP = {
         "prep_y": prep_y.get_bit_states,
         "prep_x": prep_x.get_steps,
         "prep_figure": "make_heatmap_figure",
-        "description": dcc.Markdown(
+        "description": dash.dcc.Markdown(
             """
             Bit states for each site at a given step.
             \n
@@ -30,7 +31,7 @@ FIG_SETUP = {
         "prep_y": prep_y.get_causes_of_death,
         "prep_x": prep_x.get_ages,
         "prep_figure": "make_bar_figure",
-        "description": dcc.Markdown(
+        "description": dash.dcc.Markdown(
             """
             Number of deaths per age class, stratified by cause.
             \n
@@ -50,7 +51,7 @@ FIG_SETUP = {
         "prep_y": prep_y.get_derived_allele_freq,
         "prep_x": prep_x.get_ages,
         "prep_figure": "make_hist_figure",
-        "description": dcc.Markdown(
+        "description": dash.dcc.Markdown(
             """
             Sites with derived allele frequency of 0 are ignored.
             Ancestral states were the most common states an interval ago.
@@ -78,13 +79,21 @@ FIG_SETUP = {
         "prep_y": prep_y.get_mortality_intrinsic,
         "prep_x": prep_x.get_ages,
         "prep_figure": "make_line_figure",
-        "description": dcc.Markdown(
-            """
+        "description": dash.html.Div(
+            [
+                dash.dcc.Markdown(
+                    """
             Genetic (individual-specific, heritable) mortality at a given age.
             \n
             Population medians.
             """,
-            mathjax=True,
+                    mathjax=True,
+                ),
+                dash.html.Span(
+                    "tooltips", id="tooltip-target-1", style={"textDecoration": "underline", "cursor": "pointer"}
+                ),
+                dbc.Tooltip("This is the first tooltip", target="tooltip-target-1"),
+            ]
         ),
         # graph
         "figure_layout": {
@@ -98,7 +107,7 @@ FIG_SETUP = {
         "prep_y": prep_y.get_mortality_observed,
         "prep_x": prep_x.get_ages,
         "prep_figure": "make_line_figure",
-        "description": dcc.Markdown(
+        "description": dash.dcc.Markdown(
             """
             Observed (individual-specific, heritable) mortality at a given age (all sources of mortality considered).
             \n
@@ -120,7 +129,7 @@ FIG_SETUP = {
         "prep_y": prep_y.get_total_survivorship,
         "prep_x": prep_x.get_ages,
         "prep_figure": "make_line_figure",
-        "description": dcc.Markdown(
+        "description": dash.dcc.Markdown(
             """
             Observed expected probability to survive to a specific age (when all sources of mortality are considered).
             \n
@@ -140,7 +149,7 @@ FIG_SETUP = {
         "prep_y": prep_y.get_intrinsic_survivorship,
         "prep_x": prep_x.get_ages,
         "prep_figure": "make_line_figure",
-        "description": dcc.Markdown(
+        "description": dash.dcc.Markdown(
             # TODO clarify
             """
             Expected probability to survive to a specific age class only given genetic mortality.
@@ -161,7 +170,7 @@ FIG_SETUP = {
         "prep_y": prep_y.get_life_expectancy,
         "prep_x": prep_x.get_steps,
         "prep_figure": "make_line_figure",
-        "description": dcc.Markdown(
+        "description": dash.dcc.Markdown(
             # TODO check this
             """
             Expected lifespan at birth. Plotted over the course of the simulation.
@@ -182,7 +191,7 @@ FIG_SETUP = {
         "prep_y": prep_y.get_fertility,
         "prep_x": prep_x.get_ages,
         "prep_figure": "make_line_figure",
-        "description": dcc.Markdown(
+        "description": dash.dcc.Markdown(
             """
             The intrinsic probability to produce a single offspring at each age class.
             \n
@@ -202,7 +211,7 @@ FIG_SETUP = {
     # "prep_y": prep_y.get_cumulative_reproduction,
     #     "prep_x": prep_x.get_ages,
     #     "prep_figure": "make_line_figure",
-    #     "description": dcc.Markdown(
+    #     "description": dash.dcc.Markdown(
     #         """
     #         The expected number of offspring produced per individual until a given age class.
     #         \n
@@ -223,7 +232,7 @@ FIG_SETUP = {
     # "prep_y": prep_y.get_lifetime_reproduction,
     #     "prep_x": prep_x.get_steps,
     #     "prep_figure": "make_line_figure",
-    #     "description": dcc.Markdown(
+    #     "description": dash.dcc.Markdown(
     #         """
     #         The expected number of offspring produced per individual until death. Plotted over the course of the simulation.
     #         \n
@@ -243,7 +252,7 @@ FIG_SETUP = {
         "prep_y": prep_y.get_birth_structure,
         "prep_x": prep_x.get_ages,
         "prep_figure": "make_line_figure",
-        "description": dcc.Markdown(
+        "description": dash.dcc.Markdown(
             """
             The number of newborns produced by parents of a given age class.
             \n
@@ -262,7 +271,7 @@ FIG_SETUP = {
     # "prep_y": prep_y.get_death_structure,
     #     "prep_x": prep_x.get_ages,
     #     "prep_figure": "make_line_figure",
-    #     "description": dcc.Markdown(
+    #     "description": dash.dcc.Markdown(
     #         """The measured ratio of intrinsic deaths versus total deaths, grouped by age.""",
     #         mathjax=True,
     #     ),
@@ -275,7 +284,7 @@ FIG_SETUP = {
     # "total survivorship": {
     #     "title": "total survivorship",
     # "supports_multi": True,
-    # "description": dcc.Markdown(
+    # "description": dash.dcc.Markdown(
     #         """xxx.""",
     #         mathjax=True,
     #     ),
