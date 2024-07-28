@@ -45,6 +45,8 @@ def get_graph_metadata(graph_name):
             ),
             download.get_figure_download_button(figure_id=graph_name),
             download.get_figure_download_dcc(figure_id=graph_name),
+            download.get_data_download_button(figure_id=graph_name),
+            download.get_data_download_dcc(figure_id=graph_name),
         ],
         id={"type": "graph-metadata-div", "index": graph_name},
     )
