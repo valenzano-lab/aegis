@@ -38,10 +38,12 @@ class Starvation:
         STARVATION_RESPONSE,
         STARVATION_MAGNITUDE,
         CLIFF_SURVIVORSHIP,
+        CARRYING_CAPACITY,
     ):
 
         self.STARVATION_MAGNITUDE = STARVATION_MAGNITUDE
         self.CLIFF_SURVIVORSHIP = CLIFF_SURVIVORSHIP
+        self.CARRYING_CAPACITY = CARRYING_CAPACITY
 
         self.consecutive_overshoot_n = 0  # For starvation mode
 
@@ -49,20 +51,29 @@ class Starvation:
             "treadmill_random": self._treadmill_random,
             "treadmill_boomer": self._treadmill_boomer,
             "treadmill_zoomer": self._treadmill_zoomer,
+            "treadmill_boomer_soft": self._treadmill_boomer_soft,
+            "treadmill_zoomer_soft": self._treadmill_zoomer_soft,
             "cliff": self._cliff,
             "gradual": self._gradual,
             "logistic": self._logistic,
         }[STARVATION_RESPONSE]
 
     def __call__(self, n, resource_availability):
-        """Exposed method"""
+        """Exposed method
+
+        False in `mask` means survival. True in `mask` means death.
+        """
         self.consecutive_overshoot_n
         if n <= resource_availability:
             self.consecutive_overshoot_n = 0
             return np.zeros(n, dtype=np.bool_)
         else:
             self.consecutive_overshoot_n += 1
-            return self.func(n, resource_availability)
+            # TODO fix resource availability and carrying capacity logic
+            if self.func is self._gradual:
+                return self.func(n, resource_availability)
+            else:
+                return self.func(n, self.CARRYING_CAPACITY)
 
     def _logistic(self, n, resource_availability):
         """Kill random individuals with logistic-like probability."""
@@ -133,4 +144,35 @@ class Starvation:
         """
         mask = np.ones(n, dtype=np.bool_)
         mask[: int(resource_availability)] = False
+        return mask
+
+    def _treadmill_boomer_soft(self, n, resource_availability):
+        """Kill older individuals more.
+        Old individuals are positioned more to the front of the array.
+        True in the mask means death.
+        """
+        mask = self._treadmill_soft(1, 0, n, self.CARRYING_CAPACITY)
+        return mask
+
+    def _treadmill_zoomer_soft(self, n, resource_availability):
+        """Kill younger individuals more.
+        Young individuals are positioned later in the array.
+        True in the mask means death."""
+        mask = self._treadmill_soft(0, 1, n, self.CARRYING_CAPACITY)
+        return mask
+
+    @staticmethod
+    def _treadmill_soft(linspace_from, linspace_to, n, CARRYING_CAPACITY):
+        """
+        Young individuals are positioned later in the array; older earlier.
+        True in the mask means death.
+        """
+        p = np.linspace(linspace_from, linspace_to, n) ** 5  # **5 to make it superlinear
+        p /= p.sum()  # ensure sum(p) is 1
+
+        mask = np.zeros(n, dtype=np.bool_)
+
+        a = np.arange(n)
+        indices_dead = hermes.rng.choice(a, size=n - int(CARRYING_CAPACITY), p=p, replace=False)
+        mask[indices_dead] = True
         return mask

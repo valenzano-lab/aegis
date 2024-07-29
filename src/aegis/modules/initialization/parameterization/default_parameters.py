@@ -172,7 +172,7 @@ DEFAULT_PARAMETERS = {
         info="Mechanism for determining who dies under overcrowding conditions",
         info_extended="The possible modes can differ in the age distribution of mortality and/or the number of individuals removed.",
         dtype=str,
-        drange="{gradual, cliff, treadmill_random, treadmill_zoomer, treadmill_boomer}",
+        drange="{gradual, cliff, treadmill_random, treadmill_zoomer, treadmill_boomer, treadmill_boomer_soft, treadmill_zoomer_soft}",
         inrange=lambda x: x
         in (
             "gradual",
@@ -180,6 +180,8 @@ DEFAULT_PARAMETERS = {
             "treadmill_random",
             "treadmill_zoomer",
             "treadmill_boomer",
+            "treadmill_boomer_soft",
+            "treadmill_zoomer_soft",
         ),
     ),
     "STARVATION_MAGNITUDE": Parameter(

@@ -102,6 +102,7 @@ class Hermes:
             STARVATION_RESPONSE=self.parameters.STARVATION_RESPONSE,
             STARVATION_MAGNITUDE=self.parameters.STARVATION_MAGNITUDE,
             CLIFF_SURVIVORSHIP=self.parameters.CLIFF_SURVIVORSHIP,
+            CARRYING_CAPACITY=self.parameters.CARRYING_CAPACITY,
         )
         modules.infection = Infection(
             BACKGROUND_INFECTIVITY=self.parameters.BACKGROUND_INFECTIVITY,
