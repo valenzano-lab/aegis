@@ -61,7 +61,9 @@ def make_config_file(filename, configs):
 
 def get_sim_paths():
     sim_dir = get_sim_dir()
-    return [p for p in sim_dir.iterdir() if p.is_dir()]
+    paths = [p for p in sim_dir.iterdir() if p.is_dir()]
+    paths = sorted(paths, key=lambda path: path.name)
+    return paths
 
 
 def get_sims():
