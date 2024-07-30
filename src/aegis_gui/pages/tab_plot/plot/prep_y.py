@@ -86,6 +86,12 @@ def get_life_expectancy(container: Container, iloc=None):
     return ys, max_iloc
 
 
+def get_population_size(container: Container, iloc=None):
+    ys = container.get_population_size()
+    max_iloc = None
+    return ys, max_iloc
+
+
 # x-axis is other
 def get_derived_allele_freq(container: Container, iloc=-1):
     ys = genome.get_derived_allele_freq(container.get_genotypes_intrinsic_interval())

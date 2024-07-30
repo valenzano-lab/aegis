@@ -56,6 +56,7 @@ class Container:
             (self.basepath / "te").glob("*"),
             key=lambda path: int(path.stem),
         )
+        self.paths["popsize"] = self.basepath / "popsize.csv"
         if not self.paths["log"].is_file():
             logging.error(f"No AEGIS log found at path {self.paths['log']}.")
 
@@ -274,6 +275,12 @@ class Container:
         assert record_index < len(self.paths["te"]), "Index out of range"
         data = pd.read_csv(self.paths["te"][record_index], header=0)
         data.index.names = ["individual"]
+        return data
+
+    def get_population_size(self):
+        data = pd.read_csv(self.paths["popsize"], header=None)
+        data.index.names = ["steps"]
+        data.columns = ["popsize"]
         return data
 
     ###############

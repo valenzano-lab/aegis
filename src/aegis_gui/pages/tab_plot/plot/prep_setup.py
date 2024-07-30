@@ -186,6 +186,27 @@ FIG_SETUP = {
             "yaxis_title": "life expectancy",
         },
     },
+    "population size": {
+        "title": "population size",
+        "supports_multi": True,
+        "prep_y": prep_y.get_population_size,
+        "prep_x": prep_x.get_steps,
+        "prep_figure": "make_line_figure",
+        "description": dash.dcc.Markdown(
+            # TODO check this
+            """
+            .
+            \n
+            .
+            """,
+            mathjax=True,
+        ),
+        # graph
+        "figure_layout": {
+            "xaxis_title": "simulation step",
+            "yaxis_title": "life expectancy",
+        },
+    },
     "fertility": {
         "title": "intrinsic fertility",
         "supports_multi": True,
