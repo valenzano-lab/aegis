@@ -21,6 +21,7 @@ from .featherrecorder import FeatherRecorder
 from .phenomaprecorder import PhenomapRecorder
 from .summaryrecorder import SummaryRecorder
 from .progressrecorder import ProgressRecorder
+from .popsizerecorder import PopsizeRecorder
 from .ticker import Ticker
 
 # TODO write tests
@@ -77,6 +78,7 @@ class RecordingManager:
         self.summaryrecorder = SummaryRecorder(odir=self.odir)
         self.progressrecorder = ProgressRecorder(odir=self.odir)
         self.ticker = Ticker(odir=self.odir, TICKER_RATE=TICKER_RATE)
+        self.popsizerecorder = PopsizeRecorder(odir=self.odir)
 
     #############
     # UTILITIES #

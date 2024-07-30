@@ -38,6 +38,7 @@ class Bioreactor:
         hermes.modules.resources.replenish()
 
         # Record data
+        hermes.recording_manager.popsizerecorder.write(self.population)
         hermes.recording_manager.flushrecorder.collect("additive_age_structure", self.population.ages)  # population census
         hermes.recording_manager.picklerecorder.write(self.population)
         hermes.recording_manager.featherrecorder.write(self.population)
