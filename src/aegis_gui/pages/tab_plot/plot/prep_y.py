@@ -58,8 +58,8 @@ def get_birth_table(container: Container, iloc=-1):
 
 def get_death_table(container: Container, iloc=-1):
     ys = container.get_death_table_observed_interval().unstack("cause_of_death")
-    max_iloc = None
-    ys = ys.iloc[-1].unstack("cause_of_death")
+    max_iloc = ys.shape[0]
+    ys = ys.iloc[iloc].unstack("cause_of_death")
     return ys, max_iloc
 
 

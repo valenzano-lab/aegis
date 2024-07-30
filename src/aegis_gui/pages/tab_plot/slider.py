@@ -6,6 +6,9 @@ from aegis_gui.utilities import log_funcs
 
 
 def make_slider(figure_id):
+
+    needs_slider = lambda figure_id: FIG_SETUP[figure_id]["prep_x"] == prep_x.get_ages
+
     return dcc.Slider(
         id={"type": "graph-slider", "index": figure_id},
         className="" if needs_slider(figure_id) else "invisible",
@@ -19,10 +22,8 @@ def make_slider(figure_id):
     )
 
 
-def needs_slider(fig_name):
-    if fig_name == "death table":
-        return False
-    return FIG_SETUP[fig_name]["prep_x"] == prep_x.get_ages
+# def needs_slider(fig_name):
+#     return FIG_SETUP[fig_name]["prep_x"] == prep_x.get_ages
 
 
 # Single Dropdown and Tabs
