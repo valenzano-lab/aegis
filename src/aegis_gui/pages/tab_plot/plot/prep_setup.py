@@ -9,7 +9,7 @@ FIG_SETUP = {
         "title": "bit states",
         "supports_multi": False,
         "prep_y": prep_y.get_bit_states,
-        "prep_x": prep_x.get_steps,
+        "prep_x": prep_x.get_steps_multiplied,
         "prep_figure": "make_heatmap_figure",
         "description": dash.dcc.Markdown(
             """
@@ -169,7 +169,7 @@ FIG_SETUP = {
         "title": "life expectancy at age 0",
         "supports_multi": True,
         "prep_y": prep_y.get_life_expectancy,
-        "prep_x": prep_x.get_steps,
+        "prep_x": prep_x.get_steps_multiplied,
         "prep_figure": "make_line_figure",
         "description": dash.dcc.Markdown(
             # TODO check this
@@ -190,7 +190,7 @@ FIG_SETUP = {
         "title": "population size",
         "supports_multi": True,
         "prep_y": prep_y.get_population_size,
-        "prep_x": prep_x.get_steps,
+        "prep_x": prep_x.get_steps_non_multiplied,
         "prep_figure": "make_line_figure",
         "description": dash.dcc.Markdown(
             # TODO check this
@@ -252,7 +252,7 @@ FIG_SETUP = {
     #     "title": "lifetime reproduction",
     # "supports_multi": True,
     # "prep_y": prep_y.get_lifetime_reproduction,
-    #     "prep_x": prep_x.get_steps,
+    #     "prep_x": prep_x.get_steps_multiplied,
     #     "prep_figure": "make_line_figure",
     #     "description": dash.dcc.Markdown(
     #         """
