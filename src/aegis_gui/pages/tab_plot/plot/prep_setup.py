@@ -266,6 +266,25 @@ FIG_SETUP = {
             "yaxis_title": "number of newborns",
         },
     },
+    "life table": {
+        "title": "life table",
+        "supports_multi": True,
+        "prep_y": prep_y.get_life_table,
+        "prep_x": prep_x.get_ages,
+        "prep_figure": "make_line_figure",
+        "description": dash.dcc.Markdown(
+            """
+            The proportion of living individuals.
+            \n
+            """,
+            mathjax=True,
+        ),
+        # graph
+        "figure_layout": {
+            "xaxis_title": "age class",
+            "yaxis_title": "proportion of living individuals",
+        },
+    },
     # "death structure": {
     #     "title": "death structure",
     # "supports_multi": True,

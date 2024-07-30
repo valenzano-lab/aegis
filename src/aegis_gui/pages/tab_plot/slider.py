@@ -1,5 +1,5 @@
 import dash
-from dash import dcc, ALL, Input, callback, Output, MATCH, State
+from dash import dcc, Input, callback, Output, MATCH, State
 from aegis_gui.pages.tab_plot.plot.prep_setup import FIG_SETUP
 from aegis_gui.pages.tab_plot.plot import prep_x, gen_fig
 from aegis_gui.utilities import log_funcs

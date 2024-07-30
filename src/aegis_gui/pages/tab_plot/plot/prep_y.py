@@ -63,6 +63,13 @@ def get_death_table(container: Container, iloc=-1):
     return ys, max_iloc
 
 
+def get_life_table(container: Container, iloc=-1):
+    ys = container.get_life_table_observed_interval(normalize=True)
+    max_iloc = ys.shape[0]
+    ys = ys.iloc[iloc]
+    return ys, max_iloc
+
+
 # x-axis is step
 def get_lifetime_reproduction(container: Container, iloc=None):
     ys = container.get_lifetime_reproduction()

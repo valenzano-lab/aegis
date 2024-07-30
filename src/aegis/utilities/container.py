@@ -151,8 +151,9 @@ class Container:
         table.index.names = ["interval"]
         table.columns.names = ["age_class"]
         table.columns = table.columns.astype(int)
+        # NOTE normalize by sum
         if normalize:
-            table = table.div(table.iloc[:, 0], axis=0)
+            table = table.div(table.sum(1), axis=0)
         return table
 
     def get_life_table_observed_snapshot(self, record_index: int, normalize=False):
@@ -194,6 +195,7 @@ class Container:
     #######################
 
     def get_surv_observed_interval(self):
+        # TODO this is not accurate; this assumes that the population is in an equilibrium, or it only works if the life table is sampling across a long period
         lt = self.get_life_table_observed_interval()
         lt = lt.pct_change(axis=1).shift(-1, axis=1).add(1).replace(np.inf, 1)
         return lt
