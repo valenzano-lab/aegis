@@ -25,10 +25,10 @@ FIG_SETUP = {
             "yaxis_title": "genome site",
         },
     },
-    "causes of death": {
+    "death table": {
         "title": "death table",
         "supports_multi": False,
-        "prep_y": prep_y.get_causes_of_death,
+        "prep_y": prep_y.get_death_table,
         "prep_x": prep_x.get_ages,
         "prep_figure": "make_bar_figure",
         "description": dash.dcc.Markdown(
@@ -123,6 +123,7 @@ FIG_SETUP = {
             "yaxis_title": "total mortality",
         },
     },
+    # BUG goes up and down when the snapshot_rate is very low
     "total survivorship": {
         "title": "total survivorship",
         "supports_multi": True,
@@ -246,10 +247,10 @@ FIG_SETUP = {
     #         "yaxis_title": "lifetime number of offspring",
     #     },
     # },
-    "birth structure": {
-        "title": "birth structure",
+    "birth table": {
+        "title": "birth table",
         "supports_multi": True,
-        "prep_y": prep_y.get_birth_structure,
+        "prep_y": prep_y.get_birth_table,
         "prep_x": prep_x.get_ages,
         "prep_figure": "make_line_figure",
         "description": dash.dcc.Markdown(

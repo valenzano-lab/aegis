@@ -75,7 +75,7 @@ def make_scatter_figure(id_, xs, ys, selected_sims):
     )
 
     # Custom plots
-    if id_ == "birth structure":
+    if id_ == "birth table":
         figure.update_yaxes(range=[0, maxy * 1.05])
 
     return figure
@@ -103,7 +103,7 @@ def make_line_figure(id_, xs, ys, selected_sims):
     )
 
     # Custom plots
-    if id_ == "birth structure":
+    if id_ == "birth table":
         figure.update_yaxes(range=[0, maxy * 1.05])
 
     return figure

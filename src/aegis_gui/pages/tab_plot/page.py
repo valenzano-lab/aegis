@@ -13,7 +13,7 @@ dash.register_page(__name__, path="/plot", name="plot")
 def layout():  # use function to ensure statelessness
 
     simnames = [Container(path).basepath.stem for path in utilities.get_sim_paths()]
-    dropdown_options = [simname for simname in simnames]
+    dropdown_options = sorted(simnames)
     # TODO plot initially
     children = [
         html.Div(

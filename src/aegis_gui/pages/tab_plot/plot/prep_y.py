@@ -49,14 +49,14 @@ def get_cumulative_reproduction(container: Container, iloc=-1):
     return ys, max_iloc
 
 
-def get_birth_structure(container: Container, iloc=-1):
+def get_birth_table(container: Container, iloc=-1):
     ys = container.get_birth_table_observed_interval()
     max_iloc = ys.shape[0]
     ys = ys.iloc[iloc]
     return ys, max_iloc
 
 
-def get_causes_of_death(container: Container, iloc=-1):
+def get_death_table(container: Container, iloc=-1):
     ys = container.get_death_table_observed_interval().unstack("cause_of_death")
     max_iloc = None
     ys = ys.iloc[-1].unstack("cause_of_death")

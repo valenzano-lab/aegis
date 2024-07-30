@@ -20,7 +20,7 @@ def make_slider(figure_id):
 
 
 def needs_slider(fig_name):
-    if fig_name == "causes of death":
+    if fig_name == "death table":
         return False
     return FIG_SETUP[fig_name]["prep_x"] == prep_x.get_ages
 
