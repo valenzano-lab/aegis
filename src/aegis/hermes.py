@@ -12,7 +12,7 @@ from aegis.modules.initialization.parameterization.parametermanager import Param
 
 # TODO resolve logging customization / logger
 logging.basicConfig(
-    format="%(asctime)s %(levelname)s %(module)s -- %(message)s",
+    format="%(asctime)s %(levelname)s %(module)s: %(message)s",
     datefmt="%d/%m/%Y %I:%M:%S",
     level=logging.DEBUG,
 )
@@ -30,6 +30,7 @@ class Hermes:
             custom_input_params=custom_input_params,
         )()
 
+        self.simname = custom_config_path.stem
         self.random_seed = self.init_random_seed()
         self.rng = self.init_random_number_generator()
         self.traits = self.init_traits()

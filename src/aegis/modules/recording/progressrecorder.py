@@ -27,7 +27,9 @@ class ProgressRecorder(Recorder):
 
         step = hermes.get_step()
 
-        logging.info("%8s / %s / N=%s", step, hermes.parameters.STEPS_PER_SIMULATION, popsize)
+        logging.info(
+            "%s / %s / N=%s / simname=%s", step, hermes.parameters.STEPS_PER_SIMULATION, popsize, hermes.simname
+        )
 
         # Get time estimations
         time_diff = time.time() - self.time_start
