@@ -3,12 +3,8 @@ from aegis_gui.utilities import log_funcs, utilities
 import datetime
 from aegis.utilities.container import Container
 from aegis.utilities.get_folder_size import get_folder_size_with_du
-
-from . import download
-
 from aegis_gui.config import config
-
-from . import zip, delete
+from . import zip, delete, terminate, download
 
 
 @log_funcs.log_debug
@@ -22,6 +18,7 @@ def make_simlog_table():
             html.Th("ID", style={"padding-left": "1.3rem", "padding-right": "0.8rem"}),
             html.Th("CREATED"),
             html.Th("FINISHED"),
+            html.Th("TERMINATE"),
             html.Th("EXTINCT"),
             html.Th("RUNNING"),
             html.Th("SIZE"),
@@ -90,6 +87,7 @@ def make_table_row(log, input_summary, output_summary, basepath, filename, ticke
             ),
             html.Td(html.P(time_of_creation)),
             html.Td(html.P(time_of_finishing)),
+            html.Td(html.P(terminate.make_button(filename=filename))),
             html.Td(html.P(extinct)),
             html.Td(html.P(running)),
             html.Td(html.P(get_folder_size_with_du(basepath))),

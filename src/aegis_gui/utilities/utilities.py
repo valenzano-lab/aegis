@@ -12,6 +12,8 @@ from aegis.modules.initialization.parameterization.default_parameters import DEF
 
 # TODO ensure that there is default dataset available
 
+running_processes = {}
+
 
 def get_here():
     return pathlib.Path(__file__).absolute().parent
@@ -42,10 +44,28 @@ def get_config_path(filename):
     return get_sim_dir() / f"{filename}.yml"
 
 
-def run(filename):
+def run_simulation(filename):
+    global running_processes
     config_path = get_config_path(filename)
     logging.info(f"Running a simulation at path {config_path}.")
-    subprocess.Popen(["python3", "-m", "aegis", "--config_path", config_path])
+    process = subprocess.Popen(["python3", "-m", "aegis", "--config_path", config_path])
+    running_processes[filename] = process
+
+
+def stop_simulation(simname):
+    global running_processes
+    print(running_processes, simname)
+    if simname not in running_processes:
+        logging.error("Process cannot be found.")
+        return
+    process = running_processes[simname]
+    logging.info(f"Terminating the process with PID {process.pid}.")
+    process.terminate()  # Gracefully terminate the process
+    try:
+        process.wait(timeout=5)  # Wait for the process to terminate
+    except subprocess.TimeoutExpired:
+        logging.info("Process did not terminate in time, killing it.")
+        process.kill()  # Forcefully kill the process if it did not terminate
 
 
 def make_config_file(filename, configs):

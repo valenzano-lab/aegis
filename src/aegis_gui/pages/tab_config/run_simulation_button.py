@@ -61,8 +61,7 @@ def click_sim_button(n_clicks, filename, values, ids_):
     utilities.make_config_file(filename, input_config)
 
     # run simulation
-    utilities.run(filename)
-
+    utilities.run_simulation(filename)
     return ""
 
 
