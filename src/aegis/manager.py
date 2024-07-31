@@ -56,9 +56,12 @@ class Manager:
         self.log_post_simulation()
         hermes.recording_manager.ticker.stop_process()
 
-    @staticmethod
-    def log_pre_simulation():
+    def log_pre_simulation(self):
         hermes.recording_manager.summaryrecorder.write_input_summary()
+        # TODO hacky solution of decrementing and incrementing steps
+        hermes.step -= 1
+        hermes.recording_manager.featherrecorder.write(self.bioreactor.population)
+        hermes.step += 1
 
     def run_simulation_steps(self) -> None:
         hermes.recording_manager.phenomaprecorder.write()

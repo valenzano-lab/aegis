@@ -218,6 +218,7 @@ class Container:
         index .. individual index
         value .. True or False
         """
+        # TODO let index denote the step at which the snapshot was taken
         return self._read_snapshot("genotypes", record_index=record_index)
 
     def get_phenotype_intrinsic_snapshot(self, trait, record_index):
@@ -226,6 +227,8 @@ class Container:
         index .. individual index
         value .. phenotypic trait value
         """
+        # TODO organize by trait
+        # TODO let index denote the step at which the snapshot was taken
         df = self._read_snapshot("phenotypes", record_index=record_index)
         # df.columns = df.columns.str.split("_")
         return df
@@ -235,6 +238,7 @@ class Container:
         columns .. ages, births, birthdays, sizes, sexes
         index .. individual index
         """
+        # TODO let index denote the step at which the snapshot was taken
         return self._read_snapshot("demography", record_index=record_index)
 
     def get_genotypes_intrinsic_interval(self, reload=True):
