@@ -20,7 +20,10 @@ class FeatherRecorder(Recorder):
 
     def write(self, population: Population):
         """Record demographic, genetic and phenotypic data from the current population."""
-        if hermes.skip("SNAPSHOT_RATE") or len(population) == 0:
+
+        # If not final snapshots to be taken, and about to skip or the population is extinct, do not write.
+        final_snapshots = hermes.parameters.SNAPSHOT_FINAL_COUNT > hermes.steps_to_end()
+        if not final_snapshots and (hermes.skip("SNAPSHOT_RATE") or len(population) == 0):
             return
 
         step = hermes.get_step()
@@ -70,7 +73,7 @@ class FeatherRecorder(Recorder):
         path: /snapshots/demography/{step}.feather
         filetype: feather
         keywords: demography
-        description: A recording of life history metrics (age, number of births given, step at which born, current size, sex) of all individuals until a certain simulation step. 
+        description: A recording of life history metrics (age, number of births given, step at which born, current size, sex) of all individuals until a certain simulation step.
         structure: A matrix of ints and floats
         """
         dem_attrs = ["ages", "births", "birthdays", "sizes", "sexes"]

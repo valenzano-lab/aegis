@@ -177,5 +177,8 @@ class Hermes:
         # Skip unless step is divisible by rate
         return self.step % rate > 0
 
+    def steps_to_end(self) -> int:
+        return self.parameters.STEPS_PER_SIMULATION - self.step
+
 
 hermes = Hermes()
