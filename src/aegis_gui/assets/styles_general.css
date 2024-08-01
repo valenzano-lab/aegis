@@ -24,7 +24,7 @@
   cursor: help;
 }
 
-button:active {
+/* button:active {
   background-color: var(--bs-blue);
   opacity: 0.8;
   background-image: linear-gradient(#efefff, 1px, transparent 1px),
@@ -33,4 +33,4 @@ button:active {
     linear-gradient(90deg, #efefff, 0.5px, var(--bs-blue) 0.5px);
   background-size: 50px 50px, 50px 50px, 10px 10px, 10px 10px;
   background-position: -1px -1px, -1px -1px, -0.5px -0.5px, -0.5px -0.5px;
-}
+} */

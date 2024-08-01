@@ -1,6 +1,7 @@
 from dash import callback, Output, Input, State, MATCH, no_update, dcc, ctx
 from aegis_gui.utilities import log_funcs
 from .valid_range import is_input_in_valid_range
+import dash_bootstrap_components as dbc
 
 
 @callback(
@@ -29,7 +30,7 @@ def disable_config_input(value, class_name) -> str:
 
     # Return the updated class names as a space-separated string
     updated_class_name = " ".join(class_names)
-    
+
     return updated_class_name
 
 
@@ -41,7 +42,7 @@ def get_input_element(param):
 
     if param.dtype in [int, float]:
         step = 0 if param.dtype == int else 0.01
-        return dcc.Input(
+        return dbc.Input(
             type="number",
             value=param.default,
             step=step,
@@ -50,14 +51,18 @@ def get_input_element(param):
         )
 
     if param.dtype == bool:
-        return dcc.Checklist(
-            [""],
-            value=[""] if param.default else [],
-            **common_props,
-        )
+        options = ["True", "False"]
+        return dbc.Select(options=[{"label": k, "value": k} for k in options], value=str(param.default), **common_props)
+        # return dbc.Checklist(options=[{"label": "", "value": 1}], switch=True, **common_props)
+        # return dcc.Checklist(
+        #     [""],
+        #     value=[""] if param.default else [],
+        #     **common_props,
+        # )
 
     if param.dtype == str:
         options = param.drange.strip("{}").split(", ")
+        return dbc.Select(options=[{"label": k, "value": k} for k in options], value=param.default, **common_props)
         return dcc.Dropdown(
             options=options,
             value=param.default,

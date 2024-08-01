@@ -130,3 +130,7 @@ tr:last-of-type td:last-of-type {
 .config-input-class.disabled {
   border: none;
 }
+/* 
+.config-input-class {
+  width: 10rem;
+} */
