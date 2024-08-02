@@ -4,6 +4,8 @@ from aegis_gui.utilities import log_funcs
 
 from aegis_gui.pages.tab_simlog_dcc import table
 
+from aegis_gui.pages.tab_simlog import dropdown
+
 from aegis_gui.pages.tab_simlog.table import generate_initial_simlog
 
 
@@ -36,8 +38,9 @@ def layout():
     return html.Div(
         id="simlog-section",
         children=PREFACE
-        + [
-            html.Div(id="simlog-section-table", children=generate_initial_simlog()),
-            table.make_table(),
-        ],
+        + [dropdown.make_multi_dropdown(), dropdown.get_info_div()]
+        # + [
+        #     html.Div(id="simlog-section-table", children=generate_initial_simlog()),
+            # table.make_table(),
+        # ],
     )
