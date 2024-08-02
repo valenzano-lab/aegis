@@ -11,7 +11,6 @@ from aegis.utilities.get_folder_size import get_folder_size_with_du
 def make_multi_dropdown():
 
     paths = utilities.get_sim_paths()
-    print(paths)
     return dbc.Select(
         id="sim_select",
         options=[{"label": path.stem, "value": str(path)} for path in paths],
@@ -20,6 +19,7 @@ def make_multi_dropdown():
         placeholder="Select simulations to plot...",
         # className="plot-dropdown",
         # multiple=True,
+        style={"margin-bottom": "1rem"},
     )
 
 
