@@ -71,9 +71,10 @@ def update_info_div(selected_path):
                 zip.get_zip_button_layout(filename=path.stem),
                 download.make_button(path.stem),
                 download.make_dcc(path.stem),
-            ]
+            ],
+            style={"display": "flex"},
         )
     )
 
     # Return a dbc.ListGroup with the simulation information
-    return dbc.ListGroup(list_items)
+    return dbc.ListGroup(list_items, flush=True)

@@ -13,7 +13,7 @@ def make(filename):
                 id="delete-simulation-button",
                 value=filename,
                 color="danger",
-                className="mb-3",
+                className="me-2",
             ),
             dash.dcc.Store("delete-simulation-filename", data=filename),
         ]

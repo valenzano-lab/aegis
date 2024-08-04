@@ -10,7 +10,7 @@ def make_button(filename):
         id={"type": "config-terminate-button", "index": filename},
         color="warning",
         value=filename,
-        className="mb-3",
+        className="me-2",
     )
 
 
