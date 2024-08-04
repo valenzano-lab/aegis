@@ -2,6 +2,10 @@ from dash import html, dcc, callback, Output, Input, State, ALL
 from aegis_gui.utilities import log_funcs, utilities, ps_list
 from aegis.modules.initialization.parameterization.default_parameters import DEFAULT_PARAMETERS
 
+import dash
+
+import dash_bootstrap_components as dbc
+
 from aegis_gui.config import config
 
 from .valid_range import is_input_in_valid_range
@@ -11,17 +15,15 @@ import logging
 layout = html.Div(
     id="sim-section-control",
     children=[
-        dcc.Input(
+        dbc.Input(
             id="config-make-text",
-            className="control-element",
             type="text",
             placeholder="unique id",
             autoComplete="off",
         ),
-        html.Button(
+        dbc.Button(
             "run simulation",
             id="simulation-run-button",
-            className="control-element",
         ),
         html.P("", id="simulation-run-text"),
         # html.Button("make config", id="config-make-button"),]
@@ -71,6 +73,8 @@ def is_sim_name_valid(sim_name: str) -> bool:
 
 @callback(
     Output("simulation-run-button", "disabled"),
+    Output("config-make-text", "invalid"),
+    Output("config-make-text", "valid"),
     Input("config-make-text", "value"),
     Input({"type": "config-input", "index": ALL}, "value"),
     State({"type": "config-input", "index": ALL}, "id"),
@@ -96,15 +100,15 @@ def disable_sim_button(filename, values, ids) -> bool:
             logging.info(
                 f"Simulation run button is blocked because parameter {param_name} has received an invalid input."
             )
-            return True
+            return True, True, False
 
     if not is_sim_name_valid(filename):
         logging.info(f"Simulation run button is blocked because simulation name {filename} is not valid.")
-        return True
+        return True, True, False
 
     if utilities.sim_exists(filename):
         logging.info(f"Simulation run button is blocked because simulation name {filename} already exists.")
-        return True
+        return True, True, False
 
     # Check if reached simulation number limit
     currently_running = len(ps_list.run_ps_af())
@@ -112,6 +116,6 @@ def disable_sim_button(filename, values, ids) -> bool:
         logging.info(
             f"You are currently running {currently_running} simulations. Limit is {config.simulation_number_limit}."
         )
-        return True
+        return True, True, False
 
-    return False
+    return False, False, True

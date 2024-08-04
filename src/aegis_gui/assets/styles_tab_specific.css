@@ -14,3 +14,14 @@
 #dropdown-multi {
   height: 2.5rem;
 }
+
+/* CONFIG TAB */
+
+.card {
+  margin-bottom: 1rem;
+}
+
+#config-make-text {
+  width: 300px;
+  display: inline-block;
+}

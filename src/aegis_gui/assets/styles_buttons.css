@@ -1,19 +1,7 @@
 /* .view-button, */
-.control-element {
-  border-radius: 0.5rem;
-  /* border: 1.5px solid var(--black); */
-  height: 2rem;
-}
 
 i.bi-file-arrow-down-fill {
   margin-right: 5px;
-}
-
-.control-element {
-  height: 2.6rem;
-  /* border-radius: 10px; */
-  padding: 0 1rem;
-  margin: 0 0.2rem;
 }
 
 #plot-bottom-right-panel button {

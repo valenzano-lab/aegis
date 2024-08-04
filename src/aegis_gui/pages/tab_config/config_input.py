@@ -10,7 +10,7 @@ import dash_bootstrap_components as dbc
     prevent_initial_call=True,
 )
 @log_funcs.log_debug
-def disable_config_input(value) -> str:
+def disable_config_input(value) -> bool:
     """
     Change style of config input so that the user knows that the input value is outside of valid server range.
     """
@@ -41,23 +41,10 @@ def get_input_element(param):
     if param.dtype == bool:
         options = ["True", "False"]
         return dbc.Select(options=[{"label": k, "value": k} for k in options], value=str(param.default), **common_props)
-        # return dbc.Checklist(options=[{"label": "", "value": 1}], switch=True, **common_props)
-        # return dcc.Checklist(
-        #     [""],
-        #     value=[""] if param.default else [],
-        #     **common_props,
-        # )
 
     if param.dtype == str:
         options = param.drange.strip("{}").split(", ")
         return dbc.Select(options=[{"label": k, "value": k} for k in options], value=param.default, **common_props)
-        return dcc.Dropdown(
-            options=options,
-            value=param.default,
-            searchable=False,
-            clearable=False,
-            **common_props,
-        )
 
     # TODO: resolve dict parameter
     return

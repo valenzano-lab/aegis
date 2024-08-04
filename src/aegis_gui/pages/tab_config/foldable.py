@@ -64,11 +64,16 @@ def get_foldable():
                 dbc.Button(
                     domain,
                     id={"type": "collapse-button", "index": domain},
-                    className="mb-3",
+                    className="mb-2",
+                    color="light",
+                    # outline=True,
                     n_clicks=0,
                 ),
                 dbc.Collapse(
-                    dbc.Card(dbc.CardBody(get_line(ps))),
+                    dbc.Card(
+                        dbc.CardBody(get_line(ps)),
+                        # color="light",
+                    ),
                     id={"type": "collapse-area", "index": domain},
                     is_open=False,
                 ),
@@ -81,6 +86,7 @@ def get_foldable():
 
 
 @dash.callback(
+    dash.Output({"type": "collapse-button", "index": dash.ALL}, "active"),
     dash.Output({"type": "collapse-area", "index": dash.ALL}, "is_open"),
     dash.Input({"type": "collapse-button", "index": dash.ALL}, "n_clicks"),
     dash.State({"type": "collapse-area", "index": dash.ALL}, "id"),
@@ -93,7 +99,7 @@ def toggle_collapse(n, id_s):
     triggered_index = dash.ctx.triggered_id["index"]
     is_opens = [id_["index"] == triggered_index for id_ in id_s]
 
-    return is_opens
+    return is_opens, is_opens
     # if n:
     #     return not is_open
     # return is_open

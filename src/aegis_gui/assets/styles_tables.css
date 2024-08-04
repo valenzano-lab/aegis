@@ -67,19 +67,6 @@ th {
   margin: 0;
 }
 
-label,
-input,
-button {
-  padding: 0.3rem 0.5rem;
-  font-size: 14px;
-  border: none;
-}
-
-label,
-input {
-  border-radius: 6px;
-}
-
 label {
   padding: 0.25rem 0.5rem;
 }
