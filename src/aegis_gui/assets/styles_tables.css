@@ -126,11 +126,3 @@ tr:last-of-type td:last-of-type {
   /* font-family: Quicksand; */
   font-weight: 600;
 }
-
-.config-input-class.disabled {
-  border: none;
-}
-/* 
-.config-input-class {
-  width: 10rem;
-} */

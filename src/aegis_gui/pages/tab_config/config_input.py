@@ -5,13 +5,12 @@ import dash_bootstrap_components as dbc
 
 
 @callback(
-    Output({"type": "config-input", "index": MATCH}, "className"),
+    Output({"type": "config-input", "index": MATCH}, "invalid"),
     Input({"type": "config-input", "index": MATCH}, "value"),
-    State({"type": "config-input", "index": MATCH}, "className"),
     prevent_initial_call=True,
 )
 @log_funcs.log_debug
-def disable_config_input(value, class_name) -> str:
+def disable_config_input(value) -> str:
     """
     Change style of config input so that the user knows that the input value is outside of valid server range.
     """
@@ -19,19 +18,8 @@ def disable_config_input(value, class_name) -> str:
         return no_update
 
     param_name = ctx.triggered_id["index"]
-    class_names = set(class_name.split())
-
-    # Remove 'disabled' class if it exists
-    class_names.discard("disabled")
-
-    # Check if the input value is within the valid range
-    if not is_input_in_valid_range(input_=value, param_name=param_name):
-        class_names.add("disabled")
-
-    # Return the updated class names as a space-separated string
-    updated_class_name = " ".join(class_names)
-
-    return updated_class_name
+    valid = is_input_in_valid_range(input_=value, param_name=param_name)
+    return not valid
 
 
 def get_input_element(param):
