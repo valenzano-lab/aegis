@@ -11,6 +11,7 @@ def make_button(filename):
         [html.I(className="bi bi-gear-fill"), "download configuration"],
         id={"type": "config-download-button", "index": filename},
         value=filename,
+        className="mb-3",
     )
 
 

@@ -58,21 +58,22 @@ def update_info_div(selected_path):
     for key, value in sim_info.items():
         list_items.append(dbc.ListGroupItem([html.Strong(f"{key}: "), html.Span(str(value))]))
 
-    list_items.append(dbc.ListGroupItem([terminate.make_button(filename=path.stem)]))
     list_items.append(dbc.ListGroupItem([get_folder_size_with_du(path)]))
+    list_items.append(
+        dbc.ListGroupItem([html.P(str(path), id={"type": "config-download-basepath", "index": path.stem})])
+    )
     list_items.append(
         dbc.ListGroupItem(
             [
+                delete.make(path.stem),
+                delete.make_modal(),
+                terminate.make_button(filename=path.stem),
+                zip.get_zip_button_layout(filename=path.stem),
                 download.make_button(path.stem),
                 download.make_dcc(path.stem),
             ]
         )
     )
-    list_items.append(
-        dbc.ListGroupItem([html.P(str(path), id={"type": "config-download-basepath", "index": path.stem})])
-    )
-    list_items.append(dbc.ListGroupItem([delete.make(path.stem)]))
-    list_items.append(dbc.ListGroupItem([zip.get_zip_button_layout(filename=path.stem)]))
 
     # Return a dbc.ListGroup with the simulation information
     return dbc.ListGroup(list_items)

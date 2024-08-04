@@ -14,6 +14,7 @@ def get_zip_button_layout(filename):
                 [html.I(className="bi bi-file-earmark-zip-fill"), "download data"],
                 id={"type": "zip-download-button", "index": filename},
                 value=filename,
+                className="mb-3",
             ),
             dcc.Download(id={"type": "zip-dcc-download", "index": filename}),
         ],
