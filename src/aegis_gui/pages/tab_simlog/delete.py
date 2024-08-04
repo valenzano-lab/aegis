@@ -1,11 +1,12 @@
 from dash import callback, Output, Input, State, ALL, MATCH, ctx, html
 import subprocess
 from aegis_gui.utilities import log_funcs, utilities
+import dash_bootstrap_components as dbc
 
 
 def make(filename):
-    return html.Button(
-        "delete",
+    return dbc.Button(
+        [html.I(className="bi bi-trash3-fill"), "delete"],
         id={"type": "delete-simulation-button", "index": filename},
         value=filename,
     )

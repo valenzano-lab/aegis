@@ -1,10 +1,11 @@
 import dash
 from aegis_gui.utilities import utilities, log_funcs
 
+import dash_bootstrap_components as dbc
 
 def make_button(filename):
-    return dash.html.Button(
-        "terminate",
+    return dbc.Button(
+        [dash.html.I(className="bi bi-stop-circle"), "terminate"],
         id={"type": "config-terminate-button", "index": filename},
         value=filename,
     )

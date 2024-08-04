@@ -14,6 +14,7 @@
     background-color: blue;
 } */
 
-#sidebar i {
+#sidebar i,
+i {
   margin-right: 10px;
 }

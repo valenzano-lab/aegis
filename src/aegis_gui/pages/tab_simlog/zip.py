@@ -3,14 +3,15 @@ import pathlib
 import zipfile
 import io
 from aegis_gui.utilities import log_funcs
+import dash_bootstrap_components as dbc
 
 
 @log_funcs.log_debug
 def get_zip_button_layout(filename):
-    return html.Td(
+    return html.Div(
         children=[
-            html.Button(
-                "download",
+            dbc.Button(
+                [html.I(className="bi bi-file-earmark-zip-fill"), "download data"],
                 id={"type": "zip-download-button", "index": filename},
                 value=filename,
             ),
