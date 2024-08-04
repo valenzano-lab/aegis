@@ -63,17 +63,16 @@ class Starvation:
 
         False in `mask` means survival. True in `mask` means death.
         """
-        self.consecutive_overshoot_n
+        # TODO fix resource availability and carrying capacity logic
+        if self.func is not self._gradual:
+            resource_availability = self.CARRYING_CAPACITY
+
         if n <= resource_availability:
             self.consecutive_overshoot_n = 0
             return np.zeros(n, dtype=np.bool_)
         else:
             self.consecutive_overshoot_n += 1
-            # TODO fix resource availability and carrying capacity logic
-            if self.func is self._gradual:
-                return self.func(n, resource_availability)
-            else:
-                return self.func(n, self.CARRYING_CAPACITY)
+            return self.func(n, resource_availability)
 
     def _logistic(self, n, resource_availability):
         """Kill random individuals with logistic-like probability."""
