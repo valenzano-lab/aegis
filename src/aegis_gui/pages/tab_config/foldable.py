@@ -56,8 +56,6 @@ def get_foldable():
 
     pars = get_pars()
 
-    print(pars)
-
     elements = [
         dash.html.Div(
             [
@@ -84,32 +82,47 @@ def get_foldable():
 
     elements = [
         dbc.Accordion(
-            [
+            children=[
                 dbc.AccordionItem(
                     children=[
-                        dbc.Modal(children=[TEXTS_DOMAIN.get(domain)]),
+                        dbc.Modal(
+                            children=[
+                                dash.html.Div(TEXTS_DOMAIN.get(domain)),
+                            ],
+                            id={"type": "domain-info-modal", "index": domain},
+                        ),
+                        dash.html.Div(
+                            [
+                                "More information: ",
+                                dbc.Button(
+                                    dash.html.I(className="bi bi-info-square-fill"),
+                                    id={"type": "domain-info-modal-trigger", "index": domain},
+                                    color="link",
+                                    style={"margin": 0, "padding": "0 0 0 10px"},
+                                ),
+                            ]
+                        ),
                         get_line(ps),
                     ],
                     id={"type": "collapse-button", "index": domain},
-                    title=domain,
+                    title=domain.title(),
                 )
-                # dbc.AccordionItem(
-                #     [
-                #         dash.html.P("This is the content of the second section"),
-                #         dbc.Button("Don't click me!", color="danger"),
-                #     ],
-                #     title="Item 2",
-                # ),
-                # dbc.AccordionItem(
-                #     "This is the content of the third section",
-                #     title="Item 3",
-                # ),
                 for domain, ps in pars.items()
-            ]
+            ],
+            # flush=True,
         )
     ]
 
     return elements
+
+
+@dash.callback(
+    dash.Output({"type": "domain-info-modal", "index": dash.MATCH}, "is_open"),
+    dash.Input({"type": "domain-info-modal-trigger", "index": dash.MATCH}, "n_clicks"),
+    prevent_initial_call=True,
+)
+def toggle_modal(_):
+    return True
 
 
 @dash.callback(
@@ -142,7 +155,7 @@ def get_line(ps: typing.List[Parameter]):
                     # p.dtype.__name__,
                     (
                         dbc.Button(
-                            dash.html.I(className="bi bi-info-circle-fill"),
+                            dash.html.I(className="bi bi-info-square-fill"),
                             id={"type": "info-tooltip", "index": p.key},
                             color="link",
                         )

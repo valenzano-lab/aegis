@@ -18,12 +18,16 @@ layout = html.Div(
         dbc.Input(
             id="config-make-text",
             type="text",
-            placeholder="unique id",
-            autoComplete="off",
+            # placeholder="unique id",
+            # autoComplete="off",
+            className="me-2",
         ),
         dbc.Button(
-            "run simulation",
+            [html.I(className="bi bi-rocket-takeoff-fill"), "launch"],
             id="simulation-run-button",
+            className="me-1",
+            outline=True,
+            color="success",
         ),
         html.P("", id="simulation-run-text"),
         # html.Button("make config", id="config-make-button"),]
