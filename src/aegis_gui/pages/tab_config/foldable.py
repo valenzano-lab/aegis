@@ -82,6 +82,33 @@ def get_foldable():
         for domain, ps in pars.items()
     ]
 
+    elements = [
+        dbc.Accordion(
+            [
+                dbc.AccordionItem(
+                    children=[
+                        dbc.Modal(children=[TEXTS_DOMAIN.get(domain)]),
+                        get_line(ps),
+                    ],
+                    id={"type": "collapse-button", "index": domain},
+                    title=domain,
+                )
+                # dbc.AccordionItem(
+                #     [
+                #         dash.html.P("This is the content of the second section"),
+                #         dbc.Button("Don't click me!", color="danger"),
+                #     ],
+                #     title="Item 2",
+                # ),
+                # dbc.AccordionItem(
+                #     "This is the content of the third section",
+                #     title="Item 3",
+                # ),
+                for domain, ps in pars.items()
+            ]
+        )
+    ]
+
     return elements
 
 
