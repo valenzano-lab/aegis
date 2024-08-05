@@ -18,7 +18,7 @@ layout = html.Div(
         dbc.Input(
             id="config-make-text",
             type="text",
-            # placeholder="unique id",
+            placeholder="Simulation name",
             # autoComplete="off",
             className="me-2",
         ),
@@ -29,8 +29,12 @@ layout = html.Div(
             outline=True,
             color="success",
         ),
-        html.P("", id="simulation-run-text"),
         # html.Button("make config", id="config-make-button"),]
+        dbc.FormFeedback(
+            "Enter a unique simulation name",
+            type="invalid",
+        ),
+        html.P("", id="simulation-run-text"),
     ],
 )
 
