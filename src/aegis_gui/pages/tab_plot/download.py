@@ -63,6 +63,7 @@ def get_data_download_button(figure_id):
     button = dbc.Button(
         [html.I(className="bi bi-file-arrow-down-fill"), "Download data"],
         id={"type": "data-download-button", "index": figure_id},
+        disabled=True,
     )
     return button
 
