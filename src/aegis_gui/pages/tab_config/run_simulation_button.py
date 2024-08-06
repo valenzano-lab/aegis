@@ -29,6 +29,13 @@ layout = html.Div(
             outline=True,
             color="success",
         ),
+        dbc.Button(
+            [html.I(className="bi bi-x-circle-fill"), "reset"],
+            id="reset-run-button",
+            className="me-1",
+            outline=True,
+            color="danger",
+        ),
         # html.Button("make config", id="config-make-button"),]
         dbc.FormFeedback(
             "Enter a unique simulation name",
@@ -47,6 +54,33 @@ def decode_config_tab_values(values, ids_):
             yield id_["index"], value == "True"
         else:
             yield id_["index"], value
+
+
+@callback(
+    Output({"type": "config-input", "index": dash.ALL}, "value"),
+    Input("reset-run-button", "n_clicks"),
+    dash.State({"type": "config-input", "index": dash.ALL}, "id"),
+    dash.State({"type": "config-input", "index": dash.ALL}, "value"),
+    prevent_initial_call=True,
+)
+def reset_configs(n_clicks, ids, current_values):
+    """Why not use DEFAULT_PARAMETERS.get_default_parameters()? To ensure that the order of output values is correct."""
+
+    if n_clicks is None:
+        return
+
+    new_values = []
+
+    for id_, current_value in zip(ids, current_values):
+        param_name = id_["index"]
+        param = DEFAULT_PARAMETERS[param_name]
+        new_value = param.default
+        if new_value == current_value:
+            new_values.append(dash.no_update)
+        else:
+            new_values.append(new_value)
+
+    return new_values
 
 
 @callback(
