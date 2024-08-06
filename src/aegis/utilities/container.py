@@ -40,6 +40,7 @@ class Container:
         }
         self.paths["log"] = self.basepath / "progress.log"
         self.paths["ticker"] = self.basepath / "ticker.txt"
+        self.paths["simpleprogress"] = self.basepath / "simpleprogress.log"
         self.paths["output_summary"] = self.basepath / "output_summary.json"
         self.paths["input_summary"] = self.basepath / "input_summary.json"
         self.paths["snapshots"] = {}
@@ -94,6 +95,13 @@ class Container:
                 df[["ETA", "t1M", "runtime"]].applymap(dhm_inverse)
             self.data["log"] = df
         return self.data["log"]
+
+    def get_simple_log(self):
+        with open(self.paths["simpleprogress"], "r") as file_:
+            text = file_.read()
+            print(text)
+            step, steps_per_simulation = text.split("/")
+            return int(step), int(steps_per_simulation)
 
     def get_ticker(self):
         if self.ticker is None:

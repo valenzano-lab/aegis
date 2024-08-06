@@ -67,6 +67,7 @@ class Manager:
         hermes.recording_manager.phenomaprecorder.write()
         while not self.is_finished() and not self.is_extinct():
             hermes.recording_manager.progressrecorder.write(len(self.bioreactor.population))
+            hermes.recording_manager.simpleprogressrecorder.write()
             self.bioreactor.run_step()
             hermes.increment_step()
 

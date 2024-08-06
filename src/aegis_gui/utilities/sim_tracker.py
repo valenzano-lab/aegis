@@ -1,6 +1,7 @@
 import dash
 from aegis.utilities.container import Container
 from aegis_gui.utilities import utilities
+import dash_bootstrap_components as dbc
 
 
 def make_trackers():
@@ -11,14 +12,21 @@ def make_trackers():
         is_running = not container.has_ticker_stopped()
         if is_running:
             tracker = dash.html.Div(container.name)
+            progress = container.get_simple_log()
+            print(progress, "p")
+            if progress is None:
+                continue
+            progress = progress[0] / progress[1]
+            progressbar = dbc.Progress(label=f"{progress*100:.1f}%", value=progress * 100, striped=True, animated=True)
             trackers.append(tracker)
+            trackers.append(progressbar)
 
     return trackers
 
 
 def make_tracker_component():
     return [
-        dash.dcc.Interval(id="running-simulations-interval", interval=5 * 1000, n_intervals=0),
+        dash.dcc.Interval(id="running-simulations-interval", interval=1 * 1000, n_intervals=0),
         dash.html.Div(["running-simulations"] + make_trackers(), id="running-simulations"),
     ]
 
