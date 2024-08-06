@@ -57,7 +57,9 @@ class Manager:
         hermes.recording_manager.ticker.stop_process()
 
     def log_pre_simulation(self):
-        hermes.recording_manager.summaryrecorder.write_input_summary()
+        ticker_pid = hermes.recording_manager.ticker.pid
+        assert ticker_pid is not None
+        hermes.recording_manager.summaryrecorder.write_input_summary(ticker_pid=hermes.recording_manager.ticker.pid)
         # TODO hacky solution of decrementing and incrementing steps
         hermes.step -= 1
         hermes.recording_manager.featherrecorder.write(self.bioreactor.population)

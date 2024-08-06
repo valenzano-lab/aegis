@@ -23,9 +23,9 @@ def button_terminate_simulation(n_clicks):
     if n_clicks is None:
         return dash.no_update
 
-    ctx = dash.callback_context
-    button_id = ctx.triggered[0]["prop_id"].split(".")[0]
+    button_id = dash.callback_context.triggered[0]["prop_id"].split(".")[0]
     filename = eval(button_id)["index"]
-    utilities.stop_simulation(filename)
+    # TODO do not use eval
+    utilities.terminate_simulation(filename)
 
     return dash.no_update

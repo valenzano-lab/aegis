@@ -58,7 +58,7 @@ class SummaryRecorder(Recorder):
         with open(self.odir / "output_summary.json", "w") as f:
             json.dump(summary, f, indent=4)
 
-    def write_input_summary(self):
+    def write_input_summary(self, ticker_pid):
         """
 
         # OUTPUT SPECIFICATION
@@ -75,6 +75,8 @@ class SummaryRecorder(Recorder):
             "time_start_formatted": datetime.datetime.fromtimestamp(self.time_start).strftime("%Y-%m-%d %H:%M:%S"),
             # "time_end": time.time(),
             "jupyter_path": str(self.odir.absolute()),  # TODO remove?
+            "pid": self.pp.pid,
+            "ticker_pid": ticker_pid,
         }
         with open(self.odir / "input_summary.json", "w") as f:
             json.dump(summary, f, indent=4)

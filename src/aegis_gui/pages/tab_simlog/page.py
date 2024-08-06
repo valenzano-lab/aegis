@@ -34,7 +34,6 @@ PREFACE = [
 
 @log_funcs.log_debug
 def layout(sim=None):
-    print(sim, "simname")
     return html.Div(
         id="simlog-section",
         children=PREFACE + [dropdown.make_multi_dropdown(selected=sim), dropdown.get_info_div()],

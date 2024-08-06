@@ -8,6 +8,7 @@ import re
 
 from dash import html
 
+from aegis.utilities.container import Container
 from aegis.modules.initialization.parameterization.default_parameters import DEFAULT_PARAMETERS
 
 # TODO ensure that there is default dataset available
@@ -52,20 +53,13 @@ def run_simulation(filename):
     running_processes[filename] = process
 
 
-def stop_simulation(simname):
-    global running_processes
-    print(running_processes, simname)
-    if simname not in running_processes:
-        logging.error("Process cannot be found.")
-        return
-    process = running_processes[simname]
-    logging.info(f"Terminating the process with PID {process.pid}.")
-    process.terminate()  # Gracefully terminate the process
-    try:
-        process.wait(timeout=5)  # Wait for the process to terminate
-    except subprocess.TimeoutExpired:
-        logging.info("Process did not terminate in time, killing it.")
-        process.kill()  # Forcefully kill the process if it did not terminate
+def terminate_simulation(simname):
+    container = get_container(filename=simname)
+    container.terminate()
+
+
+def get_container(filename):
+    return Container(get_sim_dir() / filename)
 
 
 def make_config_file(filename, configs):

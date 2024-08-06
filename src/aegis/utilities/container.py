@@ -5,6 +5,7 @@ import json
 import yaml
 from typing import Union
 import numpy as np
+import psutil
 
 from aegis.modules.initialization.parameterization.default_parameters import get_default_parameters
 from aegis.modules.dataclasses.population import Population
@@ -74,6 +75,28 @@ class Container:
         """Export all primary data from the container using general formats"""
         # TODO
         return
+
+    @staticmethod
+    def stop_process(pid):
+        try:
+            process = psutil.Process(pid)
+            process.terminate()  # or process.kill()
+            process.wait()  # Optional: Wait for the process to be fully terminated
+            logging.info(f"Process with PID {pid} terminated successfully.")
+        except psutil.NoSuchProcess:
+            logging.warning(f"No process found with PID {pid}.")
+        except psutil.AccessDenied:
+            logging.warning(f"Access denied when trying to terminate the process with PID {pid}.")
+        except Exception as e:
+            logging.error(f"An error occurred: {e}")
+
+    def terminate(self):
+        tpid = self.get_input_summary()["ticker_pid"]
+        assert tpid is not None
+        self.stop_process(tpid)
+        pid = self.get_input_summary()["pid"]
+        assert pid is not None
+        self.stop_process(pid)
 
     ############
     # METADATA #

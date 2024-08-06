@@ -11,7 +11,9 @@ def make_trackers():
         container = Container(path)
         is_running = not container.has_ticker_stopped()
         if is_running:
-            tracker = dash.dcc.Link(children=container.name, href=f"/simlog?sim={container.name}")
+            tracker = dash.dcc.Link(
+                children=container.name, href=f"/simlog?sim={container.name}", className="sidebar-sim-running"
+            )
             progress = container.get_simple_log()
             if progress is None:
                 continue
@@ -28,8 +30,13 @@ def make_trackers():
     trackers.append("Recent simulations:")
     for path in paths:
         container = Container(path)
-        if container.get_ticker().since_last() < 3600:
-            trackers.append(dash.dcc.Link(children=container.name, href=f"/simlog?sim={container.name}"))
+        ticker = container.get_ticker()
+        if ticker.since_last() < 3600 and container.has_ticker_stopped():
+            trackers.append(
+                dash.dcc.Link(
+                    children=container.name, href=f"/simlog?sim={container.name}", className="sidebar-sim-recent"
+                )
+            )
 
     return trackers
 

@@ -10,10 +10,13 @@ class Ticker(Recorder):
         self.TICKER_RATE = TICKER_RATE
         self.ticker_path = odir / "ticker.txt"
         self.process = None
+        self.pid = None
 
     def start_process(self):
         self.process = Process(target=self.tick)
         self.process.start()
+        self.pid = self.process.pid
+        # TODO check if this continues when simulation is interrupted or terminated otherwise
 
     def stop_process(self):
         self.process.terminate()
@@ -42,7 +45,8 @@ class Ticker(Recorder):
             return file.read()
 
     def has_stopped(self):
-        return self.since_last() > self.TICKER_RATE
+        since_last = self.since_last()
+        return since_last > self.TICKER_RATE
 
     def since_last(self):
         timestamp_recorded = self.read()
