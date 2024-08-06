@@ -26,6 +26,11 @@ class ParameterManager:
 
         default_parameters = get_default_parameters()
         custom_config_params = self.read_config_file()
+        for k in default_parameters.keys():
+            if k in custom_config_params and default_parameters[k] != custom_config_params[k]:
+                logging.debug(
+                    f"-- {k} is different in config ({custom_config_params[k]}) vs default ({default_parameters[k]})"
+                )
 
         SPECIES_PRESET = custom_config_params.get("SPECIES_PRESET", default_parameters["SPECIES_PRESET"])
         species_config_params = get_species_parameters(SPECIES_PRESET)

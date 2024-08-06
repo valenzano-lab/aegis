@@ -43,7 +43,8 @@ def decode_config_tab_values(values, ids_):
     for value, id_ in zip(values, ids_):
         param = DEFAULT_PARAMETERS[id_["index"]]
         if param.dtype == bool:
-            yield id_["index"], bool(value)
+            assert value in {"True", "False"}
+            yield id_["index"], value == "True"
         else:
             yield id_["index"], value
 
