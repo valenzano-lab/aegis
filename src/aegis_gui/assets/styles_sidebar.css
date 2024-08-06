@@ -1,5 +1,7 @@
 #sidebar {
+  /* min-width: 10rem; */
   min-width: 10rem;
+  width: 7rem;
   margin-right: 3rem;
   height: 100%;
   /* display: flex;
