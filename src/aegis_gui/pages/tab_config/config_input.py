@@ -1,25 +1,77 @@
+import dash
 from dash import callback, Output, Input, State, MATCH, no_update, dcc, ctx
 from aegis_gui.utilities import log_funcs
 from .valid_range import is_input_in_valid_range
 import dash_bootstrap_components as dbc
+from aegis.modules.initialization.parameterization.default_parameters import DEFAULT_PARAMETERS
+
+# @callback(
+#     Output({"type": "config-input", "index": dash.ALL}, "invalid"),
+#     Input({"type": "info-badge", "index": dash.ALL}, "children"),
+#     Input({"type": "info-badge", "index": dash.ALL}, "children"),
+# )
+# @log_funcs.log_debug
+# def handle_config_input(value) -> bool:
+#     """
+#     Change style of config input so that the user knows that the input value is outside of valid server range.
+#     """
+#     if ctx.triggered_id is None:
+#         return dash.no_update, dash.no_update
+
+#     param_name = ctx.triggered_id["index"]
+#     valid = is_input_in_valid_range(input_=value, param_name=param_name)
+
+#     parameter = DEFAULT_PARAMETERS[param_name]
+#     value_is_default = value == parameter.default
+
+#     return not valid, "" if value_is_default else "modified"
+
+
+@callback(
+    Output({"type": "collapse-badge", "index": dash.ALL}, "children"),
+    Output({"type": "collapse-badge", "index": dash.ALL}, "color"),
+    Input({"type": "info-badge", "index": dash.ALL}, "children"),
+    State({"type": "info-badge", "index": dash.ALL}, "id"),
+    State({"type": "collapse-badge", "index": dash.ALL}, "id"),
+    prevent_initial_call=True,
+)
+def update_badge(badges, id_params, id_domains):
+    pnames = [idp["index"] for idp in id_params]
+    domains = [idd["index"] for idd in id_domains]
+    statuses = {domain: 0 for domain in domains}
+
+    for badge, pname in zip(badges, pnames):
+        if badge == "modified":
+            domain = DEFAULT_PARAMETERS[pname].domain
+            statuses[domain] += 1
+
+    statuses = [statuses[domain] for domain in domains]
+    colors = ["primary" if status > 0 else "secondary" for status in statuses]
+
+    return statuses, colors
 
 
 @callback(
     Output({"type": "config-input", "index": MATCH}, "invalid"),
+    Output({"type": "info-badge", "index": MATCH}, "children"),
     Input({"type": "config-input", "index": MATCH}, "value"),
     prevent_initial_call=True,
 )
 @log_funcs.log_debug
-def disable_config_input(value) -> bool:
+def handle_config_input(value) -> bool:
     """
     Change style of config input so that the user knows that the input value is outside of valid server range.
     """
     if ctx.triggered_id is None:
-        return no_update
+        return dash.no_update, dash.no_update
 
     param_name = ctx.triggered_id["index"]
     valid = is_input_in_valid_range(input_=value, param_name=param_name)
-    return not valid
+
+    parameter = DEFAULT_PARAMETERS[param_name]
+    value_is_default = value == parameter.default
+
+    return not valid, "" if value_is_default else "modified"
 
 
 def get_input_element(param):

@@ -69,7 +69,7 @@ def get_foldable():
                 ),
                 dbc.Collapse(
                     dbc.Card(
-                        dbc.CardBody(get_line(ps)),
+                        dbc.CardBody(get_line(ps, domain)),
                         # color="light",
                     ),
                     id={"type": "collapse-area", "index": domain},
@@ -82,7 +82,7 @@ def get_foldable():
 
     elements = [
         dbc.Accordion(
-            children=[
+            [
                 dbc.AccordionItem(
                     children=[
                         dbc.Modal(
@@ -102,10 +102,25 @@ def get_foldable():
                                 ),
                             ]
                         ),
-                        get_line(ps),
+                        get_line(ps, domain),
                     ],
                     id={"type": "collapse-button", "index": domain},
-                    title=domain.title(),
+                    title=dash.html.Div(
+                        [
+                            domain.title(),
+                            dbc.Badge(
+                                f"{0}",
+                                pill=True,
+                                className="ms-1",
+                                # className="top-0",
+                                # className="position-absolute top-0 start-100 translate-middle-y",
+                                # color="crimson",
+                                color="secondary",
+                                id={"type": "collapse-badge", "index": domain},
+                            ),
+                        ],
+                        className="position-relative",
+                    ),
                 )
                 for domain, ps in pars.items()
             ],
@@ -145,7 +160,7 @@ def toggle_collapse(n, id_s):
     # return is_open
 
 
-def get_line(ps: typing.List[Parameter]):
+def get_line(ps: typing.List[Parameter], domain):
     elements = dash.html.Div(
         [
             dash.html.Div(
@@ -171,10 +186,11 @@ def get_line(ps: typing.List[Parameter]):
                         if p.info
                         else None
                     ),
+                    dbc.Badge("", pill=True, id={"type": "info-badge", "index": p.key}, color="primary"),
                     config_input.get_input_element(param=p),
                 ]
             )
             for p in ps
-        ]
+        ],
     )
     return elements
