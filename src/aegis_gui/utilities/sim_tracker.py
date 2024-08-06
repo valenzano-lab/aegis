@@ -27,16 +27,58 @@ def make_trackers():
             trackers.append(tracker)
             trackers.append(progressbar)
 
+    # dbc.Nav(
+    #     children=[
+    #         dbc.NavItem([dbc.NavLink([html.I(className="bi bi-house-door-fill"), "Home"], href="/", id="link-nav-home")]),
+    #         dbc.NavItem(
+    #             [
+    #                 dbc.NavLink(
+    #                     [html.I(className="bi bi-rocket-takeoff-fill"), "Launch"], href="/config", id="link-nav-config"
+    #                 )
+    #             ]
+    #         ),
+    #         dbc.NavItem(
+    #             [dbc.NavLink([html.I(className="bi bi-bar-chart-fill"), "Plot"], href="/plot", id="link-nav-plot")]
+    #         ),
+    #         dbc.NavItem(
+    #             [dbc.NavLink([html.I(className="bi bi-eye-fill"), "Control"], href="/simlog", id="link-nav-simlog")]
+    #         ),
+    #         dbc.NavItem(
+    #             [dbc.NavLink([html.I(className="bi bi-info-square-fill"), "Wiki"], href="/wiki", id="link-nav-wiki")]
+    #         ),
+    #     ]
+
     trackers.append("Recent simulations:")
+
+    recent_containers = []
+
     for path in paths:
         container = Container(path)
         ticker = container.get_ticker()
         if ticker.since_last() < 3600 and container.has_ticker_stopped():
-            trackers.append(
-                dash.dcc.Link(
-                    children=container.name, href=f"/simlog?sim={container.name}", className="sidebar-sim-recent"
-                )
+            recent_containers.append(container)
+            # trackers.append(
+            #     dash.dcc.Link(
+            #         children=container.name, href=f"/simlog?sim={container.name}", className="sidebar-sim-recent"
+            #     )
+            # )
+
+    nav = dash.html.Div(
+        children=[
+            dbc.Button(
+                children=[rc.name],
+                href=f"/simlog?sim={rc.name}",
+                # className="sidebar-sim-recent",
+                # outline=True,
+                className="badge me-1",
+                color="secondary"
+                # className="badge badge-pill badge-primary",
             )
+            for rc in recent_containers
+        ],
+    )
+
+    trackers.append(nav)
 
     return trackers
 
