@@ -8,14 +8,23 @@ from aegis_gui.pages.tab_simlog import zip, delete, terminate, download
 from aegis.utilities.get_folder_size import get_folder_size_with_du
 
 
-def make_multi_dropdown():
+def make_multi_dropdown(selected=None):
 
     paths = utilities.get_sim_paths()
+
+    if selected:
+        for path in paths:
+            if Container(path).name == selected:
+                selected_path = path
+                break
+    else:
+        selected_path = paths[0]
+
     return dbc.Select(
         id="sim_select",
         options=[{"label": path.stem, "value": str(path)} for path in paths],
         # value=["default"] if "default" in dropdown_options else [],
-        value=str(paths[0]),
+        value=str(selected_path),
         placeholder="Select simulations to plot...",
         # className="plot-dropdown",
         # multiple=True,

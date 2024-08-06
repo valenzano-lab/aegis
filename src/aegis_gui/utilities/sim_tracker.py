@@ -11,15 +11,25 @@ def make_trackers():
         container = Container(path)
         is_running = not container.has_ticker_stopped()
         if is_running:
-            tracker = dash.html.Div(container.name)
+            tracker = dash.dcc.Link(children=container.name, href=f"/simlog?sim={container.name}")
             progress = container.get_simple_log()
-            print(progress, "p")
             if progress is None:
                 continue
             progress = progress[0] / progress[1]
-            progressbar = dbc.Progress(label=f"{progress*100:.1f}%", value=progress * 100, striped=True, animated=True)
+            progressbar = dbc.Progress(
+                label=f"{progress*100:.0f}%" if progress > 0.1 else "",
+                value=progress * 100,
+                striped=True,
+                animated=True,
+            )
             trackers.append(tracker)
             trackers.append(progressbar)
+
+    trackers.append("Recent simulations:")
+    for path in paths:
+        container = Container(path)
+        if container.get_ticker().since_last() < 3600:
+            trackers.append(dash.dcc.Link(children=container.name, href=f"/simlog?sim={container.name}"))
 
     return trackers
 
@@ -37,5 +47,4 @@ def make_tracker_component():
 )
 def update_simulations(n):
     # Call make_trackers() to get the updated list of elements
-    print("updating")
     return ["running-simulations"] + make_trackers()

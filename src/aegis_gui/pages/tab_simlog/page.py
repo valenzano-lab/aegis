@@ -33,10 +33,11 @@ PREFACE = [
 
 
 @log_funcs.log_debug
-def layout():
+def layout(sim=None):
+    print(sim, "simname")
     return html.Div(
         id="simlog-section",
-        children=PREFACE + [dropdown.make_multi_dropdown(), dropdown.get_info_div()],
+        children=PREFACE + [dropdown.make_multi_dropdown(selected=sim), dropdown.get_info_div()],
         # + [
         #     html.Div(id="simlog-section-table", children=generate_initial_simlog()),
         # table.make_table(),

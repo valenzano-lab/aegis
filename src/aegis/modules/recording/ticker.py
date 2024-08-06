@@ -42,9 +42,12 @@ class Ticker(Recorder):
             return file.read()
 
     def has_stopped(self):
+        return self.since_last() > self.TICKER_RATE
+
+    def since_last(self):
         timestamp_recorded = self.read()
         timestamp_now = time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime())
         dt_recorded = datetime.strptime(timestamp_recorded, "%Y-%m-%d %H:%M:%S")
         dt_now = datetime.strptime(timestamp_now, "%Y-%m-%d %H:%M:%S")
         time_difference = (dt_now - dt_recorded).total_seconds()
-        return time_difference > self.TICKER_RATE
+        return time_difference

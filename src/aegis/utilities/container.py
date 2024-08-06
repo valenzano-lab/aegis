@@ -97,11 +97,13 @@ class Container:
         return self.data["log"]
 
     def get_simple_log(self):
-        with open(self.paths["simpleprogress"], "r") as file_:
-            text = file_.read()
-            print(text)
-            step, steps_per_simulation = text.split("/")
-            return int(step), int(steps_per_simulation)
+        try:
+            with open(self.paths["simpleprogress"], "r") as file_:
+                text = file_.read()
+                step, steps_per_simulation = text.split("/")
+                return int(step), int(steps_per_simulation)
+        except:
+            logging.error("No simpleprogress.log found.")
 
     def get_ticker(self):
         if self.ticker is None:
