@@ -278,6 +278,18 @@ DEFAULT_PARAMETERS = {
             "human": 50,
         },
     ),
+    "MAX_OFFSPRING_NUMBER": Parameter(
+        key="MAX_OFFSPRING_NUMBER",
+        name="",
+        domain="reproduction",
+        default=1,
+        info="Maximum number of offspring that an individual can produce each step.",
+        info_extended="Also known as clutch size, litter size or brood size, depending on the species.",
+        dtype=int,
+        drange="[1, inf)",
+        inrange=lambda x: x >= 1,
+        presets={},
+    ),
     # TODO split ploidy from reproduction mode
     "REPRODUCTION_MODE": Parameter(
         key="REPRODUCTION_MODE",

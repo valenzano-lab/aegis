@@ -8,7 +8,7 @@ from aegis.hermes import hermes
 
 class Bioreactor:
     def __init__(self, population: Population):
-        self.eggs = None
+        self.eggs: Population = None
         self.population = population
 
     ##############
@@ -103,23 +103,32 @@ class Bioreactor:
 
         # Check if reproducing
         probs_repr = hermes.architect.get_evaluation(self.population, "repr", part=mask_fertile)
-        mask_repr = hermes.rng.random(len(probs_repr), dtype=np.float32) < probs_repr
 
-        # Forgo if not at least two available parents
-        if np.count_nonzero(mask_repr) < 2:
+        # Binomial calculation
+        n = hermes.parameters.MAX_OFFSPRING_NUMBER
+        p = probs_repr
+        num_repr = hermes.rng.binomial(n=n, p=p)
+        mask_repr = num_repr > 0
+
+        if sum(num_repr) == 0:
             return
 
+        # Indices of reproducing individuals
+        who = np.repeat(np.arange(len(self.population)), num_repr)
+
         # Count ages at reproduction
-        ages_repr = self.population.ages[mask_repr]
+        ages_repr = self.population.ages[who]
         hermes.recording_manager.flushrecorder.collect("age_at_birth", ages_repr)
 
         # Increase births statistics
-        self.population.births += mask_repr
+        self.population.births += num_repr
 
         # Generate offspring genomes
-        parental_genomes = self.population.genomes.get(individuals=mask_repr)
-        parental_sexes = self.population.sexes[mask_repr]
+        parental_genomes = self.population.genomes.get(individuals=who)
+        parental_sexes = self.population.sexes[who]
+
         muta_prob = hermes.architect.get_evaluation(self.population, "muta", part=mask_repr)[mask_repr]
+        muta_prob = np.repeat(muta_prob, num_repr[mask_repr])
         offspring_genomes = hermes.modules.reproduction.generate_offspring_genomes(
             genomes=parental_genomes,
             muta_prob=muta_prob,
@@ -170,6 +179,7 @@ class Bioreactor:
                 hermes.parameters.INCUBATION_PERIOD > 0 and hermes.get_step() % hermes.parameters.INCUBATION_PERIOD == 0
             )  # hatch with delay
         ):
+            self.eggs.phenotypes = hermes.architect.__call__(self.eggs.genomes)
             self.population += self.eggs
             self.eggs = None
 
