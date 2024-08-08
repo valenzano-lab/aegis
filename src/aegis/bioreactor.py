@@ -7,7 +7,7 @@ from aegis.hermes import hermes
 
 
 class Bioreactor:
-    def __init__(self, population):
+    def __init__(self, population: Population):
         self.eggs = None
         self.population = population
 
@@ -187,10 +187,10 @@ class Bioreactor:
             return
 
         # Count ages at death
-        if causeofdeath != "age_limit":
-            ages_death = self.population.ages[mask_kill]
-            hermes.recording_manager.flushrecorder.collect(f"age_at_{causeofdeath}", ages_death)
-            hermes.recording_manager.terecorder.record(ages_death, "dead")
+        # if causeofdeath != "age_limit":
+        ages_death = self.population.ages[mask_kill]
+        hermes.recording_manager.flushrecorder.collect(f"age_at_{causeofdeath}", ages_death)
+        hermes.recording_manager.terecorder.record(ages_death, "dead")
 
         # Retain survivors
         self.population *= ~mask_kill

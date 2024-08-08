@@ -18,14 +18,14 @@ class FlushRecorder(Recorder):
         self.odir = odir / "gui" / "spectra"
         self.init_odir()
 
+        self.n_ages = hermes.parameters.AGE_LIMIT + 1
+
         self._collection = {
-            "age_at_birth": [0] * hermes.parameters.AGE_LIMIT,
-            "additive_age_structure": [0] * hermes.parameters.AGE_LIMIT,
+            "age_at_birth": [0] * self.n_ages,
+            "additive_age_structure": [0] * self.n_ages,
         }
 
-        self._collection.update(
-            {f"age_at_{causeofdeath}": [0] * hermes.parameters.AGE_LIMIT for causeofdeath in VALID_CAUSES_OF_DEATH}
-        )
+        self._collection.update({f"age_at_{causeofdeath}": [0] * self.n_ages for causeofdeath in VALID_CAUSES_OF_DEATH})
 
         self.collection = copy.deepcopy(self._collection)
 
@@ -33,7 +33,7 @@ class FlushRecorder(Recorder):
 
     def collect(self, key, ages):
         """Add data into memory which will be recorded later."""
-        self.collection[key] += np.bincount(ages, minlength=hermes.parameters.AGE_LIMIT)
+        self.collection[key] += np.bincount(ages, minlength=self.n_ages)
 
     def flush(self):
         """Record data that has been collected over time."""
@@ -68,5 +68,5 @@ class FlushRecorder(Recorder):
     def init_headers(self):
         for key in self._collection.keys():
             with open(self.odir / f"{key}.csv", "ab") as f:
-                array = np.arange(hermes.parameters.AGE_LIMIT)
+                array = np.arange(self.n_ages)
                 np.savetxt(f, [array], delimiter=",", fmt="%i")
