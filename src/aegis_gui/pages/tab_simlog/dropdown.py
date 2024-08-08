@@ -4,11 +4,11 @@ import dash_bootstrap_components as dbc
 from aegis.utilities.container import Container
 from aegis_gui.utilities import utilities
 import pathlib
-from aegis_gui.pages.tab_simlog import zip, delete, terminate, download
+from aegis_gui.pages.tab_simlog import delete, terminate, download, zipp
 from aegis.utilities.get_folder_size import get_folder_size_with_du
 
 
-def make_multi_dropdown(selected=None):
+def make_select(selected=None):
 
     paths = utilities.get_sim_paths()
 
@@ -77,7 +77,7 @@ def update_info_div(selected_path):
                 delete.make(path.stem),
                 delete.make_modal(),
                 terminate.make_button(filename=path.stem),
-                zip.get_zip_button_layout(filename=path.stem),
+                zipp.get_zip_button_layout(filename=path.stem),
                 download.make_button(path.stem),
                 download.make_dcc(path.stem),
             ],

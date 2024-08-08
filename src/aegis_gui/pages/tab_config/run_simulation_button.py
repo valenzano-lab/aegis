@@ -1,4 +1,3 @@
-from dash import html, dcc, callback, Output, Input, State, ALL
 from aegis_gui.utilities import log_funcs, utilities, ps_list
 from aegis.modules.initialization.parameterization.default_parameters import DEFAULT_PARAMETERS
 
@@ -12,7 +11,7 @@ from .valid_range import is_input_in_valid_range
 
 import logging
 
-layout = html.Div(
+layout = dash.html.Div(
     id="sim-section-control",
     children=[
         dbc.Input(
@@ -23,25 +22,25 @@ layout = html.Div(
             className="me-2",
         ),
         dbc.Button(
-            [html.I(className="bi bi-rocket-takeoff-fill"), "launch"],
+            [dash.html.I(className="bi bi-rocket-takeoff-fill"), "launch"],
             id="simulation-run-button",
             className="me-1",
             outline=True,
             color="success",
         ),
         dbc.Button(
-            [html.I(className="bi bi-x-circle-fill"), "reset"],
+            [dash.html.I(className="bi bi-x-circle-fill"), "reset"],
             id="reset-run-button",
             className="me-1",
             outline=True,
             color="danger",
         ),
-        # html.Button("make config", id="config-make-button"),]
+        # dash.html.Button("make config", id="config-make-button"),]
         dbc.FormFeedback(
             "Enter a unique simulation name",
             type="invalid",
         ),
-        html.P("", id="simulation-run-text"),
+        dash.html.P("", id="simulation-run-text"),
     ],
 )
 
@@ -56,9 +55,9 @@ def decode_config_tab_values(values, ids_):
             yield id_["index"], value
 
 
-@callback(
-    Output({"type": "config-input", "index": dash.ALL}, "value"),
-    Input("reset-run-button", "n_clicks"),
+@dash.callback(
+    dash.Output({"type": "config-input", "index": dash.ALL}, "value", allow_duplicate=True),
+    dash.Input("reset-run-button", "n_clicks"),
     dash.State({"type": "config-input", "index": dash.ALL}, "id"),
     dash.State({"type": "config-input", "index": dash.ALL}, "value"),
     prevent_initial_call=True,
@@ -83,12 +82,12 @@ def reset_configs(n_clicks, ids, current_values):
     return new_values
 
 
-@callback(
-    Output("config-make-text", "value"),
-    Input("simulation-run-button", "n_clicks"),
-    State("config-make-text", "value"),
-    State({"type": "config-input", "index": ALL}, "value"),
-    State({"type": "config-input", "index": ALL}, "id"),
+@dash.callback(
+    dash.Output("config-make-text", "value"),
+    dash.Input("simulation-run-button", "n_clicks"),
+    dash.State("config-make-text", "value"),
+    dash.State({"type": "config-input", "index": dash.ALL}, "value"),
+    dash.State({"type": "config-input", "index": dash.ALL}, "id"),
     prevent_initial_call=True,
 )
 @log_funcs.log_debug
@@ -114,13 +113,13 @@ def is_sim_name_valid(sim_name: str) -> bool:
     return (sim_name is not None) and (sim_name != "") and ("." not in sim_name)
 
 
-@callback(
-    Output("simulation-run-button", "disabled"),
-    Output("config-make-text", "invalid"),
-    Output("config-make-text", "valid"),
-    Input("config-make-text", "value"),
-    Input({"type": "config-input", "index": ALL}, "value"),
-    State({"type": "config-input", "index": ALL}, "id"),
+@dash.callback(
+    dash.Output("simulation-run-button", "disabled"),
+    dash.Output("config-make-text", "invalid"),
+    dash.Output("config-make-text", "valid"),
+    dash.Input("config-make-text", "value"),
+    dash.Input({"type": "config-input", "index": dash.ALL}, "value"),
+    dash.State({"type": "config-input", "index": dash.ALL}, "id"),
 )
 @log_funcs.log_debug
 def disable_sim_button(filename, values, ids) -> bool:

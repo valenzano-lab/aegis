@@ -36,7 +36,7 @@ PREFACE = [
 def layout(sim=None):
     return html.Div(
         id="simlog-section",
-        children=PREFACE + [dropdown.make_multi_dropdown(selected=sim), dropdown.get_info_div()],
+        children=PREFACE + [dropdown.make_select(selected=sim), dropdown.get_info_div()],
         # + [
         #     html.Div(id="simlog-section-table", children=generate_initial_simlog()),
         # table.make_table(),

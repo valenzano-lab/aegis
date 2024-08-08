@@ -4,7 +4,7 @@ import datetime
 from aegis.utilities.container import Container
 from aegis.utilities.get_folder_size import get_folder_size_with_du
 from aegis_gui.config import config
-from . import zip, delete, terminate, download
+from . import delete, terminate, download, zipp
 
 
 @log_funcs.log_debug
@@ -112,7 +112,7 @@ def make_table_row(log, input_summary, output_summary, basepath, filename, ticke
                 ),
                 style={"padding-right": "1rem"},
             ),
-            zip.get_zip_button_layout(filename=filename),
+            zipp.get_zip_button_layout(filename=filename),
         ],
     )
     return row

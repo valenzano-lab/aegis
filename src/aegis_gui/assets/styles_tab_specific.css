@@ -25,3 +25,12 @@
   width: 300px;
   display: inline-block;
 }
+
+#sim-config-select {
+  width: 300px;
+  display: inline-block;
+}
+
+#config-accordion {
+  margin-bottom:1rem;
+}

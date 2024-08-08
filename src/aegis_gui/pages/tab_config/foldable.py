@@ -82,6 +82,7 @@ def get_foldable():
 
     elements = [
         dbc.Accordion(
+            id="config-accordion",
             start_collapsed=True,
             children=[
                 dbc.AccordionItem(
