@@ -39,7 +39,9 @@ class Bioreactor:
 
         # Record data
         hermes.recording_manager.popsizerecorder.write(self.population)
-        hermes.recording_manager.flushrecorder.collect("additive_age_structure", self.population.ages)  # population census
+        hermes.recording_manager.flushrecorder.collect(
+            "additive_age_structure", self.population.ages
+        )  # population census
         hermes.recording_manager.picklerecorder.write(self.population)
         hermes.recording_manager.featherrecorder.write(self.population)
         hermes.recording_manager.guirecorder.record(self.population)
@@ -135,6 +137,10 @@ class Bioreactor:
         else:
             self.eggs += eggs
 
+        if len(self.eggs) > hermes.parameters.CARRYING_CAPACITY_EGGS:
+            indices = np.arange(len(self.eggs))[-hermes.parameters.CARRYING_CAPACITY_EGGS :]
+            self.eggs *= indices
+
     def growth(self):
         max_growth_potential = hermes.architect.get_evaluation(self.population, "grow")
         gathered_resources = hermes.modules.resources.scavenge(max_growth_potential)
@@ -161,8 +167,7 @@ class Bioreactor:
             (hermes.parameters.INCUBATION_PERIOD == -1 and len(self.population) == 0)  # hatch when everyone dead
             or (hermes.parameters.INCUBATION_PERIOD == 0)  # hatch immediately
             or (
-                hermes.parameters.INCUBATION_PERIOD > 0
-                and hermes.get_step() % hermes.parameters.INCUBATION_PERIOD == 0
+                hermes.parameters.INCUBATION_PERIOD > 0 and hermes.get_step() % hermes.parameters.INCUBATION_PERIOD == 0
             )  # hatch with delay
         ):
             self.population += self.eggs
