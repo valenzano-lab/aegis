@@ -1,4 +1,5 @@
 import dash
+import datetime
 from dash import html
 import dash_bootstrap_components as dbc
 from aegis.utilities.container import Container
@@ -40,13 +41,26 @@ def get_info_div():
 # Function to get simulation information
 def get_sim_info(path):
     container = Container(path)
+    input_summary = container.get_input_summary()
+    output_summary = container.get_output_summary()
+
+    time_of_creation = (
+        datetime.datetime.fromtimestamp(input_summary["time_start"]).strftime("%Y-%m-%d %H:%M")
+        if input_summary
+        else None
+    )
+
+    time_of_finishing = (
+        datetime.datetime.fromtimestamp(output_summary["time_start"]).strftime("%Y-%m-%d %H:%M")
+        if output_summary
+        else "(no terminal log detected)"
+    )
     return {
-        "log": container.get_log(),
-        "is": container.get_input_summary(),
-        "output_summary": container.get_output_summary(),
         "basepath": str(container.basepath),
         "filename": container.basepath.stem,
         "ticker_stopped": container.has_ticker_stopped(),
+        "starting time": time_of_creation,
+        "finishing time": time_of_finishing,
     }
 
 
