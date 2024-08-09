@@ -31,7 +31,6 @@ class Mutator:
             ages=ages,
             MUTATION_AGE_MULTIPLIER=self.MUTATION_AGE_MULTIPLIER,
         )
-
         mutate_0to1 = (~genomes) & (
             random_probabilities < (mutation_probabilities * self.rate_0to1).astype("float32")
         )  # genome == 0 &

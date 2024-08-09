@@ -1,11 +1,10 @@
 import numpy as np
 from aegis.hermes import hermes
+from aegis.modules.dataclasses.genomes import Genomes
 
 
-def assortment(genomes, parental_sexes):
+def pairing(genomes: Genomes, parental_sexes, ages, muta_prob):
     """Return assorted chromatids."""
-
-    # TODO rename
 
     # Get pairs
     males, females = hermes.modules.matingmanager.pair_up(parental_sexes)
@@ -22,8 +21,10 @@ def assortment(genomes, parental_sexes):
     female_gametes = female_genomes[np.arange(n_pairs), which_gamete]
 
     # Unify gametes
-    children = np.empty(genomes.get_array().shape, dtype=np.bool_)
+    gshape = genomes.shape()
+    children = np.empty(shape=(n_pairs, *gshape[1:]), dtype=np.bool_)
     children[np.arange(n_pairs), 0] = male_gametes
     children[np.arange(n_pairs), 1] = female_gametes
 
-    return children
+    # TODO fix splitting of ages and muta_prob
+    return children, ages[females], muta_prob[females]

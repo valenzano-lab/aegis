@@ -98,6 +98,7 @@ class Bioreactor:
                 self.population.ages >= hermes.parameters.MENOPAUSE
             )  # Check if menopausal; menopausal when lived through MENOPAUSE full cycles
             mask_fertile = (mask_fertile) & (~mask_menopausal)
+
         if not any(mask_fertile):
             return
 
@@ -129,6 +130,15 @@ class Bioreactor:
 
         muta_prob = hermes.architect.get_evaluation(self.population, "muta", part=mask_repr)[mask_repr]
         muta_prob = np.repeat(muta_prob, num_repr[mask_repr])
+
+        # Randomize order of eggs
+        # order = np.arange(np.sum(num_repr))
+        # hermes.rng.shuffle
+        # parental_genomes = parental_genomes[order]
+        # parental_sexes = parental_sexes[order]
+        # muta_prob = muta_prob[order]
+        # ages_repr = ages_repr[order]
+
         offspring_genomes = hermes.modules.reproduction.generate_offspring_genomes(
             genomes=parental_genomes,
             muta_prob=muta_prob,
@@ -145,9 +155,9 @@ class Bioreactor:
             self.eggs = eggs
         else:
             self.eggs += eggs
-
         if len(self.eggs) > hermes.parameters.CARRYING_CAPACITY_EGGS:
             indices = np.arange(len(self.eggs))[-hermes.parameters.CARRYING_CAPACITY_EGGS :]
+            # TODO biased
             self.eggs *= indices
 
     def growth(self):

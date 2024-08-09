@@ -62,22 +62,6 @@ def triggered_dropdown_multi(dropdown_values, figure_selected):
     return handle_trigger(dropdown_values, figure_selected)
 
 
-# # Single Dropdown and Tabs
-# @callback(
-#     Output({"type": "graph-figure", "index": ALL}, "figure", allow_duplicate=True),
-#     Output({"type": "graph-slider", "index": ALL}, "max", allow_duplicate=True),
-#     Input("dropdown-single", "value"),
-#     Input("figure-select", "value"),
-#     # Input("tabs-single", "value"),
-#     prevent_initial_call=True,
-# )
-# @log_funcs.log_debug
-# def triggered_dropdown_single(dropdown_value, figure_selected):
-#     print(figure_selected)
-#     print(dropdown_value)
-#     return handle_trigger([dropdown_value], figure_selected, dropdown_multi_triggered=False)
-
-
 @callback(
     Output({"type": "loading-graph-div", "index": ALL}, "parent_style"),
     Input("figure-select", "value"),

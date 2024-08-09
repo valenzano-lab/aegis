@@ -28,3 +28,6 @@ class MatingManager:
         females = indices_female[:n_pairs]
 
         return males, females
+
+    def pair_up_monogamously(self, sexes):
+        return

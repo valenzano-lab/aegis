@@ -81,6 +81,11 @@ class Population:
                 setattr(self, attr, val)
         return self
 
+    # def shuffle(self):
+    #     order = hermes.rng.arange(len(self))
+    #     hermes.rng.shuffle(order)
+    #     self *= order
+
     @staticmethod
     def load_pickle_from(path):
         with open(path, "rb") as file_:
@@ -112,7 +117,7 @@ class Population:
         )
 
     @staticmethod
-    def make_eggs(offspring_genomes, step, offspring_sexes):
+    def make_eggs(offspring_genomes: Genomes, step, offspring_sexes):
         n = len(offspring_genomes)
         eggs = Population(
             genomes=offspring_genomes,

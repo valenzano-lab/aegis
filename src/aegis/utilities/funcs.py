@@ -1,4 +1,5 @@
 import time
+import logging
 
 
 # Decorators
@@ -8,7 +9,7 @@ def profile_time(func):
         result = func(*args, **kwargs)
         end_time = time.time()
         execution_time = (end_time - start_time) * 1000
-        print(f"{func.__name__} took {execution_time:.6f} ms to execute")
+        logging.info(f"{func.__name__} took {execution_time:.6f} ms to execute")
         return result
 
     return wrapper

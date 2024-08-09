@@ -11,7 +11,7 @@ def get_species_parameters(SPECIES_PRESET):
 
 # TODO test these
 # TODO value interpolation between ages?
-
+# TODO report invalid values
 
 PRESET_INFO = {
     "human": "One cycle corresponds to 2 years.",

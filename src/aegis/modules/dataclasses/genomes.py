@@ -25,4 +25,7 @@ class Genomes:
     def get_array(self):
         return self.array.copy()
 
+    def shape(self):
+        return self.array.shape
+
     # TODO add logicalxor

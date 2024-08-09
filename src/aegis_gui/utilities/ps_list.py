@@ -2,6 +2,7 @@
 
 import subprocess
 import re
+import logging
 from typing import Set
 
 # TODO test this on different setups; is it picking up the python process line?
@@ -21,6 +22,6 @@ def run_ps_af() -> Set[str]:
                 config_file = match.group(1)
                 config_files.add(config_file)
     except subprocess.CalledProcessError as e:
-        print(f"An error occurred: {e}")
+        logging.error(f"An error occurred: {e}")
 
     return config_files
