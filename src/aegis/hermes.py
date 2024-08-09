@@ -2,7 +2,7 @@
 Hermes acts as a central messenger, a repository of information that is to be used globally.
 """
 
-import types
+from typing import Optional
 import logging
 import numpy as np
 
@@ -87,7 +87,37 @@ class Hermes:
         from aegis.modules.reproduction.sexsystem import SexSystem
         from aegis.modules.reproduction.matingmanager import MatingManager
 
-        modules = types.SimpleNamespace()
+        class Modules:
+            def __init__(
+                self,
+                abiotic: Optional[Abiotic] = None,
+                predation: Optional[Predation] = None,
+                starvation: Optional[Starvation] = None,
+                infection: Optional[Infection] = None,
+                resources: Optional[Resources] = None,
+                mutator: Optional[Mutator] = None,
+                reproduction: Optional[Reproducer] = None,
+                matingmanager: Optional[MatingManager] = None,
+                ploidy: Optional[Ploider] = None,
+                sexsystem: Optional[SexSystem] = None,
+                popgenstats: Optional[PopgenStats] = None,
+            ):
+                self.abiotic = abiotic
+                self.predation = predation
+                self.starvation = starvation
+                self.infection = infection
+                self.resources = resources
+                self.mutator = mutator
+                self.reproduction = reproduction
+                self.matingmanager = matingmanager
+                self.ploidy = ploidy
+                self.sexsystem = sexsystem
+                self.popgenstats = popgenstats
+
+        # modules = types.SimpleNamespace(
+        #     abiotic=None  # type: typing.Optional[Abiotic],
+        # )
+        modules = Modules()
         # Mortality
         modules.abiotic = Abiotic(
             ABIOTIC_HAZARD_SHAPE=self.parameters.ABIOTIC_HAZARD_SHAPE,
