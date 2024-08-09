@@ -28,4 +28,8 @@ class Genomes:
     def shape(self):
         return self.array.shape
 
+    def __getitem__(self, key):
+        new_array = self.array[key]
+        return Genomes(new_array)
+
     # TODO add logicalxor
