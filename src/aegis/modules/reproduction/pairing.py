@@ -7,7 +7,7 @@ def pairing(genomes: Genomes, parental_sexes, ages, muta_prob):
     """Return assorted chromatids."""
 
     # Get pairs
-    males, females = hermes.modules.matingmanager.pair_up(parental_sexes)
+    males, females = hermes.modules.matingmanager.pair_up_polygamously(parental_sexes)
     assert len(males) == len(females)
     n_pairs = len(males)
 

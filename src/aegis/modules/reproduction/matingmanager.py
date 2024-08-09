@@ -5,7 +5,7 @@ class MatingManager:
     def __init__(self):
         pass
 
-    def pair_up(self, sexes):
+    def pair_up_polygamously(self, sexes):
         """
         Return indices of reproducing, sex-sorted individuals.
         Make sure no same-sex fertilization is happening.
