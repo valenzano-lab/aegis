@@ -56,11 +56,11 @@ def get_sim_info(path):
         else "(no terminal log detected)"
     )
     return {
-        "basepath": str(container.basepath),
-        "filename": container.basepath.stem,
-        "ticker_stopped": container.has_ticker_stopped(),
-        "starting time": time_of_creation,
-        "finishing time": time_of_finishing,
+        # "Path": str(container.basepath),
+        "Running": ~container.has_ticker_stopped(),
+        "Started": time_of_creation,
+        "Finished": time_of_finishing,
+        "Size": get_folder_size_with_du(path),
     }
 
 
@@ -81,9 +81,11 @@ def update_info_div(selected_path):
     for key, value in sim_info.items():
         list_items.append(dbc.ListGroupItem([html.Strong(f"{key}: "), html.Span(str(value))]))
 
-    list_items.append(dbc.ListGroupItem([get_folder_size_with_du(path)]))
+    # list_items.append(dbc.ListGroupItem([get_folder_size_with_du(path)]))
     list_items.append(
-        dbc.ListGroupItem([html.P(str(path), id={"type": "config-download-basepath", "index": path.stem})])
+        dbc.ListGroupItem(
+            [html.Strong("Path:"), html.Span(str(path), id={"type": "config-download-basepath", "index": path.stem})]
+        )
     )
     list_items.append(
         dbc.ListGroupItem(

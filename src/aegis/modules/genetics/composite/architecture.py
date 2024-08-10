@@ -65,6 +65,14 @@ class CompositeArchitecture:
         for trait in hermes.traits.values():
             loci = genomes[:, trait.slice]  # fetch
             probs = self.interpreter.call(loci, trait.interpreter)  # interpret
+            # self.diffuse(probs)
             interpretome[:, trait.slice] += probs  # add back
 
         return interpretome
+
+    # def diffuse(self, probs):
+    #     window_size = hermes.parameters.DIFFUSION_FACTOR * 2 + 1
+    #     p = np.empty(shape=(probs.shape[0], probs.shape[1] + window_size - 1))
+    #     p[:, :window_size] = np.repeat(probs[:, 0], window_size).reshape(-1, window_size)
+    #     p[:, window_size - 1 :] = probs[:]
+    #     diffusome = np.convolve(p[0], np.ones(window_size) / window_size, mode="valid")
