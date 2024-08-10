@@ -28,3 +28,7 @@
   /* text-decoration: underline #888 dotted; */
   cursor: help;
 }
+
+h1 {
+  padding-bottom: 1rem;
+}

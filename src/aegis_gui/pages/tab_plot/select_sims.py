@@ -22,7 +22,7 @@ def make_multi_dropdown(dropdown_options):
             dcc.Dropdown(
                 id="dropdown-multi",
                 options=dropdown_options,
-                value=["default"] if "default" in dropdown_options else [],
+                value=dropdown_options[0] if dropdown_options else [],
                 multi=True,
                 placeholder="Select simulations to plot...",
                 className="plot-dropdown",

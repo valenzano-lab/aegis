@@ -52,22 +52,22 @@ PREFACE = [
         children=[
             # TODO change text
             html.H1("Configuration tab"),
-            html.P(
-                [
-                    # """Customize and start simulations.
-                    # """
-                    # """
-                    # This is the configuration tab. Here you can customize parameters and start simulations.
-                    # On the left side, there are the parameter tables in which you can specify custom parameter values.
-                    # Each parameter has a valid data type and a valid range; when the input value is not valid, the simulation cannot be started.
-                    # If no input is given, the parameter will take on the default value.
-                    # Parameters are grouped into tables depending on which simulated process (submodel) they customize – these are, in brief, mortality (infection, predation, starvation, abiotic mortality), reproduction, genetics, environmental drift and recording.
-                    # Each submodel is described on the right side, next to the relevant parameter table.
-                    # To start the simulation, adjust parameter values, enter a unique ID in the input bar on top and click the adjacent button "run simulation".
-                    # """,
-                ],
-                style={"margin-bottom": "2rem"},
-            ),
+            # html.P(
+            #     [
+            #         # """Customize and start simulations.
+            #         # """
+            #         # """
+            #         # This is the configuration tab. Here you can customize parameters and start simulations.
+            #         # On the left side, there are the parameter tables in which you can specify custom parameter values.
+            #         # Each parameter has a valid data type and a valid range; when the input value is not valid, the simulation cannot be started.
+            #         # If no input is given, the parameter will take on the default value.
+            #         # Parameters are grouped into tables depending on which simulated process (submodel) they customize – these are, in brief, mortality (infection, predation, starvation, abiotic mortality), reproduction, genetics, environmental drift and recording.
+            #         # Each submodel is described on the right side, next to the relevant parameter table.
+            #         # To start the simulation, adjust parameter values, enter a unique ID in the input bar on top and click the adjacent button "run simulation".
+            #         # """,
+            #     ],
+            #     style={"margin-bottom": "2rem"},
+            # ),
         ]
     )
 ]
