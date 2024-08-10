@@ -45,7 +45,6 @@ def make_accordion_item(d):
 
 
 def make_accordion():
-    print(OUTPUT_SPECIFICATIONS)
     data = [
         {key: specs.get(key, "!!! nan") for key in OUTPUT_SPECIFICATIONS[0].keys()} for specs in OUTPUT_SPECIFICATIONS
     ]

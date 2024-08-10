@@ -4,6 +4,7 @@ from dash import html, dcc
 from aegis_gui.utilities import log_funcs
 from aegis.documentation.documenter import Documenter
 import dash_bootstrap_components as dbc
+from aegis_gui.pages.tab_landing.jumbotron import jumbotron
 
 dash.register_page(__name__, name="landing", path="/")
 
@@ -14,6 +15,7 @@ def layout():
         id="landing-section",
         children=[
             dcc.Markdown(Documenter.read("1 welcome.md")),
+            jumbotron,
             dcc.Markdown(Documenter.read("1 getting started.md")),
             dbc.Card(
                 [
