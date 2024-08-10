@@ -5,7 +5,7 @@ import dash_bootstrap_components as dbc
 from aegis.utilities.container import Container
 from aegis_gui.utilities import utilities
 import pathlib
-from aegis_gui.pages.tab_simlog import delete, terminate, download, zipp
+from aegis_gui.pages.tab_simlog import delete, terminate, download, zipp, open_folder
 from aegis.utilities.get_folder_size import get_folder_size_with_du
 
 
@@ -60,6 +60,7 @@ def get_sim_info(path):
         "Running": ~container.has_ticker_stopped(),
         "Started": time_of_creation,
         "Finished": time_of_finishing,
+        "Went extinct": output_summary.get("extinct", "(no terminal log detected)"),
         "Size": get_folder_size_with_du(path),
     }
 
@@ -90,12 +91,20 @@ def update_info_div(selected_path):
     list_items.append(
         dbc.ListGroupItem(
             [
+                download.make_button(path.stem),
+                download.make_dcc(path.stem),
+                zipp.get_zip_button_layout(filename=path.stem),
+                open_folder.make_button(path),
+            ],
+            style={"display": "flex"},
+        )
+    )
+    list_items.append(
+        dbc.ListGroupItem(
+            [
                 delete.make(path.stem),
                 delete.make_modal(),
                 terminate.make_button(filename=path.stem),
-                zipp.get_zip_button_layout(filename=path.stem),
-                download.make_button(path.stem),
-                download.make_dcc(path.stem),
             ],
             style={"display": "flex"},
         )

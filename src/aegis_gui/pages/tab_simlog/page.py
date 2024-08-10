@@ -4,7 +4,7 @@ from aegis_gui.utilities import log_funcs
 
 from aegis_gui.pages.tab_simlog import dropdown
 
-from aegis_gui.pages.tab_simlog.table import generate_initial_simlog
+# from aegis_gui.pages.tab_simlog.table import generate_initial_simlog
 
 
 dash.register_page(__name__, path="/simlog", name="simlog")
