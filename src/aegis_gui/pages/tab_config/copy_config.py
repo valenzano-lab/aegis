@@ -18,6 +18,7 @@ def make_select(selected=None):
         selected_path = paths[0]
 
     return [
+        dash.html.P("Copy parameters"),
         dbc.Select(
             id="sim-config-select",
             options=[{"label": path.stem, "value": str(path)} for path in paths],

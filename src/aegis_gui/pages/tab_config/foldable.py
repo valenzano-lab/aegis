@@ -81,6 +81,7 @@ def get_foldable():
     ]
 
     elements = [
+        dash.html.P("Customize parameters"),
         dbc.Accordion(
             id="config-accordion",
             start_collapsed=True,
@@ -127,7 +128,7 @@ def get_foldable():
                 for domain, ps in pars.items()
             ],
             # flush=True,
-        )
+        ),
     ]
 
     return elements

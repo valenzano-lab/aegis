@@ -54,8 +54,8 @@ PREFACE = [
             html.H1("Configuration tab"),
             html.P(
                 [
-                    """Customize and start simulations.
-                    """
+                    # """Customize and start simulations.
+                    # """
                     # """
                     # This is the configuration tab. Here you can customize parameters and start simulations.
                     # On the left side, there are the parameter tables in which you can specify custom parameter values.
@@ -68,7 +68,6 @@ PREFACE = [
                 ],
                 style={"margin-bottom": "2rem"},
             ),
-            run_simulation_button.layout,
         ]
     )
 ]
@@ -96,32 +95,32 @@ def layout() -> html.Div:
 
     # Generate layout
 
-    tables = []
-    for domain, subset in subsets.items():
-        tables.append(
-            html.Div(
-                children=[
-                    html.P(domain, className="config-domain"),
-                    html.Div(
-                        children=[
-                            html.Div(
-                                children=[
-                                    html.Div(
-                                        children=[get_table(subset)],
-                                        # style={"width": "50%"},
-                                    ),
-                                ],
-                            ),
-                            html.Div(
-                                html.Div(children=TEXTS_DOMAIN.get(domain, ""), className="config-domain-desc"),
-                                style={"margin-left": "1.5rem"},
-                            ),
-                        ],
-                        style={"display": "flex"},
-                    ),
-                ],
-            )
-        )
+    # tables = []
+    # for domain, subset in subsets.items():
+    #     tables.append(
+    #         html.Div(
+    #             children=[
+    #                 html.P(domain, className="config-domain"),
+    #                 html.Div(
+    #                     children=[
+    #                         html.Div(
+    #                             children=[
+    #                                 html.Div(
+    #                                     children=[get_table(subset)],
+    #                                     # style={"width": "50%"},
+    #                                 ),
+    #                             ],
+    #                         ),
+    #                         html.Div(
+    #                             html.Div(children=TEXTS_DOMAIN.get(domain, ""), className="config-domain-desc"),
+    #                             style={"margin-left": "1.5rem"},
+    #                         ),
+    #                     ],
+    #                     style={"display": "flex"},
+    #                 ),
+    #             ],
+    #         )
+    #     )
 
     foldables = foldable.get_foldable()
 
@@ -129,63 +128,63 @@ def layout() -> html.Div:
     return html.Div(
         id="sim-section",
         # style={"display": "none"},
-        children=PREFACE + foldables + copy_config.make_select(),  # + tables,
+        children=PREFACE + copy_config.make_select() + foldables + [run_simulation_button.layout],  # + tables,
     )
+
+
+# # @log_funcs.log_debug
+# def get_row(v: Parameter) -> html.Tr:
+#     if v.serverrange_info:
+#         serverrange_info_message = f"Allowed parameter range for the server is {v.serverrange_info}."
+#     else:
+#         serverrange_info_message = ""
+
+#     return html.Tr(
+#         [
+#             # PARAMETER
+#             html.Td(
+#                 v.get_name(),
+#                 style={"padding-left": "1.2rem"},
+#                 title=v.info if v.info else None,
+#             ),
+#             # TYPE
+#             html.Td(
+#                 children=html.Label(
+#                     v.dtype.__name__,
+#                     className=f"dtype-{v.dtype.__name__} dtype",
+#                 )
+#             ),
+#             # RANGE
+#             html.Td(children=v.drange, className="data-range"),
+#             # VALUE
+#             html.Td(children=config_input.get_input_element(param=v)),
+#             # DESCRIPTION
+#             # html.Td(
+#             #     children=[
+#             #         v.info + ".",
+#             #         html.P(
+#             #             serverrange_info_message,
+#             #             className="serverrange_info_message",
+#             #         ),
+#             #     ],
+#             #     className="td-info",
+#             #     style={"padding-right": "0.8rem"},
+#             # ),
+#         ],
+#     )
 
 
 # @log_funcs.log_debug
-def get_row(v: Parameter) -> html.Tr:
-    if v.serverrange_info:
-        serverrange_info_message = f"Allowed parameter range for the server is {v.serverrange_info}."
-    else:
-        serverrange_info_message = ""
-
-    return html.Tr(
-        [
-            # PARAMETER
-            html.Td(
-                v.get_name(),
-                style={"padding-left": "1.2rem"},
-                title=v.info if v.info else None,
-            ),
-            # TYPE
-            html.Td(
-                children=html.Label(
-                    v.dtype.__name__,
-                    className=f"dtype-{v.dtype.__name__} dtype",
-                )
-            ),
-            # RANGE
-            html.Td(children=v.drange, className="data-range"),
-            # VALUE
-            html.Td(children=config_input.get_input_element(param=v)),
-            # DESCRIPTION
-            # html.Td(
-            #     children=[
-            #         v.info + ".",
-            #         html.P(
-            #             serverrange_info_message,
-            #             className="serverrange_info_message",
-            #         ),
-            #     ],
-            #     className="td-info",
-            #     style={"padding-right": "0.8rem"},
-            # ),
-        ],
-    )
-
-
-@log_funcs.log_debug
-def get_table(params_subset) -> html.Table:
-    return html.Table(
-        className="config-table",
-        children=[
-            html.Col(className="config-table-col"),
-            html.Col(className="config-table-col"),
-            html.Col(className="config-table-col"),
-            html.Col(className="config-table-col"),
-            html.Col(className="config-table-col"),
-        ]
-        + [HEADER]
-        + [get_row(v) for v in params_subset if not isinstance(v.default, list)],
-    )
+# def get_table(params_subset) -> html.Table:
+#     return html.Table(
+#         className="config-table",
+#         children=[
+#             html.Col(className="config-table-col"),
+#             html.Col(className="config-table-col"),
+#             html.Col(className="config-table-col"),
+#             html.Col(className="config-table-col"),
+#             html.Col(className="config-table-col"),
+#         ]
+#         + [HEADER]
+#         + [get_row(v) for v in params_subset if not isinstance(v.default, list)],
+#     )
