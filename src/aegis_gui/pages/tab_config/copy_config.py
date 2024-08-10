@@ -33,8 +33,15 @@ def make_select(selected=None):
             [dash.html.I(className="bi bi-arrow-up-square-fill"), "copy"],
             id="sim-config-copy",
             className="me-1",
-            outline=True,
+            # outline=True,
             color="primary",
+        ),
+        dbc.Button(
+            [dash.html.I(className="bi bi-x-circle-fill"), "reset"],
+            id="reset-run-button",
+            className="me-1",
+            # outline=True,
+            color="danger",
         ),
     ]
 

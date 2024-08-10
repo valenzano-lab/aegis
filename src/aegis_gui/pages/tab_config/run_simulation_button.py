@@ -28,13 +28,6 @@ layout = dash.html.Div(
             outline=True,
             color="success",
         ),
-        dbc.Button(
-            [dash.html.I(className="bi bi-x-circle-fill"), "reset"],
-            id="reset-run-button",
-            className="me-1",
-            outline=True,
-            color="danger",
-        ),
         # dash.html.Button("make config", id="config-make-button"),]
         dbc.FormFeedback(
             "Enter a unique simulation name",
@@ -114,6 +107,7 @@ def is_sim_name_valid(sim_name: str) -> bool:
 
 
 @dash.callback(
+    dash.Output("simulation-run-button", "outline"),
     dash.Output("simulation-run-button", "disabled"),
     dash.Output("config-make-text", "invalid"),
     dash.Output("config-make-text", "valid"),
@@ -142,15 +136,15 @@ def disable_sim_button(filename, values, ids) -> bool:
             logging.info(
                 f"Simulation run button is blocked because parameter {param_name} has received an invalid input."
             )
-            return True, True, False
+            return True, True, True, False
 
     if not is_sim_name_valid(filename):
         logging.info(f"Simulation run button is blocked because simulation name {filename} is not valid.")
-        return True, True, False
+        return True, True, True, False
 
     if utilities.sim_exists(filename):
         logging.info(f"Simulation run button is blocked because simulation name {filename} already exists.")
-        return True, True, False
+        return True, True, True, False
 
     # Check if reached simulation number limit
     currently_running = len(ps_list.run_ps_af())
@@ -158,6 +152,6 @@ def disable_sim_button(filename, values, ids) -> bool:
         logging.info(
             f"You are currently running {currently_running} simulations. Limit is {config.simulation_number_limit}."
         )
-        return True, True, False
+        return True, True, True, False
 
-    return False, False, True
+    return False, False, False, True
