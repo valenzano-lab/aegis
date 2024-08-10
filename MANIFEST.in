@@ -2,7 +2,7 @@ include LICENSE
 include Makefile
 include src/aegis_gui/assets/favicon.ico
 include src/aegis_gui/assets/*.svg
-include src/aegis_gui/assets/*.ttf
+include src/aegis_gui/assets/fonts/*.ttf
 include src/aegis_gui/assets/*.css
 include src/aegis/modules/initialization/parameterization/default_parameters.yml
 include src/aegis/documentation/*
