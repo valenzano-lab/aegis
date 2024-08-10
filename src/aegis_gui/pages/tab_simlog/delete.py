@@ -61,23 +61,30 @@ def delete_simulation(filename):
 
 @callback(
     Output("modal-centered", "is_open"),
+    dash.Output("sim-select", "options"),
+    dash.Output("sim-select", "value"),
     Input("delete-simulation-button", "n_clicks"),
     Input("close-centered", "n_clicks"),
     Input("permanently-delete", "n_clicks"),
     State("delete-simulation-filename", "data"),
+    dash.State("sim-select", "options"),
     prevent_initial_call=True,
 )
-def toggle_modal(n1, n2, n3, filename):
+def toggle_modal(n1, n2, n3, filename, current_options):
+    if ctx.triggered_id == "delete-simulation-button" and n1 is not None:
+        return True, dash.no_update, dash.no_update
 
-    if ctx.triggered_id == "close-centered":
-        return False
+    if ctx.triggered_id == "close-centered" and n2 is not None:
+        return False, dash.no_update, dash.no_update
 
-    if ctx.triggered_id == "delete-simulation-button":
-        return True
-
-    if ctx.triggered_id == "permanently-delete":
+    if ctx.triggered_id == "permanently-delete" and n3 is not None:
         delete_simulation(filename=filename)
-        return False
+        new_options = [d for d in current_options if d["label"] != filename]
+        return False, new_options, new_options[0]["value"] if new_options else ""
+    
+    # TODO issue when no new options
+
+    return dash.no_update, dash.no_update, dash.no_update
 
 
 def make_modal():

@@ -28,7 +28,7 @@ def make_select(selected=None):
         children=[
             dbc.InputGroupText("Simulation ID"),
             dbc.Select(
-                id="sim_select",
+                id="sim-select",
                 options=[{"label": path.stem, "value": str(path)} for path in paths],
                 # value=["default"] if "default" in dropdown_options else [],
                 value=str(selected_path),
@@ -77,7 +77,7 @@ def get_sim_info(path):
 # Callback to update sim_info_div
 @dash.callback(
     dash.Output("sim_info_div", "children"),
-    dash.Input("sim_select", "value"),
+    dash.Input("sim-select", "value"),
 )
 def update_info_div(selected_path):
     if not selected_path:
