@@ -51,6 +51,23 @@ FIG_LAYOUT = dict(
 )
 
 
+# FIG_LAYOUT_EMPTY = {
+#     "layout": {
+#         "xaxis": {"visible": False},
+#         "yaxis": {"visible": False},
+#         "annotations": [
+#             {
+#                 "text": "No matching data found",
+#                 "xref": "paper",
+#                 "yref": "paper",
+#                 "showarrow": False,
+#                 "font": {"size": 28},
+#             }
+#         ],
+#     }
+# }
+
+
 def make_scatter_figure(id_, xs, ys, selected_sims):
     figure = go.Figure(
         data=[
