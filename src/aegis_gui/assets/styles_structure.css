@@ -2,21 +2,51 @@ html,
 body {
   font-family: Inter;
   margin: 0;
-  overflow-y: hidden;
+  /* overflow-y: hidden; */
 }
 
 #body-container {
-  padding: 0 0;
-  height: 100vh;
-  margin: 3rem 15%;
+  /* padding: 0 0; */
+  /* height: 100vh; */
+  margin: 3rem 15% 3rem 30%;
   display: flex;
   flex-direction: row;
 }
 
 #main-container {
-  overflow-y: scroll;
+  /* overflow-y: scroll; */
   /* margin-top: 1rem; */
   max-width: 800px;
   width: 800px;
   padding: 0 1rem;
+  /* padding-bottom:1.5rem; */
 }
+
+#sidebar {
+  min-width: 10rem;
+  width: 7rem;
+  margin-right: 3rem;
+  height: 100%;
+  /*  */
+  position: fixed;
+  top: 3rem;
+  left: 18%;
+}
+
+/* .nav-item {
+  padding: 0.5rem 1rem;
+} */
+
+/* .nav-item:hover {
+    background-color: blue;
+} */
+
+#sidebar i,
+i {
+  margin-right: 10px;
+}
+
+/* .sidebar-sim-recent,
+.sidebar-sim-running {
+  display: block;
+} */
