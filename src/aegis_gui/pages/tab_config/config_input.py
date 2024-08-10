@@ -25,7 +25,7 @@ from aegis.modules.initialization.parameterization.parameter import Parameter
 #     parameter = DEFAULT_PARAMETERS[param_name]
 #     value_is_default = value == parameter.default
 
-#     return not valid, "" if value_is_default else "modified"
+#     return not valid, "" if value_is_default else "reset"
 
 
 @callback(
@@ -42,12 +42,12 @@ def update_badge(badges, id_params, id_domains):
     statuses = {domain: 0 for domain in domains}
 
     for badge, pname in zip(badges, pnames):
-        if badge == "modified":
+        if badge == "reset":
             domain = DEFAULT_PARAMETERS[pname].domain
             statuses[domain] += 1
 
     statuses = [statuses[domain] for domain in domains]
-    colors = ["primary" if status > 0 else "secondary" for status in statuses]
+    colors = ["danger" if status > 0 else "secondary" for status in statuses]
 
     return statuses, colors
 
@@ -55,6 +55,7 @@ def update_badge(badges, id_params, id_domains):
 @callback(
     Output({"type": "config-input", "index": MATCH}, "invalid"),
     Output({"type": "info-badge", "index": MATCH}, "children"),
+    Output({"type": "info-badge", "index": MATCH}, "color"),
     Input({"type": "config-input", "index": MATCH}, "value"),
     prevent_initial_call=True,
 )
@@ -64,15 +65,17 @@ def handle_config_input(value) -> bool:
     Change style of config input so that the user knows that the input value is outside of valid server range.
     """
     if ctx.triggered_id is None:
-        return dash.no_update, dash.no_update
+        return dash.no_update, dash.no_update, dash.no_update
 
     param_name = ctx.triggered_id["index"]
     valid = is_input_in_valid_range(input_=value, param_name=param_name)
 
     parameter = DEFAULT_PARAMETERS[param_name]
     value_is_default = value == parameter.default
+    new_value = "default" if value_is_default else "reset"
+    new_color = "danger" if new_value == "reset" else "secondary"
 
-    return not valid, "" if value_is_default else "modified"
+    return not valid, new_value, new_color
 
 
 def get_input_element(param: Parameter):
@@ -126,6 +129,34 @@ def get_input_element(param: Parameter):
                 id={"type": "info-tooltip", "index": param.key},
             ),
             input_element,
+            dbc.InputGroupText(
+                [
+                    dbc.Badge(
+                        "default",
+                        pill=True,
+                        id={"type": "info-badge", "index": param.key},
+                        color="secondary",
+                        style={"width": "80px", "cursor": "pointer"},
+                    )
+                ],
+                id={"type": "input-modified-state", "index": param.key},
+            ),
         ],
         className="mb-2 mt-2",
     )
+
+
+@dash.callback(
+    Output({"type": "info-badge", "index": dash.MATCH}, "children", allow_duplicate=True),
+    Output({"type": "config-input", "index": dash.MATCH}, "value"),
+    Input({"type": "info-badge", "index": dash.MATCH}, "n_clicks"),
+    prevent_initial_call=True,
+)
+def reset_config_input(n_clicks):
+
+    if n_clicks is None:
+        return dash.no_update, dash.no_update
+
+    param_name = ctx.triggered_id["index"]
+    new_value = DEFAULT_PARAMETERS[param_name].default
+    return "default", new_value

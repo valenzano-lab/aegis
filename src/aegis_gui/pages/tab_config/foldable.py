@@ -189,7 +189,6 @@ def get_line(ps: typing.List[Parameter], domain):
                     #     if p.info
                     #     else None
                     # ),
-                    dbc.Badge("", pill=True, id={"type": "info-badge", "index": p.key}, color="primary"),
                     config_input.get_input_element(param=p),
                 ]
             )
