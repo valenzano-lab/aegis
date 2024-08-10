@@ -22,16 +22,24 @@ def make_select(selected=None):
 
     return [
         dash.html.P("Copy parameters"),
-        dbc.Select(
-            id="sim-config-select",
-            options=[{"label": path.stem, "value": str(path)} for path in paths],
-            # value=["default"] if "default" in dropdown_options else [],
-            value=paths[0].stem,
-            placeholder="Copy simulation",
-            # className="plot-dropdown",
-            # multiple=True,
-            style={"margin-bottom": "1rem"},
-            className="me-2",
+        dash.html.Div(
+            children=dbc.InputGroup(
+                children=[
+                    dbc.InputGroupText("Simulation name"),
+                    dbc.Select(
+                        id="sim-config-select",
+                        options=[{"label": path.stem, "value": str(path)} for path in paths],
+                        # value=["default"] if "default" in dropdown_options else [],
+                        value=paths[0].stem,
+                        placeholder="Copy simulation",
+                        # className="plot-dropdown",
+                        # multiple=True,
+                        # style={"margin-bottom": "1rem"},
+                        className="me-2",
+                    ),
+                ],
+            ),
+            id="sim-config-select-group",
         ),
         dbc.Button(
             [dash.html.I(className="bi bi-arrow-up-square-fill"), "copy"],

@@ -26,11 +26,15 @@
   display: inline-block;
 }
 
-#sim-config-select {
-  width: 300px;
+#sim-config-select-group {
   display: inline-block;
+  margin-bottom: 1rem;
 }
 
+/* #sim-config-select {
+  display: inline-block;
+} */
+
 #config-accordion {
-  margin-bottom:1rem;
+  margin-bottom: 1rem;
 }

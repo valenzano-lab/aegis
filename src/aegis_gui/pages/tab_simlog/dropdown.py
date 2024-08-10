@@ -24,14 +24,19 @@ def make_select(selected=None):
     else:
         selected_path = paths[0]
 
-    return dbc.Select(
-        id="sim_select",
-        options=[{"label": path.stem, "value": str(path)} for path in paths],
-        # value=["default"] if "default" in dropdown_options else [],
-        value=str(selected_path),
-        placeholder="Select simulations to plot...",
-        # className="plot-dropdown",
-        # multiple=True,
+    return dbc.InputGroup(
+        children=[
+            dbc.InputGroupText("Simulation name"),
+            dbc.Select(
+                id="sim_select",
+                options=[{"label": path.stem, "value": str(path)} for path in paths],
+                # value=["default"] if "default" in dropdown_options else [],
+                value=str(selected_path),
+                placeholder="Select simulations to plot...",
+                # className="plot-dropdown",
+                # multiple=True,
+            ),
+        ],
         style={"margin-bottom": "1rem"},
     )
 
