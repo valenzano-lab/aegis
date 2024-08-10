@@ -112,7 +112,7 @@ def get_foldable():
                         [
                             domain.title(),
                             dbc.Badge(
-                                f"{0}",
+                                "0 modifications",
                                 pill=True,
                                 className="ms-1",
                                 # className="top-0",

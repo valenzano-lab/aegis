@@ -46,10 +46,10 @@ def update_badge(badges, id_params, id_domains):
             domain = DEFAULT_PARAMETERS[pname].domain
             statuses[domain] += 1
 
-    statuses = [statuses[domain] for domain in domains]
-    colors = ["danger" if status > 0 else "secondary" for status in statuses]
+    texts = [f"{statuses[domain]} modifications" for domain in domains]
+    colors = ["danger" if statuses[domain] > 0 else "secondary" for domain in domains]
 
-    return statuses, colors
+    return texts, colors
 
 
 @callback(

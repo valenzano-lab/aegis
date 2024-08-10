@@ -15,14 +15,15 @@ import dash_bootstrap_components as dbc
 
 
 def make_multi_dropdown(dropdown_options):
-    # TODO plot initial plots
+    dropdown_value = [dropdown_options[0]] if dropdown_options else []
+    assert isinstance(dropdown_value, list)
     return dbc.InputGroup(
         [
             # dbc.InputGroupText("Plotted simulation"),
             dcc.Dropdown(
                 id="dropdown-multi",
                 options=dropdown_options,
-                value=dropdown_options[0] if dropdown_options else [],
+                value=dropdown_value,
                 multi=True,
                 placeholder="Select simulations to plot...",
                 className="plot-dropdown",
@@ -34,7 +35,6 @@ def make_multi_dropdown(dropdown_options):
 
 # Define a helper function to handle the logic
 def handle_trigger(dropdown_values, selected_fig):
-    # TODO apply this logic everywhere. so elegant!
     if not dropdown_values or dropdown_values == [None]:
         return dash.no_update
 
