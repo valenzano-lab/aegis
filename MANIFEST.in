@@ -1,10 +1,10 @@
 include LICENSE
 include Makefile
-include src/aegis/gui/assets/favicon.ico
-include src/aegis/gui/assets/*.svg
-include src/aegis/gui/assets/*.ttf
-include src/aegis/gui/assets/*.css
-include src/aegis/parameters/default.yml
+include src/aegis_gui/assets/favicon.ico
+include src/aegis_gui/assets/*.svg
+include src/aegis_gui/assets/*.ttf
+include src/aegis_gui/assets/*.css
+include src/aegis/modules/initialization/parameterization/default_parameters.yml
 include src/aegis/documentation/*
 recursive-include tests *.py
 recursive-include tests *.yml

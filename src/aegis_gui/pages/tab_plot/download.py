@@ -30,7 +30,7 @@ def figure_download_button_click(n_clicks, figure):
 
 def get_figure_download_button(figure_id):
     button = dbc.Button(
-        [html.I(className="bi bi-file-arrow-down-fill"), "Download figure"],
+        [html.I(className="bi bi-file-arrow-down-fill"), "Save figure"],
         id={"type": "figure-download-button", "index": figure_id},
     )
     return button
@@ -61,7 +61,7 @@ def download_data(n_clicks):
 
 def get_data_download_button(figure_id):
     button = dbc.Button(
-        [html.I(className="bi bi-file-arrow-down-fill"), "Download data"],
+        [html.I(className="bi bi-file-arrow-down-fill"), "Download figure data"],
         id={"type": "data-download-button", "index": figure_id},
         disabled=True,
     )

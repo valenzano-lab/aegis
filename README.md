@@ -44,6 +44,10 @@ git clone git@github.com:valenzano-lab/aegis.git
 cd aegis
 make install_dev
 ```
+or
+```bash
+python3 -m pip install -e git+ssh://git@github.com/valenzano-lab/aegis.git#egg=aegis
+```
 <!-- TODO update install_dev script -->
 
 ## Documentation
