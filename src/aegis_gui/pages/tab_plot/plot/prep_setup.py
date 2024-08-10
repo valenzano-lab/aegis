@@ -89,10 +89,10 @@ FIG_SETUP = {
             """,
                     mathjax=True,
                 ),
-                dash.html.Span(
-                    "tooltips", id="tooltip-target-1", style={"textDecoration": "underline", "cursor": "pointer"}
-                ),
-                dbc.Tooltip("This is the first tooltip", target="tooltip-target-1"),
+                # dash.html.Span(
+                #     "tooltips", id="tooltip-target-1", style={"textDecoration": "underline", "cursor": "pointer"}
+                # ),
+                # dbc.Tooltip("This is the first tooltip", target="tooltip-target-1"),
             ]
         ),
         # graph

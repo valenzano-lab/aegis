@@ -90,18 +90,21 @@ def get_foldable():
                     children=[
                         dbc.Modal(
                             children=[
-                                dash.html.Div(TEXTS_DOMAIN.get(domain)),
+                                dbc.ModalHeader(dbc.ModalTitle(f"{domain.title()} module")),
+                                dbc.ModalBody(TEXTS_DOMAIN.get(domain)),
+                                # dbc.ModalFooter(),
                             ],
                             id={"type": "domain-info-modal", "index": domain},
+                            className="domain-modal-info",
                         ),
                         dash.html.Div(
                             [
-                                "More information: ",
+                                "more information at ",
                                 dbc.Button(
                                     dash.html.I(className="bi bi-info-square-fill"),
                                     id={"type": "domain-info-modal-trigger", "index": domain},
                                     color="link",
-                                    style={"margin": 0, "padding": "0 0 0 10px"},
+                                    style={"margin": 0, "padding": "0 0 0 0px"},
                                 ),
                             ]
                         ),
@@ -111,13 +114,11 @@ def get_foldable():
                     title=dash.html.Div(
                         [
                             domain.title(),
+                            dash.html.Span(" "),
                             dbc.Badge(
                                 "0 modifications",
                                 pill=True,
                                 className="ms-1",
-                                # className="top-0",
-                                # className="position-absolute top-0 start-100 translate-middle-y",
-                                # color="crimson",
                                 color="secondary",
                                 id={"type": "collapse-badge", "index": domain},
                             ),
