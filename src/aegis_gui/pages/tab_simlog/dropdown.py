@@ -55,9 +55,10 @@ def get_sim_info(path):
         if output_summary
         else "(no terminal log detected)"
     )
+
     return {
         # "Path": str(container.basepath),
-        "Running": ~container.has_ticker_stopped(),
+        "Running": not container.has_ticker_stopped(),
         "Started": time_of_creation,
         "Finished": time_of_finishing,
         "Went extinct": output_summary.get("extinct", "(no terminal log detected)"),
