@@ -6,7 +6,7 @@ import dash_bootstrap_components as dbc
 
 def make_button(filename):
     return dbc.Button(
-        [dash.html.I(className="bi bi-stop-circle"), "terminate"],
+        [dash.html.I(className="bi bi-stop-circle"), "Terminate"],
         id={"type": "config-terminate-button", "index": filename},
         color="warning",
         value=filename,

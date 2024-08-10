@@ -8,7 +8,7 @@ import dash_bootstrap_components as dbc
 
 def make_button(filename):
     return dbc.Button(
-        [html.I(className="bi bi-gear-fill"), "download configuration"],
+        [html.I(className="bi bi-gear-fill"), "Download configuration"],
         id={"type": "config-download-button", "index": filename},
         value=filename,
         className="me-2",

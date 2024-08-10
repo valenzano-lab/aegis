@@ -25,7 +25,7 @@ def make_select(selected=None):
         dash.html.Div(
             children=dbc.InputGroup(
                 children=[
-                    dbc.InputGroupText("Simulation name"),
+                    dbc.InputGroupText("Simulation ID"),
                     dbc.Select(
                         id="sim-config-select",
                         options=[{"label": path.stem, "value": str(path)} for path in paths],
@@ -42,14 +42,14 @@ def make_select(selected=None):
             id="sim-config-select-group",
         ),
         dbc.Button(
-            [dash.html.I(className="bi bi-arrow-up-square-fill"), "copy"],
+            [dash.html.I(className="bi bi-arrow-up-square-fill"), "Copy"],
             id="sim-config-copy",
             className="me-1",
             # outline=True,
             color="primary",
         ),
         dbc.Button(
-            [dash.html.I(className="bi bi-x-circle-fill"), "reset"],
+            [dash.html.I(className="bi bi-x-circle-fill"), "Reset"],
             id="reset-run-button",
             className="me-1",
             # outline=True,

@@ -15,25 +15,33 @@ layout = dash.html.Div(
     id="sim-section-control",
     children=[
         dash.html.P("Run simulation"),
-        dbc.Input(
-            id="config-make-text",
-            type="text",
-            placeholder="Simulation name",
-            # autoComplete="off",
-            className="me-2",
+        dash.html.Div(
+            children=dbc.InputGroup(
+                children=[
+                    dbc.InputGroupText("Simulation ID"),
+                    dbc.Input(
+                        id="config-make-text",
+                        type="text",
+                        placeholder="Enter a unique ID",
+                        # autoComplete="off",
+                        className="me-2",
+                    ),
+                ],
+            ),
+            id="config-make-text-group",
         ),
         dbc.Button(
-            [dash.html.I(className="bi bi-rocket-takeoff-fill"), "launch"],
+            [dash.html.I(className="bi bi-rocket-takeoff-fill"), "Launch"],
             id="simulation-run-button",
             className="me-1",
             outline=True,
             color="success",
         ),
         # dash.html.Button("make config", id="config-make-button"),]
-        dbc.FormFeedback(
-            "Enter a unique simulation name",
-            type="invalid",
-        ),
+        # dbc.FormFeedback(
+        #     "Enter a unique simulation ID",
+        #     type="invalid",
+        # ),
         dash.html.P("", id="simulation-run-text"),
     ],
 )
@@ -126,8 +134,8 @@ def disable_sim_button(filename, values, ids) -> bool:
     """
     Make simulation run button unclickable when any of these is true:
     - input values for parameters are not inside the acceptable server range
-    - simulation name is not valid
-    - simulation name is already used
+    - simulation ID is not valid
+    - simulation ID is already used
     """
 
     for value, id_ in zip(values, ids):
@@ -145,11 +153,11 @@ def disable_sim_button(filename, values, ids) -> bool:
             return True, True, True, False
 
     if not is_sim_name_valid(filename):
-        logging.info(f"Simulation run button is blocked because simulation name {filename} is not valid.")
+        logging.info(f"Simulation run button is blocked because simulation ID {filename} is not valid.")
         return True, True, True, False
 
     if utilities.sim_exists(filename):
-        logging.info(f"Simulation run button is blocked because simulation name {filename} already exists.")
+        logging.info(f"Simulation run button is blocked because simulation ID {filename} already exists.")
         return True, True, True, False
 
     # Check if reached simulation number limit

@@ -9,7 +9,7 @@ def make(filename):
     return html.Div(
         [
             dbc.Button(
-                [html.I(className="bi bi-trash3-fill"), "delete"],
+                [html.I(className="bi bi-trash3-fill"), "Delete"],
                 id="delete-simulation-button",
                 value=filename,
                 color="danger",

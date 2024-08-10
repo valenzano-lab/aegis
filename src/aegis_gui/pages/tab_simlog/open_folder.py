@@ -7,7 +7,7 @@ import dash_bootstrap_components as dbc
 
 def make_button(path):
     return dbc.Button(
-        children=[dash.html.I(className="bi bi-folder-symlink-fill"), "open folder"],
+        children=[dash.html.I(className="bi bi-folder-symlink-fill"), "Open data location"],
         id={"type": "config-basepath-folder", "index": str(path)},
         value=str(path),
         className="me-2",

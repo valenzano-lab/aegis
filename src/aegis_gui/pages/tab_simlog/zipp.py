@@ -11,7 +11,7 @@ def get_zip_button_layout(filename):
     return html.Div(
         children=[
             dbc.Button(
-                [html.I(className="bi bi-file-earmark-zip-fill"), "download data"],
+                [html.I(className="bi bi-file-earmark-zip-fill"), "Download data"],
                 id={"type": "zip-download-button", "index": filename},
                 value=filename,
                 className="me-2",

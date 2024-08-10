@@ -26,7 +26,7 @@ def make_select(selected=None):
 
     return dbc.InputGroup(
         children=[
-            dbc.InputGroupText("Simulation name"),
+            dbc.InputGroupText("Simulation ID"),
             dbc.Select(
                 id="sim_select",
                 options=[{"label": path.stem, "value": str(path)} for path in paths],
