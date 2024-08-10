@@ -21,7 +21,7 @@ def make_select(selected=None):
         selected_path = paths[0]
 
     return [
-        dash.html.P("Copy parameters"),
+        dash.html.H6("Copy parameters from previous simulations"),
         dash.html.Div(
             children=dbc.InputGroup(
                 children=[

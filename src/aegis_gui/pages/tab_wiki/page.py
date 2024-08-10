@@ -29,7 +29,7 @@ def layout() -> html.Div:
     return html.Div(
         [
             html.H1("""Wiki tab"""),
-            html.P("Specification of output files"),
+            html.H6("Specification of output files"),
             make_accordion(),
             # make_output_specification_table(),
         ]

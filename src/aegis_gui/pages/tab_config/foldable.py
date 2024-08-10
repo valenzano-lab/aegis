@@ -81,7 +81,7 @@ def get_foldable():
     ]
 
     elements = [
-        dash.html.P("Customize parameters"),
+        dash.html.H6("Customize parameters"),
         dbc.Accordion(
             id="config-accordion",
             start_collapsed=True,

@@ -14,7 +14,7 @@ import logging
 layout = dash.html.Div(
     id="sim-section-control",
     children=[
-        dash.html.P("Run simulation"),
+        dash.html.H6("Run simulation"),
         dash.html.Div(
             children=dbc.InputGroup(
                 children=[
