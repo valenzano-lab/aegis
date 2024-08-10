@@ -23,3 +23,8 @@
   text-decoration-thickness: 0.1rem;
   cursor: help;
 }
+
+.tooltip-underline {
+  /* text-decoration: underline #888 dotted; */
+  cursor: help;
+}

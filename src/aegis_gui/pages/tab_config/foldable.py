@@ -167,27 +167,27 @@ def get_line(ps: typing.List[Parameter], domain):
         [
             dash.html.Div(
                 [
-                    dbc.Label(p.get_name()),
+                    # dbc.Label(p.get_name()),
                     # p.key,
                     # p.dtype.__name__,
-                    (
-                        dbc.Button(
-                            dash.html.I(className="bi bi-info-square-fill"),
-                            id={"type": "info-tooltip", "index": p.key},
-                            color="link",
-                        )
-                        if p.info
-                        else None
-                    ),
-                    (
-                        dbc.Tooltip(
-                            p.info,
-                            target={"type": "info-tooltip", "index": p.key},
-                            placement="right",
-                        )
-                        if p.info
-                        else None
-                    ),
+                    # (
+                    #     dbc.Button(
+                    #         dash.html.I(className="bi bi-info-square-fill"),
+                    #         id={"type": "info-tooltip", "index": p.key},
+                    #         color="link",
+                    #     )
+                    #     if p.info
+                    #     else None
+                    # ),
+                    # (
+                    #     dbc.Tooltip(
+                    #         p.info,
+                    #         target={"type": "info-tooltip", "index": p.key},
+                    #         placement="right",
+                    #     )
+                    #     if p.info
+                    #     else None
+                    # ),
                     dbc.Badge("", pill=True, id={"type": "info-badge", "index": p.key}, color="primary"),
                     config_input.get_input_element(param=p),
                 ]

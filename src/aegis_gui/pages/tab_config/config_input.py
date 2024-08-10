@@ -4,6 +4,7 @@ from aegis_gui.utilities import log_funcs
 from .valid_range import is_input_in_valid_range
 import dash_bootstrap_components as dbc
 from aegis.modules.initialization.parameterization.default_parameters import DEFAULT_PARAMETERS
+from aegis.modules.initialization.parameterization.parameter import Parameter
 
 # @callback(
 #     Output({"type": "config-input", "index": dash.ALL}, "invalid"),
@@ -74,7 +75,7 @@ def handle_config_input(value) -> bool:
     return not valid, "" if value_is_default else "modified"
 
 
-def get_input_element(param):
+def get_input_element(param: Parameter):
     """
     Generate appropriate Dash input component based on the parameter's data type.
     """
@@ -82,7 +83,8 @@ def get_input_element(param):
 
     if param.dtype in [int, float]:
         step = 0 if param.dtype == int else 0.01
-        return dbc.Input(
+
+        input_element = dbc.Input(
             type="number",
             value=param.default,
             step=step,
@@ -90,13 +92,40 @@ def get_input_element(param):
             **common_props,
         )
 
-    if param.dtype == bool:
+    elif param.dtype == bool:
         options = ["True", "False"]
-        return dbc.Select(options=[{"label": k, "value": k} for k in options], value=str(param.default), **common_props)
+        input_element = dbc.Select(
+            options=[{"label": k, "value": k} for k in options], value=str(param.default), **common_props
+        )
 
-    if param.dtype == str:
+    elif param.dtype == str:
         options = param.drange.strip("{}").split(", ")
-        return dbc.Select(options=[{"label": k, "value": k} for k in options], value=param.default, **common_props)
+        input_element = dbc.Select(
+            options=[{"label": k, "value": k} for k in options], value=param.default, **common_props
+        )
 
-    # TODO: resolve dict parameter
-    return
+    else:
+        # TODO: resolve dict parameter
+        return
+
+    return dbc.InputGroup(
+        children=[
+            dbc.InputGroupText(
+                children=[
+                    dash.html.Span(param.get_name(), className="tooltip-underline" if param.info else ""),
+                    (
+                        dbc.Tooltip(
+                            param.info,
+                            target={"type": "info-tooltip", "index": param.key},
+                            placement="right",
+                        )
+                        if param.info
+                        else None
+                    ),
+                ],
+                id={"type": "info-tooltip", "index": param.key},
+            ),
+            input_element,
+        ],
+        className="mb-2 mt-2",
+    )
