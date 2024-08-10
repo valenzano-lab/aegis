@@ -42,7 +42,7 @@ AGE_LIMIT: 50
 If you want to contribute to the codebase, install AEGIS from github:
 
 ```bash
-python3 -m pip install -e git+ssh://git@github.com/valenzano-lab/aegis.git#egg=aegis-sim
+python3 -m pip install -e git+https://github.com/valenzano-lab/aegis.git#egg=aegis-sim
 ```
 
 <!-- or
