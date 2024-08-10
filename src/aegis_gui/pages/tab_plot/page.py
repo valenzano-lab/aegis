@@ -10,10 +10,10 @@ dash.register_page(__name__, path="/plot", name="plot")
 
 
 @log_funcs.log_debug
-def layout():  # use function to ensure statelessness
+def layout(sim=None):  # use function to ensure statelessness
 
     simnames = [Container(path).basepath.stem for path in utilities.get_sim_paths()]
-    dropdown_options = sorted(simnames)
+    dropdown_options = sorted(simnames) if sim is None else [sim]
 
     if not dropdown_options:
         body = [dash.html.P("No simulations to display.")]

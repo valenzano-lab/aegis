@@ -36,7 +36,7 @@ def make_trackers():
             )
             linked_progressbar = dash.dcc.Link(
                 children=progressbar,
-                href=f"/simlog?sim={container.name}",
+                href=f"/plot?sim={container.name}",
             )
             # running_sims.append(tracker)
             running_sims.append(linked_progressbar)
@@ -59,7 +59,7 @@ def make_trackers():
     for path in paths:
         container = Container(path)
         ticker = container.get_ticker()
-        if ticker.since_last() < 3600 and container.has_ticker_stopped():
+        if ticker.since_last() < 3600 * 24 and container.has_ticker_stopped():
             recent_containers.append(container)
 
     if recent_containers:
@@ -69,9 +69,9 @@ def make_trackers():
             children=[
                 dbc.Button(
                     children=[rc.name],
-                    href=f"/simlog?sim={rc.name}",
+                    href=f"/plot?sim={rc.name}",
                     className="badge me-1",
-                    color="secondary",
+                    color="primary",
                 )
                 for rc in recent_containers
             ],
@@ -80,7 +80,7 @@ def make_trackers():
         trackers.append(
             dbc.Toast(
                 children=nav,
-                header="Recent sims",
+                header="Today's sims",
                 style={"width": "100%", "margin-top": "1rem"},
             )
         )
