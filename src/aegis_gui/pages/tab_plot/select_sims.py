@@ -4,6 +4,7 @@ from dash import callback, Output, Input, ALL, State, dcc
 from aegis_gui.utilities import log_funcs
 from aegis_gui.pages.tab_plot.plot.prep_setup import FIG_SETUP
 from aegis_gui.pages.tab_plot.plot.gen_fig import gen_fig
+import dash_bootstrap_components as dbc
 
 
 # def make_single_dropdown(dropdown_options):
@@ -15,13 +16,19 @@ from aegis_gui.pages.tab_plot.plot.gen_fig import gen_fig
 
 def make_multi_dropdown(dropdown_options):
     # TODO plot initial plots
-    return dcc.Dropdown(
-        id="dropdown-multi",
-        options=dropdown_options,
-        value=["default"] if "default" in dropdown_options else [],
-        multi=True,
-        placeholder="Select simulations to plot...",
-        className="plot-dropdown",
+    return dbc.InputGroup(
+        [
+            # dbc.InputGroupText("Plotted simulation"),
+            dcc.Dropdown(
+                id="dropdown-multi",
+                options=dropdown_options,
+                value=["default"] if "default" in dropdown_options else [],
+                multi=True,
+                placeholder="Select simulations to plot...",
+                className="plot-dropdown",
+                style={"width": "100%"},
+            ),
+        ]
     )
 
 

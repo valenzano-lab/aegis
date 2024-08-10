@@ -14,9 +14,14 @@ gns = [graph_name for graph_name, d in FIG_SETUP.items() if d["supports_multi"] 
 
 initial_graph = gns[3]
 
-select = dbc.Select(
-    id="figure-select",
-    options=[{"label": gn, "value": gn} for gn in gns],
-    value=initial_graph,
-    className="plot-dropdown",
+select = dbc.InputGroup(
+    [
+        dbc.InputGroupText("Plotting function"),
+        dbc.Select(
+            id="figure-select",
+            options=[{"label": gn, "value": gn} for gn in gns],
+            value=initial_graph,
+            className="plot-dropdown",
+        ),
+    ]
 )

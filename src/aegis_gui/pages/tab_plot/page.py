@@ -40,16 +40,16 @@ def layout():  # use function to ensure statelessness
                             [
                                 dbc.Row(
                                     [
-                                        dbc.Col(select_graph.select, width=5),
-                                        dbc.Col(html.Label("(plotting function)"), width=3),
+                                        dbc.Col(select_graph.select, width=8),
+                                        # dbc.Col(html.Label("(plotting function)"), width=3),
                                     ],
                                     className="g-0",
                                     style={"margin-bottom": "0.3rem"},
                                 ),
                                 dbc.Row(
                                     [
-                                        dbc.Col(select_sims.make_multi_dropdown(dropdown_options), width=5),
-                                        dbc.Col(html.Label("(plotted simulations)"), width=3),
+                                        dbc.Col(select_sims.make_multi_dropdown(dropdown_options), width=8),
+                                        # dbc.Col(html.Label("(plotted simulations)"), width=3),
                                     ],
                                     className="g-0",
                                 ),
