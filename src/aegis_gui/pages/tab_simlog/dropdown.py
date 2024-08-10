@@ -13,6 +13,9 @@ def make_select(selected=None):
 
     paths = utilities.get_sim_paths()
 
+    if not paths:
+        return dash.html.P("No simulations to display.")
+
     if selected:
         for path in paths:
             if Container(path).name == selected:

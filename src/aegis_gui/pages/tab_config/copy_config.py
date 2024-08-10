@@ -9,6 +9,9 @@ def make_select(selected=None):
 
     paths = utilities.get_sim_paths()
 
+    if not paths:
+        return []
+
     if selected:
         for path in paths:
             if Container(path).name == selected:
