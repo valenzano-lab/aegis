@@ -1,8 +1,9 @@
 from dash import callback, Output, Input, State, ALL, MATCH, ctx, html
-import subprocess
 from aegis_gui.utilities import log_funcs, utilities
 import dash_bootstrap_components as dbc
 import dash
+import os
+import shutil
 
 
 def make(filename):
@@ -45,8 +46,7 @@ def change_simlog(n_clicks, current):
         filename = ctx.triggered_id["index"]
         config_path = utilities.get_config_path(filename)
         sim_path = config_path.parent / filename
-        subprocess.run(["rm", "-r", sim_path], check=True)
-        subprocess.run(["rm", config_path], check=True)
+        remove_simulation_data(sim_path=sim_path, config_path=config_path)
         return current
     else:
         raise Exception
@@ -55,8 +55,18 @@ def change_simlog(n_clicks, current):
 def delete_simulation(filename):
     config_path = utilities.get_config_path(filename)
     sim_path = config_path.parent / filename
-    subprocess.run(["rm", "-r", sim_path], check=True)
-    subprocess.run(["rm", config_path], check=True)
+    remove_simulation_data(sim_path=sim_path, config_path=config_path)
+
+
+def remove_simulation_data(sim_path, config_path):
+    """Removes the simulation directory and configuration file."""
+    # Remove the directory and all its contents
+    if os.path.isdir(sim_path):
+        shutil.rmtree(sim_path)  # This removes the directory and all its contents
+
+    # Remove the configuration file
+    if os.path.isfile(config_path):
+        os.remove(config_path)  # This removes the file
 
 
 @callback(
@@ -81,7 +91,7 @@ def toggle_modal(n1, n2, n3, filename, current_options):
         delete_simulation(filename=filename)
         new_options = [d for d in current_options if d["label"] != filename]
         return False, new_options, new_options[0]["value"] if new_options else ""
-    
+
     # TODO issue when no new options
 
     return dash.no_update, dash.no_update, dash.no_update
