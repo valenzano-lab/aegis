@@ -93,7 +93,7 @@ def make_trackers():
 def make_tracker_component():
     return [
         dash.dcc.Interval(id="running-simulations-interval", interval=1 * 1000, n_intervals=0),
-        dash.html.Div(make_trackers(), id="running-simulations"),
+        dash.html.Div([], id="running-simulations"),
     ]
 
 

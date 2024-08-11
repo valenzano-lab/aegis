@@ -98,7 +98,6 @@ def reset_configs(n_clicks, ids, current_values):
     dash.State("prerun-sim-select", "value"),
     prevent_initial_call=True,
 )
-
 def click_sim_button(n_clicks, filename, values, ids_, prerun_sim_path):
     """
     Run simulation when sim button clicked (also, implicitly, not disabled).
@@ -129,7 +128,6 @@ def is_sim_name_valid(sim_name: str) -> bool:
     dash.Input({"type": "config-input", "index": dash.ALL}, "value"),
     dash.State({"type": "config-input", "index": dash.ALL}, "id"),
 )
-
 def disable_sim_button(filename, values, ids) -> bool:
     """
     Make simulation run button unclickable when any of these is true:
@@ -147,17 +145,12 @@ def disable_sim_button(filename, values, ids) -> bool:
         # check validity of input value
         in_valid_range = is_input_in_valid_range(input_=value, param_name=param_name)
         if not in_valid_range:
-            logging.info(
-                f"Simulation run button is blocked because parameter {param_name} has received an invalid input."
-            )
             return True, True, True, False
 
     if not is_sim_name_valid(filename):
-        logging.info(f"Simulation run button is blocked because simulation ID {filename} is not valid.")
         return True, True, True, False
 
     if utilities.sim_exists(filename):
-        logging.info(f"Simulation run button is blocked because simulation ID {filename} already exists.")
         return True, True, True, False
 
     # Check if reached simulation number limit
