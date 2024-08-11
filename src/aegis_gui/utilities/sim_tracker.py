@@ -80,7 +80,7 @@ def make_trackers():
         trackers.append(
             dbc.Toast(
                 children=nav,
-                header="Today's sims",
+                header="Recent sims",
                 style={"width": "100%", "margin-top": "1rem"},
             )
         )
