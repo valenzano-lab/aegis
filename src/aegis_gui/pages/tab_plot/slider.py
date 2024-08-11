@@ -36,7 +36,6 @@ def make_slider(figure_id):
     # State("dropdown-single", "value"),
     prevent_initial_call=True,
 )
-
 def update(slider_value, slider_id, dropdown_multi_value):
     fig_name = slider_id["index"]
     # supports_multi = FIG_SETUP[fig_name]["supports_multi"]
