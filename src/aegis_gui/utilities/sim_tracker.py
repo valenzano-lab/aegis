@@ -33,6 +33,7 @@ def make_trackers():
                 value=progress * 100,
                 striped=True,
                 animated=True,
+                style={"margin-top": "0.5rem"},
             )
             linked_progressbar = dash.dcc.Link(
                 children=progressbar,
