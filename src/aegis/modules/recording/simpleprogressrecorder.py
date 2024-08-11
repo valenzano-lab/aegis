@@ -12,6 +12,9 @@ class SimpleProgressRecorder(Recorder):
         self.odir = odir
         self.init_odir()
         self.time_start = time.time()
+
+        self.progress_path = self.odir / "simpleprogress.log"
+        self.write_one(0)
         # self.init_headers()
 
     # def init_headers(self):
@@ -22,15 +25,22 @@ class SimpleProgressRecorder(Recorder):
     def write(self):
         """Record some information about the time and speed of simulation."""
 
-        # if hermes.skip("LOGGING_RATE"):
-        #     return
+        last_updated = self.check_when_last_updated(file_path=self.progress_path)
+        if last_updated > 1:
+            step = hermes.get_step()
+            self.write_one(step)
 
-        step = hermes.get_step()
-
+    def write_one(self, step):
         message = f"{step}/{hermes.parameters.STEPS_PER_SIMULATION}"
-
-        with open(self.odir / "simpleprogress.log", "w") as file_:
+        with open(self.progress_path, "w") as file_:
             file_.write(message)
+
+    @staticmethod
+    def check_when_last_updated(file_path: pathlib.Path):
+        last_modified_time = file_path.stat().st_mtime
+        time_since_modification = time.time() - last_modified_time
+        seconds = time_since_modification
+        return seconds
 
         # logging.info(
         #     "%s / %s / N=%s / simname=%s", step, hermes.parameters.STEPS_PER_SIMULATION, popsize, hermes.simname
