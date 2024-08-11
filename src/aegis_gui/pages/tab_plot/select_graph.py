@@ -12,7 +12,8 @@ buttons = html.Div(
 
 gns = [graph_name for graph_name, d in FIG_SETUP.items() if d["supports_multi"] or not d["supports_multi"]]
 
-initial_graph = gns[3]
+initial_graph = "death table"
+assert initial_graph in gns
 
 select = dbc.InputGroup(
     [

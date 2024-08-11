@@ -52,9 +52,6 @@ def get_graph_metadata(graph_name):
     )
 
 
-# graph.get_graph_metadata("intrinsic mortality")
-
-
 # Multi Dropdown and Tabs
 @dash.callback(
     dash.Output("plot-bottom-right-panel", "children"),
