@@ -77,8 +77,9 @@ class Container:
         return
 
     @staticmethod
-    def stop_process(pid):
+    def stop_process(pid, kind_of_process):
         try:
+            logging.info(f"Terminating {kind_of_process} process with PID {pid}...")
             process = psutil.Process(pid)
             process.terminate()  # or process.kill()
             process.wait()  # Optional: Wait for the process to be fully terminated
@@ -91,12 +92,12 @@ class Container:
             logging.error(f"An error occurred: {e}")
 
     def terminate(self):
-        tpid = self.get_input_summary()["ticker_pid"]
-        assert tpid is not None
-        self.stop_process(tpid)
         pid = self.get_input_summary()["pid"]
         assert pid is not None
-        self.stop_process(pid)
+        self.stop_process(pid, "simulation")
+        tpid = self.get_input_summary()["ticker_pid"]
+        assert tpid is not None
+        self.stop_process(tpid, "ticker")
 
     ############
     # METADATA #
