@@ -44,7 +44,7 @@ def handle_trigger(dropdown_values, selected_fig):
 
     for fig_name in FIG_SETUP:
         if fig_name == selected_fig:  # Only update the figure that matches the selected tab
-            figure, max_iloc = gen_fig(fig_name, dropdown_values, iloc=-1)
+            figure, max_iloc = gen_fig(fig_name, dropdown_values, iloc=0)
             figures.append(figure)
             drag_maxs.append(max_iloc)
         else:
