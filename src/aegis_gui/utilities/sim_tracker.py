@@ -28,9 +28,8 @@ def make_trackers():
                 continue
             progress = progress[0] / progress[1]
             progressbar = dbc.Progress(
-                # label=f"{progress*100:.0f}%" if progress > 0.1 else "",
                 label=container.name,
-                value=progress * 100,
+                value=10 + progress * 90,
                 striped=True,
                 animated=True,
                 style={"margin-top": "0.5rem"},
