@@ -5,7 +5,7 @@ import dash_bootstrap_components as dbc
 from aegis.utilities.container import Container
 from aegis_gui.utilities import utilities
 import pathlib
-from aegis_gui.pages.tab_simlog import delete, terminate, download, zipp, open_folder
+from aegis_gui.pages.tab_simlog import delete, terminate, download, zipp, open_folder, goplot
 from aegis.utilities.get_folder_size import get_folder_size_with_du
 
 
@@ -96,6 +96,14 @@ def update_info_div(selected_path):
     list_items.append(
         dbc.ListGroupItem(
             [html.Strong("Path: "), html.Span(str(path), id={"type": "config-download-basepath", "index": path.stem})]
+        )
+    )
+    list_items.append(
+        dbc.ListGroupItem(
+            [
+                goplot.make_button(path.stem),
+            ],
+            style={"display": "flex"},
         )
     )
     list_items.append(

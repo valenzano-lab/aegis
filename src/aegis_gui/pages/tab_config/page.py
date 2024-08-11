@@ -83,7 +83,6 @@ HEADER = html.Tr(
 )
 
 
-@log_funcs.log_debug
 def layout() -> html.Div:
     # Group parameters by domain
     subsets = {domain: [] for domain in TEXTS_DOMAIN.keys()}
@@ -136,7 +135,6 @@ def layout() -> html.Div:
     )
 
 
-# # @log_funcs.log_debug
 # def get_row(v: Parameter) -> html.Tr:
 #     if v.serverrange_info:
 #         serverrange_info_message = f"Allowed parameter range for the server is {v.serverrange_info}."
@@ -178,7 +176,6 @@ def layout() -> html.Div:
 #     )
 
 
-# @log_funcs.log_debug
 # def get_table(params_subset) -> html.Table:
 #     return html.Table(
 #         className="config-table",

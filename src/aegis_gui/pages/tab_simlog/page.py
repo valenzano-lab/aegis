@@ -32,7 +32,6 @@ PREFACE = [
 ]
 
 
-@log_funcs.log_debug
 def layout(sim=None):
     return html.Div(
         id="simlog-section",

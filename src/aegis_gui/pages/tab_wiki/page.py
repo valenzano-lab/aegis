@@ -8,7 +8,7 @@ import dash_bootstrap_components as dbc
 dash.register_page(__name__, path="/wiki", name="wiki")
 
 
-@log_funcs.log_debug
+
 def make_output_specification_table():
     """
 

@@ -9,11 +9,10 @@ from aegis_gui.pages.tab_plot import select_graph, select_sims, graph
 dash.register_page(__name__, path="/plot", name="plot")
 
 
-@log_funcs.log_debug
 def layout(sim=None):  # use function to ensure statelessness
 
     simnames = [Container(path).basepath.stem for path in utilities.get_sim_paths()]
-    dropdown_options = sorted(simnames) if sim is None else [sim]
+    dropdown_options = sorted(simnames)
 
     if not dropdown_options:
         body = [dash.html.P("No simulations to display.")]
@@ -36,7 +35,13 @@ def layout(sim=None):  # use function to ensure statelessness
                             ),
                             dbc.Row(
                                 [
-                                    dbc.Col(select_sims.make_multi_dropdown(dropdown_options), width=8),
+                                    dbc.Col(
+                                        select_sims.make_multi_dropdown(
+                                            dropdown_options=dropdown_options,
+                                            dropdown_value=[sim] if sim is not None else [],
+                                        ),
+                                        width=8,
+                                    ),
                                     # dbc.Col(html.Label("(plotted simulations)"), width=3),
                                 ],
                                 className="g-0",

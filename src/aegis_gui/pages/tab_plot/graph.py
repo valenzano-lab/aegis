@@ -57,7 +57,7 @@ def get_graph_metadata(graph_name):
     dash.Output("plot-bottom-right-panel", "children"),
     dash.Input("figure-select", "value"),
 )
-@log_funcs.log_debug
+
 def update_graph_metadata(figure_selected):
     return get_graph_metadata(figure_selected)
 

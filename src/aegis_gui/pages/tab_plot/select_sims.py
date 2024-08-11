@@ -14,8 +14,9 @@ import dash_bootstrap_components as dbc
 #     return dcc.Dropdown(id="dropdown-single", options=dropdown_options, value=initial_value)
 
 
-def make_multi_dropdown(dropdown_options):
-    dropdown_value = [dropdown_options[0]] if dropdown_options else []
+def make_multi_dropdown(dropdown_options, dropdown_value=[]):
+    if dropdown_value == []:
+        dropdown_value = [dropdown_options[0]] if dropdown_options else []
     assert isinstance(dropdown_value, list)
     return dbc.InputGroup(
         [
@@ -64,7 +65,6 @@ def handle_trigger(dropdown_values, selected_fig):
     # Input("tabs-multi", "value"),
     # prevent_initial_call=True,
 )
-@log_funcs.log_debug
 def triggered_dropdown_multi(dropdown_values, figure_selected):
     return handle_trigger(dropdown_values, figure_selected)
 
@@ -75,7 +75,6 @@ def triggered_dropdown_multi(dropdown_values, figure_selected):
     State({"type": "loading-graph-div", "index": ALL}, "id"),
     State({"type": "loading-graph-div", "index": ALL}, "parent_style"),
 )
-@log_funcs.log_debug
 def change_visibility(figure_selected, graph_ids, parent_styles):
 
     new_parent_styles = []

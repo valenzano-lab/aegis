@@ -36,7 +36,7 @@ def make_trackers():
             )
             linked_progressbar = dash.dcc.Link(
                 children=progressbar,
-                href=f"/plot?sim={container.name}",
+                href=f"/simlog?sim={container.name}",
             )
             # running_sims.append(tracker)
             running_sims.append(linked_progressbar)
@@ -69,7 +69,7 @@ def make_trackers():
             children=[
                 dbc.Button(
                     children=[rc.name],
-                    href=f"/plot?sim={rc.name}",
+                    href=f"/simlog?sim={rc.name}",
                     className="badge me-1",
                     color="primary",
                 )

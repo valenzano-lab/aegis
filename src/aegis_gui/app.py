@@ -9,7 +9,6 @@ from aegis_gui import sidebar
     [dash.Output(f"link-nav-{page}", "active") for page in ["home", "config", "plot", "simlog", "wiki"]],
     [dash.Input("url", "pathname")],
 )
-@log_funcs.log_debug
 def toggle_active_links(pathname):
     if pathname is None:
         # Default to home if pathname is None

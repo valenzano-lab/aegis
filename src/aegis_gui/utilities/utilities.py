@@ -57,8 +57,7 @@ def run_simulation(filename, prerun_sim_path):
     if prerun_sim_path is None:
         pickle_command = []
     else:
-        assert "value" in prerun_sim_path
-        container = Container(prerun_sim_path["value"])
+        container = Container(prerun_sim_path)
         latest_pickle_path = container.paths["pickles"][-1]
         logging.info(f"Using pickled population from {latest_pickle_path}.")
         pickle_command = ["-p", latest_pickle_path]

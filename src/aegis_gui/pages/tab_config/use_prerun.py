@@ -6,20 +6,6 @@ import logging
 
 
 def make_select(selected=None):
-
-    paths = utilities.get_sim_paths()
-
-    if not paths:
-        return []
-
-    if selected:
-        for path in paths:
-            if Container(path).name == selected:
-                selected_path = path
-                break
-    else:
-        selected_path = []
-
     return dash.html.Div(
         # id="sim-prerun-control",
         children=[
@@ -44,7 +30,7 @@ def make_select(selected=None):
                             dbc.InputGroupText("Simulation ID"),
                             dbc.Select(
                                 id="prerun-sim-select",
-                                options=[{"label": path.stem, "value": str(path)} for path in paths],
+                                # options=[{"label": path.stem, "value": str(path)} for path in paths],
                                 value=None,
                                 # placeholder="Choose an evolved population",
                                 className="me-2",
@@ -62,17 +48,25 @@ def make_select(selected=None):
 @dash.callback(
     dash.Output("prerun-sim-select", "disabled"),
     dash.Output("prerun-sim-select", "value"),
+    dash.Output("prerun-sim-select", "options"),
     dash.Input("prerun-enable-button", "value"),
-    dash.State("prerun-sim-select", "options"),
+    # dash.State("prerun-sim-select", "options"),
 )
-def toggle_select(disable_switch, options):
+def toggle_select(disable_switch):
     """Enable or disable the dbc.Select based on the dbc.Switch state."""
     if dash.ctx.triggered_id is None:
-        return dash.no_update, dash.no_update
+        return dash.no_update, dash.no_update, dash.no_update
 
-    new_value = options[0] if disable_switch else None
+    paths = utilities.get_sim_paths()
+    # If no simulations available
+    if not paths:
+        return True, dash.no_update, dash.no_update
+
+    options = [{"label": path.stem, "value": str(path)} for path in paths]
+
+    new_value = options[0]["value"] if disable_switch else None
     logging.debug(f"Toggle select {new_value}.")
-    return not disable_switch, new_value
+    return not disable_switch, new_value, options
 
 
 # def decode_config_tab_values(values, ids_):
@@ -125,7 +119,7 @@ def toggle_select(disable_switch, options):
 #     dash.State({"type": "config-input", "index": dash.ALL}, "id"),
 #     prevent_initial_call=True,
 # )
-# @log_funcs.log_debug
+# 
 # def click_sim_button(n_clicks, filename, values, ids_):
 #     """
 #     Run simulation when sim button clicked (also, implicitly, not disabled).
@@ -157,7 +151,7 @@ def toggle_select(disable_switch, options):
 #     dash.Input({"type": "config-input", "index": dash.ALL}, "value"),
 #     dash.State({"type": "config-input", "index": dash.ALL}, "id"),
 # )
-# @log_funcs.log_debug
+# 
 # def disable_sim_button(filename, values, ids) -> bool:
 #     """
 #     Make simulation run button unclickable when any of these is true:

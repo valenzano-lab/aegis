@@ -25,7 +25,7 @@ def make(filename):
 #     Output({"type": "delete-simulation-button", "index": MATCH}, "disabled"),
 #     Input({"type": "delete-simulation-button", "index": MATCH}, "n_clicks"),
 # )
-# @log_funcs.log_debug
+# 
 # def disable_delete_simulation_button(n_clicks):
 #     if n_clicks is None:
 #         return False
@@ -38,7 +38,7 @@ def make(filename):
     State("simlog-section-table", "children"),
     prevent_initial_call=True,
 )
-@log_funcs.log_info
+
 def change_simlog(n_clicks, current):
 
     # If delete button triggered the action, delete the simulation

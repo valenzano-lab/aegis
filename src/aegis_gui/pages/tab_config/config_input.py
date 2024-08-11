@@ -11,7 +11,6 @@ from aegis.modules.initialization.parameterization.parameter import Parameter
 #     Input({"type": "info-badge", "index": dash.ALL}, "children"),
 #     Input({"type": "info-badge", "index": dash.ALL}, "children"),
 # )
-# @log_funcs.log_debug
 # def handle_config_input(value) -> bool:
 #     """
 #     Change style of config input so that the user knows that the input value is outside of valid server range.
@@ -59,7 +58,6 @@ def update_badge(badges, id_params, id_domains):
     Input({"type": "config-input", "index": MATCH}, "value"),
     prevent_initial_call=True,
 )
-@log_funcs.log_debug
 def handle_config_input(value) -> bool:
     """
     Change style of config input so that the user knows that the input value is outside of valid server range.

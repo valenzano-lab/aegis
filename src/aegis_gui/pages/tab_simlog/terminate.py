@@ -20,7 +20,7 @@ def make_button(filename, disabled=False):
     dash.Output({"type": "config-terminate-button", "index": dash.MATCH}, "n_clicks"),
     dash.Input({"type": "config-terminate-button", "index": dash.MATCH}, "n_clicks"),
 )
-@log_funcs.log_debug
+
 def button_terminate_simulation(n_clicks):
     if n_clicks is None:
         return dash.no_update

@@ -11,7 +11,7 @@ def get_container(sim_name):
     return container
 
 
-@log_funcs.log_debug
+
 def gen_fig(fig_name, selected_sims, iloc):
     """Generates a figure using the figure setup"""
 

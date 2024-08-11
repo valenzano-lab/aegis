@@ -7,7 +7,7 @@
 # from . import delete, terminate, download, zipp
 
 
-# @log_funcs.log_debug
+# 
 # def make_simlog_table():
 #     paths = utilities.get_sim_paths()
 
@@ -48,7 +48,7 @@
 #     return html.Table(children=table, id="simlog-table")
 
 
-# # @log_funcs.log_debug
+# # 
 # def make_table_row(log, input_summary, output_summary, basepath, filename, ticker_stopped):
 #     if len(log) > 0:
 #         logline = log.iloc[-1].to_dict()
