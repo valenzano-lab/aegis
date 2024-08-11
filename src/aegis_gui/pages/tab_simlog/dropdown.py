@@ -94,7 +94,7 @@ def update_info_div(selected_path):
     # list_items.append(dbc.ListGroupItem([get_folder_size_with_du(path)]))
     list_items.append(
         dbc.ListGroupItem(
-            [html.Strong("Path:"), html.Span(str(path), id={"type": "config-download-basepath", "index": path.stem})]
+            [html.Strong("Path: "), html.Span(str(path), id={"type": "config-download-basepath", "index": path.stem})]
         )
     )
     list_items.append(

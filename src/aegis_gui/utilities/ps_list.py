@@ -1,27 +1,32 @@
-"""Keeping track of running simulation processes"""
-
-import subprocess
 import re
+import psutil
 import logging
 from typing import Set
 
-# TODO test this on different setups; is it picking up the python process line?
-
 
 def run_ps_af() -> Set[str]:
-    """Returns names of simulations whose processes are currently running"""
+    """Returns names of simulations whose processes are currently running based on the OS."""
     config_files = set()
     try:
-        # Run the 'ps -af' command
-        result = subprocess.run(["ps", "-af"], capture_output=True, text=True, check=True)
+        # Define the pattern for matching process command lines
+        pattern = re.compile(r"python3 -m aegis --config_path .*/(.*)\.yml")
 
-        # Process the output to find lines matching the pattern
-        for line in result.stdout.splitlines():
-            match = re.search(r"python3 -m aegis --config_path .*/(.*)\.yml", line)
-            if match:
-                config_file = match.group(1)
-                config_files.add(config_file)
-    except subprocess.CalledProcessError as e:
+        # Iterate through all running processes
+        for proc in psutil.process_iter(["cmdline"]):
+            try:
+                # Get the command line arguments of the process
+                cmdline = " ".join(proc.info["cmdline"])
+
+                # Match the command line with the pattern
+                match = pattern.search(cmdline)
+                if match:
+                    config_file = match.group(1)
+                    config_files.add(config_file)
+            except (psutil.NoSuchProcess, psutil.AccessDenied):
+                # Process has been terminated or we don't have permission to access it
+                continue
+
+    except Exception as e:
         logging.error(f"An error occurred: {e}")
 
     return config_files
