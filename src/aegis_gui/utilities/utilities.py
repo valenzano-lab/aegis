@@ -1,5 +1,5 @@
-import platformdirs
 import subprocess
+import sys
 
 import pathlib
 import yaml
@@ -21,7 +21,12 @@ def get_here():
 
 
 def get_base_dir():
-    return pathlib.Path(platformdirs.user_data_dir("aegis", "aegis"))
+    base_dir = (pathlib.Path.home() / "aegis_data").absolute()
+    base_dir.mkdir(exist_ok=True, parents=True)
+    # base_dir = pathlib.Path(platformdirs.user_data_dir("aegis", "aegis"))
+    # base_dir.mkdir(exist_ok=True, parents=True)
+    # print(base_dir.resolve())
+    return base_dir
 
 
 def get_sim_dir():
@@ -49,7 +54,7 @@ def run_simulation(filename):
     global running_processes
     config_path = get_config_path(filename)
     logging.info(f"Running a simulation at path {config_path}.")
-    process = subprocess.Popen(["python3", "-m", "aegis", "--config_path", config_path])
+    process = subprocess.Popen([sys.executable, "-m", "aegis", "--config_path", config_path])
     running_processes[filename] = process
 
 
