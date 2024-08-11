@@ -126,7 +126,7 @@ class Container:
                 step, steps_per_simulation = text.split("/")
                 return int(step), int(steps_per_simulation)
         except:
-            logging.error("No simpleprogress.log found.")
+            logging.error(f"No simpleprogress.log found at {self.paths['simpleprogress']}.")
 
     def get_ticker(self):
         if self.ticker is None:

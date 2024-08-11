@@ -3,6 +3,7 @@ import time
 import pathlib
 from datetime import datetime
 from .recorder import Recorder
+import logging
 
 
 class Ticker(Recorder):
@@ -41,6 +42,9 @@ class Ticker(Recorder):
             file.write(timestamp)
 
     def read(self):
+        if not self.ticker_path.exists():
+            logging.error(f"{self.ticker_path} does not exist.")
+            return
         with open(self.ticker_path, "r") as file:
             return file.read()
 
@@ -50,6 +54,8 @@ class Ticker(Recorder):
 
     def since_last(self):
         timestamp_recorded = self.read()
+        if timestamp_recorded is None:
+            return
         timestamp_now = time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime())
         dt_recorded = datetime.strptime(timestamp_recorded, "%Y-%m-%d %H:%M:%S")
         dt_now = datetime.strptime(timestamp_now, "%Y-%m-%d %H:%M:%S")
