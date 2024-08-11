@@ -3,6 +3,7 @@ import subprocess
 import dash
 import pathlib
 import dash_bootstrap_components as dbc
+import platform
 
 
 def make_button(path):
@@ -20,23 +21,20 @@ def make_button(path):
     prevent_initial_call=True,
 )
 def open_file_manager(n_clicks):
-
+    """Open the file manager at the specified path in a platform-independent way."""
     path = pathlib.Path(dash.ctx.triggered_id["index"])
 
     if n_clicks > 0:
-        # For Windows
-        if os.name == "nt":
-            os.startfile(path)
-        # For macOS
-        elif os.name == "posix":
-            if "darwin" in os.uname().sysname.lower():  # macOS check
-                subprocess.run(["open", path])
-            else:  # Assume Linux or WSL
-                # Check if running under WSL
-                if "microsoft" in os.uname().release.lower():
-                    # Convert the WSL path to a Windows path and use explorer.exe
-                    windows_path = subprocess.check_output(["wslpath", "-w", path]).decode().strip()
-                    subprocess.run(["explorer.exe", windows_path])
-                else:  # Regular Linux
-                    subprocess.run(["xdg-open", path])
+        system = platform.system().lower()
+
+        if system == "windows":
+            os.startfile(path)  # Opens the file manager on Windows
+        elif system == "darwin":
+            subprocess.run(["open", path])  # Opens the file manager on macOS
+        elif system == "linux":
+            subprocess.run(["xdg-open", path])  # Opens the file manager on Linux
+        elif "microsoft" in os.uname().release.lower():  # For WSL (Windows Subsystem for Linux)
+            windows_path = subprocess.check_output(["wslpath", "-w", path]).decode().strip()
+            subprocess.run(["explorer.exe", windows_path])  # Opens the Windows Explorer
+
     return 0  # Reset the click count
