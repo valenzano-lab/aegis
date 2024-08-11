@@ -50,11 +50,19 @@ def get_config_path(filename):
     return get_sim_dir() / f"{filename}.yml"
 
 
-def run_simulation(filename):
+def run_simulation(filename, prerun_sim_path):
     global running_processes
     config_path = get_config_path(filename)
     logging.info(f"Running a simulation at path {config_path}.")
-    process = subprocess.Popen([sys.executable, "-m", "aegis", "--config_path", config_path])
+    if prerun_sim_path is None:
+        pickle_command = []
+    else:
+        assert "value" in prerun_sim_path
+        container = Container(prerun_sim_path["value"])
+        latest_pickle_path = container.paths["pickles"][-1]
+        logging.info(f"Using pickled population from {latest_pickle_path}.")
+        pickle_command = ["-p", latest_pickle_path]
+    process = subprocess.Popen([sys.executable, "-m", "aegis", "--config_path", config_path] + pickle_command)
     running_processes[filename] = process
 
 

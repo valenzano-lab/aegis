@@ -95,10 +95,11 @@ def reset_configs(n_clicks, ids, current_values):
     dash.State("config-make-text", "value"),
     dash.State({"type": "config-input", "index": dash.ALL}, "value"),
     dash.State({"type": "config-input", "index": dash.ALL}, "id"),
+    dash.State("prerun-sim-select", "value"),
     prevent_initial_call=True,
 )
 @log_funcs.log_debug
-def click_sim_button(n_clicks, filename, values, ids_):
+def click_sim_button(n_clicks, filename, values, ids_, prerun_sim_path):
     """
     Run simulation when sim button clicked (also, implicitly, not disabled).
     """
@@ -106,13 +107,12 @@ def click_sim_button(n_clicks, filename, values, ids_):
         return
 
     # make config file
-
     decoded_pairs = list(decode_config_tab_values(values=values, ids_=ids_))
     input_config = {i: v for i, v in decoded_pairs}
     utilities.make_config_file(filename, input_config)
 
     # run simulation
-    utilities.run_simulation(filename)
+    utilities.run_simulation(filename, prerun_sim_path=prerun_sim_path)
     return ""
 
 

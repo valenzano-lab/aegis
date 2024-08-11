@@ -56,7 +56,7 @@ DEFAULT_PARAMETERS = {
         key="PICKLE_RATE",
         name="",
         domain="recording",
-        default=100000,
+        default=10000,
         info="Frequency of pickling (in steps)",
         info_extended="0 for no pickles",
         dtype=int,
@@ -64,7 +64,7 @@ DEFAULT_PARAMETERS = {
         inrange=lambda x: x >= 0,
         serverrange=lambda x: x >= 1000 or x == 0,
         serverrange_info="0 or [1000, inf)",
-        evalrange=[1, 10000],
+        evalrange=[1, 100000],
     ),
     "SNAPSHOT_RATE": Parameter(
         key="SNAPSHOT_RATE",

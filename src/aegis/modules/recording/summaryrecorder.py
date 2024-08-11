@@ -46,14 +46,13 @@ class SummaryRecorder(Recorder):
             "random_seed": hermes.random_seed,
             "time_start": self.time_start,
             "runtime": time.time() - self.time_start,
-            "jupyter_path": str(self.odir.absolute()),  # TODO remove?
             "memory_use": self.get_median_memuse(),
             "storage_use": storage_use,
         }
         with open(self.odir / "output_summary.json", "w") as f:
             json.dump(summary, f, indent=4)
 
-    def write_input_summary(self, ticker_pid):
+    def write_input_summary(self, ticker_pid, pickle_path):
         """
 
         # OUTPUT SPECIFICATION
@@ -64,12 +63,10 @@ class SummaryRecorder(Recorder):
         structure: A json dictionary.
         """
         summary = {
-            # "extinct": extinct,
             "random_seed": hermes.random_seed,
             "time_start": self.time_start,
+            "pickle_path": str(pickle_path),
             "time_start_formatted": datetime.datetime.fromtimestamp(self.time_start).strftime("%Y-%m-%d %H:%M:%S"),
-            # "time_end": time.time(),
-            "jupyter_path": str(self.odir.absolute()),  # TODO remove?
             "pid": self.pp.pid,
             "ticker_pid": ticker_pid,
         }

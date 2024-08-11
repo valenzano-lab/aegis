@@ -70,6 +70,7 @@ def get_sim_info(path):
         "Started": time_of_creation,
         "Finished": time_of_finishing,
         "Went extinct": output_summary.get("extinct", "(no terminal log detected)"),
+        "Path to prerun simulation": input_summary.get("pickle_path", "(no prerun population used)"),
         "Size": get_folder_size_with_du(path),
     }
 

@@ -3,7 +3,7 @@ import logging
 
 from dash import html, dcc
 from aegis_gui.utilities import log_funcs, utilities
-from aegis_gui.pages.tab_config import config_input, run_simulation_button
+from aegis_gui.pages.tab_config import config_input, run_simulation_button, use_prerun
 
 from aegis_gui.pages.tab_config import foldable, copy_config
 
@@ -128,7 +128,11 @@ def layout() -> html.Div:
     return html.Div(
         id="sim-section",
         # style={"display": "none"},
-        children=PREFACE + copy_config.make_select() + foldables + [run_simulation_button.layout],  # + tables,
+        children=PREFACE
+        + copy_config.make_select()
+        + foldables
+        + [use_prerun.make_select()]
+        + [run_simulation_button.layout],
     )
 
 
