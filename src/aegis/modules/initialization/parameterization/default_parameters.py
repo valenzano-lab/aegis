@@ -264,8 +264,8 @@ DEFAULT_PARAMETERS = {
             "mouse": 1,  # 1 cycle .. 1 month
         },
     ),
-    "MENOPAUSE": Parameter(
-        key="MENOPAUSE",
+    "REPRODUCTION_ENDPOINT": Parameter(
+        key="REPRODUCTION_ENDPOINT",
         name="",
         domain="reproduction",
         default=0,

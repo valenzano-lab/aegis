@@ -93,10 +93,10 @@ class Bioreactor:
         mask_fertile = (
             self.population.ages >= hermes.parameters.MATURATION_AGE
         )  # Check if mature; mature if survived MATURATION_AGE full cycles
-        if hermes.parameters.MENOPAUSE > 0:
+        if hermes.parameters.REPRODUCTION_ENDPOINT > 0:
             mask_menopausal = (
-                self.population.ages >= hermes.parameters.MENOPAUSE
-            )  # Check if menopausal; menopausal when lived through MENOPAUSE full cycles
+                self.population.ages >= hermes.parameters.REPRODUCTION_ENDPOINT
+            )  # Check if menopausal; menopausal when lived through REPRODUCTION_ENDPOINT full cycles
             mask_fertile = (mask_fertile) & (~mask_menopausal)
 
         if not any(mask_fertile):
