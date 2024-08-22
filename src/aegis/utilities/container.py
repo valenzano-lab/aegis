@@ -330,6 +330,12 @@ class Container:
         fertility = self.get_fert_observed_interval()
         return (survivorship * fertility).sum(axis=1)
 
+    def get_average_age_at_reproduction(self):
+        bt = self.get_birth_table_observed_interval()
+        n_offspring = bt.sum(1)
+        average_age_at_reproduction = (bt * bt.columns).sum(1) / n_offspring
+        return average_age_at_reproduction
+
     #############
     # UTILITIES #
     #############
