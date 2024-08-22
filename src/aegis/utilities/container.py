@@ -140,11 +140,11 @@ class Container:
             path = self.basepath.parent / f"{self.basepath.stem}.yml"
             with open(path, "r") as file_:
                 custom_config = yaml.safe_load(file_)
-            default_config = get_default_parameters()
+            # default_config = get_default_parameters()
             if custom_config is None:
                 custom_config = {}
-            self.data["config"] = {**default_config, **custom_config}
-
+            # self.data["config"] = {**default_config, **custom_config}
+            self.data["config"] = custom_config
         return self.data["config"]
 
     def get_output_summary(self) -> Union[dict, None]:

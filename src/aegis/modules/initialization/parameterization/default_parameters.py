@@ -364,7 +364,6 @@ DEFAULT_PARAMETERS = {
         dtype=float,
         drange="",
     ),
-    # TODO model litter size
     "G_repr_hi": Parameter(
         key="G_repr_hi",
         name="",
