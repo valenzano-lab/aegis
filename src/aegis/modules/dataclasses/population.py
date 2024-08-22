@@ -16,17 +16,19 @@ class Population:
         "ages",
         "births",
         "birthdays",
+        "generations",
         "phenotypes",
         "infection",
         "sizes",
         "sexes",
     )
 
-    def __init__(self, genomes: Genomes, ages, births, birthdays, phenotypes, infection, sizes, sexes):
+    def __init__(self, genomes: Genomes, ages, births, birthdays, generations, phenotypes, infection, sizes, sexes):
         self.genomes = genomes
         self.ages = ages
         self.births = births
         self.birthdays = birthdays
+        self.generations = generations
         self.phenotypes = phenotypes
         self.infection = infection
         self.sizes = sizes
@@ -37,6 +39,7 @@ class Population:
             == len(ages)
             == len(births)
             == len(birthdays)
+            == len(generations)
             == len(phenotypes)
             == len(infection)
             == len(sizes)
@@ -55,6 +58,7 @@ class Population:
             ages=self.ages[index],
             births=self.births[index],
             birthdays=self.birthdays[index],
+            generations=self.generations[index],
             phenotypes=self.phenotypes[index],
             infection=self.infection[index],
             sizes=self.sizes[index],
@@ -101,6 +105,7 @@ class Population:
         ages = np.zeros(n, dtype=np.int32)
         births = np.zeros(n, dtype=np.int32)
         birthdays = np.zeros(n, dtype=np.int32)
+        generations = np.zeros(n, dtype=np.int32)
         phenotypes = hermes.architect.__call__(genomes)
         infection = np.zeros(n, dtype=np.int32)
         sizes = np.zeros(n, dtype=np.float32)
@@ -110,6 +115,7 @@ class Population:
             ages=ages,
             births=births,
             birthdays=birthdays,
+            generations=generations,
             phenotypes=phenotypes,
             infection=infection,
             sizes=sizes,
@@ -117,13 +123,14 @@ class Population:
         )
 
     @staticmethod
-    def make_eggs(offspring_genomes: Genomes, step, offspring_sexes):
+    def make_eggs(offspring_genomes: Genomes, step, offspring_sexes, parental_generations):
         n = len(offspring_genomes)
         eggs = Population(
             genomes=offspring_genomes,
             ages=np.zeros(n, dtype=np.int32),
             births=np.zeros(n, dtype=np.int32),
             birthdays=np.zeros(n, dtype=np.int32) + step,
+            generations=parental_generations + 1,
             # phenotypes=hermes.architect.__call__(offspring_genomes),
             phenotypes=np.empty(n),
             infection=np.zeros(n, dtype=np.int32),

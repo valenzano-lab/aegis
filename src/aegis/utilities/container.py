@@ -269,7 +269,7 @@ class Container:
 
     def get_demography_observed_snapshot(self, record_index):
         """
-        columns .. ages, births, birthdays, sizes, sexes
+        columns .. ages, births, birthdays, generations, sizes, sexes
         index .. individual index
         """
         # TODO let index denote the step at which the snapshot was taken

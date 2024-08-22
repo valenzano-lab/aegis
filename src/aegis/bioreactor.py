@@ -9,7 +9,7 @@ from aegis.hermes import hermes
 class Bioreactor:
     def __init__(self, population: Population):
         self.eggs: Population = None
-        self.population = population
+        self.population: Population = population
 
     ##############
     # MAIN LOGIC #
@@ -148,7 +148,10 @@ class Bioreactor:
 
         # Make eggs
         eggs = Population.make_eggs(
-            offspring_genomes=offspring_genomes, step=hermes.get_step(), offspring_sexes=offspring_sexes
+            offspring_genomes=offspring_genomes,
+            step=hermes.get_step(),
+            offspring_sexes=offspring_sexes,
+            parental_generations=np.zeros(len(offspring_sexes)),  # TODO replace with working calculation
         )
         if self.eggs is None:
             self.eggs = eggs

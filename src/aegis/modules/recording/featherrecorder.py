@@ -76,7 +76,14 @@ class FeatherRecorder(Recorder):
         description: A recording of life history metrics (age, number of births given, step at which born, current size, sex) of all individuals until a certain simulation step.
         structure: A matrix of ints and floats
         """
-        dem_attrs = ["ages", "births", "birthdays", "sizes", "sexes"]
+        dem_attrs = [
+            "ages",
+            "births",
+            "birthdays",
+            # "generations",
+            "sizes",
+            "sexes",
+        ]
         demo = {attr: getattr(population, attr) for attr in dem_attrs}
         df_dem = pd.DataFrame(demo, columns=dem_attrs)
         df_dem.reset_index(drop=True, inplace=True)

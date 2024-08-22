@@ -25,7 +25,6 @@ def get_base_dir():
     base_dir.mkdir(exist_ok=True, parents=True)
     # base_dir = pathlib.Path(platformdirs.user_data_dir("aegis", "aegis"))
     # base_dir.mkdir(exist_ok=True, parents=True)
-    # print(base_dir.resolve())
     return base_dir
 
 
