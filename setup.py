@@ -1,6 +1,8 @@
 import setuptools
 import pathlib
 
+# TODO ensure aegis.__version__ is specified
+
 setuptools.setup(
     name="aegis-sim",
     version="2.3.0.18",

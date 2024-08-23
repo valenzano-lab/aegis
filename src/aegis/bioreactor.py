@@ -29,6 +29,7 @@ class Bioreactor:
         self.mortality_infection()
         self.mortality_predation()
         self.mortality_starvation()
+        hermes.recording_manager.popsizerecorder.write_before_reproduction(self.population)
 
         self.growth()  # size increase
         self.reproduction()  # reproduction
@@ -38,7 +39,7 @@ class Bioreactor:
         hermes.modules.resources.replenish()
 
         # Record data
-        hermes.recording_manager.popsizerecorder.write(self.population)
+        hermes.recording_manager.popsizerecorder.write_after_reproduction(self.population)
         hermes.recording_manager.flushrecorder.collect(
             "additive_age_structure", self.population.ages
         )  # population census

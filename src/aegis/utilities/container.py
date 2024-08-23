@@ -58,7 +58,8 @@ class Container:
             (self.basepath / "te").glob("*"),
             key=lambda path: int(path.stem),
         )
-        self.paths["popsize"] = self.basepath / "popsize.csv"
+        self.paths["popsize_before_reproduction"] = self.basepath / "popsize_before_reproduction.csv"
+        self.paths["popsize_after_reproduction"] = self.basepath / "popsize_after_reproduction.csv"
         if not self.paths["log"].is_file():
             logging.error(f"No AEGIS log found at path {self.paths['log']}.")
 
@@ -315,8 +316,14 @@ class Container:
         data.index.names = ["individual"]
         return data
 
-    def get_population_size(self):
-        data = pd.read_csv(self.paths["popsize"], header=None)
+    def get_population_size_before_reproduction(self):
+        data = pd.read_csv(self.paths["popsize_before_reproduction"], header=None)
+        data.index.names = ["steps"]
+        data.columns = ["popsize"]
+        return data
+
+    def get_population_size_after_reproduction(self):
+        data = pd.read_csv(self.paths["popsize_after_reproduction"], header=None)
         data.index.names = ["steps"]
         data.columns = ["popsize"]
         return data
