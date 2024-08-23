@@ -13,7 +13,7 @@ class PopsizeRecorder(Recorder):
             file_.write(f"{popsize}\n")
 
     def write_before_reproduction(self, population):
-        self.write(population, "popsize_before_reproduction")
+        self.write(population, "popsize_before_reproduction.csv")
 
     def write_after_reproduction(self, population):
-        self.write(population, "popsize_after_reproduction")
+        self.write(population, "popsize_after_reproduction.csv")
