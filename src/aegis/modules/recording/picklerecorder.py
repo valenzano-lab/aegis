@@ -24,8 +24,9 @@ class PickleRecorder(Recorder):
         step = hermes.get_step()
         should_skip = hermes.skip("PICKLE_RATE")
         is_first_step = step == 1
+        is_last_step = step == hermes.parameters.STEPS_PER_SIMULATION
 
-        if is_first_step or not should_skip:
+        if is_first_step or not should_skip or is_last_step:
             logging.debug(f"pickle recorded at step {step}.")
             path = self.odir / str(step)
             population.save_pickle_to(path)
