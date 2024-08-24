@@ -23,27 +23,29 @@ class Population:
         "sexes",
     )
 
-    def __init__(self, genomes: Genomes, ages, births, birthdays, generations, phenotypes, infection, sizes, sexes):
+    def __init__(
+        self, genomes: Genomes, ages, births, birthdays, phenotypes, infection, sizes, sexes, generations=None
+    ):
         self.genomes = genomes
         self.ages = ages
         self.births = births
         self.birthdays = birthdays
-        self.generations = generations
         self.phenotypes = phenotypes
         self.infection = infection
         self.sizes = sizes
         self.sexes = sexes
+        self.generations = generations
 
         if not (
             len(genomes)
             == len(ages)
             == len(births)
             == len(birthdays)
-            == len(generations)
             == len(phenotypes)
             == len(infection)
             == len(sizes)
             == len(sexes)
+            # == len(generations)
         ):
             raise ValueError("Population attributes must have equal length")
 
@@ -58,11 +60,11 @@ class Population:
             ages=self.ages[index],
             births=self.births[index],
             birthdays=self.birthdays[index],
-            generations=self.generations[index],
             phenotypes=self.phenotypes[index],
             infection=self.infection[index],
             sizes=self.sizes[index],
             sexes=self.sexes[index],
+            generations=self.generations[index] if self.generations is not None else None,
         )
 
     def __imul__(self, index):
@@ -70,6 +72,8 @@ class Population:
         for attr in self.attrs:
             if attr == "genomes":
                 self.genomes.keep(individuals=index)
+            elif attr == "generations":
+                self.generations = None
             else:
                 setattr(self, attr, getattr(self, attr)[index])
         return self
@@ -80,6 +84,8 @@ class Population:
         for attr in self.attrs:
             if attr == "genomes":
                 self.genomes.add(population.genomes)
+            elif attr == "generations":
+                self.generations = None
             else:
                 val = np.concatenate([getattr(self, attr), getattr(population, attr)])
                 setattr(self, attr, val)
@@ -105,7 +111,8 @@ class Population:
         ages = np.zeros(n, dtype=np.int32)
         births = np.zeros(n, dtype=np.int32)
         birthdays = np.zeros(n, dtype=np.int32)
-        generations = np.zeros(n, dtype=np.int32)
+        # generations = np.zeros(n, dtype=np.int32)
+        generations = None
         phenotypes = hermes.architect.__call__(genomes)
         infection = np.zeros(n, dtype=np.int32)
         sizes = np.zeros(n, dtype=np.float32)
@@ -130,7 +137,8 @@ class Population:
             ages=np.zeros(n, dtype=np.int32),
             births=np.zeros(n, dtype=np.int32),
             birthdays=np.zeros(n, dtype=np.int32) + step,
-            generations=parental_generations + 1,
+            # generations=parental_generations + 1,
+            generations=None,
             # phenotypes=hermes.architect.__call__(offspring_genomes),
             phenotypes=np.empty(n),
             infection=np.zeros(n, dtype=np.int32),
