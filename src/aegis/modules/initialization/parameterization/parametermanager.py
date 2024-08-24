@@ -26,6 +26,7 @@ class ParameterManager:
 
         default_parameters = get_default_parameters()
         custom_config_params = self.read_config_file()
+        self.validate(custom_config_params)
         for k in default_parameters.keys():
             if k in custom_config_params and default_parameters[k] != custom_config_params[k]:
                 logging.debug(
