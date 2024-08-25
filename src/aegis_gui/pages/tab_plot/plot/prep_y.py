@@ -86,8 +86,8 @@ def get_life_expectancy(container: Container, iloc=None):
     return ys, max_iloc
 
 
-def get_population_size(container: Container, iloc=None):
-    ys = container.get_population_size().popsize
+def get_population_size_after_reproduction(container: Container, iloc=None):
+    ys = container.get_population_size_after_reproduction().popsize
     max_iloc = None
     return ys, max_iloc
 

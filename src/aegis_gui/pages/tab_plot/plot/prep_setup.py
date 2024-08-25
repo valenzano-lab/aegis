@@ -189,7 +189,7 @@ FIG_SETUP = {
     "population size": {
         "title": "population size",
         "supports_multi": True,
-        "prep_y": prep_y.get_population_size,
+        "prep_y": prep_y.get_population_size_after_reproduction,
         "prep_x": prep_x.get_steps_non_multiplied,
         "prep_figure": "make_line_figure",
         "description": dash.dcc.Markdown(

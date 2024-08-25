@@ -3,6 +3,7 @@
 
 import math
 import logging
+from aegis.hermes import hermes
 
 
 class Abiotic:
@@ -73,6 +74,8 @@ class Abiotic:
 
     def _instant(self, step):
         """Mortality function that every ABIOTIC_HAZARD_PERIOD steps kills ABIOTIC_HAZARD_AMPLITUDE of the total living population; step 0 is unaffected"""
-        if step == 0 or step % self.ABIOTIC_HAZARD_PERIOD:
+        if step == 0 or not (step % self.ABIOTIC_HAZARD_PERIOD):
             return 0
-        return self.ABIOTIC_HAZARD_AMPLITUDE
+
+        mortality = hermes.rng.beta(a=1, b=3, size=1)
+        return mortality * self.ABIOTIC_HAZARD_AMPLITUDE
