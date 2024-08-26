@@ -148,6 +148,24 @@ class Container:
             self.data["config"] = custom_config
         return self.data["config"]
 
+    def get_final_config(self):
+        if "final_config" not in self.data:
+            path = self.basepath / "final_config.yml"
+            with open(path, "r") as file_:
+                final_config = yaml.safe_load(file_)
+            if final_config is None:
+                final_config = {}
+            self.data["final_config"] = final_config
+        return self.data["final_config"]
+
+    def get_generations_until_interval(self):
+        """Return Series of number of generations simulated up until interval i"""
+        aar = self.get_average_age_at_reproduction()
+        aar.iloc[0] = np.inf  # No time has passed, so no generations yet
+        IR = self.get_final_config()["INTERVAL_RATE"]
+        aar = aar.pipe(lambda s: IR / s).cumsum()
+        return aar
+
     def get_output_summary(self) -> Union[dict, None]:
         path = self.paths["output_summary"]
         if path.exists():
