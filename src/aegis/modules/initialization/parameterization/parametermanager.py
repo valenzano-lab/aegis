@@ -13,6 +13,7 @@ class ParameterManager:
     def __init__(self, custom_config_path, custom_input_params):
         self.custom_config_path = custom_config_path
         self.custom_input_params = custom_input_params
+        self.final_config = None
 
     def __call__(self):
         """
@@ -44,6 +45,8 @@ class ParameterManager:
         params.update(species_config_params)
         params.update(custom_config_params)
         params.update(self.custom_input_params)
+
+        self.final_config = params.copy()
 
         # convert to types.SimpleNamespace
         params = types.SimpleNamespace(**params)

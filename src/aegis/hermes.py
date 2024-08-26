@@ -25,10 +25,11 @@ class Hermes:
         self.step = 1
         self.constants = constants
 
-        self.parameters = ParameterManager(
+        parametermanager = ParameterManager(
             custom_config_path=custom_config_path,
             custom_input_params=custom_input_params,
-        )()
+        )
+        self.parameters = parametermanager()
 
         self.simname = custom_config_path.stem
         self.random_seed = self.init_random_seed()
@@ -36,7 +37,7 @@ class Hermes:
         self.traits = self.init_traits()
         self.modules = self.init_modules()
         self.recording_manager = self.init_recorder(custom_config_path=custom_config_path, overwrite=overwrite)
-        # self.logger = self.init_logger()  # TODO
+        self.recording_manager.configrecorder.write_final_config_file(parametermanager.final_config)
 
     ##############
     # INIT FUNCS #
