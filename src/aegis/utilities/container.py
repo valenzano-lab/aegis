@@ -160,6 +160,7 @@ class Container:
 
     def get_generations_until_interval(self):
         """Return Series of number of generations simulated up until interval i"""
+        # TODO beware that snapshots are not timed linearly; there is a bunch of snapshots at the end of the simulation
         aar = self.get_average_age_at_reproduction()
         aar.iloc[0] = np.inf  # No time has passed, so no generations yet
         IR = self.get_final_config()["INTERVAL_RATE"]
