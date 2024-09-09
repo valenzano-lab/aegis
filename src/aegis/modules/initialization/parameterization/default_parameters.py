@@ -923,6 +923,19 @@ DEFAULT_PARAMETERS = {
         serverrange_info="[1,100]",
         evalrange=[15, 100],
     ),
+    "FRAILTY_MODIFIER": Parameter(
+        key="FRAILTY_MODIFIER",
+        name="",
+        domain="other",
+        default=1,
+        info="Age-dependent modifier of mortality",
+        dtype=float,
+        drange="[1, inf)",
+        inrange=lambda x: x >= 0,
+        serverrange=lambda x: x < 100,
+        serverrange_info="[1,100]",
+        evalrange=[1, 100],
+    ),
     #
     #
     # TECHNICAL

@@ -64,7 +64,8 @@ class Bioreactor:
 
     def mortality_abiotic(self):
         hazard = hermes.modules.abiotic(hermes.get_step())
-        mask_kill = hermes.rng.random(len(self.population), dtype=np.float32) < hazard
+        age_hazard = hermes.modules.frailty.modify(hazard=hazard, ages=self.population.ages)
+        mask_kill = hermes.rng.random(len(self.population), dtype=np.float32) < age_hazard
         self._kill(mask_kill=mask_kill, causeofdeath="abiotic")
 
     def mortality_infection(self):

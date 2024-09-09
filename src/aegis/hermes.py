@@ -81,6 +81,7 @@ class Hermes:
         from aegis.modules.mortality.predation import Predation
         from aegis.modules.mortality.starvation import Starvation
         from aegis.modules.mortality.infection import Infection
+        from aegis.modules.mortality.frailty import Frailty
         from aegis.modules.genetics.ploider import Ploider
         from aegis.modules.genetics.architect import Architect
         from aegis.utilities.popgenstats import PopgenStats
@@ -95,6 +96,7 @@ class Hermes:
                 predation: Optional[Predation] = None,
                 starvation: Optional[Starvation] = None,
                 infection: Optional[Infection] = None,
+                frailty: Optional[Frailty] = None,
                 resources: Optional[Resources] = None,
                 mutator: Optional[Mutator] = None,
                 reproduction: Optional[Reproducer] = None,
@@ -107,6 +109,7 @@ class Hermes:
                 self.predation = predation
                 self.starvation = starvation
                 self.infection = infection
+                self.frailty = frailty
                 self.resources = resources
                 self.mutator = mutator
                 self.reproduction = reproduction
@@ -141,6 +144,10 @@ class Hermes:
             TRANSMISSIBILITY=self.parameters.TRANSMISSIBILITY,
             RECOVERY_RATE=self.parameters.RECOVERY_RATE,
             FATALITY_RATE=self.parameters.FATALITY_RATE,
+        )
+        modules.frailty = Frailty(
+            FRAILTY_MODIFIER=self.parameters.FRAILTY_MODIFIER,
+            AGE_LIMIT=self.parameters.AGE_LIMIT,
         )
 
         # Resources
