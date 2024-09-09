@@ -59,8 +59,9 @@ class Bioreactor:
 
     def mortality_intrinsic(self):
         probs_surv = hermes.architect.get_evaluation(self.population, "surv")
-        mask_surv = hermes.rng.random(len(probs_surv), dtype=np.float32) < probs_surv
-        self._kill(mask_kill=~mask_surv, causeofdeath="intrinsic")
+        age_hazard = hermes.modules.frailty.modify(hazard=1 - probs_surv, ages=self.population.ages)
+        mask_kill = hermes.rng.random(len(probs_surv), dtype=np.float32) < age_hazard
+        self._kill(mask_kill=mask_kill, causeofdeath="intrinsic")
 
     def mortality_abiotic(self):
         hazard = hermes.modules.abiotic(hermes.get_step())
