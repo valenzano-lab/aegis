@@ -3,7 +3,8 @@ from dash import html, dcc
 import dash_bootstrap_components as dbc
 from aegis_gui.utilities import log_funcs, utilities
 from aegis.utilities.container import Container
-from aegis_gui.pages.tab_plot import select_graph, select_sims, graph
+from aegis_gui.pages.tab_plot import select_graph, select_sims, graph, refresh
+import aegis_gui.pages.tab_plot.draw  # important callback
 
 
 dash.register_page(__name__, path="/plot", name="plot")
@@ -45,6 +46,11 @@ def layout(sim=None):  # use function to ensure statelessness
                                     # dbc.Col(html.Label("(plotted simulations)"), width=3),
                                 ],
                                 className="g-0",
+                            ),
+                            dbc.Row(
+                                [
+                                    dbc.Col(refresh.inputgroup),
+                                ]
                             ),
                         ],
                         style={"margin": "2rem 0"},

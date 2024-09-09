@@ -25,6 +25,8 @@ def open_file_manager(n_clicks):
     """Open the file manager at the specified path in a platform-independent way."""
     path = pathlib.Path(dash.ctx.triggered_id["index"])
 
+    # TODO does not work on WSL
+
     if n_clicks > 0:
         system = platform.system().lower()
 
