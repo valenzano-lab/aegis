@@ -45,6 +45,27 @@ FIG_SETUP = {
             "yaxis_title": "number of deaths",
         },
     },
+    "death table normalized": {
+        "title": "death table normalized",
+        "supports_multi": False,
+        "prep_y": prep_y.get_death_table_normalized,
+        "prep_x": prep_x.get_ages,
+        "prep_figure": "make_bar_figure",
+        "description": dash.dcc.Markdown(
+            """
+            Number of deaths per age class, stratified by cause.
+            \n
+            Interval averages.
+            """,
+            mathjax=True,
+        ),
+        # graph
+        "figure_layout": {
+            "xaxis_title": "age class",
+            "yaxis_title": "number of deaths",
+            "yaxis": {"range": [0, 1]},
+        },
+    },
     "derived allele frequencies": {
         "title": "derived allele frequencies",
         "supports_multi": False,

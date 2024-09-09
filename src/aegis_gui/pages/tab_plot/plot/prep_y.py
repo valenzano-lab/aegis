@@ -63,6 +63,12 @@ def get_death_table(container: Container, iloc=-1):
     return ys, max_iloc
 
 
+def get_death_table_normalized(container: Container, iloc=-1):
+    ys, max_iloc = get_death_table(container=container, iloc=iloc)
+    ys = ys.div(ys.sum(1), axis=0)
+    return ys, max_iloc
+
+
 def get_life_table(container: Container, iloc=-1):
     ys = container.get_life_table_observed_interval(normalize=True)
     max_iloc = ys.shape[0]
