@@ -71,16 +71,19 @@ class Bioreactor:
 
     def mortality_infection(self):
         hermes.modules.infection(self.population)
+        # TODO add age hazard
         mask_kill = self.population.infection == -1
         self._kill(mask_kill=mask_kill, causeofdeath="infection")
 
     def mortality_predation(self):
         probs_kill = hermes.modules.predation(len(self))
+        # TODO add age hazard
         mask_kill = hermes.rng.random(len(self), dtype=np.float32) < probs_kill
         self._kill(mask_kill=mask_kill, causeofdeath="predation")
 
     def mortality_starvation(self):
         resource_availability = hermes.modules.resources.scavenge(np.ones(len(self.population)))
+        # TODO add age hazard
         mask_kill = hermes.modules.starvation(
             n=len(self.population),
             resource_availability=resource_availability.sum(),
