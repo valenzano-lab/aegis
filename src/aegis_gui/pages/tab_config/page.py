@@ -7,16 +7,16 @@ from aegis_gui.pages.tab_config import config_input, run_simulation_button, use_
 
 from aegis_gui.pages.tab_config import foldable, copy_config
 
-from aegis.modules.initialization.parameterization.default_parameters import DEFAULT_PARAMETERS
-from aegis.modules.initialization.parameterization.parameter import Parameter
+from aegis_sim.modules.initialization.parameterization.default_parameters import DEFAULT_PARAMETERS
+from aegis_sim.modules.initialization.parameterization.parameter import Parameter
 
 # Documentation sources
-from aegis.modules.recording.recordingmanager import RecordingManager
-from aegis.modules.reproduction.reproduction import Reproducer
-from aegis.modules.mortality import starvation, predation, infection, abiotic
-from aegis.modules.genetics.composite.architecture import CompositeArchitecture
-from aegis.modules.genetics.modifying.architecture import ModifyingArchitecture
-from aegis.modules.genetics.envdrift import Envdrift
+from aegis_sim.modules.recording.recordingmanager import RecordingManager
+from aegis_sim.modules.reproduction.reproduction import Reproducer
+from aegis_sim.modules.mortality import starvation, predation, infection, abiotic
+from aegis_sim.modules.genetics.composite.architecture import CompositeArchitecture
+from aegis_sim.modules.genetics.modifying.architecture import ModifyingArchitecture
+from aegis_sim.modules.genetics.envdrift import Envdrift
 
 dash.register_page(__name__, path="/config", name="config")
 

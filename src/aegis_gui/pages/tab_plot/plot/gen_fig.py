@@ -1,7 +1,7 @@
 from aegis_gui.pages.tab_plot.plot.prep_setup import FIG_SETUP
 from aegis_gui.pages.tab_plot.plot import prep_fig
 from aegis_gui.utilities import log_funcs
-from aegis.utilities.container import Container
+from aegis_sim.utilities.container import Container
 from aegis_gui.utilities.utilities import get_sim_dir
 
 

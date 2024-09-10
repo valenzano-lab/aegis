@@ -1,7 +1,7 @@
 from dash import html, dcc, Output, MATCH, Input, State, callback
 import yaml
 from aegis_gui.utilities import log_funcs
-from aegis.utilities.container import Container
+from aegis_sim.utilities.container import Container
 
 import dash_bootstrap_components as dbc
 

@@ -4,12 +4,19 @@ AEGIS can be started in multiple ways; each of these functions starts AEGIS from
 """
 
 import logging
+import pathlib
 
-from aegis.manager import Manager
-from aegis.argparser import parse_terminal
+import aegis_gui
+from aegis_sim.manager import Manager
+from aegis.parse import get_parser
 
 
-def run_from_script(custom_config_path, pickle_path, overwrite, custom_input_params):
+def run_sim(
+    custom_config_path: pathlib.Path,
+    pickle_path: pathlib.Path,
+    overwrite: bool,
+    custom_input_params: dict,
+):
     """
     Use this function when you want to run aegis from a python script.
 
@@ -26,37 +33,25 @@ def run_from_script(custom_config_path, pickle_path, overwrite, custom_input_par
     manager.run()
 
 
-def run_from_main():
-    run_from_terminal()
+def start_from_terminal():
+    parser = get_parser()
+    args = parser.parse_args()
 
-
-def run_from_terminal():
-    custom_config_path, pickle_path, overwrite, server_mode = parse_terminal()
-
-    if (custom_config_path, pickle_path, overwrite) == (None, None, None):
-        logging.info("Starting run_gui.")
-        logging.info(f"Server mode is {'ON' if server_mode else 'OFF'}.")
-        if server_mode:
-            run_from_server_gui()
-        else:
-            run_from_local_gui()
-    else:
-        manager = Manager(
-            custom_config_path=custom_config_path,
+    if args.command == "sim":
+        config_path = pathlib.Path(args.config_path).absolute() if args.config_path else None
+        pickle_path = pathlib.Path(args.pickle_path).absolute() if args.pickle_path else None
+        run_sim(
+            custom_config_path=config_path,
             pickle_path=pickle_path,
-            overwrite=overwrite,
+            overwrite=args.overwrite,
             custom_input_params={},
         )
-        manager.run()
-
-
-def run_from_server_gui():
-    import aegis_gui
-
-    aegis_gui.run(environment="server")
-
-
-def run_from_local_gui():
-    import aegis_gui
-
-    aegis_gui.run(environment="local")
+    elif args.command == "gui":
+        if args.server:
+            logging.info("Server mode is ON")
+            aegis_gui.run(environment="server")
+        else:
+            logging.info("Server mode is OFF")
+            aegis_gui.run(environment="local")
+    else:
+        parser.print_help()

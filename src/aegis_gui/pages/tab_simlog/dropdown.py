@@ -2,11 +2,11 @@ import dash
 import datetime
 from dash import html
 import dash_bootstrap_components as dbc
-from aegis.utilities.container import Container
+from aegis_sim.utilities.container import Container
 from aegis_gui.utilities import utilities
 import pathlib
 from aegis_gui.pages.tab_simlog import delete, terminate, download, zipp, open_folder, goplot
-from aegis.utilities.get_folder_size import get_folder_size_with_du
+from aegis_sim.utilities.get_folder_size import get_folder_size_with_du
 
 
 def make_select(selected=None):

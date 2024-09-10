@@ -1,5 +1,5 @@
 import dash
-from aegis.utilities.container import Container
+from aegis_sim.utilities.container import Container
 from aegis_gui.utilities import utilities
 import dash_bootstrap_components as dbc
 
@@ -90,7 +90,7 @@ def make_trackers():
     return trackers
 
 
-def make_tracker_component():
+def get_tracker():
     return [
         dash.dcc.Interval(id="running-simulations-interval", interval=1 * 1000, n_intervals=0),
         dash.html.Div([], id="running-simulations"),

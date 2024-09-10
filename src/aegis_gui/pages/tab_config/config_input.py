@@ -3,8 +3,8 @@ from dash import callback, Output, Input, State, MATCH, no_update, dcc, ctx
 from aegis_gui.utilities import log_funcs
 from .valid_range import is_input_in_valid_range
 import dash_bootstrap_components as dbc
-from aegis.modules.initialization.parameterization.default_parameters import DEFAULT_PARAMETERS
-from aegis.modules.initialization.parameterization.parameter import Parameter
+from aegis_sim.modules.initialization.parameterization.default_parameters import DEFAULT_PARAMETERS
+from aegis_sim.modules.initialization.parameterization.parameter import Parameter
 
 # @callback(
 #     Output({"type": "config-input", "index": dash.ALL}, "invalid"),

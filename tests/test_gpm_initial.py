@@ -2,7 +2,7 @@
 
 import numpy as np
 
-from aegis import pan
+from aegis_sim import pan
 
 G_surv_initpheno = 0.1013
 G_repr_initpheno = 0.2124
@@ -24,8 +24,8 @@ pan.init_minimal(
 
 
 def test_call():
-    from aegis.modules.setup.init import architecture
-    from aegis.modules.genetics.architecture.gpm import GPM
+    from aegis_sim.modules.setup.init import architecture
+    from aegis_sim.modules.genetics.architecture.gpm import GPM
 
     # from aegis.init import phenomap
 

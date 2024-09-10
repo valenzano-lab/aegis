@@ -2,7 +2,7 @@ import dash
 from dash import html, dcc
 import dash_bootstrap_components as dbc
 from aegis_gui.utilities import log_funcs, utilities
-from aegis.utilities.container import Container
+from aegis_sim.utilities.container import Container
 from aegis_gui.pages.tab_plot import select_graph, select_sims, graph, refresh
 import aegis_gui.pages.tab_plot.draw  # important callback
 

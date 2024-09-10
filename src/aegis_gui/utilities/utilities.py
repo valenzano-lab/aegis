@@ -8,8 +8,8 @@ import re
 
 from dash import html
 
-from aegis.utilities.container import Container
-from aegis.modules.initialization.parameterization.default_parameters import DEFAULT_PARAMETERS
+from aegis_sim.utilities.container import Container
+from aegis_sim.modules.initialization.parameterization.default_parameters import DEFAULT_PARAMETERS
 
 # TODO ensure that there is default dataset available
 
@@ -60,7 +60,9 @@ def run_simulation(filename, prerun_sim_path):
         latest_pickle_path = container.paths["pickles"][-1]
         logging.info(f"Using pickled population from {latest_pickle_path}.")
         pickle_command = ["-p", latest_pickle_path]
-    process = subprocess.Popen([sys.executable, "-m", "aegis", "--config_path", config_path] + pickle_command)
+    process = subprocess.Popen(
+        ["aegis", "sim", "--config_path", config_path] + pickle_command
+    )  # used to use sys.executable for cross-platform 'python3' command
     running_processes[filename] = process
 
 
@@ -151,16 +153,16 @@ def get_parameter_span(name):
 
 
 # Output specification sources
-from aegis.modules.recording.featherrecorder import FeatherRecorder
-from aegis.modules.recording.flushrecorder import FlushRecorder
-from aegis.modules.recording.phenomaprecorder import PhenomapRecorder
-from aegis.modules.recording.picklerecorder import PickleRecorder
-from aegis.modules.recording.popgenstatsrecorder import PopgenStatsRecorder
-from aegis.modules.recording.progressrecorder import ProgressRecorder
-from aegis.modules.recording.summaryrecorder import SummaryRecorder
-from aegis.modules.recording.terecorder import TERecorder
-from aegis.modules.recording.ticker import Ticker
-from aegis.modules.recording.intervalrecorder import IntervalRecorder
+from aegis_sim.modules.recording.featherrecorder import FeatherRecorder
+from aegis_sim.modules.recording.flushrecorder import FlushRecorder
+from aegis_sim.modules.recording.phenomaprecorder import PhenomapRecorder
+from aegis_sim.modules.recording.picklerecorder import PickleRecorder
+from aegis_sim.modules.recording.popgenstatsrecorder import PopgenStatsRecorder
+from aegis_sim.modules.recording.progressrecorder import ProgressRecorder
+from aegis_sim.modules.recording.summaryrecorder import SummaryRecorder
+from aegis_sim.modules.recording.terecorder import TERecorder
+from aegis_sim.modules.recording.ticker import Ticker
+from aegis_sim.modules.recording.intervalrecorder import IntervalRecorder
 
 OUTPUT_SPECIFICATIONS = [
     specification

@@ -1,5 +1,5 @@
-from aegis.utilities.container import Container
-from aegis.utilities.analysis import survival, reproduction, genome
+from aegis_sim.utilities.container import Container
+from aegis_sim.utilities.analysis import survival, reproduction, genome
 
 
 # x-axis is age

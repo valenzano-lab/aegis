@@ -2,7 +2,7 @@
 
 import numpy as np
 
-from aegis import pan
+from aegis_sim import pan
 
 pan.init_minimal(
     custom_input_params={
@@ -17,11 +17,11 @@ pan.init_minimal(
     },
 )
 
-from aegis.modules.setup.init import architecture
+from aegis_sim.modules.setup.init import architecture
 
 
 def test_call():
-    from aegis.modules.genetics.architecture.gpm import GPM
+    from aegis_sim.modules.genetics.architecture.gpm import GPM
 
     phenolist = [
         (0, "surv", 8, 0.07932046620388114),  # test 1

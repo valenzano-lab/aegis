@@ -1,5 +1,5 @@
 from aegis_gui.utilities import log_funcs, utilities, ps_list
-from aegis.modules.initialization.parameterization.default_parameters import DEFAULT_PARAMETERS
+from aegis_sim.modules.initialization.parameterization.default_parameters import DEFAULT_PARAMETERS
 
 import dash
 
