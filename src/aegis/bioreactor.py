@@ -60,13 +60,13 @@ class Bioreactor:
     def mortality_intrinsic(self):
         probs_surv = hermes.architect.get_evaluation(self.population, "surv")
         age_hazard = hermes.modules.frailty.modify(hazard=1 - probs_surv, ages=self.population.ages)
-        mask_kill = hermes.rng.random(len(probs_surv), dtype=np.float32) < age_hazard
+        mask_kill = np.random.random(len(probs_surv)) < age_hazard
         self._kill(mask_kill=mask_kill, causeofdeath="intrinsic")
 
     def mortality_abiotic(self):
         hazard = hermes.modules.abiotic(hermes.get_step())
         age_hazard = hermes.modules.frailty.modify(hazard=hazard, ages=self.population.ages)
-        mask_kill = hermes.rng.random(len(self.population), dtype=np.float32) < age_hazard
+        mask_kill = np.random.random(len(self.population)) < age_hazard
         self._kill(mask_kill=mask_kill, causeofdeath="abiotic")
 
     def mortality_infection(self):
@@ -78,7 +78,7 @@ class Bioreactor:
     def mortality_predation(self):
         probs_kill = hermes.modules.predation(len(self))
         # TODO add age hazard
-        mask_kill = hermes.rng.random(len(self), dtype=np.float32) < probs_kill
+        mask_kill = np.random.random(len(self)) < probs_kill
         self._kill(mask_kill=mask_kill, causeofdeath="predation")
 
     def mortality_starvation(self):
@@ -114,7 +114,7 @@ class Bioreactor:
         # Binomial calculation
         n = hermes.parameters.MAX_OFFSPRING_NUMBER
         p = probs_repr
-        num_repr = hermes.rng.binomial(n=n, p=p)
+        num_repr = np.random.binomial(n=n, p=p)
         mask_repr = num_repr > 0
 
         if sum(num_repr) == 0:
@@ -148,7 +148,7 @@ class Bioreactor:
         # Randomize order of newly laid egg attributes ..
         # .. because the order will affect their probability to be removed because of limited carrying capacity
         order = np.arange(len(offspring_sexes))
-        hermes.rng.shuffle(order)
+        np.random.shuffle(order)
         offspring_genomes = offspring_genomes[order]
         offspring_sexes = offspring_sexes[order]
 

@@ -4,12 +4,11 @@ Modifies topology of fitness landscape over time by changing the interpretation 
 """
 
 import numpy as np
-from aegis.hermes import hermes
 
 
 class Envdrift:
     """
-    
+
     GUI
     Environmental drift is deactivated when [[ENVDRIFT_RATE]] is 0.
     Conceptually, environmental drift simulates long-term environmental change such as climate change, resource depletion, pollution, etc.
@@ -18,6 +17,7 @@ class Envdrift:
     natural selection acts mostly to purify new detrimental mutations. When environmental drift is activated, the fitness landscape changes over time – thus, the population keeps evolving adaptively, following the fitness peak.
 
     """
+
     def __init__(self, ENVDRIFT_RATE, genome_shape):
         self.ENVDRIFT_RATE = ENVDRIFT_RATE
 
@@ -31,7 +31,7 @@ class Envdrift:
         if (self.map is None) or (step % self.ENVDRIFT_RATE > 0):
             return
 
-        indices = tuple(hermes.rng.integers(self.map.shape))
+        indices = tuple(np.random.integers(self.map.shape))
         self.map[indices] = ~self.map[indices]
 
     def call(self, array):

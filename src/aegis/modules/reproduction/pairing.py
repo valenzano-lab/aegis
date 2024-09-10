@@ -13,11 +13,11 @@ def pairing(genomes: Genomes, parental_sexes, ages, muta_prob):
 
     # Which gamete
     male_genomes = genomes.get(individuals=males)
-    which_gamete = (hermes.rng.random(n_pairs) < 0.5).astype(np.int32)
+    which_gamete = (np.random.random(n_pairs) < 0.5).astype(np.int32)
     male_gametes = male_genomes[np.arange(n_pairs), which_gamete]
 
     female_genomes = genomes.get(individuals=females)
-    which_gamete = (hermes.rng.random(n_pairs) < 0.5).astype(np.int32)
+    which_gamete = (np.random.random(n_pairs) < 0.5).astype(np.int32)
     female_gametes = female_genomes[np.arange(n_pairs), which_gamete]
 
     # Unify gametes

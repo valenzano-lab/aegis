@@ -3,7 +3,6 @@
 
 import math
 import logging
-from aegis.hermes import hermes
 
 
 class Abiotic:
@@ -77,5 +76,5 @@ class Abiotic:
         if step == 0 or step % self.ABIOTIC_HAZARD_PERIOD:
             return 0
 
-        mortality = hermes.rng.beta(a=1, b=3, size=1)
+        mortality = np.random.beta(a=1, b=3, size=1)
         return mortality * self.ABIOTIC_HAZARD_AMPLITUDE

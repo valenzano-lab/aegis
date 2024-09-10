@@ -94,7 +94,7 @@ class Genblock:
         for i in range(self.n):
             func = Genblock.__resolve_function(encoding["agefunc"], encoding["funcparam"])
             if encoding["agefunc"] == "agespec":
-                age = hermes.rng.integers(0, hermes.parameters.AGE_LIMIT)
+                age = np.random.integers(0, hermes.parameters.AGE_LIMIT)
                 magnitude = func(age)
                 add_to_phenolist(i, encoding["trait"], age, magnitude)
             else:
@@ -131,13 +131,13 @@ class Genblock:
 
         # def _normal(pair):
         #     mean, std = pair
-        #     return hermes.rng.normal(mean, std)
+        #     return np.random.normal(mean, std)
 
         # def _exponential(param):
         #     if param > 0:
-        #         return hermes.rng.exponential(param)
+        #         return np.random.exponential(param)
         #     else:
-        #         return -hermes.rng.exponential(-param)
+        #         return -np.random.exponential(-param)
 
         def _beta(a=3, b=3):
             return np.random.beta(a, b) * 2 - 1
@@ -220,13 +220,13 @@ class Genblock:
 
         def _normal(pair):
             mean, std = pair
-            return hermes.rng.normal(mean, std)
+            return np.random.normal(mean, std)
 
         def _exponential(param):
             if param > 0:
-                return hermes.rng.exponential(param)
+                return np.random.exponential(param)
             else:
-                return -hermes.rng.exponential(-param)
+                return -np.random.exponential(-param)
 
         if func == "const" or func == "agespec":
             return functools.partial(const, _exponential(params[0]))

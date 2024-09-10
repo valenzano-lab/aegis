@@ -33,7 +33,9 @@ class Hermes:
 
         self.simname = custom_config_path.stem
         self.random_seed = self.init_random_seed()
-        self.rng = self.init_random_number_generator()
+        # self.rng = self.init_random_number_generator()
+        np.random.seed(self.random_seed)
+        self.rng = np.random
         self.traits = self.init_traits()
         self.modules = self.init_modules()
         self.recording_manager = self.init_recorder(custom_config_path=custom_config_path, overwrite=overwrite)

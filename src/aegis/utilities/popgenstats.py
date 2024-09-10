@@ -206,7 +206,7 @@ class PopgenStats:
 
         # Sample genomes
         if 0 < hermes.parameters.POPGENSTATS_SAMPLE_SIZE <= genomes.shape[0]:
-            indices = hermes.rng.choice(
+            indices = np.random.choice(
                 range(genomes.shape[0]),
                 hermes.parameters.POPGENSTATS_SAMPLE_SIZE,
                 replace=False,

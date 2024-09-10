@@ -44,7 +44,7 @@ class CompositeArchitecture:
 
     def init_genome_array(self, popsize):
         # TODO enable initgeno
-        array = hermes.rng.random(size=(popsize, *self.get_shape()), dtype=np.float32)
+        array = np.random.random(size=(popsize, *self.get_shape()))
 
         for trait in hermes.traits.values():
             array[:, :, trait.slice] = array[:, :, trait.slice] < trait.initgeno
@@ -76,3 +76,6 @@ class CompositeArchitecture:
     #     p[:, :window_size] = np.repeat(probs[:, 0], window_size).reshape(-1, window_size)
     #     p[:, window_size - 1 :] = probs[:]
     #     diffusome = np.convolve(p[0], np.ones(window_size) / window_size, mode="valid")
+
+    def get_map(self):
+        pass

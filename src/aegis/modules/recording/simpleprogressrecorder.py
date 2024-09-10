@@ -1,6 +1,4 @@
-import logging
 import time
-import numpy as np
 import pathlib
 
 from aegis.hermes import hermes

@@ -1,5 +1,4 @@
-from aegis.hermes import hermes
-
+import numpy as np
 
 class MatingManager:
     def __init__(self):
@@ -20,8 +19,8 @@ class MatingManager:
         n_pairs = min(n_males, n_females)
 
         # Shuffle
-        hermes.rng.shuffle(indices_male)
-        hermes.rng.shuffle(indices_female)
+        np.random.shuffle(indices_male)
+        np.random.shuffle(indices_female)
 
         # Pair up
         males = indices_male[:n_pairs]

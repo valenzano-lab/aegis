@@ -7,7 +7,7 @@ Infection status:
 """
 
 import math
-from aegis.hermes import hermes
+import numpy as np
 
 
 class Infection:
@@ -48,7 +48,7 @@ class Infection:
         if len(population) == 0:
             return
 
-        probs = hermes.rng.random(len(population), dtype=float)
+        probs = np.random.random(len(population))
 
         # current status
         infected = population.infection == 1

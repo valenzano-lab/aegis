@@ -60,6 +60,8 @@ inputgroup = dash.html.Div(
     style={"display": "flex"},
 )
 
+# TODO probably unify these two because the progressbar is not going to 0 sometimes when button is unactived
+
 
 @dash.callback(
     dash.Output("progress-interval-refresh", "disabled"),

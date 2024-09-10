@@ -92,8 +92,8 @@ class Population:
         return self
 
     # def shuffle(self):
-    #     order = hermes.rng.arange(len(self))
-    #     hermes.rng.shuffle(order)
+    #     order = np.random.arange(len(self))
+    #     np.random.shuffle(order)
     #     self *= order
 
     @staticmethod

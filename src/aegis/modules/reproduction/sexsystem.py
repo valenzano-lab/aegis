@@ -1,5 +1,4 @@
 import numpy as np
-from aegis.hermes import hermes
 
 
 class SexSystem:
@@ -7,4 +6,4 @@ class SexSystem:
         pass
 
     def get_sex(self, n):
-        return (hermes.rng.random(n) < 0.5).astype(np.int32)
+        return (np.random.random(n) < 0.5).astype(np.int32)

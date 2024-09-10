@@ -4,7 +4,6 @@ Decides which individuals to eliminate when there is overcrowding.
 """
 
 import numpy as np
-from aegis.hermes import hermes
 
 
 class Starvation:
@@ -82,7 +81,7 @@ class Starvation:
         # when ratio == 2, kill_probability is set to >0
         kill_probability = 2 / (1 + np.exp(-ratio + 1)) - 1
 
-        random_probabilities = hermes.rng.random(n, dtype=np.float32)
+        random_probabilities = np.random.random(n)
         mask = random_probabilities < kill_probability
         return mask
 
@@ -94,7 +93,7 @@ class Starvation:
         The probability of dying resets to the base value once the population dips under the maximum allowed size.
         """
         surv_probability = (1 - self.STARVATION_MAGNITUDE) ** self.consecutive_overshoot_n
-        random_probabilities = hermes.rng.random(n, dtype=np.float32)
+        random_probabilities = np.random.random(n)
         mask = random_probabilities > surv_probability
         return mask
 
@@ -103,7 +102,7 @@ class Starvation:
 
         The population size is brought down to the maximum allowed size in one go.
         """
-        indices = hermes.rng.choice(n, n - int(resource_availability), replace=False)
+        indices = np.random.choice(n, n - int(resource_availability), replace=False)
         mask = np.zeros(n, dtype=np.bool_)
         mask[indices] = True
         return mask
@@ -114,7 +113,7 @@ class Starvation:
         The proportion is defined as the parameter CLIFF_SURVIVORSHIP.
         This function will not necessarily bring the population below the maximum allowed size.
         """
-        indices = hermes.rng.choice(
+        indices = np.random.choice(
             n,
             int(resource_availability * self.CLIFF_SURVIVORSHIP),
             replace=False,
@@ -172,6 +171,6 @@ class Starvation:
         mask = np.zeros(n, dtype=np.bool_)
 
         a = np.arange(n)
-        indices_dead = hermes.rng.choice(a, size=n - int(CARRYING_CAPACITY), p=p, replace=False)
+        indices_dead = np.random.choice(a, size=n - int(CARRYING_CAPACITY), p=p, replace=False)
         mask[indices_dead] = True
         return mask

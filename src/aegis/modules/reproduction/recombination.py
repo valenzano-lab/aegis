@@ -1,5 +1,4 @@
 import numpy as np
-from aegis.hermes import hermes
 
 
 def recombination(genomes, RECOMBINATION_RATE):
@@ -23,8 +22,8 @@ def recombination(genomes, RECOMBINATION_RATE):
     # Make choice array: when to take recombined and when to take original loci
     # -1 means synapse; +1 means clear
     rr = RECOMBINATION_RATE / 2  # / 2 because you are generating two random vectors (fwd and bkd)
-    reco_fwd = (hermes.rng.random(chromatid1.shape, dtype=np.float32) < rr) * -2 + 1
-    reco_bkd = (hermes.rng.random(chromatid2.shape, dtype=np.float32) < rr) * -2 + 1
+    reco_fwd = (np.random.random(chromatid1.shape) < rr) * -2 + 1
+    reco_bkd = (np.random.random(chromatid2.shape) < rr) * -2 + 1
 
     # Propagate synapse
     reco_fwd_cum = np.cumprod(reco_fwd, axis=1)
