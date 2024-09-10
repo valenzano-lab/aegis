@@ -1,6 +1,6 @@
 import numpy as np
 from aegis_sim.hermes import hermes
-from aegis_sim.modules.dataclasses.genomes import Genomes
+from aegis_sim.dataclasses.genomes import Genomes
 
 
 def pairing(genomes: Genomes, parental_sexes, ages, muta_prob):

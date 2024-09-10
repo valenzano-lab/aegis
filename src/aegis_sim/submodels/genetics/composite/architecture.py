@@ -2,7 +2,7 @@ import numpy as np
 from aegis_sim.hermes import hermes
 from aegis_sim import constants
 
-from aegis_sim.modules.genetics.composite.interpreter import Interpreter
+from aegis_sim.submodels.genetics.composite.interpreter import Interpreter
 
 
 class CompositeArchitecture:

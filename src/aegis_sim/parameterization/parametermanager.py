@@ -2,7 +2,7 @@ import logging
 import yaml
 import types
 
-from aegis_sim.modules.initialization.parameterization.default_parameters import (
+from aegis_sim.parameterization.default_parameters import (
     get_default_parameters,
     DEFAULT_PARAMETERS,
     get_species_parameters,

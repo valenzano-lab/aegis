@@ -2,7 +2,7 @@ import numpy as np
 import logging
 
 from aegis_sim.constants import VALID_CAUSES_OF_DEATH
-from aegis_sim.modules.dataclasses.population import Population
+from aegis_sim.dataclasses.population import Population
 from aegis_sim.hermes import hermes
 
 

@@ -2,7 +2,7 @@ import numpy as np
 import pickle
 
 from aegis_sim.hermes import hermes
-from aegis_sim.modules.dataclasses.genomes import Genomes
+from aegis_sim.dataclasses.genomes import Genomes
 
 
 class Population:

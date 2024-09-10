@@ -5,7 +5,7 @@ on:
     branches:
       - gitactions
     paths:
-      - src/aegis/modules/initialization/parameterization/default_parameters.py
+      - src/aegis/modules/parameterization/default_parameters.py # NOTE this has to lead to the right path
 
 jobs:
   update-specs:

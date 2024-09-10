@@ -1,5 +1,5 @@
 from .recorder import Recorder
-from aegis_sim.modules.dataclasses.population import Population
+from aegis_sim.dataclasses.population import Population
 
 
 class PopsizeRecorder(Recorder):

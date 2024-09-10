@@ -7,7 +7,7 @@ import logging
 import numpy as np
 
 from aegis_sim import constants
-from aegis_sim.modules.initialization.parameterization.parametermanager import ParameterManager
+from aegis_sim.parameterization.parametermanager import ParameterManager
 
 
 # TODO resolve logging customization / logger
@@ -58,7 +58,7 @@ class Hermes:
         """
         Here the trait order is hardcoded.
         """
-        from aegis_sim.modules.initialization.parameterization.trait import Trait
+        from aegis_sim.parameterization.trait import Trait
 
         traits = {}
         for traitname in constants.EVOLVABLE_TRAITS:
@@ -68,7 +68,7 @@ class Hermes:
 
     def init_recorder(self, custom_config_path, overwrite):
         # NOTE Circular import if put on top
-        from aegis_sim.modules.recording.recordingmanager import RecordingManager
+        from aegis_sim.recording.recordingmanager import RecordingManager
 
         recorder_manager = RecordingManager(custom_config_path, overwrite)
         recorder_manager.initialize_recorders(TICKER_RATE=self.parameters.TICKER_RATE)
@@ -77,19 +77,19 @@ class Hermes:
     def init_modules(self):
         # NOTE Circular import if put on top
         # NOTE when modules are put into simplenamespace, no code intelligence can be used
-        from aegis_sim.modules.reproduction.mutation import Mutator
-        from aegis_sim.modules.reproduction.reproduction import Reproducer
-        from aegis_sim.modules.mortality.abiotic import Abiotic
-        from aegis_sim.modules.mortality.predation import Predation
-        from aegis_sim.modules.mortality.starvation import Starvation
-        from aegis_sim.modules.mortality.infection import Infection
-        from aegis_sim.modules.mortality.frailty import Frailty
-        from aegis_sim.modules.genetics.ploider import Ploider
-        from aegis_sim.modules.genetics.architect import Architect
+        from aegis_sim.submodels.reproduction.mutation import Mutator
+        from aegis_sim.submodels.reproduction.reproduction import Reproducer
+        from aegis_sim.submodels.abiotic import Abiotic
+        from aegis_sim.submodels.predation import Predation
+        from aegis_sim.submodels.resources.starvation import Starvation
+        from aegis_sim.submodels.infection import Infection
+        from aegis_sim.submodels.frailty import Frailty
+        from aegis_sim.submodels.genetics.ploider import Ploider
+        from aegis_sim.submodels.genetics.architect import Architect
         from aegis_sim.utilities.popgenstats import PopgenStats
-        from aegis_sim.modules.resources.resources import Resources
-        from aegis_sim.modules.reproduction.sexsystem import SexSystem
-        from aegis_sim.modules.reproduction.matingmanager import MatingManager
+        from aegis_sim.submodels.resources.resources import Resources
+        from aegis_sim.submodels.reproduction.sexsystem import SexSystem
+        from aegis_sim.submodels.reproduction.matingmanager import MatingManager
 
         class Modules:
             def __init__(

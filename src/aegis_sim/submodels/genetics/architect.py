@@ -6,9 +6,9 @@ import numpy as np
 
 from aegis_sim.hermes import hermes
 
-from aegis_sim.modules.genetics.envdrift import Envdrift
-from aegis_sim.modules.genetics.composite.architecture import CompositeArchitecture
-from aegis_sim.modules.genetics.modifying.architecture import ModifyingArchitecture
+from aegis_sim.submodels.genetics.envdrift import Envdrift
+from aegis_sim.submodels.genetics.composite.architecture import CompositeArchitecture
+from aegis_sim.submodels.genetics.modifying.architecture import ModifyingArchitecture
 
 
 class Architect:

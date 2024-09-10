@@ -1,4 +1,4 @@
-from aegis_sim.modules.initialization.parameterization.parameter import Parameter
+from aegis_sim.parameterization.parameter import Parameter
 
 
 def get_default_parameters():

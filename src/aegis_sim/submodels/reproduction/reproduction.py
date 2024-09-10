@@ -1,6 +1,6 @@
-from aegis_sim.modules.dataclasses.genomes import Genomes
-from aegis_sim.modules.reproduction.pairing import pairing
-from aegis_sim.modules.reproduction.recombination import recombination
+from aegis_sim.dataclasses.genomes import Genomes
+from aegis_sim.submodels.reproduction.pairing import pairing
+from aegis_sim.submodels.reproduction.recombination import recombination
 
 
 class Reproducer:

@@ -2,8 +2,8 @@ import numpy as np
 
 from aegis_sim import constants
 
-from aegis_sim.modules.genetics.modifying.gpm_decoder import GPM_decoder
-from aegis_sim.modules.genetics.modifying.gpm import GPM
+from aegis_sim.submodels.genetics.modifying.gpm_decoder import GPM_decoder
+from aegis_sim.submodels.genetics.modifying.gpm import GPM
 
 
 class ModifyingArchitecture:

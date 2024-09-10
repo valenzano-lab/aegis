@@ -4,17 +4,17 @@ import typing
 import dash_bootstrap_components as dbc
 from aegis_gui.utilities import log_funcs, utilities
 from aegis_gui.pages.tab_config import config_input
-from aegis_sim.modules.initialization.parameterization.parameter import Parameter
-from aegis_sim.modules.initialization.parameterization.default_parameters import DEFAULT_PARAMETERS
+from aegis_sim.parameterization.parameter import Parameter
+from aegis_sim.parameterization.default_parameters import DEFAULT_PARAMETERS
 
 # from aegis_gui.pages.tab_config.page import TEXTS_DOMAIN
 
-from aegis_sim.modules.recording.recordingmanager import RecordingManager
-from aegis_sim.modules.reproduction.reproduction import Reproducer
-from aegis_sim.modules.mortality import starvation, predation, infection, abiotic
-from aegis_sim.modules.genetics.composite.architecture import CompositeArchitecture
-from aegis_sim.modules.genetics.modifying.architecture import ModifyingArchitecture
-from aegis_sim.modules.genetics.envdrift import Envdrift
+from aegis_sim.recording.recordingmanager import RecordingManager
+from aegis_sim.submodels.reproduction.reproduction import Reproducer
+from aegis_sim.submodels import starvation, predation, infection, abiotic
+from aegis_sim.submodels.genetics.composite.architecture import CompositeArchitecture
+from aegis_sim.submodels.genetics.modifying.architecture import ModifyingArchitecture
+from aegis_sim.submodels.genetics.envdrift import Envdrift
 
 TEXTS_DOMAIN = {
     "starvation": utilities.extract_gui_from_docstring(starvation.Starvation),

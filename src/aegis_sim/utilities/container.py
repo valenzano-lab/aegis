@@ -7,10 +7,10 @@ from typing import Union
 import numpy as np
 import psutil
 
-from aegis_sim.modules.initialization.parameterization.default_parameters import get_default_parameters
-from aegis_sim.modules.dataclasses.population import Population
+from aegis_sim.parameterization.default_parameters import get_default_parameters
+from aegis_sim.dataclasses.population import Population
 from aegis_sim.constants import VALID_CAUSES_OF_DEATH
-from aegis_sim.modules.recording.ticker import Ticker
+from aegis_sim.recording.ticker import Ticker
 
 
 # TODO for analysis:

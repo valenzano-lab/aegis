@@ -24,8 +24,8 @@ pan.init_minimal(
 
 
 def test_call():
-    from aegis_sim.modules.setup.init import architecture
-    from aegis_sim.modules.genetics.architecture.gpm import GPM
+    from aegis_sim.submodels.setup.init import architecture
+    from aegis_sim.submodels.genetics.architecture.gpm import GPM
 
     # from aegis.init import phenomap
 

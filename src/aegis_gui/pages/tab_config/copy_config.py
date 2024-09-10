@@ -2,7 +2,7 @@ import dash
 import dash_bootstrap_components as dbc
 from aegis_sim.utilities.container import Container
 from aegis_gui.utilities import utilities
-from aegis_sim.modules.initialization.parameterization.default_parameters import DEFAULT_PARAMETERS
+from aegis_sim.parameterization.default_parameters import DEFAULT_PARAMETERS
 
 
 def make_select(selected=None):

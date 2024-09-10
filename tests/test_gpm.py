@@ -17,11 +17,11 @@ pan.init_minimal(
     },
 )
 
-from aegis_sim.modules.setup.init import architecture
+from aegis_sim.submodels.setup.init import architecture
 
 
 def test_call():
-    from aegis_sim.modules.genetics.architecture.gpm import GPM
+    from aegis_sim.submodels.genetics.architecture.gpm import GPM
 
     phenolist = [
         (0, "surv", 8, 0.07932046620388114),  # test 1

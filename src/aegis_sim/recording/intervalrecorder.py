@@ -3,7 +3,7 @@ import numpy as np
 import pathlib
 
 from aegis_sim.hermes import hermes
-from aegis_sim.modules.dataclasses.population import Population
+from aegis_sim.dataclasses.population import Population
 
 from .recorder import Recorder
 
