@@ -1,9 +1,10 @@
 import numpy as np
 
-from aegis_sim.hermes import hermes
+from aegis_sim.utilities.funcs import skip
 
 
 from .recorder import Recorder
+from aegis_sim import submodels
 
 
 class PopgenStatsRecorder(Recorder):
@@ -78,15 +79,15 @@ class PopgenStatsRecorder(Recorder):
         description: Reference genome based on which allele is most common at each position in a sample of genomes.
         structure: A float matrix.
         """
-        hermes.modules.popgenstats.record_pop_size_history(genomes.array)
+        submodels.popgenstats.record_pop_size_history(genomes.array)
 
-        if hermes.skip("POPGENSTATS_RATE") or len(genomes) == 0:
+        if skip("POPGENSTATS_RATE") or len(genomes) == 0:
             return
 
-        hermes.modules.popgenstats.calc(genomes.array, mutation_rates)
+        submodels.popgenstats.calc(genomes.array, mutation_rates)
 
         # Record simple statistics
-        array = list(hermes.modules.popgenstats.emit_simple().values())
+        array = list(submodels.popgenstats.emit_simple().values())
         if None in array:
             return
 
@@ -96,7 +97,7 @@ class PopgenStatsRecorder(Recorder):
         # TODO when writing some metrics (e.g. reference genome, reference genome gsample) use the appropriate dtype (bool in that case)
 
         # Record complex statistics
-        complex_statistics = hermes.modules.popgenstats.emit_complex()
+        complex_statistics = submodels.popgenstats.emit_complex()
         for key, array in complex_statistics.items():
             with open(self.odir / f"{key}.csv", "ab") as f:
                 np.savetxt(f, [array], delimiter=",", fmt="%1.3e")

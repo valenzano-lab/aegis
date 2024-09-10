@@ -7,30 +7,8 @@ import logging
 import pathlib
 
 import aegis_gui
-from aegis_sim.manager import Manager
+import aegis_sim
 from aegis.parse import get_parser
-
-
-def run_sim(
-    custom_config_path: pathlib.Path,
-    pickle_path: pathlib.Path,
-    overwrite: bool,
-    custom_input_params: dict,
-):
-    """
-    Use this function when you want to run aegis from a python script.
-
-    $ import aegis
-    $ aegis.run()
-    """
-
-    manager = Manager(
-        custom_config_path=custom_config_path,
-        pickle_path=pickle_path,
-        overwrite=overwrite,
-        custom_input_params=custom_input_params,
-    )
-    manager.run()
 
 
 def start_from_terminal():
@@ -40,7 +18,7 @@ def start_from_terminal():
     if args.command == "sim":
         config_path = pathlib.Path(args.config_path).absolute() if args.config_path else None
         pickle_path = pathlib.Path(args.pickle_path).absolute() if args.pickle_path else None
-        run_sim(
+        aegis_sim.run(
             custom_config_path=config_path,
             pickle_path=pickle_path,
             overwrite=args.overwrite,

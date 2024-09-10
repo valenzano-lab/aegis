@@ -1,13 +1,13 @@
 import numpy as np
-from aegis_sim.hermes import hermes
 from aegis_sim.dataclasses.genomes import Genomes
+from aegis_sim import submodels
 
 
 def pairing(genomes: Genomes, parental_sexes, ages, muta_prob):
     """Return assorted chromatids."""
 
     # Get pairs
-    males, females = hermes.modules.matingmanager.pair_up_polygamously(parental_sexes)
+    males, females = submodels.matingmanager.pair_up_polygamously(parental_sexes)
     assert len(males) == len(females)
     n_pairs = len(males)
 

@@ -1,6 +1,5 @@
 import logging
 
-from aegis_sim.hermes import hermes
 
 
 class GPM:
@@ -55,7 +54,7 @@ class GPM:
             for vec_index, trait, age, magnitude in self.phenolist:
                 vec_state = vectors[:, vec_index]
                 phenotype_change = vec_state * magnitude
-                phenotype_index = hermes.traits[trait].start + age
+                phenotype_index = parameterization.traits[trait].start + age
                 phenodiff[:, phenotype_index] += phenotype_change
             return phenodiff
 
@@ -65,7 +64,7 @@ class GPM:
     def add_initial_values(self, array):
         array = array.copy()
 
-        for traitname, trait in hermes.traits.items():
+        for traitname, trait in parameterization.traits.items():
             array[:, trait.slice] += trait.initpheno
         return array
 

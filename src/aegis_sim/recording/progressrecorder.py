@@ -3,8 +3,11 @@ import time
 import numpy as np
 import pathlib
 
-from aegis_sim.hermes import hermes
 from .recorder import Recorder
+from aegis_sim import variables
+from aegis_sim.utilities.funcs import skip
+
+from aegis_sim.parameterization import parametermanager
 
 
 class ProgressRecorder(Recorder):
@@ -22,20 +25,24 @@ class ProgressRecorder(Recorder):
     def write(self, popsize="?"):
         """Record some information about the time and speed of simulation."""
 
-        if hermes.skip("LOGGING_RATE"):
+        if skip("LOGGING_RATE"):
             return
 
-        step = hermes.get_step()
+        step = variables.steps
 
         logging.info(
-            "%s / %s / N=%s / simname=%s", step, hermes.parameters.STEPS_PER_SIMULATION, popsize, hermes.simname
+            "%s / %s / N=%s / simname=%s",
+            step,
+            parametermanager.parameters.STEPS_PER_SIMULATION,
+            popsize,
+            variables.custom_config_path.stem,
         )
 
         # Get time estimations
         time_diff = time.time() - self.time_start
 
         seconds_per_100 = time_diff / step * 100
-        eta = (hermes.parameters.STEPS_PER_SIMULATION - step) / 100 * seconds_per_100
+        eta = (parametermanager.parameters.STEPS_PER_SIMULATION - step) / 100 * seconds_per_100
 
         steps_per_min = int(step / (time_diff / 60))
 

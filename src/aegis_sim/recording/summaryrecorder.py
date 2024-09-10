@@ -7,7 +7,7 @@ import datetime
 
 from aegis_sim.utilities.get_folder_size import get_folder_size_with_du
 
-from aegis_sim.hermes import hermes
+from aegis_sim import variables
 from .recorder import Recorder
 
 
@@ -43,7 +43,7 @@ class SummaryRecorder(Recorder):
 
         summary = {
             "extinct": self.extinct,
-            "random_seed": hermes.random_seed,
+            "random_seed": variables.random_seed,
             "time_start": self.time_start,
             "runtime": time.time() - self.time_start,
             "memory_use": self.get_median_memuse(),
@@ -63,7 +63,7 @@ class SummaryRecorder(Recorder):
         structure: A json dictionary.
         """
         summary = {
-            "random_seed": hermes.random_seed,
+            "random_seed": variables.random_seed,
             "time_start": self.time_start,
             "pickle_path": str(pickle_path),
             "time_start_formatted": datetime.datetime.fromtimestamp(self.time_start).strftime("%Y-%m-%d %H:%M:%S"),

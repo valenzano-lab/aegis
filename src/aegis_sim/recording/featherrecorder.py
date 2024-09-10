@@ -4,9 +4,12 @@ import numpy as np
 
 import pathlib
 
-from aegis_sim.hermes import hermes
 from aegis_sim.dataclasses.population import Population
 from .recorder import Recorder
+from aegis_sim import variables
+
+from aegis_sim.parameterization import parametermanager
+from aegis_sim.utilities.funcs import steps_to_end, skip
 
 
 class FeatherRecorder(Recorder):
@@ -22,11 +25,11 @@ class FeatherRecorder(Recorder):
         """Record demographic, genetic and phenotypic data from the current population."""
 
         # If not final snapshots to be taken, and about to skip or the population is extinct, do not write.
-        final_snapshots = hermes.parameters.SNAPSHOT_FINAL_COUNT > hermes.steps_to_end()
-        if not final_snapshots and (hermes.skip("SNAPSHOT_RATE") or len(population) == 0):
+        final_snapshots = parametermanager.parameters.SNAPSHOT_FINAL_COUNT > steps_to_end()
+        if not final_snapshots and (skip("SNAPSHOT_RATE") or len(population) == 0):
             return
 
-        step = hermes.get_step()
+        step = variables.steps
 
         logging.debug(f"Snapshots recorded at step {step}.")
 

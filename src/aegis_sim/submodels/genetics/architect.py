@@ -4,12 +4,10 @@ Abstract away genetic architecture.
 
 import numpy as np
 
-from aegis_sim.hermes import hermes
-
 from aegis_sim.submodels.genetics.envdrift import Envdrift
 from aegis_sim.submodels.genetics.composite.architecture import CompositeArchitecture
 from aegis_sim.submodels.genetics.modifying.architecture import ModifyingArchitecture
-
+from aegis_sim import parameterization
 
 class Architect:
     """Wrapper for a genetic architecture
@@ -124,15 +122,15 @@ class Architect:
 
         # Apply lo and hi bound
         # TODO extract slicing
-        for trait in hermes.traits.values():
+        for trait in parameterization.traits.values():
             phenotypes[:, trait.slice] = Architect.clip(phenotypes[:, trait.slice], trait.name)
 
         return phenotypes
 
     @staticmethod
     def clip(array, traitname):
-        lo = hermes.traits[traitname].lo
-        hi = hermes.traits[traitname].hi
+        lo = parameterization.traits[traitname].lo
+        hi = parameterization.traits[traitname].hi
         return lo + array * (hi - lo)
 
     def get_evaluation(self, population, attr, part=None):
@@ -148,7 +146,7 @@ class Architect:
             which_individuals = which_individuals[part]
 
         # first scenario
-        trait = hermes.traits[attr]
+        trait = parameterization.traits[attr]
         if not trait.evolvable:
             probs = trait.initpheno
 

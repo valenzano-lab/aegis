@@ -1,9 +1,8 @@
 import numpy as np
 import pickle
 
-from aegis_sim.hermes import hermes
 from aegis_sim.dataclasses.genomes import Genomes
-
+from aegis_sim import submodels
 
 class Population:
     """Population data
@@ -107,16 +106,16 @@ class Population:
 
     @staticmethod
     def initialize(n):
-        genomes = Genomes(hermes.architect.architecture.init_genome_array(n))
+        genomes = Genomes(submodels.architect.architecture.init_genome_array(n))
         ages = np.zeros(n, dtype=np.int32)
         births = np.zeros(n, dtype=np.int32)
         birthdays = np.zeros(n, dtype=np.int32)
         # generations = np.zeros(n, dtype=np.int32)
         generations = None
-        phenotypes = hermes.architect.__call__(genomes)
+        phenotypes = submodels.architect.__call__(genomes)
         infection = np.zeros(n, dtype=np.int32)
         sizes = np.zeros(n, dtype=np.float32)
-        sexes = hermes.modules.sexsystem.get_sex(n)
+        sexes = submodels.sexsystem.get_sex(n)
         return Population(
             genomes=genomes,
             ages=ages,
@@ -139,7 +138,7 @@ class Population:
             birthdays=np.zeros(n, dtype=np.int32) + step,
             # generations=parental_generations + 1,
             generations=None,
-            # phenotypes=hermes.architect.__call__(offspring_genomes),
+            # phenotypes=submodels.architect.__call__(offspring_genomes),
             phenotypes=np.empty(n),
             infection=np.zeros(n, dtype=np.int32),
             sizes=np.zeros(n, dtype=np.float32),

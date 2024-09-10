@@ -2,11 +2,12 @@ import numpy as np
 
 import pathlib
 
-from aegis_sim.hermes import hermes
 from aegis_sim.dataclasses.population import Population
+from aegis_sim import parameterization
 
+from aegis_sim.utilities.funcs import skip
 from .recorder import Recorder
-
+from aegis_sim import submodels
 class IntervalRecorder(Recorder):
 
     def __init__(self, odir: pathlib.Path):
@@ -17,7 +18,7 @@ class IntervalRecorder(Recorder):
     def record(self, population):
         """Record data that is needed by gui."""
         # TODO rename INTERVAL_RATE into something more representative; potentially, restructure the recording rates
-        if hermes.skip("INTERVAL_RATE") or len(population) == 0:
+        if skip("INTERVAL_RATE") or len(population) == 0:
             return
 
         self.write_genotypes(population=population)
@@ -25,16 +26,16 @@ class IntervalRecorder(Recorder):
 
     def init_headers(self):
         with open(self.odir / "genotypes.csv", "ab") as f:
-            length = hermes.architect.architecture.length
-            ploidy = hermes.architect.architecture.ploid.y
+            length = submodels.architect.architecture.length
+            ploidy = submodels.architect.architecture.ploid.y
             header0 = list(range(length)) * ploidy
             header1 = np.repeat(np.arange(ploidy), length)
             np.savetxt(f, [header0], delimiter=",", fmt="%i")
             np.savetxt(f, [header1], delimiter=",", fmt="%i")
 
         with open(self.odir / "phenotypes.csv", "ab") as f:
-            age_limit = hermes.architect.architecture.AGE_LIMIT
-            trait_list = list(hermes.traits.keys())
+            age_limit = submodels.architect.architecture.AGE_LIMIT
+            trait_list = list(parameterization.traits.keys())
             n_traits = len(trait_list)
             header0 = np.repeat(trait_list, age_limit)
             header1 = list(np.arange(age_limit)) * n_traits

@@ -1,11 +1,11 @@
 import functools
 import numpy as np
 
-from aegis_sim.hermes import hermes
 
+from aegis_sim.parameterization import parametermanager
 
 def stan_age(age):
-    return age / hermes.parameters.AGE_LIMIT
+    return age / parametermanager.parameters.AGE_LIMIT
 
 
 class GPM_decoder:
@@ -94,11 +94,11 @@ class Genblock:
         for i in range(self.n):
             func = Genblock.__resolve_function(encoding["agefunc"], encoding["funcparam"])
             if encoding["agefunc"] == "agespec":
-                age = np.random.integers(0, hermes.parameters.AGE_LIMIT)
+                age = np.random.integers(0, parametermanager.parameters.AGE_LIMIT)
                 magnitude = func(age)
                 add_to_phenolist(i, encoding["trait"], age, magnitude)
             else:
-                for age in range(hermes.parameters.AGE_LIMIT):
+                for age in range(parametermanager.parameters.AGE_LIMIT):
                     magnitude = func(age)
                     add_to_phenolist(i, encoding["trait"], age, magnitude)
 

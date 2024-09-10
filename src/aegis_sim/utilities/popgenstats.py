@@ -4,8 +4,8 @@ import statistics
 import itertools
 import logging
 import numpy as np
-from aegis_sim.hermes import hermes
 
+from aegis_sim.parameterization import parametermanager
 
 class PopgenStats:
     def __init__(self):
@@ -205,10 +205,10 @@ class PopgenStats:
             return None
 
         # Sample genomes
-        if 0 < hermes.parameters.POPGENSTATS_SAMPLE_SIZE <= genomes.shape[0]:
+        if 0 < parametermanager.parameters.POPGENSTATS_SAMPLE_SIZE <= genomes.shape[0]:
             indices = np.random.choice(
                 range(genomes.shape[0]),
-                hermes.parameters.POPGENSTATS_SAMPLE_SIZE,
+                parametermanager.parameters.POPGENSTATS_SAMPLE_SIZE,
                 replace=False,
             )
             return genomes[indices]

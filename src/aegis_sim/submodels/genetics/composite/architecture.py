@@ -1,8 +1,8 @@
 import numpy as np
-from aegis_sim.hermes import hermes
 from aegis_sim import constants
 
 from aegis_sim.submodels.genetics.composite.interpreter import Interpreter
+from aegis_sim import parameterization
 
 
 class CompositeArchitecture:
@@ -26,7 +26,7 @@ class CompositeArchitecture:
         self.length = self.n_loci * BITS_PER_LOCUS
         self.AGE_LIMIT = AGE_LIMIT
 
-        self.evolvable = [trait for trait in hermes.traits.values() if trait.evolvable]
+        self.evolvable = [trait for trait in parameterization.traits.values() if trait.evolvable]
 
         self.interpreter = Interpreter(
             self.BITS_PER_LOCUS,
@@ -46,7 +46,7 @@ class CompositeArchitecture:
         # TODO enable initgeno
         array = np.random.random(size=(popsize, *self.get_shape()))
 
-        for trait in hermes.traits.values():
+        for trait in parameterization.traits.values():
             array[:, :, trait.slice] = array[:, :, trait.slice] < trait.initgeno
 
         return array
@@ -62,7 +62,7 @@ class CompositeArchitecture:
             genomes = self.ploid.diploid_to_haploid(genomes)
 
         interpretome = np.zeros(shape=(genomes.shape[0], genomes.shape[1]), dtype=np.float32)
-        for trait in hermes.traits.values():
+        for trait in parameterization.traits.values():
             loci = genomes[:, trait.slice]  # fetch
             probs = self.interpreter.call(loci, trait.interpreter)  # interpret
             # self.diffuse(probs)
@@ -71,7 +71,7 @@ class CompositeArchitecture:
         return interpretome
 
     # def diffuse(self, probs):
-    #     window_size = hermes.parameters.DIFFUSION_FACTOR * 2 + 1
+    #     window_size = parametermanager.parameters.DIFFUSION_FACTOR * 2 + 1
     #     p = np.empty(shape=(probs.shape[0], probs.shape[1] + window_size - 1))
     #     p[:, :window_size] = np.repeat(probs[:, 0], window_size).reshape(-1, window_size)
     #     p[:, window_size - 1 :] = probs[:]

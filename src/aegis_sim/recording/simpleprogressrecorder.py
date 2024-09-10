@@ -1,9 +1,10 @@
 import time
 import pathlib
 
-from aegis_sim.hermes import hermes
 from .recorder import Recorder
+from aegis_sim import variables
 
+from aegis_sim.parameterization import parametermanager
 
 class SimpleProgressRecorder(Recorder):
     def __init__(self, odir: pathlib.Path):
@@ -25,11 +26,11 @@ class SimpleProgressRecorder(Recorder):
 
         last_updated = self.check_when_last_updated(file_path=self.progress_path)
         if last_updated > 1:
-            step = hermes.get_step()
+            step = variables.steps
             self.write_one(step)
 
     def write_one(self, step):
-        message = f"{step}/{hermes.parameters.STEPS_PER_SIMULATION}"
+        message = f"{step}/{parametermanager.parameters.STEPS_PER_SIMULATION}"
         with open(self.progress_path, "w") as file_:
             file_.write(message)
 
@@ -40,15 +41,12 @@ class SimpleProgressRecorder(Recorder):
         seconds = time_since_modification
         return seconds
 
-        # logging.info(
-        #     "%s / %s / N=%s / simname=%s", step, hermes.parameters.STEPS_PER_SIMULATION, popsize, hermes.simname
-        # )
 
         # # Get time estimations
         # time_diff = time.time() - self.time_start
 
         # seconds_per_100 = time_diff / step * 100
-        # eta = (hermes.parameters.STEPS_PER_SIMULATION - step) / 100 * seconds_per_100
+        # eta = (parametermanager.parameters.STEPS_PER_SIMULATION - step) / 100 * seconds_per_100
 
         # steps_per_min = int(step / (time_diff / 60))
 

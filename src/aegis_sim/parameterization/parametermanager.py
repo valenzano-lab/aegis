@@ -10,10 +10,12 @@ from aegis_sim.parameterization.default_parameters import (
 
 
 class ParameterManager:
-    def __init__(self, custom_config_path, custom_input_params):
+    def init(self, custom_config_path, custom_input_params):
         self.custom_config_path = custom_config_path
         self.custom_input_params = custom_input_params
         self.final_config = None
+
+        self.parameters = self()
 
     def __call__(self):
         """
@@ -84,3 +86,5 @@ class ParameterManager:
 
             if validate_serverrange:
                 DEFAULT_PARAMETERS[key].validate_serverrange(val)
+
+

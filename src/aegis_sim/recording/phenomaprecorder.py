@@ -2,9 +2,8 @@ import pandas as pd
 import logging
 import pathlib
 
-from aegis_sim.hermes import hermes
 from .recorder import Recorder
-
+from aegis_sim import submodels
 
 class PhenomapRecorder(Recorder):
     """
@@ -26,7 +25,7 @@ class PhenomapRecorder(Recorder):
         description: A static list of phenotypic effects of each genomic site. 
         structure: A table with four columns: effector site index, affected trait, affected age, effect magnitude. Each row represents an effect of a single site on a specific trait expressed at a specific age.
         """
-        architecture = hermes.architect.architecture
+        architecture = submodels.architect.architecture
 
         if hasattr(architecture, "phenomap"):
             phenolist = architecture.phenomap.phenolist

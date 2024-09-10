@@ -1,9 +1,10 @@
 import copy
 import numpy as np
-from aegis_sim.hermes import hermes
 from aegis_sim.constants import VALID_CAUSES_OF_DEATH
 import pathlib
+from aegis_sim.utilities.funcs import skip
 
+from aegis_sim.parameterization import parametermanager
 from .recorder import Recorder
 
 
@@ -18,7 +19,7 @@ class FlushRecorder(Recorder):
         self.odir = odir / "gui" / "spectra"
         self.init_odir()
 
-        self.n_ages = hermes.parameters.AGE_LIMIT + 1
+        self.n_ages = parametermanager.parameters.AGE_LIMIT + 1
 
         self._collection = {
             "age_at_birth": [0] * self.n_ages,
@@ -39,7 +40,7 @@ class FlushRecorder(Recorder):
         """Record data that has been collected over time."""
         # spectra/*.csv | Age distribution of various subpopulations (e.g. population that died of genetic causes)
 
-        if hermes.skip("INTERVAL_RATE"):
+        if skip("INTERVAL_RATE"):
             return
 
         for key, val in self.collection.items():

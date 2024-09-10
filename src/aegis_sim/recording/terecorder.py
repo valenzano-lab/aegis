@@ -1,8 +1,9 @@
 import logging
 import numpy as np
-from aegis_sim.hermes import hermes
 from .recorder import Recorder
+from aegis_sim import variables
 
+from aegis_sim.parameterization import parametermanager
 # BUG Header duplication; a copy ends up as first row
 
 class TERecorder(Recorder):
@@ -32,23 +33,23 @@ class TERecorder(Recorder):
 
         assert e in ("alive", "dead")
 
-        step = hermes.get_step()
+        step = variables.steps
 
         # open new file and add header
-        if (step % hermes.parameters.TE_RATE) == 0 or step == 1:
+        if (step % parametermanager.parameters.TE_RATE) == 0 or step == 1:
             data = [["T", "E"]]
             self.write(data, "%s")
 
         # record deaths
-        elif ((step % hermes.parameters.TE_RATE) < hermes.parameters.TE_DURATION) and e == "dead":
+        elif ((step % parametermanager.parameters.TE_RATE) < parametermanager.parameters.TE_DURATION) and e == "dead":
             E = np.repeat(1, len(T))
             data = np.array([T, E]).T
             self.write(data, "%i")
 
         # flush
         elif (
-            ((step % hermes.parameters.TE_RATE) == hermes.parameters.TE_DURATION)
-            or step == hermes.parameters.STEPS_PER_SIMULATION
+            ((step % parametermanager.parameters.TE_RATE) == parametermanager.parameters.TE_DURATION)
+            or step == parametermanager.parameters.STEPS_PER_SIMULATION
         ) and e == "alive":
             logging.debug(f"Data for survival analysis (T,E) flushed at step {step}.")
             E = np.repeat(0, len(T))

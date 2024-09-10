@@ -1,9 +1,11 @@
 import logging
 import pathlib
-from aegis_sim.hermes import hermes
 
 from .recorder import Recorder
+from aegis_sim import variables
 
+from aegis_sim.parameterization import parametermanager
+from aegis_sim.utilities.funcs import skip
 
 class PickleRecorder(Recorder):
     def __init__(self, odir: pathlib.Path):
@@ -21,10 +23,10 @@ class PickleRecorder(Recorder):
         structure: Binary python file.
         """
 
-        step = hermes.get_step()
-        should_skip = hermes.skip("PICKLE_RATE")
+        step = variables.steps
+        should_skip = skip("PICKLE_RATE")
         is_first_step = step == 1
-        is_last_step = step == hermes.parameters.STEPS_PER_SIMULATION
+        is_last_step = step == parametermanager.parameters.STEPS_PER_SIMULATION
 
         if is_first_step or not should_skip or is_last_step:
             logging.debug(f"pickle recorded at step {step}.")

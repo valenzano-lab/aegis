@@ -11,6 +11,9 @@ When thinking about recording additional data, consider that there are three rec
 
 import pathlib
 import shutil
+import logging
+
+from aegis_sim import variables
 
 from .terecorder import TERecorder
 from .picklerecorder import PickleRecorder
@@ -53,7 +56,7 @@ class RecordingManager:
     The recording rates are frequencies at which rows are added; they are expressed in simulation steps.
     """
 
-    def __init__(self, custom_config_path, overwrite):
+    def init(self, custom_config_path, overwrite):
         self.odir = self.make_odir(custom_config_path=custom_config_path, overwrite=overwrite)
         # self.paths = self.get_paths(odir)
         # TODO make subfolders
@@ -104,3 +107,9 @@ class RecordingManager:
         # TODO relink paths that are now in classes
         for path in paths:
             path.mkdir(exist_ok=True, parents=True)
+
+    def is_extinct(self) -> bool:
+        if self.summaryrecorder.extinct:
+            logging.info(f"Population went extinct (at step {variables.steps}).")
+            return True
+        return False
