@@ -52,7 +52,7 @@ class SummaryRecorder(Recorder):
         with open(self.odir / "output_summary.json", "w") as f:
             json.dump(summary, f, indent=4)
 
-    def write_input_summary(self, ticker_pid, pickle_path):
+    def write_input_summary(self, ticker_pid):
         """
 
         # OUTPUT SPECIFICATION
@@ -65,7 +65,7 @@ class SummaryRecorder(Recorder):
         summary = {
             "random_seed": variables.random_seed,
             "time_start": self.time_start,
-            "pickle_path": str(pickle_path),
+            "pickle_path": str(variables.pickle_path),
             "time_start_formatted": datetime.datetime.fromtimestamp(self.time_start).strftime("%Y-%m-%d %H:%M:%S"),
             "pid": self.pp.pid,
             "ticker_pid": ticker_pid,

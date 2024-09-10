@@ -58,19 +58,7 @@ class RecordingManager:
 
     def init(self, custom_config_path, overwrite):
         self.odir = self.make_odir(custom_config_path=custom_config_path, overwrite=overwrite)
-        # self.paths = self.get_paths(odir)
         # TODO make subfolders
-        # self.make_subfolders(paths=[])
-
-    # @staticmethod
-    # def get_paths(odir: pathlib.Path) -> dict:
-    #     return {
-    #         "BASE_DIR": odir,
-    #         "gui_spectra": odir / "gui" / "spectra",
-    #         "pickles": odir / "pickles",
-    #         "popgen": odir / "popgen",
-    #         "te": odir / "te",
-    #     }
 
     def initialize_recorders(self, TICKER_RATE):
         self.terecorder = TERecorder(odir=self.odir)
