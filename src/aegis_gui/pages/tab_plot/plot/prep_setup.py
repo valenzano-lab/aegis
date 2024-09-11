@@ -100,22 +100,18 @@ FIG_SETUP = {
         "prep_y": prep_y.get_mortality_intrinsic,
         "prep_x": prep_x.get_ages,
         "prep_figure": "make_line_figure",
-        "description": dash.html.Div(
-            [
-                dash.dcc.Markdown(
-                    """
+        "description": dash.dcc.Markdown(
+            """
             Genetic (individual-specific, heritable) mortality at a given age.
             \n
             Population medians.
             """,
-                    mathjax=True,
-                ),
-                # dash.html.Span(
-                #     "tooltips", id="tooltip-target-1", style={"textDecoration": "underline", "cursor": "pointer"}
-                # ),
-                # dbc.Tooltip("This is the first tooltip", target="tooltip-target-1"),
-            ]
+            mathjax=True,
         ),
+        # dash.html.Span(
+        #     "tooltips", id="tooltip-target-1", style={"textDecoration": "underline", "cursor": "pointer"}
+        # ),
+        # dbc.Tooltip("This is the first tooltip", target="tooltip-target-1"),
         # graph
         "figure_layout": {
             "xaxis_title": "age class",

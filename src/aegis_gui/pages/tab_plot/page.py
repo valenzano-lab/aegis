@@ -32,7 +32,7 @@ def layout(sim=None):  # use function to ensure statelessness
                                     # dbc.Col(html.Label("(plotting function)"), width=3),
                                 ],
                                 className="g-0",
-                                style={"margin-bottom": "0.3rem"},
+                                style={"marginBottom": "0.3rem"},
                             ),
                             dbc.Row(
                                 [
@@ -60,7 +60,7 @@ def layout(sim=None):  # use function to ensure statelessness
             html.Div(
                 [
                     html.Div(children=graph.get_graphs(), id="plot-bottom-left-panel", style={"width": "auto"}),
-                    html.Div(children=[], id="plot-bottom-right-panel", style={"margin-left": "2rem"}),
+                    html.Div(children=[], id="plot-bottom-right-panel", style={"marginLeft": "2rem"}),
                 ],
                 style={"width": "100%", "display": "flex"},
             ),

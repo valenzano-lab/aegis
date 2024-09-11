@@ -34,7 +34,6 @@ def make_select(selected=None):
                         placeholder="Copy simulation",
                         # className="plot-dropdown",
                         # multiple=True,
-                        # style={"margin-bottom": "1rem"},
                         className="me-2",
                     ),
                 ],

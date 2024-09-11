@@ -67,7 +67,6 @@ PREFACE = [
             #         # To start the simulation, adjust parameter values, enter a unique ID in the input bar on top and click the adjacent button "run simulation".
             #         # """,
             #     ],
-            #     style={"margin-bottom": "2rem"},
             # ),
         ]
     )
@@ -113,7 +112,6 @@ def layout() -> html.Div:
     #                         ),
     #                         html.Div(
     #                             html.Div(children=TEXTS_DOMAIN.get(domain, ""), className="config-domain-desc"),
-    #                             style={"margin-left": "1.5rem"},
     #                         ),
     #                     ],
     #                     style={"display": "flex"},

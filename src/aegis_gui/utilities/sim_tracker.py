@@ -30,7 +30,7 @@ def make_trackers(ticker_store):
                 value=10 + progress * 90,
                 striped=True,
                 animated=True,
-                style={"margin-top": "0.5rem"},
+                style={"marginTop": "0.5rem"},
             )
             linked_progressbar = dash.dcc.Link(
                 children=progressbar,
@@ -48,7 +48,7 @@ def make_trackers(ticker_store):
                 ]
                 + running_sims,
                 header="Running sims",
-                style={"width": "100%", "margin-top": "1rem"},
+                style={"width": "100%", "marginTop": "1rem"},
             )
         )
 
@@ -79,7 +79,7 @@ def make_trackers(ticker_store):
             dbc.Toast(
                 children=nav,
                 header="Recent sims",
-                style={"width": "100%", "margin-top": "1rem"},
+                style={"width": "100%", "marginTop": "1rem"},
             )
         )
 

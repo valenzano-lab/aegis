@@ -25,7 +25,7 @@ PREFACE = [
                     # as an exploratory example. All parameters for the default simulation have default values.
                     # """,
                 ],
-                style={"margin-bottom": "2rem"},
+                style={"marginBottom": "2rem"},
             ),
         ],
     )

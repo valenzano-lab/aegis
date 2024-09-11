@@ -19,7 +19,7 @@ def make_select(selected=None):
                         value=False,
                         # outline=True,
                         # color="primary",
-                        style={"display": "inline-block", "margin-left": "0.8rem"},
+                        style={"display": "inline-block", "marginLeft": "0.8rem"},
                     ),
                 ],
             ),
@@ -39,7 +39,7 @@ def make_select(selected=None):
                         ],
                     ),
                 ],
-                style={"margin-bottom": "1rem", "display": "inline-block"},
+                style={"marginBottom": "1rem", "display": "inline-block"},
             ),
         ],
     )

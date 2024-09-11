@@ -7,7 +7,7 @@ from aegis_gui.utilities import log_funcs
 # Define a helper function to handle the logic
 def handle_draw_plot(dropdown_values, selected_fig):
     if not dropdown_values or dropdown_values == [None]:
-        return dash.no_update
+        return dash.no_update, dash.no_update, dash.no_update
 
     drag_maxs = []
     figures = []

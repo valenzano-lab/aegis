@@ -37,7 +37,7 @@ def make_select(selected=None):
                 # multiple=True,
             ),
         ],
-        style={"margin-bottom": "1rem"},
+        style={"marginBottom": "1rem"},
     )
 
 

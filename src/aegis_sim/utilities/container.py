@@ -308,7 +308,7 @@ class Container:
         value .. mean bit value
         """
         # TODO check that they exist
-        df = pd.read_csv(self._get_path("genotypes"), header=[0, 1], index_col=None)
+        df = pd.read_csv(self.get_path("genotypes"), header=[0, 1], index_col=None)
         df.index = df.index.astype(int)
         df.columns = df.columns.set_levels([df.columns.levels[0].astype(int), df.columns.levels[1].astype(int)])
         df.index.names = ["interval"]
@@ -322,7 +322,7 @@ class Container:
         value .. median phenotypic trait value
         """
         # TODO check that they exist
-        df = pd.read_csv(self._get_path("phenotypes"), header=[0, 1])
+        df = pd.read_csv(self.get_path("phenotypes"), header=[0, 1])
         df.index.names = ["interval"]
         df.index = df.index.astype(int)
         df.columns.names = ["trait", "age_class"]

@@ -39,7 +39,7 @@ def get_graph_metadata(graph_name):
                 children=info["title"],
                 className="figure-title",
             ),
-            dash.html.P(
+            dash.html.Div(
                 children=info["description"],
                 className="figure-description",
             ),

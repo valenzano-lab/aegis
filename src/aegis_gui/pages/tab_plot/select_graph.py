@@ -25,6 +25,7 @@ select = html.Div(
                     options=[{"label": gn, "value": gn} for gn in gns],
                     value=initial_graph,
                     className="plot-dropdown",
+                    persistence=True,
                 ),
             ]
         ),

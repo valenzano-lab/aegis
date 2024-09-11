@@ -35,7 +35,7 @@ inputgroup = dash.html.Div(
                         # "height": "8px",
                         "width": "38px",
                         "transform": "rotate(-90deg)",
-                        "transform-origin": "top left",
+                        "transformOrigin": "top left",
                         "translate": "0 38px",
                     },
                 )
