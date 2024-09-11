@@ -1,11 +1,11 @@
 import setuptools
 import pathlib
+import aegis
 
-# TODO ensure aegis.__version__ is specified
 
 setuptools.setup(
     name="aegis-sim",
-    version="2.3.0.18",
+    version=aegis.__version__,
     description="Numerical model for life history evolution of age-structured populations",
     long_description=(pathlib.Path(__file__).parent / "README.md").read_text(),
     long_description_content_type="text/markdown",

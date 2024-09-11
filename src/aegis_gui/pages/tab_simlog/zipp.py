@@ -6,7 +6,6 @@ from aegis_gui.utilities import log_funcs
 import dash_bootstrap_components as dbc
 
 
-
 def get_zip_button_layout(filename):
     return html.Div(
         children=[
@@ -15,7 +14,7 @@ def get_zip_button_layout(filename):
                 id={"type": "zip-download-button", "index": filename},
                 value=filename,
                 className="me-2",
-                color="dark",
+                color="secondary",
             ),
             dcc.Download(id={"type": "zip-dcc-download", "index": filename}),
         ],
@@ -29,7 +28,6 @@ def get_zip_button_layout(filename):
     prevent_initial_call=True,
     # running=[(Output("zip-download-button", "disabled"), True, False)] # currently not supported
 )
-
 def generate_zip(n_clicks, basepath):
     if n_clicks is None:
         return
@@ -39,6 +37,7 @@ def generate_zip(n_clicks, basepath):
 
 
 # Zipping function
+
 
 def zip_folder(folder_path: pathlib.Path) -> io.BytesIO:
     if not folder_path.is_dir():

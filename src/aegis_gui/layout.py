@@ -70,7 +70,7 @@ def get_sidebar():
 
 def get_offcanvas_trigger():
     return dbc.Button(
-        "Preferences",
+        children=[html.I(className="bi bi-gear-wide"), "Preferences"],
         id="open-offcanvas-backdrop",
         n_clicks=0,
         outline=True,
@@ -95,7 +95,6 @@ def get_offcanvas():
     dash.State("offcanvas-backdrop", "is_open"),
 )
 def toggle_offcanvas(n1, is_open):
-    print("ohh")
     if n1:
         return not is_open
     return is_open

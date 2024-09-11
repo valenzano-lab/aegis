@@ -11,7 +11,7 @@ def make_button(path):
         children=[dash.html.I(className="bi bi-folder-symlink-fill"), "Open data location"],
         id={"type": "config-basepath-folder", "index": str(path)},
         value=str(path),
-        color="dark",
+        color="secondary",
         className="me-2",
     )
 

@@ -1,3 +1,5 @@
+__version__ = "2.3.0.18"  # TODO check if this is ok for setup.py
+
 """
 This script is executed when AEGIS is imported (`import aegis`). Execute functions by running `aegis.run_from_{}`.
 AEGIS can be started in multiple ways; each of these functions starts AEGIS from a different context. 

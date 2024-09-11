@@ -11,7 +11,7 @@ def make_button(filename):
         [html.I(className="bi bi-gear-fill"), "Download configuration"],
         id={"type": "config-download-button", "index": filename},
         value=filename,
-        color="dark",
+        color="secondary",
         className="me-2",
     )
 
@@ -25,7 +25,6 @@ def make_dcc(filename):
     Input({"type": "config-download-button", "index": MATCH}, "n_clicks"),
     State({"type": "config-download-basepath", "index": MATCH}, "children"),
 )
-
 def config_file_download_button(n_clicks, basepath):
     if n_clicks is None:
         return n_clicks
