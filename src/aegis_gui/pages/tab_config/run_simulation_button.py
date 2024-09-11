@@ -116,7 +116,10 @@ def click_sim_button(n_clicks, filename, values, ids_, prerun_sim_path):
 
 
 def is_sim_name_valid(sim_name: str) -> bool:
-    return (sim_name is not None) and (sim_name != "") and ("." not in sim_name)
+    MAX_SIM_NAME_LENGTH = 20
+    return (
+        (sim_name is not None) and (sim_name != "") and ("." not in sim_name) and (len(sim_name) < MAX_SIM_NAME_LENGTH)
+    )
 
 
 @dash.callback(
