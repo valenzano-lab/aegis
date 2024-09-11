@@ -48,7 +48,7 @@ def get_sidebar():
                 ]
             ),
         ]
-        + sim_tracker.get_tracker(),
+        + sim_tracker.init_tracker_box(),
         id="sidebar",
         vertical="md",
         pills=True,

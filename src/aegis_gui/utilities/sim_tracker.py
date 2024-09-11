@@ -9,19 +9,12 @@ def make_trackers(ticker_store):
     trackers = []
 
     running_sims = []
-
     paths = utilities.get_sim_paths()
     for path in paths:
 
         ticker_store_status = ticker_store.get(path.stem)
-        if ticker_store_status is None:
-            # dash has not registered this simulation yet
-            pass
-        elif ticker_store_status is True:
-            # ticker registered and still running
-            pass
-        elif ticker_store_status is False:
-            # ticker registered and finished
+        ticker_registered_and_finished = ticker_store_status is False
+        if ticker_registered_and_finished:
             continue
 
         container = Container(path)
@@ -96,11 +89,14 @@ def make_trackers(ticker_store):
 
 
 @log_funcs.log_info
-def get_tracker():
+def init_tracker_box():
+    trackers, ticker_store = get_tracker_box(None, {})
     return [
-        dash.dcc.Store(id="ticker-store", data={}),
-        dash.dcc.Interval(id="running-simulations-interval", interval=1 * 1000, n_intervals=0),
-        dash.html.Div([], id="running-simulations"),
+        dash.dcc.Interval(
+            id="running-simulations-interval", interval=2 * 1000, n_intervals=0
+        ),  # TODO potential performance issues
+        dash.dcc.Store(id="ticker-store", data=ticker_store),
+        dash.html.Div(trackers, id="running-simulations"),
     ]
 
 
@@ -110,7 +106,7 @@ def get_tracker():
     dash.Input("running-simulations-interval", "n_intervals"),
     dash.State("ticker-store", "data"),
 )
-def update_simulations(n, ticker_store):
+def get_tracker_box(n, ticker_store):
     # NOTE This takes a long time. If the interval refresh rate is very high, it will be retriggered before finishing and no trackers will appear.
     trackers, ticker_store = make_trackers(ticker_store)
     return trackers, ticker_store

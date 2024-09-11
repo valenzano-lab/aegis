@@ -85,10 +85,12 @@ def make_config_file(filename, configs):
         yaml.dump(configs, file_)
 
 
-def get_sim_paths():
-    sim_dir = get_sim_dir()
+def get_sim_paths(sim_dir=None, sort=True):
+    if sim_dir is None:
+        sim_dir = get_sim_dir()
     paths = [p for p in sim_dir.iterdir() if p.is_dir()]
-    paths = sorted(paths, key=lambda path: path.name)
+    if sort:
+        paths = sorted(paths, key=lambda path: path.name)
     return paths
 
 
