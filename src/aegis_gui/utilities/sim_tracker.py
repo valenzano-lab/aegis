@@ -2,6 +2,7 @@ import dash
 from aegis_sim.utilities.container import Container
 from aegis_gui.utilities import utilities
 import dash_bootstrap_components as dbc
+from aegis_gui.utilities import log_funcs
 
 
 def make_trackers(ticker_store):
@@ -94,6 +95,7 @@ def make_trackers(ticker_store):
     return trackers, ticker_store
 
 
+@log_funcs.log_info
 def get_tracker():
     return [
         dash.dcc.Store(id="ticker-store", data={}),

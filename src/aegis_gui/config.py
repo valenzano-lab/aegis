@@ -21,7 +21,7 @@ class BaseConfig:
 class LocalConfig(BaseConfig):
     env = "local"
     debug_mode = True
-    loglevel = logging.DEBUG
+    # loglevel = logging.DEBUG
     simulation_number_limit = None
     can_delete_default_sim = False
     default_selection_states = (["default", True],)
@@ -31,7 +31,7 @@ class LocalConfig(BaseConfig):
 class ServerConfig(BaseConfig):
     env = "server"
     debug_mode = False
-    loglevel = logging.INFO
+    # loglevel = logging.INFO
     simulation_number_limit = 3
     can_delete_default_sim = False
     default_selection_states = (["default", True],)
@@ -52,8 +52,8 @@ def set(environment: str):
     else:
         raise ValueError("Invalid environment")
 
-    logging.basicConfig(
-        format="%(asctime)s %(levelname)s %(module)s: %(message)s",
-        datefmt="%d/%m/%Y %I:%M:%S",
-        level=config.loglevel,
-    )
+    # logging.basicConfig(
+    #     format="%(asctime)s %(levelname)s %(module)s: %(message)s",
+    #     datefmt="%d/%m/%Y %I:%M:%S",
+    #     level=config.loglevel,
+    # )

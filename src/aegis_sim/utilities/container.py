@@ -387,7 +387,7 @@ class Container:
         if not self._file_exists(stem):
             logging.error(f"File {self.get_path(stem)} des not exist.")
         elif (not file_read) or reload:
-            self.data[stem] = pd.read_csv(self.get_path(stem), heaer=0)
+            self.data[stem] = pd.read_csv(self.get_path(stem), header=0)
 
         return self.data.get(stem, pd.DataFrame())
 

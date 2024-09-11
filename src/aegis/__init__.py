@@ -8,12 +8,14 @@ import pathlib
 
 import aegis_gui
 import aegis_sim
+from aegis.log import set_logging
 from aegis.parse import get_parser
 
 
 def start_from_terminal():
     parser = get_parser()
     args = parser.parse_args()
+    set_logging(level=logging.DEBUG)
 
     if args.command == "sim":
         config_path = pathlib.Path(args.config_path).absolute() if args.config_path else None

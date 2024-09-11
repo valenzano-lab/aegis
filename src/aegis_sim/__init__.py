@@ -33,13 +33,6 @@ def init(custom_config_path, overwrite=False, pickle_path=None, custom_input_par
     And then you can safely import any module.
     """
 
-    logging.basicConfig(
-        format="%(asctime)s %(levelname)s %(module)s: %(message)s",
-        datefmt="%d/%m/%Y %I:%M:%S",
-        level=logging.DEBUG,
-    )
-    logging.info(f"Running {custom_config_path}.")
-
     custom_config_path = pathlib.Path(custom_config_path)
 
     parametermanager.init(
