@@ -57,7 +57,10 @@ def make_trackers(ticker_store):
     for path in paths:
         container = Container(path)
         ticker = container.get_ticker()
-        if ticker.since_last() < 3600 * 24 and container.has_ticker_stopped():
+        since_last = ticker.since_last()
+        if since_last is None:
+            continue
+        if since_last < 3600 * 24 and container.has_ticker_stopped():
             recent_containers.append(container)
 
     if recent_containers:
@@ -75,9 +78,7 @@ def make_trackers(ticker_store):
         ]
 
         if len(recent_containers) > N_recent_containers_to_show:
-            buttons.append(
-                dbc.Button("more...", className="badge me-1", color="secondary", href="/simlog")
-            )
+            buttons.append(dbc.Button("more...", className="badge me-1", color="secondary", href="/simlog"))
 
         nav = dash.html.Div(children=buttons)
 

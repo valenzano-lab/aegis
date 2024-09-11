@@ -25,7 +25,7 @@ def make(filename):
 #     Output({"type": "delete-simulation-button", "index": MATCH}, "disabled"),
 #     Input({"type": "delete-simulation-button", "index": MATCH}, "n_clicks"),
 # )
-# 
+#
 # def disable_delete_simulation_button(n_clicks):
 #     if n_clicks is None:
 #         return False
@@ -38,7 +38,6 @@ def make(filename):
     State("simlog-section-table", "children"),
     prevent_initial_call=True,
 )
-
 def change_simlog(n_clicks, current):
 
     # If delete button triggered the action, delete the simulation
@@ -78,10 +77,17 @@ def remove_simulation_data(sim_path, config_path):
     Input("permanently-delete", "n_clicks"),
     State("delete-simulation-filename", "data"),
     dash.State("sim-select", "options"),
+    dash.State("one-click-deletion", "value"),
     prevent_initial_call=True,
 )
-def toggle_modal(n1, n2, n3, filename, current_options):
+def toggle_modal(n1, n2, n3, filename, current_options, one_click_deletion):
+
     if ctx.triggered_id == "delete-simulation-button" and n1 is not None:
+        if one_click_deletion:
+            # repeating myself below
+            delete_simulation(filename=filename)
+            new_options = [d for d in current_options if d["label"] != filename]
+            return False, new_options, new_options[0]["value"] if new_options else ""
         return True, dash.no_update, dash.no_update
 
     if ctx.triggered_id == "close-centered" and n2 is not None:
