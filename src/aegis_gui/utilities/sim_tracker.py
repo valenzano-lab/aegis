@@ -54,18 +54,19 @@ def make_trackers(ticker_store):
 
     recent_containers = []
 
+    RECENCY_WINDOW = 365 * 24 * 3600
+
     for path in paths:
         container = Container(path)
         ticker = container.get_ticker()
         since_last = ticker.since_last()
         if since_last is None:
             continue
-        if since_last < 3600 * 24 and container.has_ticker_stopped():
+        if since_last < RECENCY_WINDOW and container.has_ticker_stopped():
             recent_containers.append(container)
 
     if recent_containers:
         N_recent_containers_to_show = 20
-        # trackers.append(dash.html.P("Recent simulations", className="text-secondary"))
 
         buttons = [
             dbc.Button(
