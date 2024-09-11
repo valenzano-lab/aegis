@@ -11,7 +11,8 @@ from aegis_sim.parameterization.default_parameters import DEFAULT_PARAMETERS
 
 from aegis_sim.recording.recordingmanager import RecordingManager
 from aegis_sim.submodels.reproduction.reproduction import Reproducer
-from aegis_sim.submodels import starvation, predation, infection, abiotic
+from aegis_sim.submodels import predation, infection, abiotic
+from aegis_sim.submodels.resources import starvation
 from aegis_sim.submodels.genetics.composite.architecture import CompositeArchitecture
 from aegis_sim.submodels.genetics.modifying.architecture import ModifyingArchitecture
 from aegis_sim.submodels.genetics.envdrift import Envdrift
