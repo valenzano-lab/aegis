@@ -372,15 +372,19 @@ class Container:
     # UTILITIES #
     #############
 
+    def _file_exists(self, stem):
+        if self.paths is None:
+            self.set_paths()
+        return stem in self.paths
+
     def has_ticker_stopped(self):
         return self.get_ticker().has_stopped()
 
     def _read_df(self, stem, reload=True):
         file_read = stem in self.data
-        file_exists = stem in self.paths
         # TODO Read also files that are not .csv
 
-        if not file_exists:
+        if not self._file_exists(stem):
             logging.error(f"File {self.get_path(stem)} des not exist.")
         elif (not file_read) or reload:
             self.data[stem] = pd.read_csv(self.get_path(stem), heaer=0)
