@@ -61,24 +61,30 @@ def make_trackers(ticker_store):
             recent_containers.append(container)
 
     if recent_containers:
+        N_recent_containers_to_show = 20
         # trackers.append(dash.html.P("Recent simulations", className="text-secondary"))
 
-        nav = dash.html.Div(
-            children=[
-                dbc.Button(
-                    children=[rc.name],
-                    href=f"/simlog?sim={rc.name}",
-                    className="badge me-1",
-                    color="primary",
-                )
-                for rc in recent_containers
-            ],
-        )
+        buttons = [
+            dbc.Button(
+                children=[rc.name],
+                href=f"/simlog?sim={rc.name}",
+                className="badge me-1",
+                color="primary",
+            )
+            for rc in recent_containers[:N_recent_containers_to_show]
+        ]
+
+        if len(recent_containers) > N_recent_containers_to_show:
+            buttons.append(
+                dbc.Button("more...", className="badge me-1", color="secondary", href="/simlog")
+            )
+
+        nav = dash.html.Div(children=buttons)
 
         trackers.append(
             dbc.Toast(
                 children=nav,
-                header="Recent sims",
+                header="Most recent sims",
                 style={"width": "100%", "marginTop": "1rem"},
             )
         )
