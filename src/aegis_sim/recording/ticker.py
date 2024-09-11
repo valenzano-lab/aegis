@@ -37,8 +37,8 @@ class Ticker(Recorder):
         description: A live file useful for determining whether the simulation is still running. It gets updated every TICKER_RATE seconds; if it is not updated, the simulation is not running.
         structure: A txt file with datetime stamp (%Y-%m-%d %H:%M:%S) in one line)
         """
+        timestamp = time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime())
         with open(self.ticker_path, "w") as file:
-            timestamp = time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime())
             file.write(timestamp)
 
     def read(self):
@@ -55,6 +55,7 @@ class Ticker(Recorder):
     def since_last(self):
         timestamp_recorded = self.read()
         if timestamp_recorded is None:
+            logging.info(f"timestamp_recorded is '{timestamp_recorded}'")
             return
         timestamp_now = time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime())
         dt_recorded = datetime.strptime(timestamp_recorded, "%Y-%m-%d %H:%M:%S")
