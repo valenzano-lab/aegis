@@ -1,4 +1,3 @@
-import logging
 from typing import Union, Type, Optional
 
 
@@ -51,9 +50,3 @@ def set(environment: str):
         config = ServerConfig()
     else:
         raise ValueError("Invalid environment")
-
-    # logging.basicConfig(
-    #     format="%(asctime)s %(levelname)s %(module)s: %(message)s",
-    #     datefmt="%d/%m/%Y %I:%M:%S",
-    #     level=config.loglevel,
-    # )

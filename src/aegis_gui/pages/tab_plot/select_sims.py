@@ -27,6 +27,7 @@ def make_multi_dropdown(dropdown_options, dropdown_value=[]):
                 placeholder="Select simulations to plot...",
                 className="plot-dropdown",
                 style={"width": "100%"},
+                persistence=True,
             ),
         ]
     )

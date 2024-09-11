@@ -2,7 +2,7 @@ import dash
 import dash_bootstrap_components as dbc
 from aegis_gui.utilities import log_funcs
 
-seconds_per_refresh = 5
+seconds_per_refresh = 10
 progress_granularity = 0.01  # 1% of the progress bar
 seconds_per_progress_step = seconds_per_refresh * progress_granularity
 

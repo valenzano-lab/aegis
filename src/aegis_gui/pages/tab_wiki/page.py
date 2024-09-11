@@ -51,4 +51,5 @@ def make_accordion():
     return dbc.Accordion(
         id="wiki-accordion",
         children=[dbc.AccordionItem(title=d["path"], children=make_accordion_item(d)) for d in data],
+        start_collapsed=True,
     )

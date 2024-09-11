@@ -22,10 +22,9 @@ def get_app():
         __name__,
         suppress_callback_exceptions=True,
         update_title="",
-        # *.css in assets are automatically imported; they need to be explicitly ignored
-        assets_ignore="styles-dark.css",
-        use_pages=True,
         external_stylesheets=[dbc.themes.BOOTSTRAP, dbc.icons.BOOTSTRAP],
+        assets_ignore="styles-dark.css",  # *.css in assets are automatically imported; they need to be explicitly ignored
+        use_pages=True,
     )
 
     # Bootstrap ICONS: https://icons.getbootstrap.com/
