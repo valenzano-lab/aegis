@@ -4,25 +4,29 @@ from aegis_gui.utilities import utilities
 import dash_bootstrap_components as dbc
 
 
-def make_trackers():
+def make_trackers(ticker_store):
     trackers = []
 
     running_sims = []
 
     paths = utilities.get_sim_paths()
     for path in paths:
+
+        ticker_store_status = ticker_store.get(path.stem)
+        if ticker_store_status is None:
+            # dash has not registered this simulation yet
+            pass
+        elif ticker_store_status is True:
+            # ticker registered and still running
+            pass
+        elif ticker_store_status is False:
+            # ticker registered and finished
+            continue
+
         container = Container(path)
         is_running = not container.has_ticker_stopped()
+        ticker_store[path.stem] = is_running
         if is_running:
-            # tracker = dash.dcc.Link(
-            #     children=container.name, href=f"/simlog?sim={container.name}", className="sidebar-sim-running"
-            # )
-            # tracker = dbc.Button(
-            #     children=[container.name],
-            #     href=f"/simlog?sim={container.name}",
-            #     className="badge me-1 sidebar-sim-running",
-            #     color="primary",
-            # )
             progress = container.get_simple_log()
             if progress is None:
                 continue
@@ -87,11 +91,12 @@ def make_trackers():
 
         # trackers.append(nav)
 
-    return trackers
+    return trackers, ticker_store
 
 
 def get_tracker():
     return [
+        dash.dcc.Store(id="ticker-store", data={}),
         dash.dcc.Interval(id="running-simulations-interval", interval=1 * 1000, n_intervals=0),
         dash.html.Div([], id="running-simulations"),
     ]
@@ -99,7 +104,11 @@ def get_tracker():
 
 @dash.callback(
     dash.Output("running-simulations", "children"),
+    dash.Output("ticker-store", "data"),
     dash.Input("running-simulations-interval", "n_intervals"),
+    dash.State("ticker-store", "data"),
 )
-def update_simulations(n):
-    return make_trackers()
+def update_simulations(n, ticker_store):
+    # NOTE This takes a long time. If the interval refresh rate is very high, it will be retriggered before finishing and no trackers will appear.
+    trackers, ticker_store = make_trackers(ticker_store)
+    return trackers, ticker_store

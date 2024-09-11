@@ -57,7 +57,7 @@ def run_simulation(filename, prerun_sim_path):
         pickle_command = []
     else:
         container = Container(prerun_sim_path)
-        latest_pickle_path = container.paths["pickles"][-1]
+        latest_pickle_path = container.get_path(["pickles"])[-1]
         logging.info(f"Using pickled population from {latest_pickle_path}.")
         pickle_command = ["-p", latest_pickle_path]
     process = subprocess.Popen(

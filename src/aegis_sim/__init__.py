@@ -3,7 +3,7 @@ import pathlib
 
 from aegis_sim.dataclasses.population import Population
 from aegis_sim.bioreactor import Bioreactor
-from aegis_sim import variables, constants, submodels, parameterization
+from aegis_sim import variables, submodels, parameterization
 from aegis_sim.parameterization import parametermanager
 from aegis_sim.recording import recordingmanager
 

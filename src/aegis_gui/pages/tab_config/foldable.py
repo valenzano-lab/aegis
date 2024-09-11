@@ -38,8 +38,8 @@ TEXTS_DOMAIN = {
     "composite genetic architecture": utilities.extract_gui_from_docstring(CompositeArchitecture),
     "modifying genetic architecture": utilities.extract_gui_from_docstring(ModifyingArchitecture),
     "environmental drift": utilities.extract_gui_from_docstring(Envdrift),
-    # "technical": "",
-    # "other": "",
+    "technical": "",  # TODO add
+    "other": "",  # TODO add
 }
 
 

@@ -43,8 +43,8 @@ TEXTS_DOMAIN = {
     "composite genetic architecture": utilities.extract_gui_from_docstring(CompositeArchitecture),
     "modifying genetic architecture": utilities.extract_gui_from_docstring(ModifyingArchitecture),
     "environmental drift": utilities.extract_gui_from_docstring(Envdrift),
-    # "technical": "",
-    # "other": "",
+    "technical": "",
+    "other": "",
 }
 
 
@@ -89,7 +89,7 @@ def layout() -> html.Div:
     subsets = {domain: [] for domain in TEXTS_DOMAIN.keys()}
     for param in DEFAULT_PARAMETERS.values():
         if param.domain not in subsets:
-            logging.error("Parameter domain {param.domain} has no documentation.")
+            logging.error(f"Parameter domain {param.domain} has no documentation.")
             subsets[param.domain] = []
         subsets[param.domain].append(param)
 
