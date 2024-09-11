@@ -30,7 +30,8 @@ class Container:
         ).absolute()  # If path to config file is /path/config.yml, then basepath is /path/config
         self.name = self.basepath.stem
         self.data = {}
-        self.set_paths()
+        # self.set_paths()
+        self.paths = None
         self.ticker = None
 
     def set_paths(self):
@@ -62,6 +63,11 @@ class Container:
         self.paths["popsize_after_reproduction"] = self.basepath / "popsize_after_reproduction.csv"
         if not self.paths["log"].is_file():
             logging.error(f"No AEGIS log found at path {self.paths['log']}.")
+
+    def get_path(self, name):
+        if self.paths is None:
+            self.set_paths()
+        return self.paths[name]
 
     def get_record_structure():
         # TODO
@@ -106,7 +112,7 @@ class Container:
 
     def get_log(self, reload=True):
         if ("log" not in self.data) or reload:
-            df = pd.read_csv(self.paths["log"], sep="|")
+            df = pd.read_csv(self.get_path("log"), sep="|")
             df.columns = [x.strip() for x in df.columns]
 
             def dhm_inverse(dhm):
@@ -123,17 +129,17 @@ class Container:
 
     def get_simple_log(self):
         try:
-            with open(self.paths["simpleprogress"], "r") as file_:
+            with open(self.get_path("simpleprogress"), "r") as file_:
                 text = file_.read()
                 step, steps_per_simulation = text.split("/")
                 return int(step), int(steps_per_simulation)
         except:
-            logging.error(f"No simpleprogress.log found at {self.paths['simpleprogress']}.")
+            logging.error(f"No simpleprogress.log found at {self.get_path('simpleprogress')}")
 
     def get_ticker(self):
         if self.ticker is None:
             TICKER_RATE = self.get_config()["TICKER_RATE"]
-            self.ticker = Ticker(TICKER_RATE=TICKER_RATE, odir=self.paths["ticker"].parent)
+            self.ticker = Ticker(TICKER_RATE=TICKER_RATE, odir=self.get_path("ticker").parent)
         return self.ticker
 
     def get_config(self):
@@ -168,13 +174,13 @@ class Container:
         return aar
 
     def get_output_summary(self) -> Union[dict, None]:
-        path = self.paths["output_summary"]
+        path = self.get_path("output_summary")
         if path.exists():
             return self._read_json(path)
         return {}
 
     def get_input_summary(self):
-        return self._read_json(self.paths["input_summary"])
+        return self._read_json(self.get_path("input_summary"))
 
     ##########
     # TABLES #
@@ -330,19 +336,19 @@ class Container:
         value .. age at event, event (1 .. died, 0 .. alive)
         """
         # TODO error with T and E in the record; they are being appended on top
-        assert record_index < len(self.paths["te"]), "Index out of range"
-        data = pd.read_csv(self.paths["te"][record_index], header=0)
+        assert record_index < len(self.get_path("te")), "Index out of range"
+        data = pd.read_csv(self.get_path("te")[record_index], header=0)
         data.index.names = ["individual"]
         return data
 
     def get_population_size_before_reproduction(self):
-        data = pd.read_csv(self.paths["popsize_before_reproduction"], header=None)
+        data = pd.read_csv(self.get_path("popsize_before_reproduction"), header=None)
         data.index.names = ["steps"]
         data.columns = ["popsize"]
         return data
 
     def get_population_size_after_reproduction(self):
-        data = pd.read_csv(self.paths["popsize_after_reproduction"], header=None)
+        data = pd.read_csv(self.get_path("popsize_after_reproduction"), header=None)
         data.index.names = ["steps"]
         data.columns = ["popsize"]
         return data
@@ -369,18 +375,15 @@ class Container:
     def has_ticker_stopped(self):
         return self.get_ticker().has_stopped()
 
-    def _get_path(self, stem):
-        return self.paths[stem]
-
     def _read_df(self, stem, reload=True):
         file_read = stem in self.data
         file_exists = stem in self.paths
         # TODO Read also files that are not .csv
 
         if not file_exists:
-            logging.error(f"File {self.paths[stem]} does not exist.")
+            logging.error(f"File {self.get_path(stem)} des not exist.")
         elif (not file_read) or reload:
-            self.data[stem] = pd.read_csv(self.paths[stem], header=0)
+            self.data[stem] = pd.read_csv(self.get_path(stem), heaer=0)
 
         return self.data.get(stem, pd.DataFrame())
 
@@ -393,10 +396,10 @@ class Container:
             return json.load(file_)
 
     def _read_snapshot(self, record_type, record_index):
-        assert record_type in self.paths["snapshots"], f"No records of '{record_type}' can be found in snapshots"
-        assert record_index < len(self.paths["snapshots"][record_type]), "Index out of range"
-        return pd.read_feather(self.paths["snapshots"][record_type][record_index])
+        assert record_type in self.get_path("snapshots"), f"No records of '{record_type}' can be found in snapshots"
+        assert record_index < len(self.get_path("snapshots")[record_type]), "Index out of range"
+        return pd.read_feather(self.get_path("snapshots")[record_type][record_index])
 
     def _read_pickle(self, record_index):
-        assert record_index < len(self.paths["pickles"]), "Index out of range"
-        return Population.load_pickle_from(self.paths["pickles"][record_index])
+        assert record_index < len(self.get_path("pickles")), "Index out of range"
+        return Population.load_pickle_from(self.get_path("pickles")[record_index])
