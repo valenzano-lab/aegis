@@ -68,7 +68,7 @@ Most documentation about the model is available within the GUI itself, including
 
 ### API reference
 
-Exhaustive, searchable API reference made by pdoc is available [here](https://valenzano-lab.github.io/aegis/aegis.html).
+Exhaustive, searchable API reference made by pdoc is available [here](https://valenzano-lab.github.io/aegis/).
 
 ## Contributors
 
