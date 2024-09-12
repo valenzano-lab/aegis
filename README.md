@@ -60,7 +60,7 @@ If you are having installation issues, check that pip is up to date (`python3 -m
 
 ### Model description
 
-Most documentation about the model is available within the GUI itself, including description of submodels, [configuration parameters](src/aegis/documentation/dynamic/default_parameters.md), [output specification](src/aegis/documentation/dynamic/output_specifications.md), and [genetic architecture](src/aegis/modules/genetics/doc.md). Use the [webserver]() or a local installation to access the GUI. <!-- TODO update link --> Further information is available in scientific articles:
+Most documentation about the model is available within the GUI itself, including description of submodels, [configuration parameters](src/aegis/documentation/dynamic/default_parameters.md), [output specification](src/aegis/documentation/dynamic/output_specifications.md), and [submodel specifications](src/aegis/documentation/dynamic/submodel_specifications.md). Use the [webserver]() or a local installation to access the GUI. <!-- TODO update link --> Further information is available in scientific articles:
 
 - [AEGIS: An In Silico Tool to model Genome Evolution in Age-Structured Populations (2019)](https://www.biorxiv.org/content/10.1101/646877v1)
 - [An In Silico Model to Simulate the Evolution of Biological Aging (2016)](https://www.biorxiv.org/content/10.1101/037952v1)
