@@ -54,7 +54,7 @@ class Ticker(Recorder):
 
     def since_last(self):
         timestamp_recorded = self.read()
-        if timestamp_recorded is None:
+        if timestamp_recorded is None or timestamp_recorded == "":
             logging.info(f"timestamp_recorded is '{timestamp_recorded}'")
             return
         timestamp_now = time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime())
