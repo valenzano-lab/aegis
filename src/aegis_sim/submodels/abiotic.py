@@ -7,6 +7,7 @@ import logging
 
 class Abiotic:
     """
+    # TODO maybe mention which phenomena could be modeled by which shape in the doctsring
 
     GUI
     Abiotic mortality is an optional source of mortality, useful for modeling death by periodic environmental phenomena such as water availability and temperature.
@@ -16,7 +17,6 @@ class Abiotic:
     Negative hazard is clipped to zero.
     Available hazard shapes (waveforms) are flat, sinusoidal, square, triangle, sawtooth, ramp (backward sawtooth) and instant (Dirac comb / impulse train).
 
-    # TODO maybe mention which phenomena could be modeled by which shape
     """
 
     def __init__(self, ABIOTIC_HAZARD_SHAPE, ABIOTIC_HAZARD_OFFSET, ABIOTIC_HAZARD_AMPLITUDE, ABIOTIC_HAZARD_PERIOD):
