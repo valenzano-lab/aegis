@@ -3,6 +3,7 @@ import dash
 from dash import html, dcc
 import dash_bootstrap_components as dbc
 from aegis_gui.pages.tab_landing import jumbotron, typewriter, usecases
+from aegis_gui.guisettings.GuiSettings import gui_settings
 
 dash.register_page(__name__, name="landing", path="/")
 
@@ -76,7 +77,8 @@ def layout():
                         ]
                     ),
                 ),
-                # html.P(f"Version: {__version__}", className="my-4 text-secondary"),
+                html.P(f"Environment: {gui_settings.ENVIRONMENT}", className="my-4 text-secondary"),
+                # html.P(f"Version: ...", className="text-secondary"),
             ]
         ),
     )

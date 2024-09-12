@@ -1,7 +1,7 @@
 import dash
 from dash import callback, Output, Input, ALL, State, dcc
 
-from aegis_gui.utilities import log_funcs
+from aegis_gui.utilities import log
 import dash_bootstrap_components as dbc
 
 

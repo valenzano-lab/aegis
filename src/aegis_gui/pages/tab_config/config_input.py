@@ -1,6 +1,6 @@
 import dash
 from dash import callback, Output, Input, State, MATCH, no_update, dcc, ctx
-from aegis_gui.utilities import log_funcs
+from aegis_gui.utilities import log
 from .valid_range import is_input_in_valid_range
 import dash_bootstrap_components as dbc
 from aegis_sim.parameterization.default_parameters import DEFAULT_PARAMETERS

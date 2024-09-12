@@ -1,5 +1,5 @@
 # from dash import html, dcc, dash_table
-# from aegis_gui.utilities import log_funcs, utilities
+# from aegis_gui.utilities import log, utilities
 # import datetime
 # from aegis.utilities.container import Container
 # from aegis.utilities.get_folder_size import get_folder_size_with_du

@@ -2,7 +2,7 @@ import dash
 from aegis_gui.pages.tab_plot.plot.prep_setup import FIG_SETUP
 from aegis_gui.pages.tab_plot import slider
 from aegis_gui.pages.tab_plot import download
-from aegis_gui.utilities import log_funcs
+from aegis_gui.utilities import log
 
 
 def get_graph(graph_name):

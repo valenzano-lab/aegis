@@ -1,13 +1,13 @@
-from aegis_gui.config.config import config
-from aegis_gui.utilities import log_funcs, utilities
+from aegis_gui.guisettings.GuiSettings import gui_settings
+from aegis_sim.parameterization.default_parameters import DEFAULT_PARAMETERS
 
 
 def is_input_in_valid_range(input_, param_name: str) -> bool:
-    param = utilities.DEFAULT_PARAMETERS[param_name]
+    param = DEFAULT_PARAMETERS[param_name]
     input_ = param.convert(input_)
     in_inrange = param.inrange(input_)
 
-    if config.ENVIRONMENT == "server":
+    if gui_settings.ENVIRONMENT == "server":
         in_serverrange = param.serverrange(input_)
     else:
         in_serverrange = True

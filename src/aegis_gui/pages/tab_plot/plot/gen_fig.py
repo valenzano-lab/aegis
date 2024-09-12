@@ -1,15 +1,6 @@
 from aegis_gui.pages.tab_plot.plot.prep_setup import FIG_SETUP
 from aegis_gui.pages.tab_plot.plot import prep_fig
-from aegis_gui.utilities import log_funcs
-from aegis_sim.utilities.container import Container
-from aegis_gui.utilities.utilities import get_sim_dir
-
-
-def get_container(sim_name):
-    base_dir = get_sim_dir()
-    container = Container(base_dir / sim_name)
-    return container
-
+from aegis_gui.utilities.utilities import get_container
 
 
 def gen_fig(fig_name, selected_sims, iloc):

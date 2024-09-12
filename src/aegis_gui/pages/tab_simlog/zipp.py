@@ -2,7 +2,7 @@ from dash import html, dcc, Output, Input, State, MATCH, callback
 import pathlib
 import zipfile
 import io
-from aegis_gui.utilities import log_funcs
+from aegis_gui.utilities import log
 import dash_bootstrap_components as dbc
 
 

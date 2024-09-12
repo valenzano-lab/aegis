@@ -4,7 +4,7 @@ import dash
 import pandas as pd
 from dash import callback, Output, Input, ctx, State, MATCH, dcc, html
 from plotly.io import write_image
-from aegis_gui.utilities.utilities import get_figure_dir
+from aegis_gui.guisettings.GuiSettings import gui_settings
 
 # FIGURE DOWNLOAD
 
@@ -20,7 +20,7 @@ def figure_download_button_click(n_clicks, figure):
         return
 
     fig_name = ctx.triggered_id["index"]
-    path_figure = get_figure_dir() / f"{fig_name}.png"
+    path_figure = gui_settings.figure_dir / f"{fig_name}.png"
     logging.info(f"Recording figure to {path_figure}...")
     write_image(figure, path_figure)
     logging.info(f"'{fig_name}' has been recorded successfully.")

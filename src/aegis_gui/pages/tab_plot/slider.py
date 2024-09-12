@@ -2,7 +2,7 @@ import dash
 from dash import dcc, Input, callback, Output, MATCH, State
 from aegis_gui.pages.tab_plot.plot.prep_setup import FIG_SETUP
 from aegis_gui.pages.tab_plot.plot import prep_x, gen_fig
-from aegis_gui.utilities import log_funcs
+from aegis_gui.utilities import log
 
 
 def make_slider(figure_id):
@@ -36,7 +36,7 @@ def make_slider(figure_id):
     # State("dropdown-single", "value"),
     prevent_initial_call=True,
 )
-@log_funcs.log_info
+@log.log_info
 def update(slider_value, slider_id, dropdown_multi_value):
     fig_name = slider_id["index"]
     # supports_multi = FIG_SETUP[fig_name]["supports_multi"]

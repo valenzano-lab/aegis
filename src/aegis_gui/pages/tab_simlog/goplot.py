@@ -1,6 +1,6 @@
 import dash
 import yaml
-from aegis_gui.utilities import log_funcs
+from aegis_gui.utilities import log
 from aegis_sim.utilities.container import Container
 
 import dash_bootstrap_components as dbc

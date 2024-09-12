@@ -4,7 +4,7 @@ import dash_bootstrap_components as dbc
 from aegis_gui.utilities import sim_tracker
 from aegis_gui import offcanvas
 
-# from aegis_gui.utilities import log_funcs
+# from aegis_gui.utilities import log
 
 
 def get_app_layout():

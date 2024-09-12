@@ -1,7 +1,7 @@
 import dash
 from aegis_gui.pages.tab_plot.plot.prep_setup import FIG_SETUP
 from aegis_gui.pages.tab_plot.plot.gen_fig import gen_fig
-from aegis_gui.utilities import log_funcs
+from aegis_gui.utilities import log
 
 
 # Define a helper function to handle the logic
@@ -35,7 +35,7 @@ def handle_draw_plot(dropdown_values, selected_fig):
     dash.Input("refresh-figure-data", "n_clicks"),
     # prevent_initial_call=True,
 )
-@log_funcs.log_info
+@log.log_info
 def draw_plot(dropdown_values, figure_selected, refresh_figure_data):
     figures, drag_maxs = handle_draw_plot(dropdown_values, figure_selected)
     return figures, drag_maxs, drag_maxs

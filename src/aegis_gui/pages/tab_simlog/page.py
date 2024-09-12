@@ -1,6 +1,6 @@
 import dash
 from dash import html
-from aegis_gui.utilities import log_funcs
+from aegis_gui.utilities import log
 
 from aegis_gui.pages.tab_simlog import dropdown
 

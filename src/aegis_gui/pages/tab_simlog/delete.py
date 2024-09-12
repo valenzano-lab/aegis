@@ -1,5 +1,5 @@
 from dash import callback, Output, Input, State, ALL, MATCH, ctx, html
-from aegis_gui.utilities import log_funcs, utilities
+from aegis_gui.utilities import log, utilities
 import dash_bootstrap_components as dbc
 import dash
 import os

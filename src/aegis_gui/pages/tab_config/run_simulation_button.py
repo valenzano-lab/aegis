@@ -1,15 +1,10 @@
-from aegis_gui.utilities import log_funcs, utilities, ps_list
-from aegis_sim.parameterization.default_parameters import DEFAULT_PARAMETERS
-
 import dash
-
 import dash_bootstrap_components as dbc
-
-from aegis_gui.config.config import config
-
+from aegis_gui.guisettings.GuiSettings import gui_settings
+from aegis_gui.utilities import manipulate, utilities
+from aegis_sim.parameterization.default_parameters import DEFAULT_PARAMETERS
 from .valid_range import is_input_in_valid_range
 
-import logging
 
 layout = dash.html.Div(
     [
@@ -116,10 +111,10 @@ def click_sim_button(n_clicks, filename, values, ids_, prerun_sim_path):
     # make config file
     decoded_pairs = list(decode_config_tab_values(values=values, ids_=ids_))
     input_config = {i: v for i, v in decoded_pairs}
-    utilities.make_config_file(filename, input_config)
+    manipulate.make_config_file(filename, input_config)
 
     # run simulation
-    utilities.run_simulation(filename, prerun_sim_path=prerun_sim_path)
+    manipulate.run_simulation(filename, prerun_sim_path=prerun_sim_path)
     return ""
 
 
@@ -167,7 +162,7 @@ def disable_sim_button(filename, values, ids, ticker_store) -> bool:
 
     # TODO do not use block bc that is not the problem
     currently_running = sum(ticker_store.values())
-    if not config.can_run_more_simulations(currently_running=currently_running):
+    if not gui_settings.can_run_more_simulations(currently_running=currently_running):
         return *block, f"Maximum number of simulations running is reached ({currently_running})"
 
     if filename is None or filename == "":
@@ -176,8 +171,8 @@ def disable_sim_button(filename, values, ids, ticker_store) -> bool:
     if "." in filename:
         return *block, "ID cannot contain a period (.)"
 
-    if len(filename) > config.MAX_SIM_NAME_LENGTH:
-        return *block, f"ID has more than {config.MAX_SIM_NAME_LENGTH} characters"
+    if len(filename) > gui_settings.MAX_SIM_NAME_LENGTH:
+        return *block, f"ID has more than {gui_settings.MAX_SIM_NAME_LENGTH} characters"
 
     if utilities.sim_exists(filename):
         return *block, "Entered ID has already been used"
