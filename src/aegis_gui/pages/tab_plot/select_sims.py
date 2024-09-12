@@ -28,6 +28,7 @@ def make_multi_dropdown(dropdown_options, dropdown_value=[]):
                 className="plot-dropdown",
                 style={"width": "100%"},
                 persistence=True,
+                clearable=False,
             ),
         ]
     )

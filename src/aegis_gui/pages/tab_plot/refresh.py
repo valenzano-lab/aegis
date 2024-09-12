@@ -22,7 +22,7 @@ inputgroup = dash.html.Div(
             outline=True,
             color="secondary",
             className="me-1",
-            active=True,
+            active=False,
         ),
         dash.html.Div(
             children=[
@@ -50,7 +50,7 @@ inputgroup = dash.html.Div(
             id="progress-interval-refresh",
             interval=1000 * seconds_per_progress_step,
             n_intervals=0,
-            disabled=False,
+            disabled=True,
         ),
         dash.dcc.Store(
             id="refresh-progress-store",

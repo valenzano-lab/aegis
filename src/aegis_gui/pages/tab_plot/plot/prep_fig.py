@@ -68,6 +68,10 @@ FIG_LAYOUT = dict(
 # }
 
 
+def make_empty_figure():
+    return go.Figure(layout=go.Layout({**FIG_LAYOUT}))
+
+
 def make_scatter_figure(id_, xs, ys, selected_sims):
     figure = go.Figure(
         data=[

@@ -1,13 +1,14 @@
 import dash
 from aegis_gui.pages.tab_plot.plot.prep_setup import FIG_SETUP
 from aegis_gui.pages.tab_plot.plot.gen_fig import gen_fig
+from aegis_gui.pages.tab_plot.plot.prep_fig import make_empty_figure
 from aegis_gui.utilities import log
 
 
 # Define a helper function to handle the logic
 def handle_draw_plot(dropdown_values, selected_fig):
     if not dropdown_values or dropdown_values == [None]:
-        return dash.no_update, dash.no_update, dash.no_update
+        return dash.no_update, dash.no_update
 
     drag_maxs = []
     figures = []
@@ -37,5 +38,13 @@ def handle_draw_plot(dropdown_values, selected_fig):
 )
 @log.log_info
 def draw_plot(dropdown_values, figure_selected, refresh_figure_data):
+    # Return empty figure and no updates for sliders if dropdown_values is None
+    if dropdown_values == []:
+        # BUG it complains
+        n = len(FIG_SETUP)
+        empty_figures = [make_empty_figure()] * n  # Return an empty figure for each graph
+        return empty_figures, [0] * n, [1] * n
+
+    # Otherwise, handle the plot drawing logic
     figures, drag_maxs = handle_draw_plot(dropdown_values, figure_selected)
     return figures, drag_maxs, drag_maxs

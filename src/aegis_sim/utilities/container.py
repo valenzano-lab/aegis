@@ -7,7 +7,6 @@ from typing import Union
 import numpy as np
 import psutil
 
-from aegis_sim.parameterization.default_parameters import get_default_parameters
 from aegis_sim.dataclasses.population import Population
 from aegis_sim.constants import VALID_CAUSES_OF_DEATH
 from aegis_sim.recording.ticker import Ticker
@@ -27,7 +26,7 @@ class Container:
     def __init__(self, basepath):
         self.basepath = pathlib.Path(
             basepath
-        ).absolute()  # If path to config file is /path/config.yml, then basepath is /path/config
+        ).absolute()  # If path to config file is /path/_.yml, then basepath is /path/_
         self.name = self.basepath.stem
         self.data = {}
         # self.set_paths()
