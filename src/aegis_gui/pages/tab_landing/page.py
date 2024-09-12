@@ -4,8 +4,6 @@ from dash import html, dcc
 import dash_bootstrap_components as dbc
 from aegis_gui.pages.tab_landing import jumbotron, typewriter, usecases
 
-import aegis
-
 dash.register_page(__name__, name="landing", path="/")
 
 
@@ -78,7 +76,7 @@ def layout():
                         ]
                     ),
                 ),
-                html.P(f"Version: {aegis.__version__}", className="my-4 text-secondary"),
+                # html.P(f"Version: {__version__}", className="my-4 text-secondary"),
             ]
         ),
     )

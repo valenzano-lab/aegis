@@ -1,4 +1,4 @@
-from aegis_gui.config import config
+from aegis_gui.config.config import config
 from aegis_gui.utilities import log_funcs, utilities
 
 
@@ -7,7 +7,7 @@ def is_input_in_valid_range(input_, param_name: str) -> bool:
     input_ = param.convert(input_)
     in_inrange = param.inrange(input_)
 
-    if config.env == "server":
+    if config.ENVIRONMENT == "server":
         in_serverrange = param.serverrange(input_)
     else:
         in_serverrange = True

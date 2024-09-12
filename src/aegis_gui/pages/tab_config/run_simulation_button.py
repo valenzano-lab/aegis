@@ -5,45 +5,53 @@ import dash
 
 import dash_bootstrap_components as dbc
 
-from aegis_gui.config import config
+from aegis_gui.config.config import config
 
 from .valid_range import is_input_in_valid_range
 
 import logging
 
 layout = dash.html.Div(
-    id="sim-section-control",
-    children=[
+    [
         dash.html.H6("Run simulation"),
         dash.html.Div(
-            children=dbc.InputGroup(
-                children=[
-                    dbc.InputGroupText("Simulation ID"),
-                    dbc.Input(
-                        id="config-make-text",
-                        type="text",
-                        placeholder="Enter a unique ID",
-                        # autoComplete="off",
-                        className="me-2",
-                    ),
-                ],
-            ),
-            id="config-make-text-group",
+            id="sim-section-control",
+            children=[
+                dash.html.Div(
+                    children=[
+                        dbc.InputGroup(
+                            children=[
+                                dbc.InputGroupText("Simulation ID"),
+                                dbc.Input(
+                                    id="config-make-text",
+                                    type="text",
+                                    placeholder="Enter a unique ID",
+                                    # autoComplete="off",
+                                    className="me-2",
+                                ),
+                            ],
+                        ),
+                        dbc.FormText("", id="config-make-error-text", style={"marginLeft": "8.3rem"}),
+                    ],
+                    id="config-make-text-group",
+                ),
+                dbc.Button(
+                    [dash.html.I(className="bi bi-rocket-takeoff-fill"), "Launch"],
+                    id="simulation-run-button",
+                    className="me-1",
+                    outline=True,
+                    color="success",
+                ),
+                # dash.html.Button("make config", id="config-make-button"),]
+                # dbc.FormFeedback(
+                #     "Enter a unique simulation ID",
+                #     type="invalid",
+                # ),
+                # dash.html.P("sssssssssssss", id="simulation-run-text"),
+            ],
+            style={"display": "flex", "align-items": "flex-start"},
         ),
-        dbc.Button(
-            [dash.html.I(className="bi bi-rocket-takeoff-fill"), "Launch"],
-            id="simulation-run-button",
-            className="me-1",
-            outline=True,
-            color="success",
-        ),
-        # dash.html.Button("make config", id="config-make-button"),]
-        # dbc.FormFeedback(
-        #     "Enter a unique simulation ID",
-        #     type="invalid",
-        # ),
-        dash.html.P("", id="simulation-run-text"),
-    ],
+    ]
 )
 
 
@@ -115,11 +123,10 @@ def click_sim_button(n_clicks, filename, values, ids_, prerun_sim_path):
     return ""
 
 
-def is_sim_name_valid(sim_name: str) -> bool:
-    MAX_SIM_NAME_LENGTH = 20
-    return (
-        (sim_name is not None) and (sim_name != "") and ("." not in sim_name) and (len(sim_name) < MAX_SIM_NAME_LENGTH)
-    )
+# def is_sim_name_valid(sim_name: str) -> bool:
+#     return (
+#         (sim_name is not None) and (sim_name != "") and ("." not in sim_name) and (len(sim_name) < MAX_SIM_NAME_LENGTH)
+#     )
 
 
 @dash.callback(
@@ -127,11 +134,13 @@ def is_sim_name_valid(sim_name: str) -> bool:
     dash.Output("simulation-run-button", "disabled"),
     dash.Output("config-make-text", "invalid"),
     dash.Output("config-make-text", "valid"),
+    dash.Output("config-make-error-text", "children"),
     dash.Input("config-make-text", "value"),
     dash.Input({"type": "config-input", "index": dash.ALL}, "value"),
     dash.State({"type": "config-input", "index": dash.ALL}, "id"),
+    dash.State("ticker-store", "data"),
 )
-def disable_sim_button(filename, values, ids) -> bool:
+def disable_sim_button(filename, values, ids, ticker_store) -> bool:
     """
     Make simulation run button unclickable when any of these is true:
     - input values for parameters are not inside the acceptable server range
@@ -139,6 +148,9 @@ def disable_sim_button(filename, values, ids) -> bool:
     - simulation ID is already used
     """
 
+    block = (True, True, True, False)
+
+    # TODO block here is not correct because the simname is fine
     for value, id_ in zip(values, ids):
         param_name = id_["index"]
         is_value_set = value != "" and value is not None
@@ -148,20 +160,26 @@ def disable_sim_button(filename, values, ids) -> bool:
         # check validity of input value
         in_valid_range = is_input_in_valid_range(input_=value, param_name=param_name)
         if not in_valid_range:
-            return True, True, True, False
+            return (
+                *block,
+                f"Parameter {param_name} is out of valid range",
+            )
 
-    if not is_sim_name_valid(filename):
-        return True, True, True, False
+    # TODO do not use block bc that is not the problem
+    currently_running = sum(ticker_store.values())
+    if not config.can_run_more_simulations(currently_running=currently_running):
+        return *block, f"Maximum number of simulations running is reached ({currently_running})"
+
+    if filename is None or filename == "":
+        return True, True, False, False, ""
+
+    if "." in filename:
+        return *block, "ID cannot contain a period (.)"
+
+    if len(filename) > config.MAX_SIM_NAME_LENGTH:
+        return *block, f"ID has more than {config.MAX_SIM_NAME_LENGTH} characters"
 
     if utilities.sim_exists(filename):
-        return True, True, True, False
+        return *block, "Entered ID has already been used"
 
-    # Check if reached simulation number limit
-    currently_running = len(ps_list.run_ps_af())
-    if not config.can_run_more_simulations(currently_running=currently_running):
-        logging.info(
-            f"You are currently running {currently_running} simulations. Limit is {config.simulation_number_limit}."
-        )
-        return True, True, True, False
-
-    return False, False, False, True
+    return False, False, False, True, ""

@@ -23,14 +23,14 @@ right_jumbotron = dbc.Col(
             dash.dcc.Link(
                 dbc.Button(
                     "Take me to the wiki",
-                    color="secondary",
+                    color="light",
                     outline=True,
                     id="read-jumbotron-button",
                 ),
                 href="/wiki",
             ),
         ],
-        className="h-100 p-5 bg-light text-dark border rounded-3",
+        className="h-100 p-5 bg-secondary text-white border rounded-3",
     ),
     md=6,
 )
