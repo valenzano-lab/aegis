@@ -72,7 +72,7 @@ inputgroup = dash.html.Div(
     dash.State("refresh-progress-store", "data"),
     prevent_initial_call=True,
 )
-@log.log_info
+@log.log_debug
 def toggle_interval(n_clicks, is_disabled, progress_data):
     if n_clicks is None:
         raise dash.no_update
@@ -94,7 +94,6 @@ def toggle_interval(n_clicks, is_disabled, progress_data):
     dash.State("refresh-figure-data", "n_clicks"),
     prevent_initial_call=True,
 )
-# @log.log_info
 def update_progress(n_intervals, progress_data, n_clicks):
     progress = progress_data["progress"]
 

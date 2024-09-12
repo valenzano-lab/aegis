@@ -25,7 +25,7 @@ class GuiSettings:
         else:
             return pathlib.Path(self.ABS_PATH_TO_BASE_DIRECTORY).absolute()
 
-    def set(self, environment: str):
+    def set(self, environment: str, debug):
 
         # Read from YML
         path_to_yaml = pathlib.Path(__file__).parent / "gui_settings.yml"
@@ -38,8 +38,10 @@ class GuiSettings:
         else:
             raise ValueError(f"{environment} is an invalid input for environment; should be 'local' or 'server'")
 
+        assert isinstance(debug, bool)
+
         self.ENVIRONMENT = yml["ENVIRONMENT"]
-        self.DEBUG_MODE = yml["DEBUG_MODE"]
+        self.DEBUG_MODE = debug
         self.SIMULATION_NUMBER_LIMIT = yml["SIMULATION_NUMBER_LIMIT"]
         self.DATA_RETENTION_DAYS = yml["DATA_RETENTION_DAYS"]
         self.MAX_SIM_NAME_LENGTH = yml["MAX_SIM_NAME_LENGTH"]

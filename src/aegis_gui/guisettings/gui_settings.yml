@@ -1,6 +1,5 @@
 LocalConfig:
   ENVIRONMENT: "local"
-  DEBUG_MODE: true
   SIMULATION_NUMBER_LIMIT: null
   DATA_RETENTION_DAYS: null
   MAX_SIM_NAME_LENGTH: 20
@@ -8,7 +7,6 @@ LocalConfig:
 
 ServerConfig:
   ENVIRONMENT: "server"
-  DEBUG_MODE: false
   SIMULATION_NUMBER_LIMIT: 5
   DATA_RETENTION_DAYS: 7
   MAX_SIM_NAME_LENGTH: 20

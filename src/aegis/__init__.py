@@ -28,10 +28,8 @@ def start_from_terminal():
         )
     elif args.command == "gui":
         if args.server:
-            logging.info("Server mode is ON")
-            aegis_gui.run(environment="server")
+            aegis_gui.run(environment="server", debug=False)
         else:
-            logging.info("Server mode is OFF")
-            aegis_gui.run(environment="local")
+            aegis_gui.run(environment="local", debug=args.debug)
     else:
         parser.print_help()

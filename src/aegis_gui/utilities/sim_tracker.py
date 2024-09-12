@@ -96,7 +96,7 @@ def make_trackers(ticker_store):
     return trackers, ticker_store
 
 
-@log.log_info
+@log.log_debug
 def init_tracker_box():
     trackers, ticker_store = get_tracker_box(None, {})
     return [

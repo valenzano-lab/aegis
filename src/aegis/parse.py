@@ -40,4 +40,12 @@ def get_parser():
         default=False,
     )
 
+    subparser_gui.add_argument(
+        "--debug",
+        "-d",
+        action="store_true",
+        help="activate the debugger if running locally",
+        default=False,
+    )
+
     return parser

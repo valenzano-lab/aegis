@@ -36,7 +36,7 @@ def handle_draw_plot(dropdown_values, selected_fig):
     dash.Input("refresh-figure-data", "n_clicks"),
     # prevent_initial_call=True,
 )
-@log.log_info
+@log.log_debug
 def draw_plot(dropdown_values, figure_selected, refresh_figure_data):
     # Return empty figure and no updates for sliders if dropdown_values is None
     if dropdown_values == []:
