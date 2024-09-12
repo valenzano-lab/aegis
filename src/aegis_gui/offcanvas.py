@@ -9,7 +9,7 @@ def get_offcanvas_trigger():
         n_clicks=0,
         outline=True,
         color="primary",
-        style={"marginTop": "1rem"},
+        style={"marginTop": "2rem"},
     )
 
 
