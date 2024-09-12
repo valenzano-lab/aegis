@@ -22,9 +22,9 @@ You can access the AEGIS webserver [here](). The server is running AEGIS GUI.<!-
 You can install AEGIS locally using pip (`pip install aegis-sim`). The package is available on https://pypi.org/project/aegis-sim/. You can use AEGIS with a GUI or in a terminal. GUI is useful for running individual simulations, while the terminal is useful for running batches of simulations.
 
 ```bash
-python3 -m aegis # starts GUI
-python3 -m aegis -c {path/to/config_file} # runs a simulation within a terminal
-python3 -m aegis --help # shows help documentation
+aegis gui # starts GUI
+aegis sim -c {path/to/config_file} # runs a simulation within a terminal
+aegis --help # shows help documentation
 ```
 
 To run simulations within a terminal, you need to prepare config files in [YAML](https://en.wikipedia.org/wiki/YAML) format
