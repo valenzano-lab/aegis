@@ -56,6 +56,12 @@ If you are having installation issues, check that pip is up to date (`python3 -m
 
 <!-- TODO update install_dev script -->
 
+### AEGIS GUI
+Graphical user interface for AEGIS can be used on the webserver or with a local installation. It contains sections for launching and analyzing/plotting simulations.
+
+<img width="418" alt="Screenshot_21" src="https://github.com/user-attachments/assets/520bb69c-a1cd-404a-bdf8-a541340e699a" style="border-radius: 10px;">
+
+
 ## Documentation
 
 ### Model description
