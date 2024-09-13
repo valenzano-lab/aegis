@@ -12,6 +12,7 @@ class GuiSettings:
     # default_selection_states: tuple
     DATA_RETENTION_DAYS: Optional[int]
     ABS_PATH_TO_BASE_DIRECTORY: Optional[str]
+    PORT: Optional[int]
 
     def can_run_more_simulations(self, currently_running):
         if self.SIMULATION_NUMBER_LIMIT is None:
@@ -46,6 +47,7 @@ class GuiSettings:
         self.DATA_RETENTION_DAYS = yml["DATA_RETENTION_DAYS"]
         self.MAX_SIM_NAME_LENGTH = yml["MAX_SIM_NAME_LENGTH"]
         self.ABS_PATH_TO_BASE_DIRECTORY = yml["ABS_PATH_TO_BASE_DIRECTORY"]
+        self.PORT = yml["PORT"]
 
         # Derived
         self.base_dir = self.get_base_dir() / "aegis_data"
