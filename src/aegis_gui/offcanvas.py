@@ -1,5 +1,6 @@
 import dash
 import dash_bootstrap_components as dbc
+from aegis_gui.guisettings.GuiSettings import gui_settings
 
 
 def get_offcanvas_trigger():
@@ -36,10 +37,29 @@ def get_delete_switch():
     )
 
 
+def get_gui_env_settings():
+    return dash.html.Div(
+        [
+            dash.html.Hr(),
+            # dash.html.P("GUI settings"),
+            dash.html.P(
+                f"environment: {gui_settings.ENVIRONMENT}",
+                className="text-secondary",
+            ),
+            dash.html.P(
+                f"simulation number limit: {gui_settings.SIMULATION_NUMBER_LIMIT}",
+                className="text-secondary",
+            ),
+        ],
+        style={"padding": "0 0.5rem 0.25rem 0.5rem"},
+    )
+
+
 def get_offcanvas():
     children = [
         get_theme_switch(),
         get_delete_switch(),
+        get_gui_env_settings(),
     ]
     return dbc.Offcanvas(
         children=children,

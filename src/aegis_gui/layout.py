@@ -4,8 +4,6 @@ import dash_bootstrap_components as dbc
 from aegis_gui.utilities import sim_tracker
 from aegis_gui import offcanvas
 
-# from aegis_gui.utilities import log
-
 
 def get_app_layout():
     return html.Div(
@@ -16,7 +14,6 @@ def get_app_layout():
             html.Div(id="main-container", children=[dash.page_container]),
         ],
     )
-
 
 
 def get_sidebar():

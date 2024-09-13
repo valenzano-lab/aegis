@@ -77,8 +77,7 @@ def layout():
                         ]
                     ),
                 ),
-                html.P(f"Environment: {gui_settings.ENVIRONMENT}", className="my-4 text-secondary"),
-                # html.P(f"Version: ...", className="text-secondary"),
+                # html.P(html.Small(f"Version: ...", className="text-secondary")),
             ]
         ),
     )
