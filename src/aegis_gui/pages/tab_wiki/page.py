@@ -5,7 +5,7 @@ from aegis_gui.utilities import log
 import dash_bootstrap_components as dbc
 
 
-dash.register_page(__name__, path="/wiki", name="wiki")
+dash.register_page(__name__, path="/wiki", name="AEGIS | Wiki")
 
 
 def make_output_specification_table():

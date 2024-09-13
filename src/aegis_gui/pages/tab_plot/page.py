@@ -7,7 +7,7 @@ from aegis_gui.pages.tab_plot import select_graph, select_sims, graph, refresh
 import aegis_gui.pages.tab_plot.draw  # important callback
 
 
-dash.register_page(__name__, path="/plot", name="plot")
+dash.register_page(__name__, path="/plot", name="AEGIS | Plot")
 
 
 def layout(sim=None):  # use function to ensure statelessness

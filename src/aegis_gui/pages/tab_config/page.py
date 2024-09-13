@@ -11,7 +11,7 @@ from aegis_sim.parameterization.default_parameters import DEFAULT_PARAMETERS
 
 from aegis_gui.docs.domains import TEXTS_DOMAIN
 
-dash.register_page(__name__, path="/config", name="config")
+dash.register_page(__name__, path="/config", name="AEGIS | Launch")
 
 # # TODO source from documentation
 # TEXTS_DOMAIN = {

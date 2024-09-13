@@ -5,14 +5,15 @@ import dash_bootstrap_components as dbc
 from aegis_gui.pages.tab_landing import jumbotron, typewriter, usecases
 from aegis_gui.guisettings.GuiSettings import gui_settings
 
-dash.register_page(__name__, name="landing", path="/")
+dash.register_page(__name__, name="AEGIS", path="/")
 
 
 def layout():
     return (
         dbc.Container(
             [
-                html.H1("AEGIS", style={"font-weight": "800", "font-size": "50px"}),
+                # html.H1("AEGIS", style={"font-weight": "800", "font-size": "50px"}),
+                html.H1("Home tab"),
                 html.P(
                     "AEGIS (Aging of Evolving Genomes In Silico) is an advanced software tool that simulates the evolution of life history traits at the genotype-phenotype level. By modeling factors such as resource availability, mortality, mutation rates, and reproductive strategies, AEGIS offers unparalleled insights into the dynamics of life history evolution."
                 ),
