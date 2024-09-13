@@ -17,17 +17,17 @@ left_jumbotron = dbc.Col(
 right_jumbotron = dbc.Col(
     dash.html.Div(
         [
-            dash.html.H2("Learn", className="display-3"),
+            dash.html.H2("Analyze", className="display-3"),
             dash.html.Hr(className="my-2"),
-            dash.html.P("Or, familiarize yourself with AEGIS first. You can start by reading the wiki."),
+            dash.html.P("Or, inspect results of pre-run simulations."),
             dash.dcc.Link(
                 dbc.Button(
-                    "Take me to the wiki",
+                    "Show me plots",
                     color="light",
                     outline=True,
                     id="read-jumbotron-button",
                 ),
-                href="/wiki",
+                href="/plot",
             ),
         ],
         className="h-100 p-5 bg-secondary text-white border rounded-3",

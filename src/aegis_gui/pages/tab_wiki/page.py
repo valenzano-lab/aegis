@@ -29,7 +29,8 @@ def layout() -> html.Div:
         [
             html.H1("""Wiki tab"""),
             html.H6("Specification of output files"),
-            make_accordion(),
+            make_accordion_specs_output_files(),
+            # html.H6("Specification of parameters"),
             # make_output_specification_table(),
         ]
     )
@@ -43,7 +44,7 @@ def make_accordion_item(d):
     )
 
 
-def make_accordion():
+def make_accordion_specs_output_files():
     data = [
         {key: specs.get(key, "!!! nan") for key in output_specifications[0].keys()} for specs in output_specifications
     ]
