@@ -22,8 +22,11 @@ def layout():
                     "AEGIS operates by simulating individual organisms within a shared environment. The tool models various life history traits such as survival, reproduction, and mutation rates under different selective pressures. Users can define parameters, run simulations, and analyze outcomes to gain insights into evolutionary processes."
                 ),
                 html.H2("Use Cases", className="my-4"),
+                html.P(
+                    "AEGIS is designed to be a tool for theoretical and applied research, as well as a learning aid."
+                ),
                 usecases.layout,
-                html.H2("Concepts modeled", className="my-4"),
+                html.H2("Concepts modeled", className="my-2"),
                 html.Ul(
                     [
                         html.Li("Population dynamics"),
@@ -35,7 +38,8 @@ def layout():
                         html.Li("Pseudogenetic simulation"),
                     ]
                 ),
-                html.H2("Contact Us", className="my-4"),
+                # html.H2("Contact Us", className="mb-2 mt-4"),
+                html.Hr(className="mt-4"),
                 html.Div(
                     html.Div(
                         [

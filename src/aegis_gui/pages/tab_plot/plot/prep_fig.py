@@ -27,7 +27,7 @@ FIG_LAYOUT = dict(
     # legend=dict(x=0, y=0),
     legend=dict(x=0, y=1, yanchor="top", orientation="v"),
     font_size=14,
-    font_family="Inter",
+    # font_family="Inter",
     xaxis=dict(
         # showgrid=False,
         zeroline=False,
