@@ -8,6 +8,8 @@ from aegis_sim import parameterization
 from aegis_sim.utilities.funcs import skip
 from .recorder import Recorder
 from aegis_sim import submodels
+
+
 class IntervalRecorder(Recorder):
 
     def __init__(self, odir: pathlib.Path):
@@ -49,8 +51,11 @@ class IntervalRecorder(Recorder):
         # OUTPUT SPECIFICATION
         path: /gui/genotypes.csv
         filetype: csv
-        keywords: genotype
+        category: genotype
         description: A table of allele frequencies (frequency of 1's in the population for each site) across simulation intervals. Columns are sites, rows are simulation intervals (spanning INTERVAL_RATE steps).
+        trait granularity: population mean
+        time granularity: snapshot
+        frequency parameter: INTERVAL_RATE
         structure: A float matrix.
         """
         with open(self.odir / "genotypes.csv", "ab") as f:
@@ -64,8 +69,11 @@ class IntervalRecorder(Recorder):
         # OUTPUT SPECIFICATION
         path: /gui/genotypes.csv
         filetype: csv
-        keywords: phenotype
+        category: phenotype
         description: A table of median intrinsic phenotypes (median phenotype rate for each trait at each age) across simulation intervals. Columns are traits, rows are simulation intervals (spanning INTERVAL_RATE steps).
+        trait granularity: population median
+        time granularity: snapshot
+        frequency parameter: INTERVAL_RATE
         structure: A float matrix
         """
         with open(self.odir / "phenotypes.csv", "ab") as f:

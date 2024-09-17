@@ -18,8 +18,11 @@ class PickleRecorder(Recorder):
         # OUTPUT SPECIFICATION
         path: /pickles/{step}
         filetype: pickle
-        keywords: log
+        category: log
         description: A file that records the Population class instance which can be used to seed a future simulation.
+        trait granularity: individual
+        time granularity: snapshot
+        frequency parameter: PICKLE_RATE
         structure: Binary python file.
         """
 

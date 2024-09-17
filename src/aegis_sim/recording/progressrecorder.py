@@ -60,8 +60,11 @@ class ProgressRecorder(Recorder):
         # OUTPUT SPECIFICATION
         path: /progress.log
         filetype: txt
-        keywords: log
+        category: log
         description: A table documenting the estimated time of simulation completion (ETA), time to run one million steps (t1M), time since simulation start (runtime), number of simulated steps per minute (stg/min) and population size (popsize).
+        trait granularity: N/A
+        time granularity: N/A
+        frequency parameter: LOGGING_RATE
         structure: A str table with custom separator (` | `).
         """
         with open(self.odir / "progress.log", "ab") as f:

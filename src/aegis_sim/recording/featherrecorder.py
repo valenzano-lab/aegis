@@ -43,8 +43,11 @@ class FeatherRecorder(Recorder):
         # OUTPUT SPECIFICATION
         path: /snapshots/genotypes/{step}.feather
         filetype: feather
-        keywords: genotype
+        category: genotype
         description: A snapshot of complete binary genomes of all individuals at a certain simulation step.
+        trait granularity: individual
+        time granularity: snapshot
+        frequency parameter: SNAPSHOT_RATE
         structure: A bool matrix
         """
         df_gen = pd.DataFrame(np.array(population.genomes.flatten()))
@@ -59,8 +62,11 @@ class FeatherRecorder(Recorder):
         # OUTPUT SPECIFICATION
         path: /snapshots/phenotypes/{step}.feather
         filetype: feather
-        keywords: phenotype
+        category: phenotype
         description: A snapshot of complete intrinsic phenotypes of all individuals at a certain simulation step.
+        trait granularity: individual
+        time granularity: snapshot
+        frequency parameter: SNAPSHOT_RATE
         structure: A float matrix
         """
         # TODO bugged, wrong header
@@ -75,8 +81,11 @@ class FeatherRecorder(Recorder):
         # OUTPUT SPECIFICATION
         path: /snapshots/demography/{step}.feather
         filetype: feather
-        keywords: demography
+        category: demography
         description: A recording of life history metrics (age, number of births given, step at which born, current size, sex) of all individuals until a certain simulation step.
+        trait granularity: individual
+        time granularity: snapshot
+        frequency parameter: SNAPSHOT_RATE
         structure: A matrix of ints and floats
         """
         dem_attrs = [

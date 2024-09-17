@@ -33,8 +33,11 @@ class Ticker(Recorder):
         # OUTPUT SPECIFICATION
         path: /ticker.txt
         filetype: txt
-        keywords: log
+        category: log
         description: A live file useful for determining whether the simulation is still running. It gets updated every TICKER_RATE seconds; if it is not updated, the simulation is not running.
+        trait granularity: N/A
+        time granularity: N/A
+        frequency parameter: TICKER_RATE
         structure: A txt file with datetime stamp (%Y-%m-%d %H:%M:%S) in one line)
         """
         timestamp = time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime())

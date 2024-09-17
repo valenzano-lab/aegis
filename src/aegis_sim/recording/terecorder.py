@@ -63,8 +63,11 @@ class TERecorder(Recorder):
         # OUTPUT SPECIFICATION
         path: /te/{te_number}.csv
         filetype: csv
-        keywords: demography
+        category: demography
         description: Data for survival analysis; time until event (age at death or current viable age) and the event type (1 if death, 0 if still alive).
+        trait granularity: population
+        time granularity: interval
+        frequency parameter: TE_RATE
         structure: An int matrix.
         """
         path = self.odir / f"{self.TE_number}.csv"

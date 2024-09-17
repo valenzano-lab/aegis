@@ -21,8 +21,11 @@ class PhenomapRecorder(Recorder):
         # OUTPUT SPECIFICATION
         path: /phenomap.csv
         filetype: csv
-        keywords: genotype
+        category: genotype
         description: A static list of phenotypic effects of each genomic site. 
+        trait granularity: N/A
+        time granularity: N/A
+        frequency parameter: once
         structure: A table with four columns: effector site index, affected trait, affected age, effect magnitude. Each row represents an effect of a single site on a specific trait expressed at a specific age.
         """
         architecture = submodels.architect.architecture

@@ -58,8 +58,11 @@ class FlushRecorder(Recorder):
         # OUTPUT SPECIFICATION
         path: /gui/spectra/age_at_{cause}.csv
         filetype: csv
-        keywords: demography
+        category: demography
         description: Total number of deaths by age and cause of death, within a simulation interval.
+        trait granularity: population count
+        time granularity: interval
+        frequency parameter: INTERVAL_RATE
         structure: An int matrix.
         """
         with open(self.odir / f"{filename}.csv", "ab") as f:

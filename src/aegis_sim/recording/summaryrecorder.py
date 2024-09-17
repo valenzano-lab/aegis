@@ -32,8 +32,11 @@ class SummaryRecorder(Recorder):
         # OUTPUT SPECIFICATION
         path: /output_summary.json
         filetype: json
-        keywords: log
+        category: log
         description: A json dictionary documenting a number of simulation traits at the end of the simulation; e.g. extinction status, random seed, time at start, total runtime, median memory use, total storage use.
+        trait granularity: N/A
+        time granularity: N/A
+        frequency parameter: once
         structure: A json dictionary.
         """
         try:
@@ -58,8 +61,11 @@ class SummaryRecorder(Recorder):
         # OUTPUT SPECIFICATION
         path: /input_summary.json
         filetype: json
-        keywords: genotype
+        category: genotype
         description: A json dictionary documenting a number of simulation traits at the start of the simulation; e.g. random seed, time at start.
+        trait granularity:
+        time granularity:
+        frequency parameter: once
         structure: A json dictionary.
         """
         summary = {
