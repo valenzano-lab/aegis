@@ -603,7 +603,8 @@ DEFAULT_PARAMETERS = {
     #     inrange=lambda x: x >= 1,
     #     serverrange=lambda x: x <= 10,
     #     serverrange_info="[1,10]",
-    #     evalrange=[1, 50],
+    #
+    # evalrange=[1, 50],
     # ),
     "G_surv_evolvable": Parameter(
         key="G_surv_evolvable",
@@ -892,6 +893,7 @@ DEFAULT_PARAMETERS = {
         dtype=str,
         drange="None or [" + ",".join(PRESET_INFO.keys()) + "]",
         inrange=lambda x: x in PRESET_INFO.keys() or x is None,
+        show_in_docs=False,
     ),
     #
     #

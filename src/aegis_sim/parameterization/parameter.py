@@ -17,6 +17,7 @@ class Parameter:
         serverrange_info="",
         evalrange=None,
         presets={},
+        show_in_docs=True,
     ):
         self.key = key
         self.name = name
@@ -31,6 +32,7 @@ class Parameter:
         self.serverrange_info = serverrange_info
         self.evalrange = evalrange
         self.presets = presets
+        self.show_in_docs = show_in_docs
 
     def convert(self, value):
         if value is None or value == "":

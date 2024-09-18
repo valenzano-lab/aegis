@@ -20,8 +20,9 @@ def get_default_parameter_dictlists():
         "info",
         "dtype",
         "drange",
+        "domain",
     ]
-    dictlists = [{col: getattr(p, col) for col in cols} for p in DEFAULT_PARAMETERS.values()]
+    dictlists = [{col: getattr(p, col) for col in cols} for p in DEFAULT_PARAMETERS.values() if p.show_in_docs]
     return dictlists
 
 
@@ -34,11 +35,12 @@ There are three kinds of properties in AEGIS: fixed, parametrizable and variable
 - All other properties, e.g. fertility (biological) or abiotic mortality (environmental), are variable – they differ between individuals and they vary over simulation time.  
 
 The table below provides information about all parameters in AEGIS. Here we provide an explanation of table columns.
-- `key` gives the parameter names as they are given in the GUI and as they are expected in the .yml input configuration files.
-- `default` gives the default value of the parameter. This is the value that will be used if the user does not provide any value.
-- `info` gives a short description of the parameter. Note that to understand some of the parameters it is necessary to understand how they modify the behavior of the submodel they affect.
-- `dtype` gives the data type of the parameter value.
+- `key` specifies the parameter names as they are given in the GUI and as they are expected in the .yml input configuration files.
+- `default` specifies the default value of the parameter. This is the value that will be used if the user does not provide any value.
+- `info` specifies a short description of the parameter. Note that to understand some of the parameters it is necessary to understand how they modify the behavior of the submodel they affect.
+- `dtype` specifies the data type of the parameter value.
 - `drange` specifies the valid range of values that can be used for the parameter.
+- `domain` specifies the simulation component which the parameter modifies.
 
 """
 
