@@ -28,7 +28,7 @@ aegis --help # shows help documentation
 ```
 
 To run simulations within a terminal, you need to prepare config files in [YAML](https://en.wikipedia.org/wiki/YAML) format
-which contain custom values for simulation parameters. The list of parameters, including their descriptions and default values you can find [here](). <!-- TODO update link -->
+which contain custom values for simulation parameters. The list of parameters, including their descriptions and default values you can find [here](src/aegis/documentation/dynamic/default_parameters.md).
 An example of a config file:
 
 ```yml
@@ -66,7 +66,7 @@ Graphical user interface for AEGIS can be used on the webserver or with a local 
 
 ### Model description
 
-Most documentation about the model is available within the GUI itself, including description of submodels, [configuration parameters](src/aegis/documentation/dynamic/default_parameters.md), [output specification](src/aegis/documentation/dynamic/output_specifications.md), and [submodel specifications](src/aegis/documentation/dynamic/submodel_specifications.md). Use the [webserver]() or a local installation to access the GUI. <!-- TODO update link --> Further information is available in scientific articles:
+Most documentation about the model is available within the GUI itself, including description of [inputs](src/aegis/documentation/dynamic/default_parameters.md), [outputs](src/aegis/documentation/dynamic/output_specifications.md) and [submodels](src/aegis/documentation/dynamic/submodel_specifications.md). Use the [webserver]() or a local installation to access the GUI. <!-- TODO update link --> Further information is available in the following articles:
 
 - [AEGIS: An In Silico Tool to model Genome Evolution in Age-Structured Populations (2019)](https://www.biorxiv.org/content/10.1101/646877v1)
 - [An In Silico Model to Simulate the Evolution of Biological Aging (2016)](https://www.biorxiv.org/content/10.1101/037952v1)
