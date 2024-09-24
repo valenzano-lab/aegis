@@ -1,6 +1,7 @@
 import dash
 import dash_bootstrap_components as dbc
 from aegis_gui import layout
+from aegis_gui.guisettings.GuiSettings import gui_settings
 
 
 @dash.callback(
@@ -22,6 +23,7 @@ def get_app():
         __name__,
         suppress_callback_exceptions=True,
         update_title="",
+        url_base_pathname=gui_settings.BASE_HREF,
         external_stylesheets=[dbc.themes.BOOTSTRAP, dbc.icons.BOOTSTRAP],
         assets_ignore="styles-dark.css",  # *.css in assets are automatically imported; they need to be explicitly ignored
         use_pages=True,

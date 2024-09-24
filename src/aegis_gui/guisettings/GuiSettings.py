@@ -13,6 +13,7 @@ class GuiSettings:
     DATA_RETENTION_DAYS: Optional[int]
     ABS_PATH_TO_BASE_DIRECTORY: Optional[str]
     PORT: Optional[int]
+    BASE_HREF = "/aegis/"
 
     def can_run_more_simulations(self, currently_running):
         if self.SIMULATION_NUMBER_LIMIT is None:
@@ -57,6 +58,9 @@ class GuiSettings:
         self.base_dir.mkdir(exist_ok=True, parents=True)
         self.sim_dir.mkdir(exist_ok=True, parents=True)
         self.figure_dir.mkdir(exist_ok=True, parents=True)
+
+    def wrap_href(self, href):
+        return self.BASE_HREF + href
 
 
 gui_settings = GuiSettings()

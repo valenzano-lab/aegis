@@ -3,6 +3,7 @@ from aegis_sim.utilities.container import Container
 from aegis_gui.utilities import utilities
 import dash_bootstrap_components as dbc
 from aegis_gui.utilities import log
+from aegis_gui.guisettings.GuiSettings import gui_settings
 
 
 def make_trackers(ticker_store):
@@ -34,7 +35,7 @@ def make_trackers(ticker_store):
             )
             linked_progressbar = dash.dcc.Link(
                 children=progressbar,
-                href=f"/simlog?sim={container.name}",
+                href=gui_settings.wrap_href(f"simlog?sim={container.name}"),
             )
             # running_sims.append(tracker)
             running_sims.append(linked_progressbar)
@@ -71,7 +72,7 @@ def make_trackers(ticker_store):
         buttons = [
             dbc.Button(
                 children=[rc.name],
-                href=f"/simlog?sim={rc.name}",
+                href=gui_settings.wrap_href(f"simlog?sim={rc.name}"),
                 className="badge me-1",
                 color="primary",
             )
@@ -79,7 +80,9 @@ def make_trackers(ticker_store):
         ]
 
         if len(recent_containers) > N_recent_containers_to_show:
-            buttons.append(dbc.Button("more...", className="badge me-1", color="secondary", href="/simlog"))
+            buttons.append(
+                dbc.Button("more...", className="badge me-1", color="secondary", href=gui_settings.wrap_href(f"simlog"))
+            )
 
         nav = dash.html.Div(children=buttons)
 

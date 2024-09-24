@@ -3,6 +3,7 @@ from dash import html, dcc
 import dash_bootstrap_components as dbc
 from aegis_gui.utilities import sim_tracker
 from aegis_gui import offcanvas
+from aegis_gui.guisettings.GuiSettings import gui_settings
 
 
 def get_app_layout():
@@ -22,14 +23,20 @@ def get_sidebar():
             dbc.Nav(
                 children=[
                     html.A(
-                        [html.Img(src="/assets/aegis-ager.svg", width="80%", style={"margin": "0 10%"}, id="aegis-logo")],
-                        href="/",
+                        [
+                            html.Img(
+                                src="assets/aegis-ager.svg", width="80%", style={"margin": "0 10%"}, id="aegis-logo"
+                            )
+                        ],
+                        href=gui_settings.wrap_href(""),
                         className="mb-5",
                     ),
                     dbc.NavItem(
                         [
                             dbc.NavLink(
-                                [dash.html.I(className="bi bi-house-door-fill"), "Home"], href="/", id="link-nav-home"
+                                [dash.html.I(className="bi bi-house-door-fill"), "Home"],
+                                href=gui_settings.wrap_href(""),
+                                id="link-nav-home",
                             )
                         ]
                     ),
@@ -37,7 +44,7 @@ def get_sidebar():
                         [
                             dbc.NavLink(
                                 [dash.html.I(className="bi bi-rocket-takeoff-fill"), "Launch"],
-                                href="/config",
+                                href=gui_settings.wrap_href("config"),
                                 id="link-nav-config",
                             )
                         ]
@@ -46,7 +53,7 @@ def get_sidebar():
                         [
                             dbc.NavLink(
                                 [dash.html.I(className="bi bi-bar-chart-fill"), "Plot"],
-                                href="/plot",
+                                href=gui_settings.wrap_href("plot"),
                                 id="link-nav-plot",
                             )
                         ]
@@ -55,7 +62,7 @@ def get_sidebar():
                         [
                             dbc.NavLink(
                                 [dash.html.I(className="bi bi-eye-fill"), "Control"],
-                                href="/simlog",
+                                href=gui_settings.wrap_href("simlog"),
                                 id="link-nav-simlog",
                             )
                         ]
@@ -64,7 +71,7 @@ def get_sidebar():
                         [
                             dbc.NavLink(
                                 [dash.html.I(className="bi bi-info-square-fill"), "Wiki"],
-                                href="/wiki",
+                                href=gui_settings.wrap_href("wiki"),
                                 id="link-nav-wiki",
                             )
                         ]
@@ -74,9 +81,8 @@ def get_sidebar():
                 + [offcanvas.get_offcanvas_trigger(), offcanvas.get_offcanvas()],
                 id="sidebar",
                 vertical="md",
-                pills=True,
+                pills=True,  # TODO fix because it is not showing since i changed the href logic with gui_settings.wrap_href
                 # fill=True,
             ),
         ],
     )
-
