@@ -1,8 +1,10 @@
 import dash
 from dash import html, dash_table
 from aegis_gui.docs.specifications import output_specifications
-from aegis_gui.utilities import log
 import dash_bootstrap_components as dbc
+
+from aegis_sim.submodels import genetics
+import pathlib
 
 
 dash.register_page(__name__, path="/wiki", name="AEGIS | Wiki")
@@ -28,12 +30,40 @@ def layout() -> html.Div:
     return html.Div(
         [
             html.H1("""Wiki tab"""),
-            html.H6("Specification of output files"),
-            make_accordion_specs_output_files(),
-            # html.H6("Specification of parameters"),
-            # make_output_specification_table(),
+            dbc.Select(
+                id="select",
+                options=[
+                    {"label": "Specification of output files", "value": "1"},
+                    {"label": "Specification of the genetic architecture in AEGIS", "value": "2"},
+                    # {"label": "Disabled option", "value": "3", "disabled": True},
+                ],
+                value="1",
+                style={"marginBottom": "1rem"},
+            ),
+            html.Div(id="select-container", children=[]),
         ]
     )
+
+
+@dash.callback(
+    dash.Output("select-container", "children"),  # Updates the content of the container div
+    [dash.Input("select", "value")],  # Listens to changes in the Select dropdown
+)
+def update_select_container(selected_value):
+    if selected_value == "1":
+        return [
+            # html.H6("Specification of output files"),
+            make_accordion_specs_output_files(),  # Call the appropriate function to return content
+        ]
+    elif selected_value == "2":
+        return [
+            # html.H6("Specification of the genetic architecture in AEGIS"),
+            dash.dcc.Markdown(
+                children=get_specification_of_gen_arch(), mathjax=True, dangerously_allow_html=True
+            ),  # Display Markdown with MathJax
+        ]
+    else:
+        return html.P("Please select an option.")  # Default message for no selection or invalid option
 
 
 def make_accordion_item(d):
@@ -53,3 +83,9 @@ def make_accordion_specs_output_files():
         children=[dbc.AccordionItem(title=d["path"], children=make_accordion_item(d)) for d in data],
         start_collapsed=True,
     )
+
+
+def get_specification_of_gen_arch():
+    path_to_md = pathlib.Path(genetics.__file__).parent / "doc.md"
+    with open(path_to_md, "r") as file_:
+        return file_.read()
