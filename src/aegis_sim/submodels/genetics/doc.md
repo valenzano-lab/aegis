@@ -92,21 +92,33 @@ The output of each step ($o^{step}$) is taken as input for the next step. There 
 
 ##### Motivation
 
-This step is important in simulating environmental drift; i.e. a non-cyclic, progressively changing environment. When environment drifts, the fitness of all phenotypes shifts as they become more or less suited for the novel environment. Shifting environments are important for studying the effects of long-term environmental change (e.g. climate change, resource depletion) on evolution. Furthermore, it enables indefinite adaptive evolution because as the environment shifts, the population has to evolve to adapt to it. In stable environments, populations cease to adapt once they come close to the fitness peak.
+This step simulates environmental drift, representing a non-cyclic, progressively changing environment. As the environment shifts, the fitness landscape is altered, rendering all phenotypes more or less suited to the novel conditions. Shifting environments is crucial for understanding the evolutionary dynamics under long-term environmental change, such as those driven by climate change. Moreover, environmental drift enables continuous adaptive evolution, as populations must constantly evolve to follow the shifting environmental optima. In contrast, populations in stable environments become stationary once they approach local fitness peaks.
 
 ##### Computation
 
-$$g \oplus \epsilon \rightarrow o^1_{i,j,k}$$
+$$
+o^1_{i,j,k} := g \oplus \epsilon
+$$
 
 ##### Explanation
 
-The relevant parameter here is _environmental drift rate_, $ER$. When $ER=0$, there is no environmental drift (the environment is stable); when it is non-zero, the environment drifts; $ER$ signifies how often the environment drifts (how many steps does it take for environment to drift).
+The key parameter governing environmental dynamics is the environmental drift rate, $ER$. When $ER=0$, the environment remains stable, with no drift. For non-zero values of $ER$, the environment undergoes progressive change. The magnitude of $ER$ determines the frequency of environmental shifts, indicating how many simulation steps are required for the environmental change to occur.
 
-The state of the environment is saved in the array $\epsilon$ which has the same structure as a genome ($g$). In the beginning of the simulation, $\epsilon$ only contains zeros but every $ER$ steps, a random bit in $\epsilon$ flips.
+The state of the environment is saved in the boolean array $\epsilon$ which has the same dimensions as genomes ($g$). In the beginning of the simulation, $\epsilon$ only contains zeros but every $ER$ steps, a random bit in $\epsilon$ flips.
 
-Note that $\oplus$ is a XOR operation which acts as a flip; i.e.
-$$g_{i,j,k} \oplus \epsilon_{i,j,k} \rightarrow o^1_{i,j,k} \text{ when } \epsilon_{i,j,k} = 0$$
+Note that $\oplus$ is a XOR operation which acts as a flip:
+
+$$g_{i,j,k} \oplus \epsilon_{i,j,k} \rightarrow o^1_{i,j,k} \text{ when } \epsilon_{i,j,k} = 0, \text{ and}$$
+
 $$g_{i,j,k} \oplus \epsilon_{i,j,k} \rightarrow \neg\ o^1_{i,j,k} \text{ when } \epsilon_{i,j,k} = 1.$$
+
+<!-- $$
+o^1_{i,j,k} =
+\begin{cases}
+o^1_{i,j,k} & \text{if } \epsilon_{i,j,k} = 0 \\
+\neg\ o^1_{i,j,k} & \text{if } \epsilon_{i,j,k} = 1
+\end{cases}
+$$ -->
 
 When $\epsilon$ is 1, this computation flips the homologous genomic bit, and when $\epsilon$ is 0, the computation keeps the value of the homologous genomic bit.
 
@@ -118,8 +130,13 @@ This step is important in handling diploidy and simulating inheritance patterns 
 
 ##### Computation
 
-$$o^1_{i,j,0} = o^1_{i,j,1} \rightarrow o^2_{i,j} := o^1_{i,j,0}$$
-$$o^1_{i,j,0} \ne o^1_{i,j,1} \rightarrow o^2_{i,j} := DF$$
+$$
+o^2_{i,j} =
+\begin{cases}
+o^1_{i,j,0} & \text{if } o^1_{i,j,0} = o^1_{i,j,1} \\
+DF & \text{if } o^1_{i,j,0} \ne o^1_{i,j,1}
+\end{cases}
+$$
 
 ##### Explanation
 
@@ -127,13 +144,13 @@ The relevant parameter here is the _dominance factor_, $DF$. When homologous sit
 
 The value of $DF$ will determine the inheritance pattern:
 
-| DF | pattern |
-| -------- | ------- |
-| 0 | recessive |
+| DF  | pattern          |
+| --- | ---------------- |
+| 0   | recessive        |
 | 0-1 | partial dominant |
-| 0.5 | true additive |
-| 1 | dominant |
-| 1+ | overdominant |
+| 0.5 | true additive    |
+| 1   | dominant         |
+| 1+  | overdominant     |
 
 #### 3. Genetic architecture
 
@@ -148,42 +165,46 @@ In AEGIS, there are two kinds of architectures – a _composite_ and a _modifyin
 
 We can resolve the genetic architecture as a weighted sum
 
-$$o^3_{t,a} \leftarrow \sum_{i,j} o^2_{i,j} * GA_{i,j,t,a}$$
+$$
+o^3_{t,a} := \sum_{i,j} o^2_{i,j} * GA_{i,j,t,a}
+$$
 
 or as a matrix multiplication
 
-$$GA \times o^2 \rightarrow o^3$$
+$$
+o^3 := GA \times o^2
+$$
 
-where the intermediate pseudogenome $o^2$ is flattened (to one dimensions) and the $GA$ is flattened to have $`_{i,j}`$ on one axis (as $o^2$) and $`_{t,a}`$ on the other.
+where the intermediate pseudogenome $o^2$ is flattened (to the dimension of 1) and the $GA$ is flattened to have $_{i,j}$ on one axis (as $o^2$) and $_{t,a}$ on the other.
 
 Conceptually, it is simpler to think of it as a weighted sum. $GA_{i,j,t,a}$ are user-set inputs, the weights of the weighted sum. When $o^2_{i,j}$ is greater than 0, it contributes to a trait $t$ at an age $a$ with the weight of $GA_{i,j,t,a}$.
 
-Note that $GA$ is only a concept. The user does not enter individual weights of the genetic architecture; furthermore, the exact computation procedure depends on the type of the genetic architecture used. See below.
+Note that $GA$ is only a notational concept. The user does not enter individual weights of the genetic architecture; furthermore, the exact computation procedure depends on the type of the genetic architecture used. See below.
 
 ###### Computation for composite architecture
 
 Under composite architecture, each locus is responsible for setting a phenotypic value of one trait at one age. Each locus has a user-defined number of bits, $BPL$ (parameter `BITS_PER_LOCUS`). Each bit has a weight, determined by the locus architecture $LA_i$. Under the simplest locus architecture, every bit has the same weight; i.e. $LA_{i} = \frac{1}{BPL}$. More complex locus architectures can be made where bits are increasingly more important within a locus.
 
-<!-- # TODO use := instead of arrows -->
+$$o^{2*}_{j} := \sum_{i=0}^{BPL} o^{2}_{i,j} \cdot LA_i$$
 
-$$o^{2*}\_{j} \leftarrow \sum_{i=0}^{BPL} o^{2}_{i,j} \cdot LA_i$$
+<!-- TODO explain locus architectures -->
 
 The sequence $o^{2*}_j$ contains locus values. These are now mapped onto various traits. Per code convention, traits are encoded in the following sequence – intrinsic mortality, intrinsic fertility, intrinsic mutation rate and intrinsic growth rate.
 
 $$
-o^{3}_{mortality, a} := o^{2*}\_{a}
+o^{3}_{mortality, a} := o^{2*}_{a}
 $$
 
 $$
-o^{3}_{fertility, a} := o^{2*}\_{a+\Delta A}
+o^{3}_{fertility, a} := o^{2*}_{a+\Delta A}
 $$
 
 $$
-o^{3}_{mutation\ rate, a} := o^{2*}\_{a+2\Delta A}
+o^{3}_{mutation\ rate, a} := o^{2*}_{a+2\Delta A}
 $$
 
 $$
-o^{3}_{growth\ rate, a} := o^{2*}\_{a+3\Delta A}
+o^{3}_{growth\ rate, a} := o^{2*}_{a+3\Delta A}
 $$
 
 Factor $\Delta A$ is the parameter `AGE_LIMIT`, the maximum age that can be obtained by any individual within a custom simulation.
@@ -191,10 +212,10 @@ These formulas simply mean that the phenotypic values for mortality are encoded 
 
 ###### Computation for modifying architecture
 
-Under modifying architecture, the computation is simpler. `BITS_PER_LOCUS` is set to 1, so $o^2_{i,j} = o^2_{i,0} \rightarrow o^{2*}_i.$
+Under modifying architecture, the computation is simpler. `BITS_PER_LOCUS` is set to 1, so $o^{2*}_i := o^2_{i,j} = o^2_{i,0}.$
 
 The weighted sum formula then becomes
-$o^3_{t,a} \leftarrow \sum_{i} o^{2*}_{i} * GA\_{i,t,a}$
+$o^3_{t,a} := \sum_{i} o^{2*}_{i} * GA_{i,t,a}$
 which means that setting $GA$ becomes simpler.
 
 Weights of the genetic architecture ($GA_{i,t,a}$) are sampled from user-specified distributions.
@@ -205,15 +226,20 @@ Weights of the genetic architecture ($GA_{i,t,a}$) are sampled from user-specifi
 
 ##### Motivation
 
-In case probability traits (intrinsic survival, reproduction and mutation rates) compute to values over 1 or under 0, they are cut back to the valid interval of [0,1].
+In case probability traits (intrinsic survival, reproduction and mutation rates) compute to values over 1 or under 0, they are cut back to the valid interval of $[0,1]$.
 
 ##### Computation
 
-$$o^4*{t,a} \leftarrow 1 \text{ when } o^3*{t,a} > 1 $$
-$$o^4*{t,a} \leftarrow 0 \text{ when } o^3*{t,a} < 0 $$
-$$o^4*{t,a} \leftarrow o^3*{t,a} \text{ otherwise} $$
+$$
+o^4_{t,a} =
+\begin{cases}
+1 & \text{if } o^3_{t,a} > 1 \\
+0 & \text{if } o^3_{t,a} < 0 \\
+o^3_{t,a} & \text{otherwise}
+\end{cases}
+$$
 
-Note that these are equivalent:
+Note that these are equivalent and final values used in the simulation:
 
 $$o^4_{mortality, a} = m_{a}$$
 

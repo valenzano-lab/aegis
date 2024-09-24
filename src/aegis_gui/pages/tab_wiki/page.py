@@ -42,6 +42,7 @@ def layout() -> html.Div:
                 ],
                 value="input",
                 style={"marginBottom": "1rem"},
+                persistence=True,
             ),
             html.Div(id="select-container", children=[]),
         ]
