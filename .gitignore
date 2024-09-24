@@ -6,6 +6,7 @@ ipynb
 temp
 .temp
 src/gui/sim_data
+bootstrap-icons-1.11.3
 
 ### Python ###
 # Byte-compiled / optimized / DLL files

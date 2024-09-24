@@ -2,6 +2,7 @@ import dash
 from dash import html, dcc
 import dash_bootstrap_components as dbc
 from aegis_gui.utilities import sim_tracker
+from aegis_gui.utilities.utilities import get_icon
 from aegis_gui import offcanvas
 from aegis_gui.guisettings.GuiSettings import gui_settings
 
@@ -34,7 +35,11 @@ def get_sidebar():
                     dbc.NavItem(
                         [
                             dbc.NavLink(
-                                [dash.html.I(className="bi bi-house-door-fill"), "Home"],
+                                [
+                                    dash.html.I(className="bi bi-house-door-fill"),
+                                    "Home",
+                                    # get_icon("house-door-fill"),
+                                ],
                                 href=gui_settings.wrap_href(""),
                                 id="link-nav-home",
                             )

@@ -1,4 +1,6 @@
+import dash
 import yaml
+
 from aegis_sim.utilities.container import Container
 from aegis_gui.guisettings.GuiSettings import gui_settings
 
@@ -32,3 +34,11 @@ def get_sims():
 def sim_exists(filename: str) -> bool:
     paths = get_sim_paths()
     return any(path.stem == filename for path in paths)
+
+
+def get_icon(icon_name):
+    return dash.html.Img(
+        src=f"/aegis/assets/icons/{icon_name}.svg",
+        width="16",
+        height="16",
+    )
