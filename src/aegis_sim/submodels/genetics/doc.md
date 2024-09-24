@@ -54,11 +54,11 @@ The site marked as a hyphen `-` is $g_{1,2,4}$ because it is the site on the fir
 second locus ($j=2$) in the fourth position ($k=4$).
 In another example, the site marked as the equal sign `=` is $g_{2,2,7}$.
 
-### The rationale behind the three-dimensionality of pseudogenomes
+##### The rationale behind the three-dimensionality of pseudogenomes
 
 This structure is biologically and computationally motivated. Biological motivation stems from the need to define chromosome sets (because they undergo specific biological processes such as recombination, assortment and dominance) and usefulness of loci (as they allude to genes – sequences of bases that work together to target a specific phenotypic trait). Computational motivation results from the biological motivation – e.g. computing recombination works different than computing phenotypic effects of a locus; thus organizing the genome into multiple dimensions aids with writing computational algorithms.
 
-### What is a locus? Why do loci have eight bits?
+##### What is a locus? Why do loci have eight bits?
 
 Locus is a sequence of multiple bases that all contribute to the same phenotypic trait (e.g. the fertility rate). This means that when one bases is mutated, the phenotypic trait will be modified (fertility rate increased or decreased). The same is true for empirical genes.
 
@@ -88,17 +88,17 @@ The output of each step ($o^{step}$) is taken as input for the next step. There 
    - _modifying_
 4. Phenotypic bounds
 
-### 1. Environmental drift
+#### 1. Environmental drift
 
-#### Motivation
+##### Motivation
 
 This step is important in simulating environmental drift; i.e. a non-cyclic, progressively changing environment. When environment drifts, the fitness of all phenotypes shifts as they become more or less suited for the novel environment. Shifting environments are important for studying the effects of long-term environmental change (e.g. climate change, resource depletion) on evolution. Furthermore, it enables indefinite adaptive evolution because as the environment shifts, the population has to evolve to adapt to it. In stable environments, populations cease to adapt once they come close to the fitness peak.
 
-#### Computation
+##### Computation
 
 $$g \oplus \epsilon \rightarrow o^1_{i,j,k}$$
 
-#### Explanation
+##### Explanation
 
 The relevant parameter here is _environmental drift rate_, $ER$. When $ER=0$, there is no environmental drift (the environment is stable); when it is non-zero, the environment drifts; $ER$ signifies how often the environment drifts (how many steps does it take for environment to drift).
 
@@ -110,22 +110,23 @@ $$g_{i,j,k} \oplus \epsilon_{i,j,k} \rightarrow \neg\ o^1_{i,j,k} \text{ when } 
 
 When $\epsilon$ is 1, this computation flips the homologous genomic bit, and when $\epsilon$ is 0, the computation keeps the value of the homologous genomic bit.
 
-### 2. Ploidy
+#### 2. Ploidy
 
-#### Motivation
+##### Motivation
 
 This step is important in handling diploidy and simulating inheritance patterns (e.g. dominance).
 
-#### Computation
+##### Computation
 
 $$o^1_{i,j,0} = o^1_{i,j,1} \rightarrow o^2_{i,j} := o^1_{i,j,0}$$
 $$o^1_{i,j,0} \ne o^1_{i,j,1} \rightarrow o^2_{i,j} := DF$$
 
-#### Explanation
+##### Explanation
 
 The relevant parameter here is the _dominance factor_, $DF$. When homologous sites are homozygous, the combined value is the value of either site ($1$ if both chromosome sets have a $1$, or $0$ when both have a $0$). When homologous sites are heterozygous, the combined value is $DF$.
 
 The value of $DF$ will determine the inheritance pattern:
+
 | DF | pattern |
 | -------- | ------- |
 | 0 | recessive |
@@ -134,16 +135,16 @@ The value of $DF$ will determine the inheritance pattern:
 | 1 | dominant |
 | 1+ | overdominant |
 
-### 3. Genetic architecture
+#### 3. Genetic architecture
 
-#### Motivation
+##### Motivation
 
 Similar to how genes have effects on phenotypic traits as well as individual sites, so do loci and individual sites in pseudogenomes. AEGIS encodes no molecular information, so no individual, specific genes are modeled together with the information on how they affect which phenotypic traits. Instead, AEGIS uses genotype-phenotype mapping – a computational method that translates the state of each pseudogenomic site into a phenotypic effect. The final phenotype, then, is the aggregate of all those individual phenotypic effects.
 
 Genotype-phenotype mapping requires as input a genetic architecture, $GA$.
 In AEGIS, there are two kinds of architectures – a _composite_ and a _modifying_ architecture. When compared to a _modifying_ architecture, a _composite_ architecture is fast, simple to define, easy to plot and understand; however, it cannot simulate sites with age-pleiotropic or trait-pleiotropic effects (i.e. a genetic site that affects two traits or affects a single trait at two different ages). The _modifying_ architecture can simulate pleiotropy (age-pleiotropy and/or trait-pleiotropy). An additional advantage of the _modifying_ architecture is that linkage between phenotypically related genes is low; i.e. genes that affect a specific trait at a specific age will usually not find itself next to another gene that affects the same trait at a similar age.
 
-#### Computation (general)
+##### Computation (general)
 
 We can resolve the genetic architecture as a weighted sum
 
@@ -151,7 +152,7 @@ $$o^3_{t,a} \leftarrow \sum_{i,j} o^2_{i,j} * GA_{i,j,t,a}$$
 
 or as a matrix multiplication
 
-$$ GA \times o^2 \rightarrow o^3$$
+$$GA \times o^2 \rightarrow o^3$$
 
 where the intermediate pseudogenome $o^2$ is flattened (to one dimensions) and the $GA$ is flattened to have $`_{i,j}`$ on one axis (as $o^2$) and $`_{t,a}`$ on the other.
 
@@ -159,7 +160,7 @@ Conceptually, it is simpler to think of it as a weighted sum. $GA_{i,j,t,a}$ are
 
 Note that $GA$ is only a concept. The user does not enter individual weights of the genetic architecture; furthermore, the exact computation procedure depends on the type of the genetic architecture used. See below.
 
-##### Computation for composite architecture
+###### Computation for composite architecture
 
 Under composite architecture, each locus is responsible for setting a phenotypic value of one trait at one age. Each locus has a user-defined number of bits, $BPL$ (parameter `BITS_PER_LOCUS`). Each bit has a weight, determined by the locus architecture $LA_i$. Under the simplest locus architecture, every bit has the same weight; i.e. $LA_{i} = \frac{1}{BPL}$. More complex locus architectures can be made where bits are increasingly more important within a locus.
 
@@ -188,7 +189,7 @@ $$
 Factor $\Delta A$ is the parameter `AGE_LIMIT`, the maximum age that can be obtained by any individual within a custom simulation.
 These formulas simply mean that the phenotypic values for mortality are encoded in the first $\Delta A$ loci, values for fertility in the second $\Delta A$ loci, etc.
 
-##### Computation for modifying architecture
+###### Computation for modifying architecture
 
 Under modifying architecture, the computation is simpler. `BITS_PER_LOCUS` is set to 1, so $o^2_{i,j} = o^2_{i,0} \rightarrow o^{2*}_i.$
 
@@ -200,17 +201,17 @@ Weights of the genetic architecture ($GA_{i,t,a}$) are sampled from user-specifi
 
 <!-- # TODO explain how to set GA -->
 
-### 4. Phenotypic bounds
+#### 4. Phenotypic bounds
 
-#### Motivation
+##### Motivation
 
 In case probability traits (intrinsic survival, reproduction and mutation rates) compute to values over 1 or under 0, they are cut back to the valid interval of [0,1].
 
-#### Computation
+##### Computation
 
-$$ o^4*{t,a} \leftarrow 1 \text{ when } o^3*{t,a} > 1$$
-$$ o^4*{t,a} \leftarrow 0 \text{ when } o^3*{t,a} < 0$$
-$$ o^4*{t,a} \leftarrow o^3*{t,a} \text{ otherwise}$$
+$$o^4*{t,a} \leftarrow 1 \text{ when } o^3*{t,a} > 1 $$
+$$o^4*{t,a} \leftarrow 0 \text{ when } o^3*{t,a} < 0 $$
+$$o^4*{t,a} \leftarrow o^3*{t,a} \text{ otherwise} $$
 
 Note that these are equivalent:
 

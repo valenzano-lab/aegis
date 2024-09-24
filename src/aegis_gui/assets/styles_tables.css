@@ -42,15 +42,25 @@ th {
 }
 
 td {
-  height: 2rem;
-  padding-top: 0.5rem;
-  padding-bottom: 0.5rem;
+  /* height: 2rem; */
+  /* padding-top: 0.5rem; */
+  /* padding-bottom: 0.5rem; */
 }
 
 th {
-  padding-top: 0.8rem;
-  padding-bottom: 0.8rem;
-  margin-top: 1.5rem;
+  /* padding-top: 0.8rem; */
+  /* padding-bottom: 0.8rem; */
+  /* margin-top: 1.5rem; */
+  background-color: dodgerblue;
+  color:white;
+}
+
+table {
+  margin-bottom: 1rem;
+}
+
+th, td {
+  border: 1px solid dodgerblue;
 }
 
 .config-table th {
@@ -78,11 +88,11 @@ label {
 th.valid-values {
   width: 100px;
 }
-
+/* 
 table {
   border-radius: 10px;
   margin-bottom: 2rem;
-}
+} */
 
 table:hover {
 }
@@ -92,7 +102,7 @@ table:hover {
 }
 
 /* Rounded corners of tables -- */
-th:first-of-type {
+/* th:first-of-type {
   border-top-left-radius: 10px;
 }
 
@@ -100,16 +110,15 @@ th:last-of-type {
   border-top-right-radius: 10px;
 }
 
-tr:last-of-type td:first-of-type {
+td:last-of-type td:first-of-type {
   border-bottom-left-radius: 10px;
 }
 
-tr:last-of-type td:last-of-type {
+td:last-of-type td:last-of-type {
   border-bottom-right-radius: 10px;
-}
+} */
 
 .domain,
 .dtype {
-  /* font-family: Quicksand; */
   font-weight: 600;
 }

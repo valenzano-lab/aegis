@@ -33,11 +33,11 @@ def layout() -> html.Div:
             dbc.Select(
                 id="select",
                 options=[
-                    {"label": "Specification of output files", "value": "1"},
-                    {"label": "Specification of the genetic architecture in AEGIS", "value": "2"},
+                    {"label": "Specification of the genetic architecture in AEGIS", "value": "genarch"},
+                    {"label": "Specification of output files", "value": "output"},
                     # {"label": "Disabled option", "value": "3", "disabled": True},
                 ],
-                value="1",
+                value="genarch",
                 style={"marginBottom": "1rem"},
             ),
             html.Div(id="select-container", children=[]),
@@ -50,12 +50,12 @@ def layout() -> html.Div:
     [dash.Input("select", "value")],  # Listens to changes in the Select dropdown
 )
 def update_select_container(selected_value):
-    if selected_value == "1":
+    if selected_value == "output":
         return [
             # html.H6("Specification of output files"),
             make_accordion_specs_output_files(),  # Call the appropriate function to return content
         ]
-    elif selected_value == "2":
+    elif selected_value == "genarch":
         return [
             # html.H6("Specification of the genetic architecture in AEGIS"),
             dash.dcc.Markdown(
