@@ -2,7 +2,9 @@ import numpy as np
 import pickle
 
 from aegis_sim.dataclasses.genomes import Genomes
+from aegis_sim.dataclasses.phenotypes import Phenotypes
 from aegis_sim import submodels
+
 
 class Population:
     """Population data
@@ -23,7 +25,16 @@ class Population:
     )
 
     def __init__(
-        self, genomes: Genomes, ages, births, birthdays, phenotypes, infection, sizes, sexes, generations=None
+        self,
+        genomes: Genomes,
+        ages,
+        births,
+        birthdays,
+        phenotypes: Phenotypes,
+        infection,
+        sizes,
+        sexes,
+        generations=None,
     ):
         self.genomes = genomes
         self.ages = ages
@@ -59,7 +70,7 @@ class Population:
             ages=self.ages[index],
             births=self.births[index],
             birthdays=self.birthdays[index],
-            phenotypes=self.phenotypes[index],
+            phenotypes=self.phenotypes.get(individuals=index),
             infection=self.infection[index],
             sizes=self.sizes[index],
             sexes=self.sexes[index],
@@ -71,6 +82,8 @@ class Population:
         for attr in self.attrs:
             if attr == "genomes":
                 self.genomes.keep(individuals=index)
+            elif attr == "phenotypes":
+                self.phenotypes.keep(individuals=index)
             elif attr == "generations":
                 self.generations = None
             else:
@@ -83,6 +96,8 @@ class Population:
         for attr in self.attrs:
             if attr == "genomes":
                 self.genomes.add(population.genomes)
+            elif attr == "phenotypes":
+                self.phenotypes.add(population.phenotypes)
             elif attr == "generations":
                 self.generations = None
             else:

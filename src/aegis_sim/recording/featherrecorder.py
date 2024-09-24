@@ -70,7 +70,7 @@ class FeatherRecorder(Recorder):
         structure: A float matrix
         """
         # TODO bugged, wrong header
-        df_phe = pd.DataFrame(np.array(population.phenotypes))
+        df_phe = pd.DataFrame(population.phenotypes.get())
         df_phe.reset_index(drop=True, inplace=True)
         df_phe.columns = [str(c) for c in df_phe.columns]
         df_phe.to_feather(self.odir_phenotypes / f"{step}.feather")

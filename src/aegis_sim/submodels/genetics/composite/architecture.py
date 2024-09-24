@@ -44,6 +44,7 @@ class CompositeArchitecture:
 
     def init_genome_array(self, popsize):
         # TODO enable initgeno
+        # TODO enable agespecific False
         array = np.random.random(size=(popsize, *self.get_shape()))
 
         for trait in parameterization.traits.values():

@@ -1,12 +1,13 @@
 import numpy as np
 import logging
 
+from aegis_sim import variables
+from aegis_sim import submodels
 from aegis_sim.constants import VALID_CAUSES_OF_DEATH
 from aegis_sim.dataclasses.population import Population
 from aegis_sim.recording import recordingmanager
-from aegis_sim import variables
 from aegis_sim.parameterization import parametermanager
-from aegis_sim import submodels
+
 
 class Bioreactor:
     def __init__(self, population: Population):
@@ -41,15 +42,13 @@ class Bioreactor:
 
         # Record data
         recordingmanager.popsizerecorder.write_after_reproduction(self.population)
-        recordingmanager.flushrecorder.collect(
-            "additive_age_structure", self.population.ages
-        )  # population census
+        recordingmanager.flushrecorder.collect("additive_age_structure", self.population.ages)  # population census
         recordingmanager.picklerecorder.write(self.population)
         recordingmanager.featherrecorder.write(self.population)
         recordingmanager.guirecorder.record(self.population)
         recordingmanager.flushrecorder.flush()
         recordingmanager.popgenstatsrecorder.write(
-            self.population.genomes, submodels.architect.get_evaluation(self.population, "muta")
+            self.population.genomes, self.population.phenotypes.extract(ages=self.population.ages, trait_name="muta")
         )  # TODO defers calculation of mutation rates; hacky
         recordingmanager.summaryrecorder.record_memuse()
         recordingmanager.terecorder.record(self.population.ages, "alive")
@@ -59,7 +58,7 @@ class Bioreactor:
     ###############
 
     def mortality_intrinsic(self):
-        probs_surv = submodels.architect.get_evaluation(self.population, "surv")
+        probs_surv = self.population.phenotypes.extract(ages=self.population.ages, trait_name="surv")
         age_hazard = submodels.frailty.modify(hazard=1 - probs_surv, ages=self.population.ages)
         mask_kill = np.random.random(len(probs_surv)) < age_hazard
         self._kill(mask_kill=mask_kill, causeofdeath="intrinsic")
@@ -110,7 +109,7 @@ class Bioreactor:
             return
 
         # Check if reproducing
-        probs_repr = submodels.architect.get_evaluation(self.population, "repr", part=mask_fertile)
+        probs_repr = self.population.phenotypes.extract(ages=self.population.ages, trait_name="repr", part=mask_fertile)
 
         # Binomial calculation
         n = parametermanager.parameters.MAX_OFFSPRING_NUMBER
@@ -135,7 +134,9 @@ class Bioreactor:
         parental_genomes = self.population.genomes.get(individuals=who)
         parental_sexes = self.population.sexes[who]
 
-        muta_prob = submodels.architect.get_evaluation(self.population, "muta", part=mask_repr)[mask_repr]
+        muta_prob = self.population.phenotypes.extract(ages=self.population.ages, trait_name="muta", part=mask_repr)[
+            mask_repr
+        ]
         muta_prob = np.repeat(muta_prob, num_repr[mask_repr])
 
         offspring_genomes = submodels.reproduction.generate_offspring_genomes(
@@ -170,7 +171,7 @@ class Bioreactor:
             self.eggs *= indices
 
     def growth(self):
-        max_growth_potential = submodels.architect.get_evaluation(self.population, "grow")
+        max_growth_potential = self.population.phenotypes.extract(ages=self.population.ages, trait_name="grow")
         gathered_resources = submodels.resources.scavenge(max_growth_potential)
         self.population.sizes += gathered_resources
 
@@ -192,10 +193,13 @@ class Bioreactor:
 
         # If something to hatch
         if (
-            (parametermanager.parameters.INCUBATION_PERIOD == -1 and len(self.population) == 0)  # hatch when everyone dead
+            (
+                parametermanager.parameters.INCUBATION_PERIOD == -1 and len(self.population) == 0
+            )  # hatch when everyone dead
             or (parametermanager.parameters.INCUBATION_PERIOD == 0)  # hatch immediately
             or (
-                parametermanager.parameters.INCUBATION_PERIOD > 0 and variables.steps % parametermanager.parameters.INCUBATION_PERIOD == 0
+                parametermanager.parameters.INCUBATION_PERIOD > 0
+                and variables.steps % parametermanager.parameters.INCUBATION_PERIOD == 0
             )  # hatch with delay
         ):
             self.eggs.phenotypes = submodels.architect.__call__(self.eggs.genomes)

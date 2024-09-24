@@ -3,6 +3,8 @@ from aegis_sim.parameterization.parametermanager import ParameterManager
 
 parametermanager = ParameterManager()
 
+traits = None  # will be redefined below in init_traits
+
 
 def init_traits(self):
     """

@@ -77,5 +77,5 @@ class IntervalRecorder(Recorder):
         structure: A float matrix
         """
         with open(self.odir / "phenotypes.csv", "ab") as f:
-            array = np.median(population.phenotypes, 0)
+            array = np.median(population.phenotypes.get(), 0)
             np.savetxt(f, [array], delimiter=",", fmt="%1.3e")

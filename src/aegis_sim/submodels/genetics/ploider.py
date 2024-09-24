@@ -1,6 +1,5 @@
 class Ploider:
-    """
-    """
+    """ """
 
     def __init__(self, REPRODUCTION_MODE, DOMINANCE_FACTOR):
         self.REPRODUCTION_MODE = REPRODUCTION_MODE
@@ -25,6 +24,9 @@ class Ploider:
             A bool numpy array with shape (population size, genome length, BITS_PER_LOCUS)
         """
 
+        assert len(loci.shape) == 4, len(loci.shape)  # e.g. (45, 2, 250, 8)
+        assert loci.shape[1] in (1, 2), loci.shape[1]  # ploidy
+
         # TODO handle polyploidy too
         # compute homozygous (0, 1) or heterozygous (0.5)
         zygosity = loci.mean(1)
@@ -35,5 +37,7 @@ class Ploider:
             zygosity[mask] = self.DOMINANCE_FACTOR[mask]
         else:
             zygosity[mask] = self.DOMINANCE_FACTOR
+
+        assert len(zygosity.shape) == 3, len(zygosity.shape)
 
         return zygosity
