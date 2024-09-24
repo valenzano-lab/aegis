@@ -58,7 +58,7 @@ def get_gui_env_settings():
 def get_offcanvas():
     children = [
         get_theme_switch(),
-        get_delete_switch(),
+        get_delete_switch() if gui_settings.ENVIRONMENT == "local" else None,
         get_gui_env_settings(),
     ]
     return dbc.Offcanvas(
