@@ -177,6 +177,7 @@ DEFAULT_PARAMETERS = {
         serverrange=lambda x: x <= 10000,
         serverrange_info="[1,100000]",
         evalrange=[1, 1000000],
+        previous_keys=["MAX_POPULATION_SIZE"],
     ),
     "CARRYING_CAPACITY_EGGS": Parameter(
         key="CARRYING_CAPACITY_EGGS",

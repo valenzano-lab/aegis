@@ -18,6 +18,7 @@ class Parameter:
         evalrange=None,
         presets={},
         show_in_docs=True,
+        previous_keys=[],
     ):
         self.key = key
         self.name = name
@@ -33,6 +34,7 @@ class Parameter:
         self.evalrange = evalrange
         self.presets = presets
         self.show_in_docs = show_in_docs
+        self.previous_keys = previous_keys
 
     def convert(self, value):
         if value is None or value == "":
