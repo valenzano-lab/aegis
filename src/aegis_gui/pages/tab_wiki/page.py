@@ -5,6 +5,7 @@ import dash_bootstrap_components as dbc
 
 from aegis_sim.submodels import genetics
 import pathlib
+import aegis
 
 
 dash.register_page(__name__, path="/wiki", name="AEGIS | Wiki")
@@ -35,6 +36,8 @@ def layout() -> html.Div:
                 options=[
                     {"label": "Specification of the genetic architecture in AEGIS", "value": "genarch"},
                     {"label": "Specification of output files", "value": "output"},
+                    {"label": "Specification of parameters", "value": "parameters"},
+                    {"label": "Specification of submodels", "value": "submodels"},
                     # {"label": "Disabled option", "value": "3", "disabled": True},
                 ],
                 value="genarch",
@@ -62,6 +65,16 @@ def update_select_container(selected_value):
                 children=get_specification_of_gen_arch(), mathjax=True, dangerously_allow_html=True
             ),  # Display Markdown with MathJax
         ]
+    elif selected_value == "parameters":
+        path_to_dynamic = pathlib.Path(aegis.__file__).parent / "documentation" / "dynamic"
+        with open(path_to_dynamic / "default_parameters.md", "r") as file_:
+            text = file_.read()
+        return dash.dcc.Markdown(children=text)
+    elif selected_value == "submodels":
+        path_to_dynamic = pathlib.Path(aegis.__file__).parent / "documentation" / "dynamic"
+        with open(path_to_dynamic / "submodel_specifications.md", "r") as file_:
+            text = file_.read()
+        return dash.dcc.Markdown(children=text)
     else:
         return html.P("Please select an option.")  # Default message for no selection or invalid option
 
