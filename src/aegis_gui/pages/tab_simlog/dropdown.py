@@ -7,6 +7,7 @@ from aegis_gui.utilities import utilities
 import pathlib
 from aegis_gui.pages.tab_simlog import delete, terminate, download, zipp, open_folder, goplot
 from aegis_sim.utilities.get_folder_size import get_folder_size_with_du
+from aegis_gui.guisettings.GuiSettings import gui_settings
 
 
 def make_select(selected=None):
@@ -112,21 +113,22 @@ def update_info_div(selected_path):
                 download.make_button(path.stem),
                 download.make_dcc(path.stem),
                 zipp.get_zip_button_layout(filename=path.stem),
-                open_folder.make_button(path),
+                open_folder.make_button(path) if gui_settings.ENVIRONMENT == "local" else None,
             ],
             style={"display": "flex"},
         )
     )
-    list_items.append(
-        dbc.ListGroupItem(
-            [
-                delete.make(path.stem),
-                delete.make_modal(),
-                terminate.make_button(filename=path.stem),
-            ],
-            style={"display": "flex"},
+    if gui_settings.ENVIRONMENT == "local":
+        list_items.append(
+            dbc.ListGroupItem(
+                [
+                    delete.make(path.stem),
+                    delete.make_modal(),
+                    terminate.make_button(filename=path.stem),
+                ],
+                style={"display": "flex"},
+            )
         )
-    )
 
     # Return a dbc.ListGroup with the simulation information
     return dbc.ListGroup(list_items, flush=True)
