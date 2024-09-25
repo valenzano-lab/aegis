@@ -1,5 +1,6 @@
 import numpy as np
 import pickle
+import pathlib
 
 from aegis_sim.dataclasses.genomes import Genomes
 from aegis_sim.dataclasses.phenotypes import Phenotypes
@@ -111,7 +112,8 @@ class Population:
     #     self *= order
 
     @staticmethod
-    def load_pickle_from(path):
+    def load_pickle_from(path: pathlib.Path):
+        assert path.exists(), f"pickle_path {path} does not exist"
         with open(path, "rb") as file_:
             return pickle.load(file_)
 
