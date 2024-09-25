@@ -50,18 +50,9 @@ class Architect:
 
         # Apply the envdrift
         envgenomes = self.envdrift.call(genomes.get_array())
+        assert envgenomes.shape == genomes.shape()  # envgenome retains the same shape as genome array
 
-        phenotypes = self.architecture.compute(envgenomes)
+        pheno_array = self.architecture.compute(envgenomes)
+        assert len(pheno_array) == len(genomes)  # no individuals are lost during the computation
 
-        # Apply lo and hi bound
-        # TODO extract slicing
-        for trait in parameterization.traits.values():
-            phenotypes[:, trait.slice] = Architect.clip(phenotypes[:, trait.slice], trait.name)
-
-        return Phenotypes(phenotypes)
-
-    @staticmethod
-    def clip(array, traitname):
-        lo = parameterization.traits[traitname].lo
-        hi = parameterization.traits[traitname].hi
-        return lo + array * (hi - lo)
+        return Phenotypes(pheno_array)

@@ -1,15 +1,44 @@
 """Wrapper for phenotype vectors."""
 
 import numpy as np
+import pandas as pd
 from aegis_sim import parameterization
+from aegis_sim import constants
+import pathlib
 
 
 class Phenotypes:
     def __init__(self, array):
+
+        # TODO perform this check somewhere
+        # assert array.shape[1] == constants.TRAIT_N * parameterization.parametermanager.parameters.AGE_LIMIT
+
+        # clip phenotype to [0,1] / Apply lo and hi bound
+        # TODO ??? extract slicing
+        array = Phenotypes.clip_array_to_01(array)
+
         self.array = array
 
     def __len__(self):
         return len(self.array)
+
+    # def to_frame(self, AGE_LIMIT):
+
+    #     df = pd.DataFrame(self.array)
+
+    #     # Edit index
+    #     # df.reset_index(drop=True, inplace=True)
+    #     # df.index.name = "individual"
+
+    #     # Edit columns
+    #     traits = constants.EVOLVABLE_TRAITS
+
+    #     # AGE_LIMIT = parameterization.parametermanager.parameters.AGE_LIMIT
+    #     ages = [str(a) for a in range(AGE_LIMIT)]
+    #     multi_columns = pd.MultiIndex.from_product([traits, ages], names=["trait", "age"])
+    #     df.columns = multi_columns
+
+    #     return df
 
     def get(self, individuals=slice(None), loci=slice(None)):
         return self.array[individuals, loci]
@@ -55,3 +84,26 @@ class Phenotypes:
         final_probs[which_individuals] += probs
 
         return final_probs
+
+    @staticmethod
+    def clip_array_to_01(array):
+        for trait in parameterization.traits.values():
+            array[:, trait.slice] = Phenotypes.clip_trait_to_01(array[:, trait.slice], trait.name)
+        return array
+
+    @staticmethod
+    def clip_trait_to_01(array, traitname):
+        lo = parameterization.traits[traitname].lo
+        hi = parameterization.traits[traitname].hi
+        return lo + array * (hi - lo)
+
+    # # Recording functions
+    # def to_feather(self):
+    #     for_feather = pd.DataFrame(self.array)
+    #     for_feather.columns = for_feather.columns.astype(str)
+    #     return for_feather
+
+    # @staticmethod
+    # def from_feather(path: pathlib.Path):
+    #     from_feather = pd.read_feather(path)
+    #     return Phenotypes(array=from_feather)

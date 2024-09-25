@@ -5,6 +5,7 @@ These numbers can be loosely understood as gene activity.
 """
 
 import numpy as np
+from aegis_sim import parameterization
 
 
 class Interpreter:
@@ -29,6 +30,29 @@ class Interpreter:
         # Parameters for the linear interpreter
         linear_weights = np.arange(self.BITS_PER_LOCUS)[::-1] + 1
         self.linear_weights = linear_weights / linear_weights.sum()
+
+    def call(self, loci, interpreter_kind):
+        """Exposed method"""
+
+        # shape is (n_individuals, age_limit, bits_per_locus)
+        assert loci.shape[0] > 0
+        assert loci.shape[1] == parameterization.parametermanager.parameters.AGE_LIMIT
+        assert loci.shape[2] == self.BITS_PER_LOCUS
+
+        method = {
+            "const1": self._const1,
+            "single_bit": self._single_bit,
+            "threshold": self._threshold,
+            "linear": self._linear,
+            "binary": self._binary,
+            "switch": self._switch,
+            "binary_switch": self._binary_switch,
+            "uniform": self._uniform,
+            "exp": self._exp,
+            "binary_exp": self._binary_exp,
+        }[interpreter_kind]
+        interpretome = method(loci)
+        return interpretome
 
     @staticmethod
     def _const1(loci):
@@ -106,20 +130,3 @@ class Interpreter:
         """
         binary = self._binary(loci)
         return self.binary_exp_base**binary
-
-    def call(self, loci, interpreter_kind):
-        """Exposed method"""
-        method = {
-            "const1": self._const1,
-            "single_bit": self._single_bit,
-            "threshold": self._threshold,
-            "linear": self._linear,
-            "binary": self._binary,
-            "switch": self._switch,
-            "binary_switch": self._binary_switch,
-            "uniform": self._uniform,
-            "exp": self._exp,
-            "binary_exp": self._binary_exp,
-        }[interpreter_kind]
-        interpretome = method(loci)
-        return interpretome
