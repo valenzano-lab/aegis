@@ -80,6 +80,10 @@ def get_input_element(param: Parameter):
     """
     Generate appropriate Dash input component based on the parameter's data type.
     """
+
+    if not param.show_in_gui:
+        return
+
     common_props = {"id": {"type": "config-input", "index": param.key}, "className": "config-input-class"}
 
     if param.dtype in [int, float]:

@@ -895,6 +895,7 @@ DEFAULT_PARAMETERS = {
         drange="None or [" + ",".join(PRESET_INFO.keys()) + "]",
         inrange=lambda x: x in PRESET_INFO.keys() or x is None,
         show_in_docs=False,
+        show_in_gui=False,
     ),
     #
     #
