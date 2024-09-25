@@ -26,13 +26,9 @@ class Bioreactor:
             logging.debug("Population went extinct.")
             recordingmanager.summaryrecorder.extinct = True
         # Mortality sources
-        self.mortality_intrinsic()
-        self.mortality_abiotic()
-        self.mortality_infection()
-        self.mortality_predation()
-        self.mortality_starvation()
-        recordingmanager.popsizerecorder.write_before_reproduction(self.population)
+        self.mortalities()
 
+        recordingmanager.popsizerecorder.write_before_reproduction(self.population)
         self.growth()  # size increase
         self.reproduction()  # reproduction
         self.age()  # age increment and potentially death
@@ -56,6 +52,21 @@ class Bioreactor:
     ###############
     # STEP LOGIC #
     ###############
+
+    def mortalities(self):
+        for source in parametermanager.parameters.MORTALITY_ORDER:
+            if source == "intrinsic":
+                self.mortality_intrinsic()
+            elif source == "abiotic":
+                self.mortality_abiotic()
+            elif source == "infection":
+                self.mortality_infection()
+            elif source == "predation":
+                self.mortality_predation()
+            elif source == "starvation":
+                self.mortality_starvation()
+            else:
+                raise ValueError(f"Invalid source of mortality '{source}'")
 
     def mortality_intrinsic(self):
         probs_surv = self.population.phenotypes.extract(ages=self.population.ages, trait_name="surv")
@@ -212,6 +223,8 @@ class Bioreactor:
 
     def _kill(self, mask_kill, causeofdeath):
         """Kill individuals and record their data."""
+
+        print(len(mask_kill), causeofdeath)
 
         assert causeofdeath in VALID_CAUSES_OF_DEATH
 

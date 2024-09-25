@@ -940,6 +940,19 @@ DEFAULT_PARAMETERS = {
         serverrange_info="[1,100]",
         evalrange=[1, 100],
     ),
+    "MORTALITY_ORDER": Parameter(
+        key="MORTALITY_ORDER",
+        name="",
+        domain="other",
+        default=["intrinsic", "abiotic", "infection", "predation", "starvation"],
+        info="Order in which mortality sources are computed",
+        dtype=list,
+        drange=None,
+        inrange=lambda order: all(
+            source in ["intrinsic", "abiotic", "infection", "predation", "starvation"] for source in order
+        ),
+        show_in_gui=False,
+    ),
     #
     #
     # TECHNICAL
