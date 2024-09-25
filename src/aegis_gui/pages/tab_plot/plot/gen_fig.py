@@ -3,7 +3,7 @@ from aegis_gui.pages.tab_plot.plot import prep_fig
 from aegis_gui.utilities.utilities import get_container
 
 
-def gen_fig(fig_name, selected_sims, iloc):
+def generate_figure(fig_name, selected_sims, iloc, dark_mode=False):
     """Generates a figure using the figure setup"""
 
     # Extract setup
@@ -34,6 +34,6 @@ def gen_fig(fig_name, selected_sims, iloc):
     max_iloc = min(max_ilocs) if max_ilocs else None
 
     prep_figure = getattr(prep_fig, fig_setup["prep_figure"])
-    figure = prep_figure(fig_name, xs, ys, selected_sims)
+    figure = prep_figure(fig_name, xs, ys, selected_sims, dark_mode=dark_mode)
 
     return figure, max_iloc

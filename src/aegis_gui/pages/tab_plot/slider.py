@@ -33,14 +33,15 @@ def make_slider(figure_id):
     Input({"type": "graph-slider", "index": MATCH}, "value"),
     State({"type": "graph-slider", "index": MATCH}, "id"),
     State("dropdown-multi", "value"),
+    dash.Input("color-mode-switch", "value"),
     # State("dropdown-single", "value"),
     prevent_initial_call=True,
 )
 @log.log_debug
-def update(slider_value, slider_id, dropdown_multi_value):
+def update(slider_value, slider_id, dropdown_multi_value, dark_mode):
     fig_name = slider_id["index"]
     # supports_multi = FIG_SETUP[fig_name]["supports_multi"]
     # dropdown_values = dropdown_multi_value if supports_multi else [dropdown_single_value]
     dropdown_values = dropdown_multi_value
-    fig, max_iloc = gen_fig.gen_fig(fig_name, dropdown_values, iloc=slider_value)
+    fig, max_iloc = gen_fig.generate_figure(fig_name, dropdown_values, iloc=slider_value, dark_mode=dark_mode)
     return fig, max_iloc

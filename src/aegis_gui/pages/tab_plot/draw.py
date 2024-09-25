@@ -1,12 +1,12 @@
 import dash
 from aegis_gui.pages.tab_plot.plot.prep_setup import FIG_SETUP
-from aegis_gui.pages.tab_plot.plot.gen_fig import gen_fig
+from aegis_gui.pages.tab_plot.plot.gen_fig import generate_figure
 from aegis_gui.pages.tab_plot.plot.prep_fig import make_empty_figure
 from aegis_gui.utilities import log
 
 
 # Define a helper function to handle the logic
-def handle_draw_plot(dropdown_values, selected_fig):
+def handle_draw_plot(dropdown_values, selected_fig, dark_mode):
     if not dropdown_values or dropdown_values == [None]:
         return dash.no_update, dash.no_update
 
@@ -15,7 +15,7 @@ def handle_draw_plot(dropdown_values, selected_fig):
 
     for fig_name in FIG_SETUP:
         if fig_name == selected_fig:  # Only update the figure that matches the selected tab
-            figure, max_iloc = gen_fig(fig_name, dropdown_values, iloc=-1)
+            figure, max_iloc = generate_figure(fig_name, dropdown_values, iloc=-1, dark_mode=dark_mode)
             figures.append(figure)
             drag_maxs.append(max_iloc)
         else:
@@ -34,10 +34,11 @@ def handle_draw_plot(dropdown_values, selected_fig):
     dash.Input("dropdown-multi", "value"),
     dash.Input("figure-select", "value"),
     dash.Input("refresh-figure-data", "n_clicks"),
+    dash.State("color-mode-switch", "value"),
     # prevent_initial_call=True,
 )
 @log.log_debug
-def draw_plot(dropdown_values, figure_selected, refresh_figure_data):
+def draw_plot(dropdown_values, figure_selected, refresh_figure_data, dark_mode):
     # Return empty figure and no updates for sliders if dropdown_values is None
     if dropdown_values == []:
         # BUG it complains
@@ -46,5 +47,5 @@ def draw_plot(dropdown_values, figure_selected, refresh_figure_data):
         return empty_figures, [0] * n, [1] * n
 
     # Otherwise, handle the plot drawing logic
-    figures, drag_maxs = handle_draw_plot(dropdown_values, figure_selected)
+    figures, drag_maxs = handle_draw_plot(dropdown_values, figure_selected, dark_mode=dark_mode)
     return figures, drag_maxs, drag_maxs

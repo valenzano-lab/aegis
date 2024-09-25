@@ -12,6 +12,30 @@ bootstrap_colors = [
     "#343a40",  # dark
 ]
 
+FIG_xaxis = dict(
+    # showgrid=False,
+    zeroline=False,
+    # showline=False,
+    nticks=10,
+    # gridcolor="#cccccc",
+    griddash="dot",
+    # gridwidth=1,
+    linecolor="rgb(46, 49, 51)",
+)
+
+FIG_yaxis = dict(
+    # showgrid=False,
+    zeroline=False,
+    # showline=False,
+    nticks=10,
+    # gridcolor="#cccccc",
+    griddash="dot",
+    # gridwidth=1,
+    linecolor="rgb(46, 49, 51)",
+)
+
+FIG_legend = dict(x=0.97, y=1, yanchor="top", xanchor="right", orientation="v")
+
 FIG_LAYOUT = dict(
     width=300 * 1.1,
     height=300 * 1.1,
@@ -25,54 +49,45 @@ FIG_LAYOUT = dict(
     # showlegend=False,
     showlegend=True,
     # legend=dict(x=0, y=0),
-    legend=dict(x=0, y=1, yanchor="top", orientation="v"),
+    legend=FIG_legend,
     font_size=14,
     # font_family="Inter",
-    xaxis=dict(
-        # showgrid=False,
-        zeroline=False,
-        # showline=False,
-        nticks=10,
-        # gridcolor="#cccccc",
-        # griddash="dot",
-        # gridwidth=1,
-        linecolor="rgb(46, 49, 51)",
-    ),
-    yaxis=dict(
-        # showgrid=False,
-        zeroline=False,
-        # showline=False,
-        nticks=10,
-        # gridcolor="#cccccc",
-        # griddash="dot",
-        # gridwidth=1,
-        linecolor="rgb(46, 49, 51)",
-    ),
+    xaxis=FIG_xaxis,
+    yaxis=FIG_yaxis,
+)
+
+dark_mode_white = "rgba(255,255,255,0.8)"
+
+
+FIG_LAYOUT_DARK_MODE = dict(
+    plot_bgcolor="rgba(0, 0, 0, 0.1)",  # Darker background for the plot area
+    paper_bgcolor="rgba(24, 25, 27, 0.0)",  # Darker background for the overall figure
+    font_color=dark_mode_white,  # Light font color for better contrast
+    legend={**FIG_legend, **dict(font=dict(color=dark_mode_white))},  # Light legend text
+    xaxis={
+        **FIG_xaxis,
+        **dict(
+            linecolor=dark_mode_white,  # Light color for x-axis line
+            tickfont=dict(color=dark_mode_white),  # Light color for x-axis ticks
+            gridcolor="rgba(255, 255, 255, 0.1)",  # Light grid lines for visibility
+        ),
+    },
+    yaxis={
+        **FIG_yaxis,
+        **dict(
+            linecolor=dark_mode_white,  # Light color for y-axis line
+            tickfont=dict(color=dark_mode_white),  # Light color for y-axis ticks
+            gridcolor="rgba(255, 255, 255, 0.1)",  # Light grid lines for visibility
+        ),
+    },
 )
 
 
-# FIG_LAYOUT_EMPTY = {
-#     "layout": {
-#         "xaxis": {"visible": False},
-#         "yaxis": {"visible": False},
-#         "annotations": [
-#             {
-#                 "text": "No matching data found",
-#                 "xref": "paper",
-#                 "yref": "paper",
-#                 "showarrow": False,
-#                 "font": {"size": 28},
-#             }
-#         ],
-#     }
-# }
+def make_empty_figure(dark_mode=False):
+    return go.Figure(layout=go.Layout({**FIG_LAYOUT, **(FIG_LAYOUT_DARK_MODE if dark_mode else {})}))
 
 
-def make_empty_figure():
-    return go.Figure(layout=go.Layout({**FIG_LAYOUT}))
-
-
-def make_scatter_figure(id_, xs, ys, selected_sims):
+def make_scatter_figure(id_, xs, ys, selected_sims, dark_mode=False):
     figure = go.Figure(
         data=[
             go.Scatter(
@@ -80,7 +95,9 @@ def make_scatter_figure(id_, xs, ys, selected_sims):
             )
             for i, (x, y, sim) in enumerate(zip(xs, ys, selected_sims))
         ],
-        layout=go.Layout({**FIG_LAYOUT, **FIG_SETUP[id_]["figure_layout"]}),
+        layout=go.Layout(
+            {**FIG_LAYOUT, **(FIG_LAYOUT_DARK_MODE if dark_mode else {}), **FIG_SETUP[id_]["figure_layout"]}
+        ),
     )
 
     # Compute maximum axes limits
@@ -102,13 +119,15 @@ def make_scatter_figure(id_, xs, ys, selected_sims):
     return figure
 
 
-def make_line_figure(id_, xs, ys, selected_sims):
+def make_line_figure(id_, xs, ys, selected_sims, dark_mode=False):
     figure = go.Figure(
         data=[
             go.Scatter(x=x, y=y, mode="lines", name=sim, line=dict(color=bootstrap_colors[i % len(bootstrap_colors)]))
             for i, (x, y, sim) in enumerate(zip(xs, ys, selected_sims))
         ],
-        layout=go.Layout({**FIG_LAYOUT, **FIG_SETUP[id_]["figure_layout"]}),
+        layout=go.Layout(
+            {**FIG_LAYOUT, **(FIG_LAYOUT_DARK_MODE if dark_mode else {}), **FIG_SETUP[id_]["figure_layout"]}
+        ),
     )
 
     # Compute maximum axes limits
@@ -130,7 +149,7 @@ def make_line_figure(id_, xs, ys, selected_sims):
     return figure
 
 
-def make_hist_figure(id_, xs, ys, selected_sims):
+def make_hist_figure(id_, xs, ys, selected_sims, dark_mode=False):
     fig_setup = FIG_SETUP[id_]
     figure = go.Figure(
         data=[
@@ -142,19 +161,23 @@ def make_hist_figure(id_, xs, ys, selected_sims):
             )
             for i, (y, sim) in enumerate(zip(ys, selected_sims))
         ],
-        layout=go.Layout({**FIG_LAYOUT, **FIG_SETUP[id_]["figure_layout"]}),
+        layout=go.Layout(
+            {**FIG_LAYOUT, **(FIG_LAYOUT_DARK_MODE if dark_mode else {}), **FIG_SETUP[id_]["figure_layout"]}
+        ),
     )
 
     return figure
 
 
-def make_heatmap_figure(id_, xs, ys, selected_sims):
+def make_heatmap_figure(id_, xs, ys, selected_sims, dark_mode=False):
     x = xs[0]
     y = ys[0]
     sim = next(iter(selected_sims))
     figure = go.Figure(
         data=go.Heatmap(z=y.T, x=x, name=sim, colorscale="Electric", showscale=True),
-        layout=go.Layout({**FIG_LAYOUT, **FIG_SETUP[id_]["figure_layout"]}),
+        layout=go.Layout(
+            {**FIG_LAYOUT, **(FIG_LAYOUT_DARK_MODE if dark_mode else {}), **FIG_SETUP[id_]["figure_layout"]}
+        ),
     )
 
     figure.update_yaxes(
@@ -166,13 +189,16 @@ def make_heatmap_figure(id_, xs, ys, selected_sims):
     return figure
 
 
-def make_bar_figure(id_, xs, ys, selected_sims):
+def make_bar_figure(id_, xs, ys, selected_sims, dark_mode=False):
     assert len(ys) > 0, f"{id_}"
     y = ys[0]
     figure = go.Figure(
-        data=[go.Bar(x=y.index, y=y.loc[:, i], name=i) for i in y.columns],
+        data=[
+            go.Bar(x=y.index, y=y.loc[:, i], width=0.7, name=i, marker=dict(line=dict(width=0 if dark_mode else 0)))
+            for i in y.columns
+        ],
         layout=go.Layout(
-            {**FIG_LAYOUT, **FIG_SETUP[id_]["figure_layout"]},
+            {**FIG_LAYOUT, **(FIG_LAYOUT_DARK_MODE if dark_mode else {}), **FIG_SETUP[id_]["figure_layout"]},
             barmode="stack",
             showlegend=True,
             # width=420,
