@@ -189,8 +189,9 @@ def make_heatmap_figure(id_, xs, ys, selected_sims, dark_mode=False):
     return figure
 
 
-def make_bar_figure(id_, xs, ys, selected_sims, dark_mode=False):
+def make_bar_figure_stacked(id_, xs, ys, selected_sims, dark_mode=False):
     assert len(ys) > 0, f"{id_}"
+    print(ys)
     y = ys[0]
     figure = go.Figure(
         data=[
@@ -201,6 +202,30 @@ def make_bar_figure(id_, xs, ys, selected_sims, dark_mode=False):
             {**FIG_LAYOUT, **(FIG_LAYOUT_DARK_MODE if dark_mode else {}), **FIG_SETUP[id_]["figure_layout"]},
             barmode="stack",
             showlegend=True,
+            # width=420,
+        ),
+    )
+    return figure
+
+
+def make_bar_figure_not_stacked(id_, xs, ys, selected_sims, dark_mode=False):
+
+    figure = go.Figure(
+        data=[
+            go.Bar(x=x, y=y, name=sim, marker=dict(line=dict(width=0 if dark_mode else 0)))
+            # for i in columns
+            for i, (x, y, sim) in enumerate(zip(xs, ys, selected_sims))
+        ],
+        layout=go.Layout(
+            {
+                **FIG_LAYOUT,
+                **(FIG_LAYOUT_DARK_MODE if dark_mode else {}),
+                **FIG_SETUP[id_]["figure_layout"],
+            },
+            barmode="group",
+            showlegend=True,
+            bargroupgap=0.1,
+            bargap=0.15,
             # width=420,
         ),
     )

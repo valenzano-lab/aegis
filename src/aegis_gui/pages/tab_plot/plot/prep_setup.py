@@ -30,7 +30,7 @@ FIG_SETUP = {
         "supports_multi": False,
         "prep_y": prep_y.get_death_table,
         "prep_x": prep_x.get_ages,
-        "prep_figure": "make_bar_figure",
+        "prep_figure": "make_bar_figure_stacked",
         "description": dash.dcc.Markdown(
             """
             Number of deaths per age class, stratified by cause.
@@ -50,7 +50,7 @@ FIG_SETUP = {
         "supports_multi": False,
         "prep_y": prep_y.get_death_table_normalized,
         "prep_x": prep_x.get_ages,
-        "prep_figure": "make_bar_figure",
+        "prep_figure": "make_bar_figure_stacked",
         "description": dash.dcc.Markdown(
             """
             Number of deaths per age class, stratified by cause.
@@ -290,7 +290,7 @@ FIG_SETUP = {
         "supports_multi": True,
         "prep_y": prep_y.get_birth_table,
         "prep_x": prep_x.get_ages,
-        "prep_figure": "make_line_figure",
+        "prep_figure": "make_bar_figure_not_stacked",
         "description": dash.dcc.Markdown(
             """
             The number of newborns produced by parents of a given age class.
@@ -309,7 +309,7 @@ FIG_SETUP = {
         "supports_multi": True,
         "prep_y": prep_y.get_life_table,
         "prep_x": prep_x.get_ages,
-        "prep_figure": "make_line_figure",
+        "prep_figure": "make_bar_figure_not_stacked",
         "description": dash.dcc.Markdown(
             """
             The proportion of living individuals.
