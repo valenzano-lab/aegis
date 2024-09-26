@@ -137,7 +137,7 @@ class Container:
 
     def get_ticker(self):
         if self.ticker is None:
-            TICKER_RATE = self.get_config()["TICKER_RATE"]
+            TICKER_RATE = self.get_final_config()["TICKER_RATE"]
             self.ticker = Ticker(TICKER_RATE=TICKER_RATE, odir=self.get_path("ticker").parent)
         return self.ticker
 
