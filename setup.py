@@ -1,7 +1,9 @@
 import setuptools
 import pathlib
 
-__version__ = "2.3.0.18"
+__version__ = "2.3.1.0"
+
+# Latest pypi version is 2.3.0
 
 
 setuptools.setup(

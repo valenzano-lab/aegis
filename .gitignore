@@ -1,6 +1,6 @@
 ### Custom ###
 
-tests/execution/*/*
+tests/test_sim/*
 profiler
 ipynb
 temp
@@ -120,6 +120,7 @@ celerybeat.pid
 # .env
 .env/
 .venv/
+.venv_*/
 env/
 venv/
 ENV/
