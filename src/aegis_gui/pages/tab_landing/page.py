@@ -51,7 +51,7 @@ def layout():
                                 href="mailto:",
                                 external_link=True,
                                 # outline=True,
-                                # style={"background-color": "#1c9be9", "color": "white"},
+                                # style={"backgroundColor": "#1c9be9", "color": "white"},
                             ),
                             dbc.Button(
                                 [dash.html.I(className="bi bi-twitter"), "Twitter"],
@@ -60,7 +60,7 @@ def layout():
                                 href="https://x.com/valenzanolab",
                                 external_link=True,
                                 # outline=True,
-                                style={"background-color": "#1c9be9", "color": "white"},
+                                style={"backgroundColor": "#1c9be9", "color": "white"},
                             ),
                             dbc.Button(
                                 [dash.html.I(className="bi bi-github"), "Github"],
@@ -69,7 +69,7 @@ def layout():
                                 href="https://github.com/valenzano-lab/aegis",
                                 external_link=True,
                                 # outline=True,
-                                style={"background-color": "#0e1017", "color": "white"},
+                                style={"backgroundColor": "#0e1017", "color": "white"},
                             ),
                             dbc.Button(
                                 [dash.html.I(className="bi bi-globe2"), "Lab website"],
