@@ -85,7 +85,6 @@ tab_content = {
 
 # with open(path_md, "r") as file_:
 #     text = markdown.markdown(file_.read())
-#     print(text, len(text))
 
 # Layout
 layout = dbc.Card(

@@ -51,6 +51,7 @@ DEFAULT_PARAMETERS = {
         drange="[0, inf)",
         inrange=lambda x: x >= 0,
         evalrange=[1, 10000],
+        show_in_gui=False,
     ),
     "PICKLE_RATE": Parameter(
         key="PICKLE_RATE",
@@ -105,6 +106,8 @@ DEFAULT_PARAMETERS = {
         drange="[0, inf)",
         inrange=lambda x: x >= 0,
         evalrange=[1, 10000],
+        serverrange=lambda x: x >= 100,
+        serverrange_info="[100, inf)",
     ),
     "TE_RATE": Parameter(
         key="TE_RATE",
@@ -116,6 +119,8 @@ DEFAULT_PARAMETERS = {
         drange="[0, inf)",
         inrange=lambda x: x >= 0,
         evalrange=[1, 10000],
+        serverrange=lambda x: x >= 100,
+        serverrange_info="[100, inf)",
     ),
     "TE_DURATION": Parameter(
         key="TE_DURATION",
@@ -174,8 +179,8 @@ DEFAULT_PARAMETERS = {
         dtype=int,
         drange="[1, inf)",
         inrange=lambda x: x >= 1,
-        serverrange=lambda x: x <= 10000,
-        serverrange_info="[1,100000]",
+        serverrange=lambda x: x <= 5000,
+        serverrange_info="[1,5000]",
         evalrange=[1, 1000000],
         previous_keys=["MAX_POPULATION_SIZE"],
     ),
@@ -190,7 +195,7 @@ DEFAULT_PARAMETERS = {
         drange="[1, inf)",
         inrange=lambda x: x >= 1,
         serverrange=lambda x: x <= 10000,
-        serverrange_info="[1,100000]",
+        serverrange_info="[1,10000]",
         evalrange=[1, 1000000],
     ),
     "STARVATION_RESPONSE": Parameter(
@@ -290,6 +295,8 @@ DEFAULT_PARAMETERS = {
         drange="[1, inf)",
         inrange=lambda x: x >= 1,
         presets={},
+        serverrange=lambda x: x <= 5,
+        serverrange_info="[1,5]",
     ),
     # TODO split ploidy from reproduction mode
     "REPRODUCTION_MODE": Parameter(
@@ -591,6 +598,7 @@ DEFAULT_PARAMETERS = {
         dtype=int,
         drange="{-1, 0, [1, inf)}",
         inrange=lambda x: x in (-1, 0) or x >= 1,
+        show_in_gui=False,
     ),
     # "DIFFUSION_FACTOR": Parameter(
     #     key="DIFFUSION_FACTOR",
@@ -827,8 +835,10 @@ DEFAULT_PARAMETERS = {
         info="",
         dtype=list,
         drange="",
+        show_in_gui=False,
     ),
     "PHENOMAP": Parameter(
+        # TODO is this still needed
         key="PHENOMAP",
         name="",
         domain="modifying genetic architecture",
@@ -836,6 +846,7 @@ DEFAULT_PARAMETERS = {
         info="",
         dtype=dict,
         drange="",
+        show_in_gui=False,
     ),
     "G_grow_initpheno": Parameter(
         key="G_grow_initpheno",
@@ -909,8 +920,8 @@ DEFAULT_PARAMETERS = {
         dtype=int,
         drange="[1, inf)",
         inrange=lambda x: x >= 1,
-        serverrange=lambda x: x <= 1000000,
-        serverrange_info="[1,1000000]",
+        serverrange=lambda x: x <= 100000,
+        serverrange_info="[1,100000]",
         evalrange=[1, 10000000],
     ),
     "AGE_LIMIT": Parameter(

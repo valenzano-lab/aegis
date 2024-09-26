@@ -191,7 +191,6 @@ def make_heatmap_figure(id_, xs, ys, selected_sims, dark_mode=False):
 
 def make_bar_figure_stacked(id_, xs, ys, selected_sims, dark_mode=False):
     assert len(ys) > 0, f"{id_}"
-    print(ys)
     y = ys[0]
     figure = go.Figure(
         data=[

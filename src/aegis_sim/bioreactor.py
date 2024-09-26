@@ -224,8 +224,6 @@ class Bioreactor:
     def _kill(self, mask_kill, causeofdeath):
         """Kill individuals and record their data."""
 
-        print(len(mask_kill), causeofdeath)
-
         assert causeofdeath in VALID_CAUSES_OF_DEATH
 
         # Skip if no one to kill
