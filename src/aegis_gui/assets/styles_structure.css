@@ -9,7 +9,8 @@ body {
 #body-container {
   /* padding: 0 0; */
   /* height: 100vh; */
-  margin: 3rem 15% 3rem 30%;
+  margin: 3rem 15% 3rem;
+  margin-left: calc(16% + 10rem);
   display: flex;
   flex-direction: row;
 }
@@ -17,8 +18,9 @@ body {
 #main-container {
   /* overflow-y: scroll; */
   /* margin-top: 1rem; */
-  max-width: 800px;
-  width: 800px;
+  max-width: 900px;
+  min-width: 800px;
+  /* width: 800px; */
   padding: 0 1rem;
   /* padding-bottom:1.5rem; */
 }
@@ -31,7 +33,7 @@ body {
   /*  */
   position: fixed;
   top: 3rem;
-  left: 18%;
+  left: 15%;
 }
 
 /* .nav-item {
