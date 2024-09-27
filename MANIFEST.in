@@ -1,14 +1,20 @@
 include LICENSE
 include Makefile
+include logo.png
 
-include *.yml
-include *.md
-include *.svg
-include *.ttf
-include *.css
-include *.ico
+recursive-include src *.yml
+recursive-include src *.md
+recursive-include src *.svg
+recursive-include src *.ttf
+recursive-include src *.css
+recursive-include src *.ico
 
-include src/aegis_gui/guisettings/gui_settings.yml
-include src/aegis_gui/assets/favicon.ico
+recursive-include tests *
+recursive-include src/aegis_gui/assets *
 
-global-exclude *.pyc
+prune src/aegis_sim.egg-info
+prune src/aegis_gui/__pycache__
+
+exclude .flake8
+exclude .vscode/settings.json
+exclude .gitignore

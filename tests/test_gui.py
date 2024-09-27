@@ -15,6 +15,7 @@ class TestDashApp(unittest.TestCase):
         self.client = app.server.test_client()
         self.app_context = app.server.app_context()
         self.app_context.push()
+        print(self.app_context)
 
     def tearDown(self):
         # Clean up after tests
