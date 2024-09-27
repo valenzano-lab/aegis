@@ -26,7 +26,7 @@ def get_app():
         url_base_pathname=gui_settings.BASE_HREF,
         external_stylesheets=[
             # dbc.themes.BOOTSTRAP,
-            dbc.icons.BOOTSTRAP,
+            # dbc.icons.BOOTSTRAP,
         ],  # Do not use external_stylesheets
         assets_ignore="styles-dark.css",  # *.css in assets are automatically imported; they need to be explicitly ignored
         use_pages=True,

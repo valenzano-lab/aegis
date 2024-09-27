@@ -2,7 +2,7 @@ import dash
 
 from dash import html, dcc
 import dash_bootstrap_components as dbc
-from aegis_gui.pages.tab_landing import jumbotron, typewriter, usecases
+from aegis_gui.pages.tab_landing import jumbotron, usecases
 from aegis_gui.guisettings.GuiSettings import gui_settings
 
 dash.register_page(__name__, name="AEGIS", path="/")
