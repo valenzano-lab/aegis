@@ -15,7 +15,7 @@ You can run AEGIS simulations on a webserver or locally. The webserver is especi
 
 ### Webserver use
 
-You can access the AEGIS webserver [here](). The server is running AEGIS GUI.<!-- TODO update link -->
+You can access the AEGIS webserver [here](https://genome.leibniz-fli.de/aegis/). The server is running AEGIS GUI.
 
 ### Local use
 
@@ -54,8 +54,6 @@ make install_dev
 
 If you are having installation issues, check that pip is up to date (`python3 -m pip install --upgrade pip`).
 
-<!-- TODO update install_dev script -->
-
 ### AEGIS GUI
 Graphical user interface for AEGIS can be used on the webserver or with a local installation. It contains sections for launching and analyzing/plotting simulations.
 
@@ -66,7 +64,7 @@ Graphical user interface for AEGIS can be used on the webserver or with a local 
 
 ### Model description
 
-Most documentation about the model is available within the GUI itself, including description of [inputs](src/aegis/documentation/dynamic/default_parameters.md), [outputs](src/aegis/documentation/dynamic/output_specifications.md), [submodels](src/aegis/documentation/dynamic/submodel_specifications.md) and the [genetic architecture](src/aegis_sim/submodels/genetics/doc.md). Use the [webserver]() or a local installation to access the GUI. <!-- TODO update link --> Further information is available in the following articles:
+Most documentation about the model is available within the GUI itself, including description of [inputs](src/aegis/documentation/dynamic/default_parameters.md), [outputs](src/aegis/documentation/dynamic/output_specifications.md), [submodels](src/aegis/documentation/dynamic/submodel_specifications.md) and the [genetic architecture](src/aegis_sim/submodels/genetics/doc.md). Use the [webserver](https://genome.leibniz-fli.de/aegis/) or a local installation to access the GUI.  Further information is available in the following articles:
 
 - [AEGIS: An In Silico Tool to model Genome Evolution in Age-Structured Populations (2019)](https://www.biorxiv.org/content/10.1101/646877v1)
 - [An In Silico Model to Simulate the Evolution of Biological Aging (2016)](https://www.biorxiv.org/content/10.1101/037952v1)
