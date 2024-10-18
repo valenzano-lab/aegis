@@ -226,7 +226,7 @@ DEFAULT_PARAMETERS = {
         info="Acceleration of mortality under starvation",
         info_extended="",
         dtype=float,
-        drange="(0,1)",
+        drange="[0,1]",
         inrange=lambda x: 0 <= x <= 1,
     ),
     "CLIFF_SURVIVORSHIP": Parameter(
@@ -239,6 +239,28 @@ DEFAULT_PARAMETERS = {
         dtype=float,
         drange="{None, (0,1)}",
         inrange=lambda x: x is None or (0 < x < 1),
+    ),
+    "RESOURCE_MULTIPLICATIVE_GROWTH": Parameter(
+        key="RESOURCE_MULTIPLICATIVE_GROWTH",
+        name="",
+        domain="starvation",
+        default=None,
+        info="Factor by which the amount of remaining resources are multiplied each step",
+        info_extended="new_resource_amount = old_resource_amount * RESOURCE_MULTIPLICATIVE_GROWTH + RESOURCE_ADDITIVE_GROWTH",
+        dtype=float,
+        drange="{None, [0,inf)}",
+        inrange=lambda x: x is None or (0 <= x),
+    ),
+    "RESOURCE_ADDITIVE_GROWTH": Parameter(
+        key="RESOURCE_ADDITIVE_GROWTH",
+        name="",
+        domain="starvation",
+        default=None,
+        info="Absolute value by which the amount of resources increases each step",
+        info_extended="new_resource_amount = old_resource_amount * RESOURCE_MULTIPLICATIVE_GROWTH + RESOURCE_ADDITIVE_GROWTH",
+        dtype=float,
+        drange="{None, (0,inf)}",
+        inrange=lambda x: x is None or (0 < x),
     ),
     #
     #

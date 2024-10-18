@@ -49,6 +49,8 @@ def init(self, parametermanager):
     # Resources
     self.resources = Resources(
         CARRYING_CAPACITY=parametermanager.parameters.CARRYING_CAPACITY,
+        RESOURCE_ADDITIVE_GROWTH=parametermanager.parameters.RESOURCE_ADDITIVE_GROWTH,
+        RESOURCE_MULTIPLICATIVE_GROWTH=parametermanager.parameters.RESOURCE_MULTIPLICATIVE_GROWTH,
     )
 
     # Reproduction
