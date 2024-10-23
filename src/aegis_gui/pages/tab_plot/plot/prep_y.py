@@ -24,6 +24,13 @@ def get_mortality_intrinsic(container: Container, iloc=-1):
     return ys, max_iloc
 
 
+def get_fertility_intrinsic(container: Container, iloc=-1):
+    ys = container.get_phenotype_intrinsic_interval("repr")
+    max_iloc = ys.shape[0]
+    ys = ys.iloc[iloc].pipe(lambda x: x).to_numpy()
+    return ys, max_iloc
+
+
 def get_intrinsic_survivorship(container: Container, iloc=-1):
     ys = container.get_phenotype_intrinsic_interval("surv")
     max_iloc = ys.shape[0]

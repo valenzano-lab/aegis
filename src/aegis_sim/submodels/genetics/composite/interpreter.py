@@ -34,9 +34,8 @@ class Interpreter:
     def call(self, loci, interpreter_kind):
         """Exposed method"""
 
-        # shape is (n_individuals, age_limit, bits_per_locus)
+        # shape is (n_individuals, ?, bits_per_locus)
         assert loci.shape[0] > 0
-        assert loci.shape[1] == parameterization.parametermanager.parameters.AGE_LIMIT
         assert loci.shape[2] == self.BITS_PER_LOCUS
 
         method = {

@@ -13,8 +13,16 @@ def init_traits(self):
     from aegis_sim.parameterization.trait import Trait
 
     traits = {}
+    next_trait_start_position = 0
     for traitname in constants.EVOLVABLE_TRAITS:
-        trait = Trait(name=traitname, cnf=parametermanager.parameters)
+        trait = Trait(
+            name=traitname,
+            cnf=parametermanager.parameters,
+            start_position=next_trait_start_position,
+            genarch_type=parametermanager.parameters.GENARCH_TYPE,
+            MODIF_GENOME_SIZE=parametermanager.parameters.MODIF_GENOME_SIZE,
+        )
         traits[traitname] = trait
+        next_trait_start_position = trait.end
 
     self.traits = traits

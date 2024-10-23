@@ -224,8 +224,8 @@ FIG_SETUP = {
             "yaxis_title": "life expectancy",
         },
     },
-    "fertility": {
-        "title": "intrinsic fertility",
+    "observed fertility": {
+        "title": "observed fertility",
         "supports_multi": True,
         "prep_y": prep_y.get_fertility,
         "prep_x": prep_x.get_ages,
@@ -238,6 +238,30 @@ FIG_SETUP = {
             """,
             mathjax=True,
         ),
+        # graph
+        "figure_layout": {
+            "xaxis_title": "age class",
+            "yaxis_title": "observed fertility",
+        },
+    },
+    "intrinsic fertility": {
+        "title": "intrinsic fertility",
+        "supports_multi": True,
+        "prep_y": prep_y.get_fertility_intrinsic,
+        "prep_x": prep_x.get_ages,
+        "prep_figure": "make_line_figure",
+        "description": dash.dcc.Markdown(
+            """
+            Genetic (individual-specific, heritable) fertility at a given age.
+            \n
+            Population medians.
+            """,
+            mathjax=True,
+        ),
+        # dash.html.Span(
+        #     "tooltips", id="tooltip-target-1", style={"textDecoration": "underline", "cursor": "pointer"}
+        # ),
+        # dbc.Tooltip("This is the first tooltip", target="tooltip-target-1"),
         # graph
         "figure_layout": {
             "xaxis_title": "age class",

@@ -11,25 +11,21 @@ from aegis_sim.dataclasses.phenotypes import Phenotypes
 class Architect:
     """Wrapper for a genetic architecture"""
 
-    def __init__(
-        self,
-        BITS_PER_LOCUS,
-        PHENOMAP,
-        AGE_LIMIT,
-        THRESHOLD,
-        ENVDRIFT_RATE,
-    ):
+    def __init__(self, BITS_PER_LOCUS, PHENOMAP, AGE_LIMIT, THRESHOLD, ENVDRIFT_RATE, GENARCH_TYPE, MODIF_GENOME_SIZE):
 
-        if PHENOMAP:
+        assert GENARCH_TYPE in ("modifying", "composite")
+
+        if GENARCH_TYPE == "modifying":
             assert (
                 BITS_PER_LOCUS == 1
             ), f"BITS_PER_LOCUS should be 1 if PHENOMAP is specified but it is set to {BITS_PER_LOCUS}"
             architecture = ModifyingArchitecture(
                 PHENOMAP=PHENOMAP,
                 AGE_LIMIT=AGE_LIMIT,
+                MODIF_GENOME_SIZE=MODIF_GENOME_SIZE,
             )
 
-        else:
+        elif GENARCH_TYPE == "composite":
             architecture = CompositeArchitecture(
                 BITS_PER_LOCUS=BITS_PER_LOCUS,
                 AGE_LIMIT=AGE_LIMIT,

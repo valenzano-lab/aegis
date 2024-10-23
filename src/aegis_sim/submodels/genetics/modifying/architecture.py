@@ -1,6 +1,7 @@
 import numpy as np
 
 from aegis_sim import constants
+from aegis_sim import parameterization
 
 from aegis_sim.submodels.genetics.modifying.gpm_decoder import GPM_decoder
 from aegis_sim.submodels.genetics.modifying.gpm import GPM
@@ -17,23 +18,22 @@ class ModifyingArchitecture:
     - ... dev still required
     """
 
-    def __init__(self, PHENOMAP, AGE_LIMIT):
+    def __init__(self, PHENOMAP, AGE_LIMIT, MODIF_GENOME_SIZE):
         self.PHENOMAP = PHENOMAP
-        self.AGE_LIMIT = AGE_LIMIT
 
         self.gpm_decoder = GPM_decoder(PHENOMAP)
 
-        self.length = self.gpm_decoder.n
+        self.length = MODIF_GENOME_SIZE
 
         phenolist = self.gpm_decoder.get_total_phenolist()
         self.phenomap = GPM(
-            AGE_LIMIT=AGE_LIMIT,
             phenomatrix=None,
             phenolist=phenolist,
         )
 
-    def get_number_of_phenotypic_values(self):
-        return self.AGE_LIMIT * constants.TRAIT_N
+        self.n_phenotypic_values = AGE_LIMIT * constants.TRAIT_N
+
+        self.AGE_LIMIT = AGE_LIMIT
 
     def get_number_of_bits(self):
         return self.length * ploider.ploider.y
@@ -45,7 +45,7 @@ class ModifyingArchitecture:
         return np.zeros(shape=(popsize, *self.get_shape()), dtype=np.bool_)
 
     def init_phenotype_array(self, popsize):
-        return np.zeros(shape=(popsize, self.get_number_of_phenotypic_values()))
+        return np.zeros(shape=(popsize, self.n_phenotypic_values))
 
     def compute(self, genomes):
 
@@ -54,9 +54,22 @@ class ModifyingArchitecture:
         else:
             genomes = ploider.ploider.diploid_to_haploid(genomes)
 
-        return self.phenomap(
+        # TODO yuck!
+
+        # Apply phenomap
+        phenomapped = self.phenomap(
             interpretome=genomes.reshape(len(genomes), -1),
             zeropheno=self.init_phenotype_array(
                 popsize=len(genomes),
             ),
         )
+
+        # TODO damn ugly!
+
+        # Add background values
+        for traitname, trait in parameterization.traits.items():
+            start = constants.starting_site(trait.name) * self.AGE_LIMIT
+            end = start + self.AGE_LIMIT
+            phenomapped[:, slice(start, end)] += trait.initpheno
+
+        return phenomapped

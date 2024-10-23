@@ -1,10 +1,7 @@
 """Wrapper for phenotype vectors."""
 
 import numpy as np
-import pandas as pd
 from aegis_sim import parameterization
-from aegis_sim import constants
-import pathlib
 
 
 class Phenotypes:
@@ -68,7 +65,7 @@ class Phenotypes:
         # Reminder.
         # Traits can be evolvable and age-specific (thus different across individuals and ages)
         # Traits can be evolvable and non age-specific (thus different between individuals but same across ages)
-        # Traits can be not evolvable (thus same for all individuals at all ages)
+        # Traits can be non-evolvable (thus same for all individuals at all ages)
 
         if not trait.evolvable:
             probs = trait.initpheno

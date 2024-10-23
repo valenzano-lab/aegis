@@ -1,5 +1,4 @@
 import numpy as np
-
 import pathlib
 
 from aegis_sim.dataclasses.population import Population

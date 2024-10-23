@@ -1,4 +1,5 @@
 EVOLVABLE_TRAITS = ("surv", "repr", "muta", "neut", "grow")
+# EVOLVABLE_TRAITS = ("surv", "repr", "muta", "grow")
 
 TRAIT_N = len(EVOLVABLE_TRAITS)
 

@@ -1,5 +1,5 @@
 import logging
-
+from aegis_sim import parameterization
 
 
 class GPM:
@@ -29,12 +29,11 @@ class GPM:
     rather than a matrix because the matrix will be very sparse (it will carry a lot of 0's).
     """
 
-    def __init__(self, AGE_LIMIT, phenomatrix, phenolist):
-        self.AGE_LIMIT = AGE_LIMIT
+    def __init__(self, phenomatrix, phenolist):
         self.phenomatrix = phenomatrix
         self.phenolist = phenolist
 
-        self.dummy = self.phenolist == [] and self.phenomatrix is None
+        self.dummy = len(self.phenolist) == 0 and self.phenomatrix is None
         if self.dummy:
             logging.info("Phenomap inactive.")
 
@@ -61,17 +60,9 @@ class GPM:
         else:
             raise Exception("Neither phenomatrix nor phenolist has been provided.")
 
-    def add_initial_values(self, array):
-        array = array.copy()
-
-        for traitname, trait in parameterization.traits.items():
-            array[:, trait.slice] += trait.initpheno
-        return array
-
     def __call__(self, interpretome, zeropheno):
         if self.dummy:
-            return interpretome
+            return zeropheno
         else:
             phenodiff = self.phenodiff(interpretome, zeropheno=zeropheno)
-            phenowhole = self.add_initial_values(phenodiff)
-            return phenowhole
+            return phenodiff

@@ -5,6 +5,7 @@ import pathlib
 from .recorder import Recorder
 from aegis_sim import submodels
 
+
 class PhenomapRecorder(Recorder):
     """
 
@@ -22,7 +23,7 @@ class PhenomapRecorder(Recorder):
         path: /phenomap.csv
         filetype: csv
         category: genotype
-        description: A static list of phenotypic effects of each genomic site. 
+        description: A static list of phenotypic effects of each genomic site.
         trait granularity: N/A
         time granularity: N/A
         frequency parameter: once
@@ -30,10 +31,9 @@ class PhenomapRecorder(Recorder):
         """
         architecture = submodels.architect.architecture
 
-        if hasattr(architecture, "phenomap"):
+        if hasattr(architecture, "phenomap") and architecture.phenomap.phenolist:
             phenolist = architecture.phenomap.phenolist
-            pd.DataFrame(phenolist).to_csv(
-                self.odir / "phenomap.csv", index=None, header=["bit", "trait", "age", "weight"]
-            )
+            df = pd.DataFrame(phenolist)
+            df.to_csv(self.odir / "phenomap.csv", index=None, header=["bit", "trait", "age", "weight"])
         else:
             logging.info("Phenomap is empty.")

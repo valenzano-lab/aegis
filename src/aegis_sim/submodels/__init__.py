@@ -85,9 +85,11 @@ def init(self, parametermanager):
 
     # Genetic architecture
     self.architect = Architect(
+        GENARCH_TYPE=parametermanager.parameters.GENARCH_TYPE,
         BITS_PER_LOCUS=parametermanager.parameters.BITS_PER_LOCUS,
         PHENOMAP=parametermanager.parameters.PHENOMAP,
         AGE_LIMIT=parametermanager.parameters.AGE_LIMIT,
         THRESHOLD=parametermanager.parameters.THRESHOLD,
         ENVDRIFT_RATE=parametermanager.parameters.ENVDRIFT_RATE,
+        MODIF_GENOME_SIZE=parametermanager.parameters.MODIF_GENOME_SIZE,
     )

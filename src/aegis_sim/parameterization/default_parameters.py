@@ -396,6 +396,17 @@ DEFAULT_PARAMETERS = {
         drange="[1, 4]",
         inrange=lambda x: x in (1, 2, 3, 4),
     ),
+    "GENARCH_TYPE": Parameter(
+        key="GENARCH_TYPE",
+        name="",
+        domain="genetics",
+        default="composite",
+        info="Modifying or composite architecture",
+        info_extended="",
+        dtype=str,
+        drange="{composite, modifying}",
+        inrange=lambda x: x in ("composite", "modifying"),
+    ),
     "G_repr_lo": Parameter(
         key="G_repr_lo",
         name="",
@@ -860,6 +871,17 @@ DEFAULT_PARAMETERS = {
     #
     #
     # GENETIC ARCHITECTURE (modifying)
+    "MODIF_GENOME_SIZE": Parameter(
+        key="MODIF_GENOME_SIZE",
+        name="",
+        domain="modifying genetic architecture",
+        default=200,
+        info="Size of the genome under the modifying architecture",
+        dtype=int,
+        drange="[1,inf)",
+        inrange=lambda x: x >= 1,
+        show_in_gui=True,
+    ),
     "PHENOMAP_SPECS": Parameter(
         key="PHENOMAP_SPECS",
         name="",
@@ -903,7 +925,7 @@ DEFAULT_PARAMETERS = {
         key="G_surv_initpheno",
         name="",
         domain="modifying genetic architecture",
-        default=1,
+        default=0.95,
         info="Initial survival rate",
         dtype=float,
         drange="",
@@ -912,7 +934,7 @@ DEFAULT_PARAMETERS = {
         key="G_repr_initpheno",
         name="",
         domain="modifying genetic architecture",
-        default=1,
+        default=0.75,
         info="Initial fertility rate",
         dtype=float,
         drange="",
@@ -921,7 +943,7 @@ DEFAULT_PARAMETERS = {
         key="G_neut_initpheno",
         name="",
         domain="modifying genetic architecture",
-        default=1,
+        default=0.5,
         info="",
         dtype=float,
         drange="",

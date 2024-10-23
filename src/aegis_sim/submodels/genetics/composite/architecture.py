@@ -22,9 +22,8 @@ class CompositeArchitecture:
 
     def __init__(self, BITS_PER_LOCUS, AGE_LIMIT, THRESHOLD):
         self.BITS_PER_LOCUS = BITS_PER_LOCUS
-        self.n_loci = constants.TRAIT_N * AGE_LIMIT
+        self.n_loci = sum(trait.length for trait in parameterization.traits.values())
         self.length = self.n_loci * BITS_PER_LOCUS
-        self.AGE_LIMIT = AGE_LIMIT
 
         self.evolvable = [trait for trait in parameterization.traits.values() if trait.evolvable]
 
@@ -33,8 +32,7 @@ class CompositeArchitecture:
             THRESHOLD,
         )
 
-    def get_number_of_phenotypic_values(self):
-        return self.AGE_LIMIT * constants.TRAIT_N
+        self.n_phenotypic_values = AGE_LIMIT * constants.TRAIT_N
 
     def get_number_of_bits(self):
         return ploider.ploider.y * self.n_loci * self.BITS_PER_LOCUS
@@ -53,7 +51,7 @@ class CompositeArchitecture:
         return array
 
     def init_phenotype_array(self, popsize):
-        return np.zeros(shape=(popsize, self.get_number_of_phenotypic_values()))
+        return np.zeros(shape=(popsize, self.n_phenotypic_values))
 
     def compute(self, genomes):
 

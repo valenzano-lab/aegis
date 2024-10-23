@@ -7,41 +7,59 @@ class Trait:
     Contains data on traits encoded in the genome.
     """
 
-    def __init__(self, name, cnf):
+    def __init__(self, name, cnf, genarch_type, MODIF_GENOME_SIZE, start_position):
         def get(key):
             return getattr(cnf, f"G_{name}_{key}")
 
         self.name = name
+        self.start = start_position
 
-        # Attributes set by the configuration files
+        # Relevant if genetic architecture is composite
         self.evolvable = get("evolvable")
         self.agespecific = get("agespecific")
         self.interpreter = get("interpreter")
-        self.lo = get("lo")
-        self.hi = get("hi")
         self.initgeno = get("initgeno")
+
+        # Relevant if genetic architecture is modifying
         self.initpheno = get("initpheno")
 
-        # Determine the number of loci encoding the trait
-        if self.evolvable:
-            if self.agespecific is True:  # one locus per age
-                self.length = cnf.AGE_LIMIT
-            elif self.agespecific is False:  # one locus for all ages
-                self.length = 1
-            else:  # custom number of loci
-                self.length = self.agespecific
-        else:  # no loci for a constant trait
-            self.length = 0
+        # Relevant under any genetic architecture
+        self.lo = get("lo")
+        self.hi = get("hi")
 
-        self._validate()
+        assert genarch_type in ("modifying", "composite")
 
-        # Infer positions in the genome
-        # self.start = start
-        # self.end = self.start + self.length
-        # self.slice = slice(self.start, self.end)
+        if genarch_type == "composite":
 
-        self.start = cnf.AGE_LIMIT * constants.starting_site(self.name)
-        self.end = self.start + cnf.AGE_LIMIT
+            # Determine the number of loci encoding the trait
+            if self.evolvable:
+                if self.agespecific is True:  # one locus per age
+                    self.length = cnf.AGE_LIMIT
+                elif self.agespecific is False:  # one locus for all ages
+                    self.length = 1
+                else:  # custom number of loci
+                    self.length = self.agespecific
+            else:  # no loci for a constant trait
+                self.length = 0
+
+            self._validate()
+
+            # Infer positions in the genome
+            # self.start = start
+            # self.end = self.start + self.length
+            # self.slice = slice(self.start, self.end)
+
+            # self.start = cnf.AGE_LIMIT * constants.starting_site(self.name)
+            # self.end = self.start_position + cnf.AGE_LIMIT
+
+        elif genarch_type == "modifying":
+            if name == "neut":
+                self.length = MODIF_GENOME_SIZE
+            else:
+                self.length = 0
+
+        self.end = self.start + self.length
+
         self.slice = slice(self.start, self.end)
 
     def _validate(self):
