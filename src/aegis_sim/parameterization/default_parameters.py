@@ -329,10 +329,10 @@ DEFAULT_PARAMETERS = {
         info="Mode of reproduction",
         info_extended="",
         dtype=str,
-        drange="{sexual, asexual, asexual_diploid}",
-        inrange=lambda x: x in ("sexual", "asexual", "asexual_diploid"),
+        drange="{sexual, asexual}",
+        inrange=lambda x: x in ("sexual", "asexual"),
         presets={
-            "yeast": "asexual_diploid",
+            "yeast": "asexual",
         },
     ),
     "RECOMBINATION_RATE": Parameter(
@@ -384,6 +384,17 @@ DEFAULT_PARAMETERS = {
         dtype=float,
         drange="[0, inf)",
         inrange=lambda x: x >= 0,
+    ),
+    "PLOIDY": Parameter(
+        key="PLOIDY",
+        name="",
+        domain="genetics",
+        default=2,
+        info="Number of complete sets of chromosomes",
+        info_extended="If reproduction is sexual, ploidy can only be 2.",
+        dtype=int,
+        drange="[1, 4]",
+        inrange=lambda x: x in (1, 2, 3, 4),
     ),
     "G_repr_lo": Parameter(
         key="G_repr_lo",

@@ -86,5 +86,3 @@ class ParameterManager:
 
             if validate_serverrange:
                 DEFAULT_PARAMETERS[key].validate_serverrange(val)
-
-

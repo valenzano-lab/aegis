@@ -66,6 +66,7 @@ def init(self, parametermanager):
     self.ploidy = Ploider(
         REPRODUCTION_MODE=parametermanager.parameters.REPRODUCTION_MODE,
         DOMINANCE_FACTOR=parametermanager.parameters.DOMINANCE_FACTOR,
+        PLOIDY=parametermanager.parameters.PLOIDY,
     )
 
     # Other

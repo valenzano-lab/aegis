@@ -1,18 +1,13 @@
 class Ploider:
     """ """
 
-    def __init__(self, REPRODUCTION_MODE, DOMINANCE_FACTOR):
+    def __init__(self, REPRODUCTION_MODE, DOMINANCE_FACTOR, PLOIDY):
         self.REPRODUCTION_MODE = REPRODUCTION_MODE
         self.DOMINANCE_FACTOR = DOMINANCE_FACTOR
-        self.y = self.get_ploidy(REPRODUCTION_MODE)
+        self.y = PLOIDY
 
-    @staticmethod
-    def get_ploidy(REPRODUCTION_MODE):
-        return {
-            "sexual": 2,
-            "asexual": 1,
-            "asexual_diploid": 2,
-        }[REPRODUCTION_MODE]
+        if REPRODUCTION_MODE == "sexual":
+            assert PLOIDY == 2, f"If reproduction is sexual, ploidy can only be 2, not {PLOIDY}."
 
     def diploid_to_haploid(self, loci):
         """Merge two arrays encoding two chromatids into one array.
