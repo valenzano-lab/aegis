@@ -1,7 +1,7 @@
 class Ploider:
     """ """
 
-    def __init__(self, REPRODUCTION_MODE, DOMINANCE_FACTOR, PLOIDY):
+    def init(self, REPRODUCTION_MODE, DOMINANCE_FACTOR, PLOIDY):
         self.REPRODUCTION_MODE = REPRODUCTION_MODE
         self.DOMINANCE_FACTOR = DOMINANCE_FACTOR
         self.y = PLOIDY
@@ -36,3 +36,6 @@ class Ploider:
         assert len(zygosity.shape) == 3, len(zygosity.shape)
 
         return zygosity
+
+
+ploider = Ploider()

@@ -3,6 +3,7 @@ from aegis_sim import constants
 
 from aegis_sim.submodels.genetics.composite.interpreter import Interpreter
 from aegis_sim import parameterization
+from aegis_sim.submodels.genetics import ploider
 
 
 class CompositeArchitecture:
@@ -19,8 +20,7 @@ class CompositeArchitecture:
 
     """
 
-    def __init__(self, ploid, BITS_PER_LOCUS, AGE_LIMIT, THRESHOLD):
-        self.ploid = ploid
+    def __init__(self, BITS_PER_LOCUS, AGE_LIMIT, THRESHOLD):
         self.BITS_PER_LOCUS = BITS_PER_LOCUS
         self.n_loci = constants.TRAIT_N * AGE_LIMIT
         self.length = self.n_loci * BITS_PER_LOCUS
@@ -37,10 +37,10 @@ class CompositeArchitecture:
         return self.AGE_LIMIT * constants.TRAIT_N
 
     def get_number_of_bits(self):
-        return self.ploid.y * self.n_loci * self.BITS_PER_LOCUS
+        return ploider.ploider.y * self.n_loci * self.BITS_PER_LOCUS
 
     def get_shape(self):
-        return (self.ploid.y, self.n_loci, self.BITS_PER_LOCUS)
+        return (ploider.ploider.y, self.n_loci, self.BITS_PER_LOCUS)
 
     def init_genome_array(self, popsize):
         # TODO enable initgeno
@@ -60,7 +60,7 @@ class CompositeArchitecture:
         if genomes.shape[1] == 1:  # Do not calculate mean if genomes are haploid
             genomes = genomes[:, 0]
         else:
-            genomes = self.ploid.diploid_to_haploid(genomes)
+            genomes = ploider.ploider.diploid_to_haploid(genomes)
 
         interpretome = np.zeros(shape=(genomes.shape[0], genomes.shape[1]), dtype=np.float32)
         for trait in parameterization.traits.values():

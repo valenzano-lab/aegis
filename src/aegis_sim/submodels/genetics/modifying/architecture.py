@@ -4,6 +4,7 @@ from aegis_sim import constants
 
 from aegis_sim.submodels.genetics.modifying.gpm_decoder import GPM_decoder
 from aegis_sim.submodels.genetics.modifying.gpm import GPM
+from aegis_sim.submodels.genetics import ploider
 
 
 class ModifyingArchitecture:
@@ -16,8 +17,7 @@ class ModifyingArchitecture:
     - ... dev still required
     """
 
-    def __init__(self, ploid, PHENOMAP, AGE_LIMIT):
-        self.ploid = ploid
+    def __init__(self, PHENOMAP, AGE_LIMIT):
         self.PHENOMAP = PHENOMAP
         self.AGE_LIMIT = AGE_LIMIT
 
@@ -36,10 +36,10 @@ class ModifyingArchitecture:
         return self.AGE_LIMIT * constants.TRAIT_N
 
     def get_number_of_bits(self):
-        return self.length * self.ploid.y
+        return self.length * ploider.ploider.y
 
     def get_shape(self):
-        return (self.ploid.y, self.length, 1)
+        return (ploider.ploider.y, self.length, 1)
 
     def init_genome_array(self, popsize):
         return np.zeros(shape=(popsize, *self.get_shape()), dtype=np.bool_)
@@ -52,7 +52,7 @@ class ModifyingArchitecture:
         if genomes.shape[1] == 1:  # Do not calculate mean if genomes are haploid
             genomes = genomes[:, 0]
         else:
-            genomes = self.ploid.diploid_to_haploid(genomes)
+            genomes = ploider.ploider.diploid_to_haploid(genomes)
 
         return self.phenomap(
             interpretome=genomes.reshape(len(genomes), -1),

@@ -2,13 +2,9 @@
 Abstract away genetic architecture.
 """
 
-import numpy as np
-
 from aegis_sim.submodels.genetics.envdrift import Envdrift
 from aegis_sim.submodels.genetics.composite.architecture import CompositeArchitecture
 from aegis_sim.submodels.genetics.modifying.architecture import ModifyingArchitecture
-from aegis_sim import parameterization
-
 from aegis_sim.dataclasses.phenotypes import Phenotypes
 
 
@@ -21,7 +17,6 @@ class Architect:
         PHENOMAP,
         AGE_LIMIT,
         THRESHOLD,
-        ploid,
         ENVDRIFT_RATE,
     ):
 
@@ -30,14 +25,12 @@ class Architect:
                 BITS_PER_LOCUS == 1
             ), f"BITS_PER_LOCUS should be 1 if PHENOMAP is specified but it is set to {BITS_PER_LOCUS}"
             architecture = ModifyingArchitecture(
-                ploid=ploid,
                 PHENOMAP=PHENOMAP,
                 AGE_LIMIT=AGE_LIMIT,
             )
 
         else:
             architecture = CompositeArchitecture(
-                ploid=ploid,
                 BITS_PER_LOCUS=BITS_PER_LOCUS,
                 AGE_LIMIT=AGE_LIMIT,
                 THRESHOLD=THRESHOLD,

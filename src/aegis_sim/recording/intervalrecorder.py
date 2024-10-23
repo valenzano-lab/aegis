@@ -29,7 +29,7 @@ class IntervalRecorder(Recorder):
     def init_headers(self):
         with open(self.odir / "genotypes.csv", "ab") as f:
             length = submodels.architect.architecture.length
-            ploidy = submodels.architect.architecture.ploid.y
+            ploidy = submodels.genetics.ploider.ploider.y
             header0 = list(range(length)) * ploidy
             header1 = np.repeat(np.arange(ploidy), length)
             np.savetxt(f, [header0], delimiter=",", fmt="%i")

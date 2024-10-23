@@ -2,7 +2,7 @@ import numpy as np
 
 
 class Mutator:
-    def __init__(self, MUTATION_RATIO, MUTATION_METHOD, MUTATION_AGE_MULTIPLIER):
+    def init(self, MUTATION_RATIO, MUTATION_METHOD, MUTATION_AGE_MULTIPLIER):
         self.MUTATION_RATIO = MUTATION_RATIO
         self.MUTATION_METHOD = MUTATION_METHOD
         self.MUTATION_AGE_MULTIPLIER = MUTATION_AGE_MULTIPLIER
@@ -94,3 +94,5 @@ class Mutator:
         multipliers = ages * MUTATION_AGE_MULTIPLIER
         multipliers = multipliers.reshape(mutation_probabilities.shape)
         return mutation_probabilities * (1 + multipliers)
+
+mutator = Mutator()

@@ -1,11 +1,11 @@
-from aegis_sim.submodels.reproduction.mutation import Mutator
+from aegis_sim.submodels.reproduction.mutation import mutator
 from aegis_sim.submodels.reproduction.reproduction import Reproducer
 from aegis_sim.submodels.abiotic import Abiotic
 from aegis_sim.submodels.predation import Predation
 from aegis_sim.submodels.resources.starvation import Starvation
 from aegis_sim.submodels.infection import Infection
 from aegis_sim.submodels.frailty import Frailty
-from aegis_sim.submodels.genetics.ploider import Ploider
+from aegis_sim.submodels.genetics.ploider import ploider
 from aegis_sim.submodels.genetics.architect import Architect
 from aegis_sim.utilities.popgenstats import PopgenStats
 from aegis_sim.submodels.resources.resources import Resources
@@ -54,7 +54,7 @@ def init(self, parametermanager):
     )
 
     # Reproduction
-    self.mutator = Mutator(
+    mutator.init(
         MUTATION_RATIO=parametermanager.parameters.MUTATION_RATIO,
         MUTATION_METHOD=parametermanager.parameters.MUTATION_METHOD,
         MUTATION_AGE_MULTIPLIER=parametermanager.parameters.MUTATION_AGE_MULTIPLIER,
@@ -63,7 +63,7 @@ def init(self, parametermanager):
     self.matingmanager = MatingManager()
 
     # Genetic architecture
-    self.ploidy = Ploider(
+    ploider.init(
         REPRODUCTION_MODE=parametermanager.parameters.REPRODUCTION_MODE,
         DOMINANCE_FACTOR=parametermanager.parameters.DOMINANCE_FACTOR,
         PLOIDY=parametermanager.parameters.PLOIDY,
@@ -80,12 +80,11 @@ def init(self, parametermanager):
     self.reproduction = Reproducer(
         RECOMBINATION_RATE=parametermanager.parameters.RECOMBINATION_RATE,
         REPRODUCTION_MODE=parametermanager.parameters.REPRODUCTION_MODE,
-        mutator=self.mutator,
+        mutator=mutator,
     )
 
     # Genetic architecture
     self.architect = Architect(
-        ploid=self.ploidy,
         BITS_PER_LOCUS=parametermanager.parameters.BITS_PER_LOCUS,
         PHENOMAP=parametermanager.parameters.PHENOMAP,
         AGE_LIMIT=parametermanager.parameters.AGE_LIMIT,
