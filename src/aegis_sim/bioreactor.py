@@ -182,9 +182,11 @@ class Bioreactor:
             self.eggs *= indices
 
     def growth(self):
-        max_growth_potential = self.population.phenotypes.extract(ages=self.population.ages, trait_name="grow")
-        gathered_resources = submodels.resources.scavenge(max_growth_potential)
-        self.population.sizes += gathered_resources
+        # TODO use already scavenged resources to determine growth
+        # max_growth_potential = self.population.phenotypes.extract(ages=self.population.ages, trait_name="grow")
+        # gathered_resources = submodels.resources.scavenge(max_growth_potential)
+        # self.population.sizes += gathered_resources
+        self.population.sizes += 1
 
     def age(self):
         """Increase age of all by one and kill those that surpass age limit.

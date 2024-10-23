@@ -47,6 +47,7 @@ class Starvation:
         self.consecutive_overshoot_n = 0  # For starvation mode
 
         self.func = {
+            # "sensitive": self._sensitive,
             "treadmill_random": self._treadmill_random,
             "treadmill_boomer": self._treadmill_boomer,
             "treadmill_zoomer": self._treadmill_zoomer,
@@ -72,6 +73,9 @@ class Starvation:
         else:
             self.consecutive_overshoot_n += 1
             return self.func(n, resource_availability)
+
+    # def _sensitive(self, n, resource_availability):
+    #     ratio = n /resource_availability
 
     def _logistic(self, n, resource_availability):
         """Kill random individuals with logistic-like probability."""
