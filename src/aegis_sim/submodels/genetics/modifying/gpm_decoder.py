@@ -94,7 +94,7 @@ class Genblock:
         for i in range(self.n):
             func = Genblock.__resolve_function(encoding["agefunc"], encoding["funcparam"])
             if encoding["agefunc"] == "agespec":
-                age = np.random.integers(0, parametermanager.parameters.AGE_LIMIT)
+                age = np.random.randint(0, parametermanager.parameters.AGE_LIMIT)
                 magnitude = func(age)
                 add_to_phenolist(i, encoding["trait"], age, magnitude)
             else:

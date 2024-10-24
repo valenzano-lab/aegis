@@ -72,4 +72,10 @@ class ModifyingArchitecture:
             end = start + self.AGE_LIMIT
             phenomapped[:, slice(start, end)] += trait.initpheno
 
+            # Check that phenotype values are within [0,1]:
+            p = phenomapped[:, slice(start, end)]
+            p[p > 1] = 1
+            p[p < 0] = 0
+            phenomapped[:, slice(start, end)] = p
+
         return phenomapped

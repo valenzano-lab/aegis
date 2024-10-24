@@ -125,6 +125,9 @@ class Bioreactor:
         # Binomial calculation
         n = parametermanager.parameters.MAX_OFFSPRING_NUMBER
         p = probs_repr
+
+        assert np.all(p<=1)
+        assert np.all(p>=0)
         num_repr = np.random.binomial(n=n, p=p)
         mask_repr = num_repr > 0
 

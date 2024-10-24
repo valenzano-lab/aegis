@@ -3,6 +3,8 @@
 import numpy as np
 from aegis_sim import parameterization
 
+from aegis_sim.constants import EVOLVABLE_TRAITS
+
 
 class Phenotypes:
     def __init__(self, array):
@@ -11,9 +13,7 @@ class Phenotypes:
         # assert array.shape[1] == constants.TRAIT_N * parameterization.parametermanager.parameters.AGE_LIMIT
 
         # clip phenotype to [0,1] / Apply lo and hi bound
-        # TODO ??? extract slicing
-        array = Phenotypes.clip_array_to_01(array)
-
+        array = self.clip_array_to_01(array)
         self.array = array
 
     def __len__(self):
@@ -82,17 +82,42 @@ class Phenotypes:
 
         return final_probs
 
-    @staticmethod
-    def clip_array_to_01(array):
-        for trait in parameterization.traits.values():
-            array[:, trait.slice] = Phenotypes.clip_trait_to_01(array[:, trait.slice], trait.name)
+    def clip_array_to_01(self, array):
+        for trait_name in EVOLVABLE_TRAITS:
+            lo = parameterization.traits[trait_name].lo
+            hi = parameterization.traits[trait_name].hi
+
+            # get old values
+            _, _, slice_ = self.get_trait_position(trait_name=trait_name)
+            values = array[:, slice_]
+
+            # clip
+            new_values = lo + values * (hi - lo)
+
+            # set new values
+            array[:, slice_] = new_values
+
         return array
 
-    @staticmethod
-    def clip_trait_to_01(array, traitname):
-        lo = parameterization.traits[traitname].lo
-        hi = parameterization.traits[traitname].hi
-        return lo + array * (hi - lo)
+    def get_trait_position(self, trait_name):
+        index = EVOLVABLE_TRAITS.index(trait_name)
+        AGE_LIMIT = parameterization.parametermanager.parameters.AGE_LIMIT
+        start = index * AGE_LIMIT
+        end = start + AGE_LIMIT
+        slice_ = slice(start, end)
+        return start, end, slice_
+
+    # @staticmethod
+    # def clip_array_to_01(array):
+    #     for trait in parameterization.traits.values():
+    #         array[:, trait.slice] = Phenotypes.clip_trait_to_01(array[:, trait.slice], trait.name)
+    #     return array
+
+    # @staticmethod
+    # def clip_trait_to_01(array, traitname):
+    #     lo = parameterization.traits[traitname].lo
+    #     hi = parameterization.traits[traitname].hi
+    #     return lo + array * (hi - lo)
 
     # # Recording functions
     # def to_feather(self):

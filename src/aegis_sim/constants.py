@@ -7,7 +7,6 @@ TRAIT_N = len(EVOLVABLE_TRAITS)
 def starting_site(trait_name):
     return EVOLVABLE_TRAITS.index(trait_name)
 
-
 VALID_CAUSES_OF_DEATH = (
     "intrinsic",
     "abiotic",
