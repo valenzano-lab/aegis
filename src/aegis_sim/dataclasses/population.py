@@ -155,8 +155,8 @@ class Population:
             birthdays=np.zeros(n, dtype=np.int32) + step,
             # generations=parental_generations + 1,
             generations=None,
-            # phenotypes=submodels.architect.__call__(offspring_genomes),
-            phenotypes=np.empty(n),
+            # phenotypes=submodels.architect.__call__(offspring_genomes), # Do not compute phenotypes until eggs are laid! Why? Because it is computationally expensive.
+            phenotypes=Phenotypes(np.empty(n)),  # TODO hacky!
             infection=np.zeros(n, dtype=np.int32),
             sizes=np.zeros(n, dtype=np.float32),
             sexes=offspring_sexes,

@@ -83,6 +83,12 @@ class Phenotypes:
         return final_probs
 
     def clip_array_to_01(self, array):
+
+        is_egg_container = len(array.shape) == 1
+        if is_egg_container:
+            # Eggs do not have computed phenotypes. Only when they hatch, are their phenotypes computed.
+            return array
+
         for trait_name in EVOLVABLE_TRAITS:
             lo = parameterization.traits[trait_name].lo
             hi = parameterization.traits[trait_name].hi
