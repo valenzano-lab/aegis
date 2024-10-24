@@ -4,6 +4,7 @@ import numpy as np
 
 from aegis_sim.parameterization import parametermanager
 
+
 def stan_age(age):
     return age / parametermanager.parameters.AGE_LIMIT
 
@@ -14,17 +15,18 @@ class GPM_decoder:
     --- Example input ---
 
     PHENOMAP:
-        "AP1, 7":
-            - - "surv"
-            - "agespec"
-            - - 0.1
-            - - "repr"
-            - "agespec"
-            - - 0.1
+        "AP1, 7": # name of block, number of sites
+            - ["surv", "agespec", 0.1] # trait, age-dependency, scale
+            - ["repr", "agespec", -0.1]
         "MA1, 13":
-            - - "surv"
-            - "agespec"
-            - - 0.1
+            - ["surv", "agespec", -0.1]
+
+    # Make sure you set:
+    GENARCH_TYPE: modifying
+    BITS_PER_LOCUS: 1
+
+    # Make sure your genome size is big enough for all sites set up
+    MODIF_GENOME_SIZE: 2000
 
     ---
     """
@@ -107,41 +109,22 @@ class Genblock:
 
         scale = params
 
-        # def const(intercept, age):
-        #     return intercept
-
-        # def linear(intercept, slope, age):
-        #     return intercept + slope * age
-
-        # def gompertz(baseline, aging_rate, age):
-        #     """
-        #     Exponential increase in mortality.
-        #     When aging_rate = 0, there is no aging.
-        #     Baseline is intercept.
-        #     """
-        #     return [-1, 1][aging_rate > 0] * baseline * np.exp(abs(aging_rate) * age)
-
-        # def makeham(intercept, baseline, aging_rate, age):
-        #     return intercept + gompertz(baseline=baseline, aging_rate=aging_rate, age=age)
-
-        # def siler(baseline_infancy, slope_infancy, intercept, baseline, aging_rate, age):
-        #     return baseline_infancy * np.exp(-slope_infancy * age) + makeham(
-        #         intercept, baseline=baseline, aging_rate=aging_rate, age=age
-        #     )
-
-        # def _normal(pair):
-        #     mean, std = pair
-        #     return np.random.normal(mean, std)
-
-        # def _exponential(param):
-        #     if param > 0:
-        #         return np.random.exponential(param)
-        #     else:
-        #         return -np.random.exponential(-param)
-
-        def _beta(a=3, b=3):
+        # PARAMETER DISTRIBUTIONS
+        def _beta_symmetrical(a=3, b=3):
+            """
+            a=3, b=3 -> bell-shape
+            a=1, b=3 -> decay (highest around 0, decreases with distance from 0)
+            a=1, b=1 -> flat
+            """
             return np.random.beta(a, b) * 2 - 1
-            # return np.random.beta(a, b)
+
+        def _beta_onesided(a, b):
+            return np.random.beta(a, b)
+
+        # PHENOTYPE(AGE) functions
+        # These functions are used to compute phenotypic effects for every age
+        # They are going to be partial-ed with beta-shaped parameters (above)
+        # And then they take in age as a variable
 
         def acc(intercept, slope, acc, age):
             x = stan_age(age)
@@ -167,74 +150,23 @@ class Genblock:
             y = 1 / (1 + np.exp((-1) * k * (x - midpoint - shift / 2)))
             return scale * y - scale / 2
 
-        if func == "flat" or func == "agespec":
-            return functools.partial(acc, _beta(), 0, 0)
+        # Assembling it together
+        if func == "agespec":
+            return functools.partial(acc, _beta_onesided(a=1, b=3), 0, 0)
         elif func == "lin":
-            return functools.partial(acc, _beta() / 2, _beta(), 0)
+            # linearly changing with age
+            return functools.partial(acc, _beta_symmetrical() / 2, _beta_symmetrical(), 0)
         elif func == "acc":
-            return functools.partial(acc, _beta(), 0, _beta())
+            # exponentially changing with age
+            return functools.partial(acc, _beta_symmetrical(), 0, _beta_symmetrical())
         elif func == "exp":
-            return functools.partial(exp, _beta())
+            # exponentially changing with age
+            return functools.partial(exp, _beta_symmetrical())
         elif func == "hump":
-            return functools.partial(hump, _beta(), _beta(1, 1), _beta())
+            # not age-specific but with an age-hump
+            return functools.partial(hump, _beta_symmetrical(), _beta_symmetrical(1, 1), _beta_symmetrical())
         elif func == "sigm":
-            return functools.partial(sigm, _beta(), _beta(1, 1))
-        else:
-            raise Exception(f"{func} not allowed.")
-
-        # if func == "const" or func == "agespec":
-        #     return functools.partial(const, _exponential(params[0]))
-        # elif func == "linear":
-        #     assert len(params) == 2, "Two parameters are needed for a linear block."
-        #     return functools.partial(linear, _exponential(params[0]), _exponential(params[1]))
-        # elif func == "gompertz":
-        #     assert len(params) == 2, "Two parameters are needed for a Gompertz block."
-        #     return functools.partial(gompertz, _exponential(params[0]), _exponential(params[1]))
-        # else:
-        #     raise Exception(f"{func} not allowed.")
-
-    @staticmethod
-    def __resolve_function_old(func, params):
-
-        def const(intercept, age):
-            return intercept
-
-        def linear(intercept, slope, age):
-            return intercept + slope * age
-
-        def gompertz(baseline, aging_rate, age):
-            """
-            Exponential increase in mortality.
-            When aging_rate = 0, there is no aging.
-            Baseline is intercept.
-            """
-            return [-1, 1][aging_rate > 0] * baseline * np.exp(abs(aging_rate) * age)
-
-        def makeham(intercept, baseline, aging_rate, age):
-            return intercept + gompertz(baseline=baseline, aging_rate=aging_rate, age=age)
-
-        def siler(baseline_infancy, slope_infancy, intercept, baseline, aging_rate, age):
-            return baseline_infancy * np.exp(-slope_infancy * age) + makeham(
-                intercept, baseline=baseline, aging_rate=aging_rate, age=age
-            )
-
-        def _normal(pair):
-            mean, std = pair
-            return np.random.normal(mean, std)
-
-        def _exponential(param):
-            if param > 0:
-                return np.random.exponential(param)
-            else:
-                return -np.random.exponential(-param)
-
-        if func == "const" or func == "agespec":
-            return functools.partial(const, _exponential(params[0]))
-        elif func == "linear":
-            assert len(params) == 2, "Two parameters are needed for a linear block."
-            return functools.partial(linear, _exponential(params[0]), _exponential(params[1]))
-        elif func == "gompertz":
-            assert len(params) == 2, "Two parameters are needed for a Gompertz block."
-            return functools.partial(gompertz, _exponential(params[0]), _exponential(params[1]))
+            # sigmoidal across age
+            return functools.partial(sigm, _beta_symmetrical(), _beta_symmetrical(1, 1))
         else:
             raise Exception(f"{func} not allowed.")
