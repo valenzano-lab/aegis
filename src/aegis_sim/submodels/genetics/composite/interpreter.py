@@ -35,7 +35,7 @@ class Interpreter:
         """Exposed method"""
 
         # shape is (n_individuals, ?, bits_per_locus)
-        assert loci.shape[0] > 0
+        assert loci.shape[0] > 0, f"loci.shape[0] is {loci.shape[0]}"
         assert loci.shape[2] == self.BITS_PER_LOCUS
 
         method = {
