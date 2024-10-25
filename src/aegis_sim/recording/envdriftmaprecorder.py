@@ -34,6 +34,6 @@ class Envdriftmaprecorder(Recorder):
 
         if will_evolve:
             map_ = envdrift.map.flatten()
-            with open(self.odir / "envdrift.csv", "ab") as f:
+            with open(self.odir / "envdriftmap.csv", "ab") as f:
                 array = np.array(map_)
                 np.savetxt(f, [array], delimiter=",", fmt="%i")

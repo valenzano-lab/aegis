@@ -44,6 +44,7 @@ class Container:
         self.paths["simpleprogress"] = self.basepath / "simpleprogress.log"
         self.paths["output_summary"] = self.basepath / "output_summary.json"
         self.paths["input_summary"] = self.basepath / "input_summary.json"
+        self.paths["envdriftmap"] = self.basepath / "envdriftmap.csv"
         self.paths["snapshots"] = {}
         for kind in ("demography", "phenotypes", "genotypes"):
             self.paths["snapshots"][kind] = sorted(
