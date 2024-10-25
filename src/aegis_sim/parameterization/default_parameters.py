@@ -633,17 +633,6 @@ DEFAULT_PARAMETERS = {
         serverrange_info="[1,10]",
         evalrange=[1, 100],
     ),
-    "HEADSUP": Parameter(
-        key="HEADSUP",
-        name="",
-        domain="composite genetic architecture",
-        default=-1,
-        info="-1 if no preevolution, 0 for maturity guarantee, +x for headsup",
-        dtype=int,
-        drange="{-1, 0, [1, inf)}",
-        inrange=lambda x: x in (-1, 0) or x >= 1,
-        show_in_gui=False,
-    ),
     # "DIFFUSION_FACTOR": Parameter(
     #     key="DIFFUSION_FACTOR",
     #     name="",
