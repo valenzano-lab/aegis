@@ -320,7 +320,6 @@ DEFAULT_PARAMETERS = {
         serverrange=lambda x: x <= 5,
         serverrange_info="[1,5]",
     ),
-    # TODO split ploidy from reproduction mode
     "REPRODUCTION_MODE": Parameter(
         key="REPRODUCTION_MODE",
         name="",
@@ -334,6 +333,16 @@ DEFAULT_PARAMETERS = {
         presets={
             "yeast": "asexual",
         },
+    ),
+    "REPRODUCTION_REGULATION": Parameter(
+        key="REPRODUCTION_REGULATION",
+        name="",
+        domain="reproduction",
+        default=False,
+        info="Density effects on reproduction. When True, no overshooting can occur.",
+        info_extended="",
+        dtype=bool,
+        drange="",
     ),
     "RECOMBINATION_RATE": Parameter(
         key="RECOMBINATION_RATE",

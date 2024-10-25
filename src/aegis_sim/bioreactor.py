@@ -208,6 +208,19 @@ class Bioreactor:
         if self.eggs is None or len(self.eggs) == 0:
             return
 
+        # Apply REPRODUCTION_REGULATION if True
+        if parametermanager.parameters.REPRODUCTION_REGULATION:
+            current_population_size = len(self.population)
+            remaining_capacity = parametermanager.parameters.CARRYING_CAPACITY - current_population_size
+
+            # If no remaining capacity, do not reproduce
+            if remaining_capacity < 1:
+                self.eggs = None
+                return
+            elif remaining_capacity < len(self.eggs):
+                indices = np.random.choice(len(self.eggs), remaining_capacity, replace=False)
+                self.eggs *= indices
+
         # If something to hatch
         if (
             (
@@ -219,6 +232,7 @@ class Bioreactor:
                 and variables.steps % parametermanager.parameters.INCUBATION_PERIOD == 0
             )  # hatch with delay
         ):
+
             self.eggs.phenotypes = submodels.architect.__call__(self.eggs.genomes)
             self.population += self.eggs
             self.eggs = None
