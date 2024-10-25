@@ -182,6 +182,9 @@ class Container:
     def get_input_summary(self):
         return self._read_json(self.get_path("input_summary"))
 
+    def get_envidriftmap(self):
+        return pd.read_csv(self.get_path("envdriftmap"), header=None)
+
     ##########
     # TABLES #
     ##########
