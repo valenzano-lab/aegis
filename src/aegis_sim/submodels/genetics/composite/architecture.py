@@ -24,6 +24,7 @@ class CompositeArchitecture:
         self.BITS_PER_LOCUS = BITS_PER_LOCUS
         self.n_loci = sum(trait.length for trait in parameterization.traits.values())
         self.length = self.n_loci * BITS_PER_LOCUS
+        self.AGE_LIMIT = AGE_LIMIT
 
         self.evolvable = [trait for trait in parameterization.traits.values() if trait.evolvable]
 
