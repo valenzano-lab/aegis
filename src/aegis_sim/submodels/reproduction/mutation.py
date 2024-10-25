@@ -63,9 +63,9 @@ class Mutator:
         # Generate indices to mutate
         mutation_indices = (
             np.repeat(np.arange(len(genomes)), n_mutations_per_individual),
-            np.random.integers(genomes.shape[1], size=n_mutations_total),
-            np.random.integers(genomes.shape[2], size=n_mutations_total),
-            np.random.integers(genomes.shape[3], size=n_mutations_total),
+            np.random.randint(genomes.shape[1], size=n_mutations_total),
+            np.random.randint(genomes.shape[2], size=n_mutations_total),
+            np.random.randint(genomes.shape[3], size=n_mutations_total),
         )
 
         # Extract indices of 0-bits and 1-bits

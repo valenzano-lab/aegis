@@ -31,7 +31,7 @@ class Envdrift:
         if (self.map is None) or (step % self.ENVDRIFT_RATE > 0):
             return
 
-        indices = tuple(np.random.integers(self.map.shape))
+        indices = tuple(np.random.randint(self.map.shape))
         self.map[indices] = ~self.map[indices]
 
     def call(self, array):
