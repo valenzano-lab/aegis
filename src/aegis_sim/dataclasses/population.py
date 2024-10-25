@@ -47,6 +47,8 @@ class Population:
         self.sexes = sexes
         self.generations = generations
 
+        assert isinstance(phenotypes, Phenotypes)
+
         if not (
             len(genomes)
             == len(ages)
@@ -98,6 +100,7 @@ class Population:
             if attr == "genomes":
                 self.genomes.add(population.genomes)
             elif attr == "phenotypes":
+                assert isinstance(population.phenotypes, Phenotypes)
                 self.phenotypes.add(population.phenotypes)
             elif attr == "generations":
                 self.generations = None
@@ -129,7 +132,10 @@ class Population:
         birthdays = np.zeros(n, dtype=np.int32)
         # generations = np.zeros(n, dtype=np.int32)
         generations = None
+
         phenotypes = submodels.architect.__call__(genomes)
+        assert isinstance(phenotypes, Phenotypes)
+
         infection = np.zeros(n, dtype=np.int32)
         sizes = np.zeros(n, dtype=np.float32)
         sexes = submodels.sexsystem.get_sex(n)

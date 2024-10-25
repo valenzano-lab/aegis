@@ -205,7 +205,7 @@ class Bioreactor:
         """Turn eggs into living individuals"""
 
         # If nothing to hatch
-        if self.eggs is None:
+        if self.eggs is None or len(self.eggs) == 0:
             return
 
         # If something to hatch

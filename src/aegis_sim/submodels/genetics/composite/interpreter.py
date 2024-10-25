@@ -5,7 +5,6 @@ These numbers can be loosely understood as gene activity.
 """
 
 import numpy as np
-from aegis_sim import parameterization
 
 
 class Interpreter:
