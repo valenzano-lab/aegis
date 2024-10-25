@@ -28,6 +28,7 @@ from .simpleprogressrecorder import SimpleProgressRecorder
 from .popsizerecorder import PopsizeRecorder
 from .ticker import Ticker
 from .configrecorder import ConfigRecorder
+from .envdriftmaprecorder import Envdriftmaprecorder
 
 # TODO write tests
 
@@ -74,6 +75,7 @@ class RecordingManager:
         self.ticker = Ticker(odir=self.odir, TICKER_RATE=TICKER_RATE)
         self.popsizerecorder = PopsizeRecorder(odir=self.odir)
         self.configrecorder = ConfigRecorder(odir=self.odir)
+        self.envdriftmaprecorder = Envdriftmaprecorder(odir=self.odir)
 
     #############
     # UTILITIES #

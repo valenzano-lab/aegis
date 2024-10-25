@@ -26,13 +26,16 @@ class Envdrift:
         else:
             self.map = np.zeros(genome_shape, dtype=np.bool_)
 
+    def will_evolve(self, step):
+        if (self.map is None) or (step % self.ENVDRIFT_RATE > 0):
+            return False
+        return True
+
     def evolve(self, step):
         """Modify the envdrift"""
-        if (self.map is None) or (step % self.ENVDRIFT_RATE > 0):
-            return
-
-        indices = tuple(np.random.randint(self.map.shape))
-        self.map[indices] = ~self.map[indices]
+        if self.will_evolve(step=step):
+            indices = tuple(np.random.randint(self.map.shape))
+            self.map[indices] = ~self.map[indices]
 
     def call(self, array):
         """Return the genomes reinterpreted"""
