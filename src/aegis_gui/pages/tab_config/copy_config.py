@@ -1,8 +1,8 @@
 import dash
+import logging
 import dash_bootstrap_components as dbc
 from aegis_sim.utilities.container import Container
 from aegis_gui.utilities import utilities
-from aegis_sim.parameterization.default_parameters import DEFAULT_PARAMETERS
 
 
 def make_select(selected=None):
@@ -78,6 +78,12 @@ def reset_configs(n_clicks, filename, ids, current_values):
 
     for id_, current_value in zip(ids, current_values):
         param_name = id_["index"]
+        if param_name not in config:
+            logging.debug(
+                f"Parameter {param_name} is not in configuration; probably because it was generated under a different AEGIS version."
+            )
+            new_values.append(dash.no_update)
+            continue
         new_value = config[param_name]
         # new_value = param.default
         if new_value == current_value:
