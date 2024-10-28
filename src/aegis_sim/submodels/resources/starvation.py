@@ -56,6 +56,7 @@ class Starvation:
             "cliff": self._cliff,
             "gradual": self._gradual,
             "logistic": self._logistic,
+            "worsening_proportional": self._worsening_proportional,
         }[STARVATION_RESPONSE]
 
     def __call__(self, n, resource_availability):
@@ -97,6 +98,18 @@ class Starvation:
         The probability of dying resets to the base value once the population dips under the maximum allowed size.
         """
         surv_probability = (1 - self.STARVATION_MAGNITUDE) ** self.consecutive_overshoot_n
+        random_probabilities = np.random.random(n)
+        mask = random_probabilities > surv_probability
+        return mask
+
+    def _worsening_proportional(self, n, resource_availability):
+        """Kill random individuals with time-increasing probability.
+
+        The choice of individuals is random.
+        The probability of dying increases each consecutive step of overcrowding.
+        The probability of dying resets to the base value once the population dips under the maximum allowed size.
+        """
+        surv_probability = (resource_availability / n) ** self.consecutive_overshoot_n
         random_probabilities = np.random.random(n)
         mask = random_probabilities > surv_probability
         return mask
@@ -178,5 +191,6 @@ class Starvation:
         indices_dead = np.random.choice(a, size=n - int(CARRYING_CAPACITY), p=p, replace=False)
         mask[indices_dead] = True
         return mask
+
 
 starvation = Starvation()

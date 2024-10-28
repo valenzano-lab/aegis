@@ -97,7 +97,6 @@ class Bioreactor:
 
     def mortality_starvation(self):
         resource_availability = resources.scavenge(np.ones(len(self.population)))
-        print(resource_availability)
         # TODO add age hazard
         mask_kill = starvation(
             n=len(self.population),

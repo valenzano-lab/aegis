@@ -39,4 +39,5 @@ class Resources:
             self.reduce(total_demand)
             return demands
 
+
 resources = Resources()

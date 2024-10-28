@@ -202,11 +202,11 @@ DEFAULT_PARAMETERS = {
         key="STARVATION_RESPONSE",
         name="",
         domain="starvation",
-        default="gradual",
+        default="worsening_proportional",
         info="Mechanism for determining who dies under overcrowding conditions",
         info_extended="The possible modes can differ in the age distribution of mortality and/or the number of individuals removed.",
         dtype=str,
-        drange="{gradual, cliff, treadmill_random, treadmill_zoomer, treadmill_boomer, treadmill_boomer_soft, treadmill_zoomer_soft}",
+        drange="{gradual, cliff, treadmill_random, treadmill_zoomer, treadmill_boomer, treadmill_boomer_soft, treadmill_zoomer_soft, worsening_proportional}",
         inrange=lambda x: x
         in (
             "gradual",
@@ -216,6 +216,7 @@ DEFAULT_PARAMETERS = {
             "treadmill_boomer",
             "treadmill_boomer_soft",
             "treadmill_zoomer_soft",
+            "worsening_proportional",
         ),
     ),
     "STARVATION_MAGNITUDE": Parameter(
@@ -228,6 +229,7 @@ DEFAULT_PARAMETERS = {
         dtype=float,
         drange="[0,1]",
         inrange=lambda x: 0 <= x <= 1,
+        show_in_gui=False,  # TODO fix; hidden bc irrelevant for worsening_proportional
     ),
     "CLIFF_SURVIVORSHIP": Parameter(
         key="CLIFF_SURVIVORSHIP",
