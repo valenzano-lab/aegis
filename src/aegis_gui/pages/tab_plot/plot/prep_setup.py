@@ -212,9 +212,7 @@ FIG_SETUP = {
         "description": dash.dcc.Markdown(
             # TODO check this
             """
-            .
-            \n
-            .
+            Number of living individuals, counted after the reproduction phase.
             """,
             mathjax=True,
         ),
