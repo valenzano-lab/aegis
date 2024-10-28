@@ -32,7 +32,7 @@ class Starvation:
     immune to starvation mortality (until they hatch).
     """
 
-    def __init__(
+    def init(
         self,
         STARVATION_RESPONSE,
         STARVATION_MAGNITUDE,
@@ -178,3 +178,5 @@ class Starvation:
         indices_dead = np.random.choice(a, size=n - int(CARRYING_CAPACITY), p=p, replace=False)
         mask[indices_dead] = True
         return mask
+
+starvation = Starvation()

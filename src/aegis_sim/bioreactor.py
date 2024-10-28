@@ -7,6 +7,7 @@ from aegis_sim.constants import VALID_CAUSES_OF_DEATH
 from aegis_sim.dataclasses.population import Population
 from aegis_sim.recording import recordingmanager
 from aegis_sim.parameterization import parametermanager
+from aegis_sim.submodels.resources.starvation import starvation
 
 
 class Bioreactor:
@@ -96,7 +97,7 @@ class Bioreactor:
     def mortality_starvation(self):
         resource_availability = submodels.resources.scavenge(np.ones(len(self.population)))
         # TODO add age hazard
-        mask_kill = submodels.starvation(
+        mask_kill = starvation(
             n=len(self.population),
             resource_availability=resource_availability.sum(),
         )

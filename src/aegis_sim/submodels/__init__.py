@@ -2,7 +2,7 @@ from aegis_sim.submodels.reproduction.mutation import mutator
 from aegis_sim.submodels.reproduction.reproduction import Reproducer
 from aegis_sim.submodels.abiotic import Abiotic
 from aegis_sim.submodels.predation import Predation
-from aegis_sim.submodels.resources.starvation import Starvation
+from aegis_sim.submodels.resources.starvation import starvation
 from aegis_sim.submodels.infection import Infection
 from aegis_sim.submodels.frailty import Frailty
 from aegis_sim.submodels.genetics.ploider import ploider
@@ -29,7 +29,7 @@ def init(self, parametermanager):
         PREDATOR_GROWTH=parametermanager.parameters.PREDATOR_GROWTH,
         PREDATION_RATE=parametermanager.parameters.PREDATION_RATE,
     )
-    self.starvation = Starvation(
+    starvation.init(
         STARVATION_RESPONSE=parametermanager.parameters.STARVATION_RESPONSE,
         STARVATION_MAGNITUDE=parametermanager.parameters.STARVATION_MAGNITUDE,
         CLIFF_SURVIVORSHIP=parametermanager.parameters.CLIFF_SURVIVORSHIP,
