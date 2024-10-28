@@ -3,7 +3,7 @@ import numpy as np
 
 class Resources:
 
-    def __init__(self, CARRYING_CAPACITY, RESOURCE_ADDITIVE_GROWTH, RESOURCE_MULTIPLICATIVE_GROWTH):
+    def init(self, CARRYING_CAPACITY, RESOURCE_ADDITIVE_GROWTH, RESOURCE_MULTIPLICATIVE_GROWTH):
 
         if RESOURCE_ADDITIVE_GROWTH is None:
             self.replenish_additive = CARRYING_CAPACITY
@@ -38,3 +38,5 @@ class Resources:
         else:
             self.reduce(total_demand)
             return demands
+
+resources = Resources()

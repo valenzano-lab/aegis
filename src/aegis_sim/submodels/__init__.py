@@ -8,7 +8,7 @@ from aegis_sim.submodels.frailty import Frailty
 from aegis_sim.submodels.genetics.ploider import ploider
 from aegis_sim.submodels.genetics.architect import Architect
 from aegis_sim.utilities.popgenstats import PopgenStats
-from aegis_sim.submodels.resources.resources import Resources
+from aegis_sim.submodels.resources.resources import resources
 from aegis_sim.submodels.reproduction.sexsystem import SexSystem
 from aegis_sim.submodels.reproduction.matingmanager import MatingManager
 
@@ -47,7 +47,7 @@ def init(self, parametermanager):
     )
 
     # Resources
-    self.resources = Resources(
+    resources.init(
         CARRYING_CAPACITY=parametermanager.parameters.CARRYING_CAPACITY,
         RESOURCE_ADDITIVE_GROWTH=parametermanager.parameters.RESOURCE_ADDITIVE_GROWTH,
         RESOURCE_MULTIPLICATIVE_GROWTH=parametermanager.parameters.RESOURCE_MULTIPLICATIVE_GROWTH,

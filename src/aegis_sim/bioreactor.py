@@ -8,6 +8,7 @@ from aegis_sim.dataclasses.population import Population
 from aegis_sim.recording import recordingmanager
 from aegis_sim.parameterization import parametermanager
 from aegis_sim.submodels.resources.starvation import starvation
+from aegis_sim.submodels.resources.resources import resources
 
 
 class Bioreactor:
@@ -35,7 +36,7 @@ class Bioreactor:
         self.age()  # age increment and potentially death
         self.hatch()
         submodels.architect.envdrift.evolve(step=variables.steps)
-        submodels.resources.replenish()
+        resources.replenish()
 
         # Record data
         recordingmanager.popsizerecorder.write_after_reproduction(self.population)
@@ -95,7 +96,8 @@ class Bioreactor:
         self._kill(mask_kill=mask_kill, causeofdeath="predation")
 
     def mortality_starvation(self):
-        resource_availability = submodels.resources.scavenge(np.ones(len(self.population)))
+        resource_availability = resources.scavenge(np.ones(len(self.population)))
+        print(resource_availability)
         # TODO add age hazard
         mask_kill = starvation(
             n=len(self.population),
