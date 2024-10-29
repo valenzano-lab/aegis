@@ -218,6 +218,16 @@ DEFAULT_PARAMETERS = {
             "treadmill_zoomer_soft",
             "worsening_proportional",
         ),
+        evalrange=[
+            "gradual",
+            "cliff",
+            "treadmill_random",
+            "treadmill_zoomer",
+            "treadmill_boomer",
+            "treadmill_boomer_soft",
+            "treadmill_zoomer_soft",
+            "worsening_proportional",
+        ],
     ),
     "STARVATION_MAGNITUDE": Parameter(
         key="STARVATION_MAGNITUDE",

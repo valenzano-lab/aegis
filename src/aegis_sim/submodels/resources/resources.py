@@ -15,7 +15,7 @@ class Resources:
         else:
             self.replenish_multiplicative = RESOURCE_MULTIPLICATIVE_GROWTH
 
-        self.capacity = 0
+        self.capacity = CARRYING_CAPACITY
 
     def replenish(self):
         self.capacity = self.capacity * self.replenish_multiplicative + self.replenish_additive

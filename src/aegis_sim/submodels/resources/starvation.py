@@ -65,8 +65,8 @@ class Starvation:
         False in `mask` means survival. True in `mask` means death.
         """
         # TODO fix resource availability and carrying capacity logic
-        if self.func is not self._gradual:
-            resource_availability = self.CARRYING_CAPACITY
+        # if self.func is not self._gradual:
+        # resource_availability = self.CARRYING_CAPACITY
 
         if n <= resource_availability:
             self.consecutive_overshoot_n = 0
