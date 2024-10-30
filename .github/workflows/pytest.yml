@@ -34,10 +34,10 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: SuperTest-test-report
-          path: report
+          path: .github/workflows/report
 
       - name: Upload Pytest report to GitHub
         uses: actions/upload-artifact@v3
         with:
           name: Pytest-test-report
-          path: report
+          path: .github/workflows/report
