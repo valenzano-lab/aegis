@@ -11,6 +11,7 @@ from aegis_sim.submodels.resources import starvation
 from aegis_sim.submodels.genetics.composite.architecture import CompositeArchitecture
 from aegis_sim.submodels.genetics.modifying.architecture import ModifyingArchitecture
 from aegis_sim.submodels.genetics.envdrift import Envdrift
+from aegis_sim.submodels.resources.resources import Resources
 
 
 def extract_gui_from_docstring(class_):
@@ -82,6 +83,7 @@ AEGIS offers two genetic architectures – composite and modifying. They are mut
 def get_texts(func):
     return {
         "starvation": func(starvation.Starvation),
+        "resources": func(Resources),
         "predation": func(Predation),
         "infection": func(Infection),
         "abiotic": func(Abiotic),

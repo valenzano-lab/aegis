@@ -11,9 +11,9 @@ class Starvation:
 
     GUI
     Starvation is an obligatory source of mortality, useful for modeling death from lack of resources.
-    The parameter [[CARRYING_CAPACITY]] specifies the amount of resources.
+    The submodel Resources computes the amount of available resources during the simulation.
     Generally, each individual requires one unit of resources; otherwise, they are at risk of starvation.
-    When population size exceeds [[CARRYING_CAPACITY]], random individuals will start dying.
+    When population size exceeds the amount of resources, random individuals will start dying.
 
     The probability to die is genetics-independent (genetics do not confer protection or susceptibility to starvation).
     However, age can modify the probability to die, depending on the [[STARVATION_RESPONSE]].
@@ -23,9 +23,9 @@ class Starvation:
     Under other [[STARVATION_RESPONSE]]s, starvation affects all ages equally, but the dynamics of starvation are different.
     When response is set to gradual, death from starvation is at first low, but increases with each subsequent
     step of insufficient resources (the speed of increase is parameterized by [[STARVATION_MAGNITUDE]]).
-    When response is set to treadmill_random, whenever population exceeds the [[CARRYING_CAPACITY]], it is immediately
+    When response is set to treadmill_random, whenever population exceeds the resource capacity, it is immediately
     and precisely cut down to [[CARRYING_CAPACITY]]. In contrast, when response is set to cliff,
-    whenever [[CARRYING_CAPACITY]] is exceeded, the population is cut down to a fraction of the [[CARRYING_CAPACITY]];
+    whenever resource capacity is exceeded, the population is cut down to a fraction of the [[CARRYING_CAPACITY]];
     the fraction is specified by the [[CLIFF_SURVIVORSHIP]] parameter.
 
     Note that if the species is oviparious ([[INCUBATION_PERIOD]]), the produced eggs do not consume resources and are

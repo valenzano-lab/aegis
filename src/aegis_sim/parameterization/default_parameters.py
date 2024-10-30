@@ -255,7 +255,7 @@ DEFAULT_PARAMETERS = {
     "RESOURCE_MULTIPLICATIVE_GROWTH": Parameter(
         key="RESOURCE_MULTIPLICATIVE_GROWTH",
         name="",
-        domain="starvation",
+        domain="resources",
         default=None,
         info="Factor by which (+1) the amount of remaining resources are multiplied each step",
         info_extended="new_resource_amount = old_resource_amount * (1 + RESOURCE_MULTIPLICATIVE_GROWTH) + RESOURCE_ADDITIVE_GROWTH",
@@ -267,7 +267,7 @@ DEFAULT_PARAMETERS = {
     "RESOURCE_ADDITIVE_GROWTH": Parameter(
         key="RESOURCE_ADDITIVE_GROWTH",
         name="",
-        domain="starvation",
+        domain="resources",
         default=None,
         info="Absolute value by which the amount of resources increases each step",
         info_extended="new_resource_amount = old_resource_amount * RESOURCE_MULTIPLICATIVE_GROWTH + RESOURCE_ADDITIVE_GROWTH",
@@ -278,7 +278,7 @@ DEFAULT_PARAMETERS = {
     "RESOURCE_MAXIMUM": Parameter(
         key="RESOURCE_MAXIMUM",
         name="",
-        domain="starvation",
+        domain="resources",
         default=None,
         info="Maximum amount of resources that can be accumulated",
         info_extended="When None, no maximum exists.",
