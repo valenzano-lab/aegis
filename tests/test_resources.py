@@ -17,7 +17,10 @@ logging.basicConfig(level=logging.INFO)
     ],
 )
 def test_STARVATION_RESPONSE(custom_input_params):
-    path = pathlib.Path(__file__).absolute().parent / "_.yml"
+    path = (
+        pathlib.Path(__file__).absolute().parent
+        / f"STARVATION_RESPONSE={custom_input_params['STARVATION_RESPONSE']}.yml"
+    )
     logging.info(custom_input_params)
     if custom_input_params["STARVATION_RESPONSE"] == "cliff":
         custom_input_params["CLIFF_SURVIVORSHIP"] = 0.5
@@ -37,13 +40,23 @@ def test_STARVATION_RESPONSE(custom_input_params):
 @pytest.mark.parametrize(
     "custom_input_params",
     [
-        {"MATURATION_AGE": v, "STEPS_PER_SIMULATION": 100, "SNAPSHOT_FINAL_COUNT": 0}
-        for v in range(*DEFAULT_PARAMETERS["MATURATION_AGE"].evalrange, 10)
+        {
+            "STARVATION_RESPONSE": starvation_response,
+            "STEPS_PER_SIMULATION": 100,
+            "RESOURCE_MULTIPLICATIVE_GROWTH": resource_multiplicative_growth,
+        }
+        for starvation_response in ["worsening_proportional", "gradual", "treadmill_random"]
+        for resource_multiplicative_growth in DEFAULT_PARAMETERS["RESOURCE_MULTIPLICATIVE_GROWTH"].evalrange
     ],
 )
-def test_MATURATION_AGE(custom_input_params):
-    path = pathlib.Path(__file__).absolute().parent / "_.yml"
+def test_RESOURCE_MULTIPLICATIVE_GROWTH(custom_input_params):
+    path = (
+        pathlib.Path(__file__).absolute().parent
+        / f"RESOURCE_MULTIPLICATIVE_GROWTH={custom_input_params['RESOURCE_MULTIPLICATIVE_GROWTH']};STARVATION_RESPONSE={custom_input_params['STARVATION_RESPONSE']}.yml"
+    )
     logging.info(custom_input_params)
+    if custom_input_params["STARVATION_RESPONSE"] == "cliff":
+        custom_input_params["CLIFF_SURVIVORSHIP"] = 0.5
     with open(path, "w") as file_:
         file_.write("")
     try:
@@ -53,8 +66,5 @@ def test_MATURATION_AGE(custom_input_params):
             overwrite=True,
             custom_input_params=custom_input_params,
         )
-        container = Container(str(path).strip(".yml"))
-        output_summary = container.get_output_summary()
-        logging.warning(output_summary)
     except Exception as e:
         raise AssertionError(f"run raised an exception for custom_input_params={custom_input_params}: {e}")

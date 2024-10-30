@@ -262,6 +262,7 @@ DEFAULT_PARAMETERS = {
         dtype=float,
         drange="{None, [0,inf)}",
         inrange=lambda x: x is None or (0 <= x),
+        evalrange=[0, 1.01, 1.02, 1.05, 1.1, 1.2, 1.5],
     ),
     "RESOURCE_ADDITIVE_GROWTH": Parameter(
         key="RESOURCE_ADDITIVE_GROWTH",
