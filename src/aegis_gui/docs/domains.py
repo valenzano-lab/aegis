@@ -4,7 +4,9 @@ from aegis_sim.parameterization.default_parameters import DEFAULT_PARAMETERS
 
 from aegis_sim.recording.recordingmanager import RecordingManager
 from aegis_sim.submodels.reproduction.reproduction import Reproducer
-from aegis_sim.submodels import predation, infection, abiotic
+from aegis_sim.submodels.predation import Predation
+from aegis_sim.submodels.infection import Infection
+from aegis_sim.submodels.abiotic import Abiotic
 from aegis_sim.submodels.resources import starvation
 from aegis_sim.submodels.genetics.composite.architecture import CompositeArchitecture
 from aegis_sim.submodels.genetics.modifying.architecture import ModifyingArchitecture
@@ -80,9 +82,9 @@ AEGIS offers two genetic architectures – composite and modifying. They are mut
 def get_texts(func):
     return {
         "starvation": func(starvation.Starvation),
-        "predation": func(predation.Predation),
-        "infection": func(infection.Infection),
-        "abiotic": func(abiotic.Abiotic),
+        "predation": func(Predation),
+        "infection": func(Infection),
+        "abiotic": func(Abiotic),
         "reproduction": func(Reproducer),
         "recording": func(RecordingManager),
         "genetics": genetics_text,

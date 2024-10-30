@@ -78,7 +78,8 @@ class Starvation:
     # def _sensitive(self, n, resource_availability):
     #     ratio = n /resource_availability
 
-    def _logistic(self, n, resource_availability):
+    @staticmethod
+    def _logistic(n, resource_availability):
         """Kill random individuals with logistic-like probability."""
         ratio = n / resource_availability
 
@@ -114,7 +115,8 @@ class Starvation:
         mask = random_probabilities > surv_probability
         return mask
 
-    def _treadmill_random(self, n, resource_availability):
+    @staticmethod
+    def _treadmill_random(n, resource_availability):
         """Kill random individuals.
 
         The population size is brought down to the maximum allowed size in one go.
@@ -139,7 +141,8 @@ class Starvation:
         mask[indices] = False
         return mask
 
-    def _treadmill_boomer(self, n, resource_availability):
+    @staticmethod
+    def _treadmill_boomer(n, resource_availability):
         """Kill the oldest individuals.
 
         The population size is brought down to the maximum allowed size in one go.
@@ -150,7 +153,8 @@ class Starvation:
         mask[-int(resource_availability) :] = False
         return mask
 
-    def _treadmill_zoomer(self, n, resource_availability):
+    @staticmethod
+    def _treadmill_zoomer(n, resource_availability):
         """Kill the youngest individuals.
 
         The population size is brought down to the maximum allowed size in one go.
