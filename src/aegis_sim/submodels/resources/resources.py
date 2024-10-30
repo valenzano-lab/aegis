@@ -3,7 +3,9 @@ import numpy as np
 
 class Resources:
 
-    def init(self, CARRYING_CAPACITY, RESOURCE_ADDITIVE_GROWTH, RESOURCE_MULTIPLICATIVE_GROWTH):
+    def init(self, CARRYING_CAPACITY, RESOURCE_ADDITIVE_GROWTH, RESOURCE_MULTIPLICATIVE_GROWTH, RESOURCE_MAXIMUM):
+
+        self.RESOURCE_MAXIMUM = RESOURCE_MAXIMUM if RESOURCE_MAXIMUM is not None else np.inf
 
         if RESOURCE_ADDITIVE_GROWTH is None:
             self.replenish_additive = CARRYING_CAPACITY
@@ -18,7 +20,9 @@ class Resources:
         self.capacity = CARRYING_CAPACITY
 
     def replenish(self):
-        self.capacity = self.capacity * self.replenish_multiplicative + self.replenish_additive
+        self.capacity = self.capacity * (1 + self.replenish_multiplicative) + self.replenish_additive
+        if self.capacity > self.RESOURCE_MAXIMUM:
+            self.capacity = self.RESOURCE_MAXIMUM
 
     def reduce(self, amount):
         if amount > self.capacity:

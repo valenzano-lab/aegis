@@ -257,12 +257,12 @@ DEFAULT_PARAMETERS = {
         name="",
         domain="starvation",
         default=None,
-        info="Factor by which the amount of remaining resources are multiplied each step",
-        info_extended="new_resource_amount = old_resource_amount * RESOURCE_MULTIPLICATIVE_GROWTH + RESOURCE_ADDITIVE_GROWTH",
+        info="Factor by which (+1) the amount of remaining resources are multiplied each step",
+        info_extended="new_resource_amount = old_resource_amount * (1 + RESOURCE_MULTIPLICATIVE_GROWTH) + RESOURCE_ADDITIVE_GROWTH",
         dtype=float,
         drange="{None, [0,inf)}",
         inrange=lambda x: x is None or (0 <= x),
-        evalrange=[0, 1.01, 1.02, 1.05, 1.1, 1.2, 1.5],
+        evalrange=[0.01, 0.02, 0.05, 0.1],
     ),
     "RESOURCE_ADDITIVE_GROWTH": Parameter(
         key="RESOURCE_ADDITIVE_GROWTH",
@@ -274,6 +274,17 @@ DEFAULT_PARAMETERS = {
         dtype=float,
         drange="{None, (0,inf)}",
         inrange=lambda x: x is None or (0 < x),
+    ),
+    "RESOURCE_MAXIMUM": Parameter(
+        key="RESOURCE_MAXIMUM",
+        name="",
+        domain="starvation",
+        default=None,
+        info="Maximum amount of resources that can be accumulated",
+        info_extended="When None, no maximum exists.",
+        dtype=float,
+        drange="{None, (0,inf)}",
+        inrange=lambda x: x is None or (x > 0),
     ),
     #
     #
