@@ -125,9 +125,9 @@ class Population:
             pickle.dump(self, file_)
 
     @staticmethod
-    def initialize(n):
+    def initialize(n, AGE_LIMIT):
         genomes = Genomes(submodels.architect.architecture.init_genome_array(n))
-        ages = np.zeros(n, dtype=np.int32)
+        ages = np.random.randint(low=0, high=AGE_LIMIT, size=n, dtype=np.int32)
         births = np.zeros(n, dtype=np.int32)
         birthdays = np.zeros(n, dtype=np.int32)
         # generations = np.zeros(n, dtype=np.int32)
