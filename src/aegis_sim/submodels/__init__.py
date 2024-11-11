@@ -33,7 +33,6 @@ def init(self, parametermanager):
         STARVATION_RESPONSE=parametermanager.parameters.STARVATION_RESPONSE,
         STARVATION_MAGNITUDE=parametermanager.parameters.STARVATION_MAGNITUDE,
         CLIFF_SURVIVORSHIP=parametermanager.parameters.CLIFF_SURVIVORSHIP,
-        CARRYING_CAPACITY=parametermanager.parameters.CARRYING_CAPACITY,
     )
     self.infection = Infection(
         BACKGROUND_INFECTIVITY=parametermanager.parameters.BACKGROUND_INFECTIVITY,
@@ -48,10 +47,10 @@ def init(self, parametermanager):
 
     # Resources
     resources.init(
-        CARRYING_CAPACITY=parametermanager.parameters.CARRYING_CAPACITY,
         RESOURCE_ADDITIVE_GROWTH=parametermanager.parameters.RESOURCE_ADDITIVE_GROWTH,
         RESOURCE_MULTIPLICATIVE_GROWTH=parametermanager.parameters.RESOURCE_MULTIPLICATIVE_GROWTH,
-        RESOURCE_MAXIMUM=parametermanager.parameters.RESOURCE_MAXIMUM,
+        RESOURCE_MAXIMUM_AMOUNT=parametermanager.parameters.RESOURCE_MAXIMUM_AMOUNT,
+        RESOURCE_INITIAL_AMOUNT=parametermanager.parameters.RESOURCE_INITIAL_AMOUNT,
     )
 
     # Reproduction

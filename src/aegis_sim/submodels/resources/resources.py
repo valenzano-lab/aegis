@@ -5,8 +5,8 @@ class Resources:
     """
 
     GUI
-    Resources module computes the available resources for the population.
-    Living individuals scavenge resources during each simulation step, with each individual requiring one unit of resources per step.
+    Resources module computes and keeps track of the amount of available resources.
+    Living individuals scavenge resources during each simulation step, with each individual requiring one unit of resources per step to survive.
     If the number of available resource units falls short of the number of individuals, a starvation response is triggered, as defined by the Starvation module.
     In that case, resources are fully depleted.
 
@@ -14,32 +14,29 @@ class Resources:
     Regeneration logic can be customized to operate in an additive or multiplicative manner, or both.
     Additive regeneration increases the resource pool by a constant amount each step, determined by the [[RESOURCE_ADDITIVE_GROWTH]] parameter.
     In contrast, multiplicative regeneration increases the currently available resources by a factor of 1 + [[RESOURCE_MULTIPLICATIVE_GROWTH]].
-    Additionally, there may be a cap on the maximum amount of resources that can be accumulated, which can be controlled using the [[RESOURCE_MAXIMUM]] parameter.
+    Additionally, there may be a cap on the maximum amount of resources that can be accumulated, which can be controlled using the [[RESOURCE_MAXIMUM_AMOUNT]] parameter.
 
-    By default, resource growth is additive and corresponds to the [[CARRYING_CAPACITY]].
+    By default, resource growth is additive and corresponds to the [[RESOURCE_ADDITIVE_GROWTH]].
     Furthermore, there is no maximum limit on resource growth by default.
     """
 
-    def init(self, CARRYING_CAPACITY, RESOURCE_ADDITIVE_GROWTH, RESOURCE_MULTIPLICATIVE_GROWTH, RESOURCE_MAXIMUM):
+    def init(
+        self,
+        RESOURCE_ADDITIVE_GROWTH,
+        RESOURCE_MULTIPLICATIVE_GROWTH,
+        RESOURCE_MAXIMUM_AMOUNT,
+        RESOURCE_INITIAL_AMOUNT,
+    ):
 
-        self.RESOURCE_MAXIMUM = RESOURCE_MAXIMUM if RESOURCE_MAXIMUM is not None else np.inf
-
-        if RESOURCE_ADDITIVE_GROWTH is None:
-            self.replenish_additive = CARRYING_CAPACITY
-        else:
-            self.replenish_additive = RESOURCE_ADDITIVE_GROWTH
-
-        if RESOURCE_MULTIPLICATIVE_GROWTH is None:
-            self.replenish_multiplicative = 0
-        else:
-            self.replenish_multiplicative = RESOURCE_MULTIPLICATIVE_GROWTH
-
-        self.capacity = CARRYING_CAPACITY
+        self.capacity = RESOURCE_INITIAL_AMOUNT
+        self.RESOURCE_ADDITIVE_GROWTH = RESOURCE_ADDITIVE_GROWTH
+        self.RESOURCE_MULTIPLICATIVE_GROWTH = RESOURCE_MULTIPLICATIVE_GROWTH
+        self.RESOURCE_MAXIMUM_AMOUNT = RESOURCE_MAXIMUM_AMOUNT if RESOURCE_MAXIMUM_AMOUNT is not None else np.inf
 
     def replenish(self):
-        self.capacity = self.capacity * (1 + self.replenish_multiplicative) + self.replenish_additive
-        if self.capacity > self.RESOURCE_MAXIMUM:
-            self.capacity = self.RESOURCE_MAXIMUM
+        self.capacity = self.capacity * (1 + self.RESOURCE_MULTIPLICATIVE_GROWTH) + self.RESOURCE_ADDITIVE_GROWTH
+        if self.capacity > self.RESOURCE_MAXIMUM_AMOUNT:
+            self.capacity = self.RESOURCE_MAXIMUM_AMOUNT
 
     def reduce(self, amount):
         if amount > self.capacity:

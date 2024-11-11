@@ -12,7 +12,7 @@ def run(custom_config_path, pickle_path, overwrite, custom_input_params):
     init(custom_config_path, overwrite, pickle_path, custom_input_params)
 
     population = (
-        Population.initialize(n=parametermanager.parameters.CARRYING_CAPACITY)
+        Population.initialize(n=parametermanager.parameters.INITIAL_POPULATION_SIZE)
         if pickle_path is None
         else Population.load_pickle_from(pickle_path)
     )

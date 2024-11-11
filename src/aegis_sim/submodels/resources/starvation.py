@@ -24,8 +24,8 @@ class Starvation:
     When response is set to gradual, death from starvation is at first low, but increases with each subsequent
     step of insufficient resources (the speed of increase is parameterized by [[STARVATION_MAGNITUDE]]).
     When response is set to treadmill_random, whenever population exceeds the resource capacity, it is immediately
-    and precisely cut down to [[CARRYING_CAPACITY]]. In contrast, when response is set to cliff,
-    whenever resource capacity is exceeded, the population is cut down to a fraction of the [[CARRYING_CAPACITY]];
+    and precisely cut down to the amount of available resources. In contrast, when response is set to cliff,
+    whenever resource capacity is exceeded, the population is cut down to a fraction of the amount of available resources;
     the fraction is specified by the [[CLIFF_SURVIVORSHIP]] parameter.
 
     Note that if the species is oviparious ([[INCUBATION_PERIOD]]), the produced eggs do not consume resources and are
@@ -37,12 +37,10 @@ class Starvation:
         STARVATION_RESPONSE,
         STARVATION_MAGNITUDE,
         CLIFF_SURVIVORSHIP,
-        CARRYING_CAPACITY,
     ):
 
         self.STARVATION_MAGNITUDE = STARVATION_MAGNITUDE
         self.CLIFF_SURVIVORSHIP = CLIFF_SURVIVORSHIP
-        self.CARRYING_CAPACITY = CARRYING_CAPACITY
 
         self.consecutive_overshoot_n = 0  # For starvation mode
 
@@ -163,18 +161,18 @@ class Starvation:
         Old individuals are positioned more to the front of the array.
         True in the mask means death.
         """
-        mask = self._treadmill_soft(1, 0, n, self.CARRYING_CAPACITY)
+        mask = self._treadmill_soft(1, 0, n, resource_availability)
         return mask
 
     def _treadmill_zoomer_soft(self, n, resource_availability):
         """Kill younger individuals more.
         Young individuals are positioned later in the array.
         True in the mask means death."""
-        mask = self._treadmill_soft(0, 1, n, self.CARRYING_CAPACITY)
+        mask = self._treadmill_soft(0, 1, n, resource_availability)
         return mask
 
     @staticmethod
-    def _treadmill_soft(linspace_from, linspace_to, n, CARRYING_CAPACITY):
+    def _treadmill_soft(linspace_from, linspace_to, n, resource_availability):
         """
         Young individuals are positioned later in the array; older earlier.
         True in the mask means death.
@@ -185,7 +183,7 @@ class Starvation:
         mask = np.zeros(n, dtype=np.bool_)
 
         a = np.arange(n)
-        indices_dead = np.random.choice(a, size=n - int(CARRYING_CAPACITY), p=p, replace=False)
+        indices_dead = np.random.choice(a, size=n - int(resource_availability), p=p, replace=False)
         mask[indices_dead] = True
         return mask
 

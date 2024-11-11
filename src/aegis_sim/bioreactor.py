@@ -210,10 +210,10 @@ class Bioreactor:
         if self.eggs is None or len(self.eggs) == 0:
             return
 
-        # Apply REPRODUCTION_REGULATION if True
+        # If REPRODUCTION_REGULATION is True, only reproduce until MAX_POPULATION_SIZE
         if parametermanager.parameters.REPRODUCTION_REGULATION:
             current_population_size = len(self.population)
-            remaining_capacity = parametermanager.parameters.CARRYING_CAPACITY - current_population_size
+            remaining_capacity = parametermanager.parameters.MAX_POPULATION_SIZE - current_population_size
 
             # If no remaining capacity, do not reproduce
             if remaining_capacity < 1:

@@ -168,22 +168,7 @@ DEFAULT_PARAMETERS = {
     ),
     #
     #
-    # STARVATION
-    "CARRYING_CAPACITY": Parameter(
-        key="CARRYING_CAPACITY",
-        name="",
-        domain="starvation",
-        default=500,
-        info="Maximum population size that the environment can sustain",
-        info_extended="Starvation mortality is incurred when the population exceeds the carrying capacity.",
-        dtype=int,
-        drange="[1, inf)",
-        inrange=lambda x: x >= 1,
-        serverrange=lambda x: x <= 5000,
-        serverrange_info="[1,5000]",
-        evalrange=[1, 1000000],
-        previous_keys=["MAX_POPULATION_SIZE"],
-    ),
+    # DEMOGRAPHY
     "CARRYING_CAPACITY_EGGS": Parameter(
         key="CARRYING_CAPACITY_EGGS",
         name="",
@@ -197,7 +182,24 @@ DEFAULT_PARAMETERS = {
         serverrange=lambda x: x <= 10000,
         serverrange_info="[1,10000]",
         evalrange=[1, 1000000],
+        previous_keys=["CARRYING_CAPACITY_EGGS"],
     ),
+    "INITIAL_POPULATION_SIZE": Parameter(
+        key="INITIAL_POPULATION_SIZE",
+        name="",
+        domain="starvation",
+        default=500,
+        info="Number of individuals generated at the beginning of the simulation",
+        info_extended="",
+        dtype=int,
+        drange="[1, inf)",
+        inrange=lambda x: x >= 1,
+        serverrange=lambda x: x <= 1000 and x >= 1,
+        serverrange_info="[1,1000]",
+    ),
+    #
+    #
+    # STARVATION
     "STARVATION_RESPONSE": Parameter(
         key="STARVATION_RESPONSE",
         name="",
@@ -252,39 +254,52 @@ DEFAULT_PARAMETERS = {
         drange="{None, (0,1)}",
         inrange=lambda x: x is None or (0 < x < 1),
     ),
-    "RESOURCE_MULTIPLICATIVE_GROWTH": Parameter(
-        key="RESOURCE_MULTIPLICATIVE_GROWTH",
+    #
+    #
+    # RESOURCES
+    "RESOURCE_INITIAL_AMOUNT": Parameter(
+        key="RESOURCE_INITIAL_AMOUNT",
         name="",
         domain="resources",
-        default=None,
-        info="Factor by which (+1) the amount of remaining resources are multiplied each step",
-        info_extended="new_resource_amount = old_resource_amount * (1 + RESOURCE_MULTIPLICATIVE_GROWTH) + RESOURCE_ADDITIVE_GROWTH",
+        default=500,
+        info="Amount of resources available at the beginning of the simulation",
         dtype=float,
-        drange="{None, [0,inf)}",
-        inrange=lambda x: x is None or (0 <= x),
-        evalrange=[0.01, 0.02, 0.05, 0.1],
+        drange="[1,inf)",
+        inrange=lambda x: x >= 1,
     ),
-    "RESOURCE_ADDITIVE_GROWTH": Parameter(
-        key="RESOURCE_ADDITIVE_GROWTH",
-        name="",
-        domain="resources",
-        default=None,
-        info="Absolute value by which the amount of resources increases each step",
-        info_extended="new_resource_amount = old_resource_amount * RESOURCE_MULTIPLICATIVE_GROWTH + RESOURCE_ADDITIVE_GROWTH",
-        dtype=float,
-        drange="{None, (0,inf)}",
-        inrange=lambda x: x is None or (0 < x),
-    ),
-    "RESOURCE_MAXIMUM": Parameter(
-        key="RESOURCE_MAXIMUM",
+    "RESOURCE_MAXIMUM_AMOUNT": Parameter(
+        key="RESOURCE_MAXIMUM_AMOUNT",
         name="",
         domain="resources",
         default=None,
         info="Maximum amount of resources that can be accumulated",
         info_extended="When None, no maximum exists.",
         dtype=float,
-        drange="{None, (0,inf)}",
-        inrange=lambda x: x is None or (x > 0),
+        drange="{None, [1,inf)}",
+        inrange=lambda x: x is None or (x >= 1),
+    ),
+    "RESOURCE_ADDITIVE_GROWTH": Parameter(
+        key="RESOURCE_ADDITIVE_GROWTH",
+        name="",
+        domain="resources",
+        default=500,
+        info="Absolute value by which the amount of resources increases each step",
+        info_extended="new_resource_amount = old_resource_amount * RESOURCE_MULTIPLICATIVE_GROWTH + RESOURCE_ADDITIVE_GROWTH",
+        dtype=float,
+        drange="[1,inf)",
+        inrange=lambda x: x >= 1,
+    ),
+    "RESOURCE_MULTIPLICATIVE_GROWTH": Parameter(
+        key="RESOURCE_MULTIPLICATIVE_GROWTH",
+        name="",
+        domain="resources",
+        default=0,
+        info="Factor by which (+1) the amount of remaining resources are multiplied each step",
+        info_extended="new_resource_amount = old_resource_amount * (1 + RESOURCE_MULTIPLICATIVE_GROWTH) + RESOURCE_ADDITIVE_GROWTH",
+        dtype=float,
+        drange="[0,inf)",
+        inrange=lambda x: x >= 0,
+        evalrange=[0.01, 0.02, 0.05, 0.1],
     ),
     #
     #
