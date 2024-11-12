@@ -1,23 +1,42 @@
 ## STARVATION
 
 
-Starvation is an obligatory source of mortality, useful for modeling death from lack of resources.
-The parameter **CARRYING_CAPACITY** specifies the amount of resources.
-Generally, each individual requires one unit of resources; otherwise, they are at risk of starvation.
-When population size exceeds **CARRYING_CAPACITY**, random individuals will start dying.
-The probability to die is genetics-independent (genetics do not confer protection or susceptibility to starvation).
-However, age can modify the probability to die, depending on the **STARVATION_RESPONSE**.
-When **STARVATION_RESPONSE** is set to treadmill_zoomer, young individuals will start dying first;
-for treadmill_boomer, older individuals die first.
-Under other **STARVATION_RESPONSE**s, starvation affects all ages equally, but the dynamics of starvation are different.
-When response is set to gradual, death from starvation is at first low, but increases with each subsequent
-step of insufficient resources (the speed of increase is parameterized by **STARVATION_MAGNITUDE**).
-When response is set to treadmill_random, whenever population exceeds the **CARRYING_CAPACITY**, it is immediately
-and precisely cut down to **CARRYING_CAPACITY**. In contrast, when response is set to cliff,
-whenever **CARRYING_CAPACITY** is exceeded, the population is cut down to a fraction of the **CARRYING_CAPACITY**;
-the fraction is specified by the **CLIFF_SURVIVORSHIP** parameter.
+Starvation is a source of mortality useful for modeling death from lack of resources.
+It is usually the largest contributor to mortality. Generally, each individual requires one unit of resources to survive.
+When the population size exceeds the amount of resources available, the population experiences starvation.
+Starvation is either experienced by the whole population or by no individual; i.e. the distribution of resources is equal across individuals.
+Starvation mortality can operate under one of two modes. Under the first mode, population is sensitive to the
+amount of resource deficit it is experiencing and will respond promptly to it. For example, if the population size is 1000
+and there are only 800 resource units available, approximately only 800 individuals will survive, thus approximately 200 will die,
+so the mortality will be about 20% (200/1000).
+Under the second mode, population is not sensitive to the amount of resource deficit but rather to the number of consecutive simulation steps
+that it has experienced starvation. When it first experiences resource deficit, the mortality will be **STARVATION_MORTALITY_FACTOR**.
+If in the next step, the population size is still greater than the amount of available resources, the mortality will now be
+approximately twice as high; in the next step, about three times, etc.
+The probability to die is independent of genetics (genetics do not confer protection nor susceptibility to starvation).
+However, age can modify the probability to die, depending on the **FRAILTY_MODIFIER**. When **FRAILTY_MODIFIER** is 0,
+there is no age-dependent effect. When it is greater than 0, then starvation mortality is magnified by **FRAILTY_MODIFIER**
+for the oldest age class, by 0 for the youngest age class, and proportionally for the intermediate age classes (e.g. by 20% of the
+**FRAILTY_MODIFIER** for the age class 10 if **AGE_LIMIT** is 50 because 10/50=0.2).
+If **STARVATION_MORTALITY_MAXIMUM** is set, the final computed mortality will be at maximum of that value, not higher.
 Note that if the species is oviparious (**INCUBATION_PERIOD**), the produced eggs do not consume resources and are
 immune to starvation mortality (until they hatch).
+
+
+## RESOURCES
+
+
+Resources module computes and keeps track of the amount of available resources.
+Living individuals scavenge resources during each simulation step, with each individual requiring one unit of resources per step to survive.
+If the number of available resource units falls short of the number of individuals, a starvation response is triggered, as defined by the Starvation module.
+In that case, resources are fully depleted.
+While scavenging reduces the available resources, regeneration occurs each step as well.
+Regeneration logic can be customized to operate in an additive or multiplicative manner, or both.
+Additive regeneration increases the resource pool by a constant amount each step, determined by the **RESOURCE_ADDITIVE_GROWTH** parameter.
+In contrast, multiplicative regeneration increases the currently available resources by a factor of 1 + **RESOURCE_MULTIPLICATIVE_GROWTH**.
+Additionally, there may be a cap on the maximum amount of resources that can be accumulated, which can be controlled using the **RESOURCE_MAXIMUM_AMOUNT** parameter.
+By default, resource growth is additive and corresponds to the **RESOURCE_ADDITIVE_GROWTH**.
+Furthermore, there is no maximum limit on resource growth by default.
 
 
 ## PREDATION
