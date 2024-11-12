@@ -29,6 +29,7 @@ class Bioreactor:
             recordingmanager.summaryrecorder.extinct = True
         # Mortality sources
         self.mortalities()
+        resources.replenish()
 
         recordingmanager.popsizerecorder.write_before_reproduction(self.population)
         self.growth()  # size increase
@@ -36,7 +37,6 @@ class Bioreactor:
         self.age()  # age increment and potentially death
         self.hatch()
         submodels.architect.envdrift.evolve(step=variables.steps)
-        resources.replenish()
 
         # Record data
         recordingmanager.popsizerecorder.write_after_reproduction(self.population)
@@ -215,14 +215,13 @@ class Bioreactor:
         # If REPRODUCTION_REGULATION is True, only reproduce until MAX_POPULATION_SIZE
         if parametermanager.parameters.REPRODUCTION_REGULATION:
             current_population_size = len(self.population)
-            remaining_capacity = parametermanager.parameters.MAX_POPULATION_SIZE - current_population_size
-
+            remaining_capacity = resources.capacity - current_population_size
             # If no remaining capacity, do not reproduce
             if remaining_capacity < 1:
                 self.eggs = None
                 return
             elif remaining_capacity < len(self.eggs):
-                indices = np.random.choice(len(self.eggs), remaining_capacity, replace=False)
+                indices = np.random.choice(len(self.eggs), size=int(remaining_capacity), replace=False)
                 self.eggs *= indices
 
         # If something to hatch

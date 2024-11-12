@@ -5,7 +5,7 @@ on:
     branches:
       - v2
     paths:
-      - src/aegis_sim/parameterization/default_parameters.py # NOTE this has to lead to the right path
+      - src/aegis_sim/parameterization/default_parameters.py # NOTE Make sure that this path leads to the default_parameters.py file
 
 jobs:
   update-specs:
