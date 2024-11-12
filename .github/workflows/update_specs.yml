@@ -3,9 +3,9 @@ name: Update parameter, output and submodel specifications
 on:
   push:
     branches:
-      - gitactions
+      - v2
     paths:
-      - src/aegis/modules/parameterization/default_parameters.py # NOTE this has to lead to the right path
+      - src/aegis_sim/parameterization/default_parameters.py # NOTE this has to lead to the right path
 
 jobs:
   update-specs:
