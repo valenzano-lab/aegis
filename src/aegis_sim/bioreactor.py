@@ -96,7 +96,9 @@ class Bioreactor:
         self._kill(mask_kill=mask_kill, causeofdeath="predation")
 
     def mortality_starvation(self):
+        recordingmanager.resourcerecorder.write_before_scavenging()
         resources_scavenged = resources.scavenge(np.ones(len(self.population)))
+        recordingmanager.resourcerecorder.write_after_scavenging()
         # mask_kill = starvation.get_mask_kill(
         #     n=len(self.population),
         #     resources_scavenged=resources_scavenged.sum(),

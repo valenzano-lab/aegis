@@ -26,6 +26,7 @@ from .summaryrecorder import SummaryRecorder
 from .progressrecorder import ProgressRecorder
 from .simpleprogressrecorder import SimpleProgressRecorder
 from .popsizerecorder import PopsizeRecorder
+from .resourcerecorder import ResourcesRecorder
 from .ticker import Ticker
 from .configrecorder import ConfigRecorder
 from .envdriftmaprecorder import Envdriftmaprecorder
@@ -74,6 +75,7 @@ class RecordingManager:
         self.simpleprogressrecorder = SimpleProgressRecorder(odir=self.odir)
         self.ticker = Ticker(odir=self.odir, TICKER_RATE=TICKER_RATE)
         self.popsizerecorder = PopsizeRecorder(odir=self.odir)
+        self.resourcerecorder = ResourcesRecorder(odir=self.odir)
         self.configrecorder = ConfigRecorder(odir=self.odir)
         self.envdriftmaprecorder = Envdriftmaprecorder(odir=self.odir)
 

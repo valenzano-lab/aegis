@@ -1,9 +1,8 @@
 # install aegis-sim for development
 
 # uninstall previous installation
-. .venv/bin/activate
-
-python3 -m pip uninstall aegis-sim -y
+# . .venv/bin/activate
+# python3 -m pip uninstall aegis-sim -y
 rm -rf .venv
 
 deactivate
