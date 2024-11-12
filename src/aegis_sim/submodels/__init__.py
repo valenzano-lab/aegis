@@ -4,7 +4,7 @@ from aegis_sim.submodels.abiotic import Abiotic
 from aegis_sim.submodels.predation import Predation
 from aegis_sim.submodels.resources.starvation import starvation
 from aegis_sim.submodels.infection import Infection
-from aegis_sim.submodels.frailty import Frailty
+from aegis_sim.submodels.frailty import frailty
 from aegis_sim.submodels.genetics.ploider import ploider
 from aegis_sim.submodels.genetics.architect import Architect
 from aegis_sim.utilities.popgenstats import PopgenStats
@@ -30,9 +30,8 @@ def init(self, parametermanager):
         PREDATION_RATE=parametermanager.parameters.PREDATION_RATE,
     )
     starvation.init(
-        STARVATION_RESPONSE=parametermanager.parameters.STARVATION_RESPONSE,
-        STARVATION_MAGNITUDE=parametermanager.parameters.STARVATION_MAGNITUDE,
-        CLIFF_SURVIVORSHIP=parametermanager.parameters.CLIFF_SURVIVORSHIP,
+        STARVATION_MORTALITY_FACTOR=parametermanager.parameters.STARVATION_MORTALITY_FACTOR,
+        STARVATION_MORTALITY_MAXIMUM=parametermanager.parameters.STARVATION_MORTALITY_MAXIMUM,
     )
     self.infection = Infection(
         BACKGROUND_INFECTIVITY=parametermanager.parameters.BACKGROUND_INFECTIVITY,
@@ -40,7 +39,7 @@ def init(self, parametermanager):
         RECOVERY_RATE=parametermanager.parameters.RECOVERY_RATE,
         FATALITY_RATE=parametermanager.parameters.FATALITY_RATE,
     )
-    self.frailty = Frailty(
+    frailty.init(
         FRAILTY_MODIFIER=parametermanager.parameters.FRAILTY_MODIFIER,
         AGE_LIMIT=parametermanager.parameters.AGE_LIMIT,
     )

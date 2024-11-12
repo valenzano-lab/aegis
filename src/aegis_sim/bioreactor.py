@@ -96,12 +96,12 @@ class Bioreactor:
         self._kill(mask_kill=mask_kill, causeofdeath="predation")
 
     def mortality_starvation(self):
-        resource_availability = resources.scavenge(np.ones(len(self.population)))
-        # TODO add age hazard
-        mask_kill = starvation(
-            n=len(self.population),
-            resource_availability=resource_availability.sum(),
-        )
+        resources_scavenged = resources.scavenge(np.ones(len(self.population)))
+        # mask_kill = starvation.get_mask_kill(
+        #     n=len(self.population),
+        #     resources_scavenged=resources_scavenged.sum(),
+        # )
+        mask_kill = starvation.get_mask_kill(ages=self.population.ages, resources_scavenged=resources_scavenged.sum())
         self._kill(mask_kill=mask_kill, causeofdeath="starvation")
 
     def reproduction(self):
