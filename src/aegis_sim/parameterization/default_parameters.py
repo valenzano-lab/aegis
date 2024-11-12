@@ -224,29 +224,6 @@ DEFAULT_PARAMETERS = {
         inrange=lambda x: 0 < x < 1,
         evalrange=[0.5, 0.75, 0.9],
     ),
-    # "STARVATION_MAGNITUDE": Parameter(
-    #     key="STARVATION_MAGNITUDE",
-    #     name="",
-    #     domain="starvation",
-    #     default=0.05,
-    #     info="Acceleration of mortality under starvation",
-    #     info_extended="",
-    #     dtype=float,
-    #     drange="[0,1]",
-    #     inrange=lambda x: 0 <= x <= 1,
-    #     show_in_gui=False,  # TODO fix; hidden bc irrelevant for worsening_proportional
-    # ),
-    # "CLIFF_SURVIVORSHIP": Parameter(
-    #     key="CLIFF_SURVIVORSHIP",
-    #     name="",
-    #     domain="starvation",
-    #     default=None,
-    #     info="Fraction of the population surviving a 'cliff' starvation event",
-    #     info_extended="Modifies the 'cliff' starvation response.",
-    #     dtype=float,
-    #     drange="{None, (0,1)}",
-    #     inrange=lambda x: x is None or (0 < x < 1),
-    # ),
     #
     #
     # RESOURCES
