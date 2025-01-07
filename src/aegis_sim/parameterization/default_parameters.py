@@ -913,7 +913,7 @@ DEFAULT_PARAMETERS = {
     "G_grow_initpheno": Parameter(
         key="G_grow_initpheno",
         name="",
-        domain="composite genetic architecture",
+        domain="modifying genetic architecture",
         default=0.5,
         info="",
         dtype=float,
