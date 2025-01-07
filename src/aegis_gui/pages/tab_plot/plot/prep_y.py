@@ -105,6 +105,18 @@ def get_population_size_after_reproduction(container: Container, iloc=None):
     return ys, max_iloc
 
 
+def get_resource_amount_before_scavenging(container: Container, iloc=None):
+    ys = container.get_resource_amount_before_scavenging().resources
+    max_iloc = None
+    return ys, max_iloc
+
+
+def get_resource_amount_after_scavenging(container: Container, iloc=None):
+    ys = container.get_resource_amount_after_scavenging().resources
+    max_iloc = None
+    return ys, max_iloc
+
+
 # x-axis is other
 def get_derived_allele_freq(container: Container, iloc=-1):
     ys = genome.get_derived_allele_freq(container.get_genotypes_intrinsic_interval())

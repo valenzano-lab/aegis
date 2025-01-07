@@ -356,6 +356,18 @@ class Container:
         data.columns = ["popsize"]
         return data
 
+    def get_resource_amount_before_scavenging(self):
+        data = pd.read_csv(self.get_path("resources_before_scavenging"), header=None)
+        data.index.names = ["steps"]
+        data.columns = ["resources"]
+        return data
+
+    def get_resource_amount_after_scavenging(self):
+        data = pd.read_csv(self.get_path("resources_before_scavenging"), header=None)
+        data.index.names = ["steps"]
+        data.columns = ["resources"]
+        return data
+
     ###############
     # DERIVATIVES #
     ###############

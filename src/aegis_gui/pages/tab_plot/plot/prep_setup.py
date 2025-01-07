@@ -222,6 +222,44 @@ FIG_SETUP = {
             "yaxis_title": "life expectancy",
         },
     },
+    "resource amount before scavenging": {
+        "title": "resource amount before scavenging",
+        "supports_multi": True,
+        "prep_y": prep_y.get_resource_amount_before_scavenging,
+        "prep_x": prep_x.get_steps_non_multiplied,
+        "prep_figure": "make_line_figure",
+        "description": dash.dcc.Markdown(
+            # TODO check this
+            """
+            Amount of available resources
+            """,
+            mathjax=True,
+        ),
+        # graph
+        "figure_layout": {
+            "xaxis_title": "simulation step",
+            "yaxis_title": "life expectancy",
+        },
+    },
+    "resource amount after scavenging": {
+        "title": "resource amount after scavenging",
+        "supports_multi": True,
+        "prep_y": prep_y.get_resource_amount_after_scavenging,
+        "prep_x": prep_x.get_steps_non_multiplied,
+        "prep_figure": "make_line_figure",
+        "description": dash.dcc.Markdown(
+            # TODO check this
+            """
+            Amount of available resources
+            """,
+            mathjax=True,
+        ),
+        # graph
+        "figure_layout": {
+            "xaxis_title": "simulation step",
+            "yaxis_title": "life expectancy",
+        },
+    },
     "observed fertility": {
         "title": "observed fertility",
         "supports_multi": True,
