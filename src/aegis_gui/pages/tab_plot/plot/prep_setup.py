@@ -219,7 +219,7 @@ FIG_SETUP = {
         # graph
         "figure_layout": {
             "xaxis_title": "simulation step",
-            "yaxis_title": "life expectancy",
+            "yaxis_title": "population size",
         },
     },
     "resource amount before scavenging": {
@@ -238,7 +238,7 @@ FIG_SETUP = {
         # graph
         "figure_layout": {
             "xaxis_title": "simulation step",
-            "yaxis_title": "life expectancy",
+            "yaxis_title": "resource amount",
         },
     },
     "resource amount after scavenging": {
@@ -257,7 +257,7 @@ FIG_SETUP = {
         # graph
         "figure_layout": {
             "xaxis_title": "simulation step",
-            "yaxis_title": "life expectancy",
+            "yaxis_title": "resource amount",
         },
     },
     "observed fertility": {
