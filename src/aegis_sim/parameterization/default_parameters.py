@@ -562,8 +562,8 @@ DEFAULT_PARAMETERS = {
         default="sinusoidal",
         info="Wave form of abiotic hazard",
         dtype=str,
-        drange="{sinusoidal, flat, triangle, square, sawtooth, ramp, instant}",
-        inrange=lambda x: x in {"sinusoidal", "flat", "triangle", "square", "sawtooth", "ramp", "instant"},
+        drange="{sinusoidal, flat, triangle, square, sawtooth, ramp, instant, instant_fatal}",
+        inrange=lambda x: x in {"sinusoidal", "flat", "triangle", "square", "sawtooth", "ramp", "instant", "instant_fatal"},
     ),
     #
     #

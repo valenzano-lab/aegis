@@ -5,6 +5,7 @@ import math
 import logging
 import numpy as np
 
+
 class Abiotic:
     """
     # TODO maybe mention which phenomena could be modeled by which shape in the doctsring
@@ -16,7 +17,7 @@ class Abiotic:
     shape of [[ABIOTIC_HAZARD_SHAPE]] and constant background mortality of [[ABIOTIC_HAZARD_OFFSET]] (negative or positive).
     Negative hazard is clipped to zero.
     Available hazard shapes (waveforms) are flat, sinusoidal, square, triangle, sawtooth, ramp (backward sawtooth) and instant (Dirac comb / impulse train).
-
+    Importantly, it only affects the living individuals (i.e. it does not affect eggs, if applicable).
     """
 
     def __init__(self, ABIOTIC_HAZARD_SHAPE, ABIOTIC_HAZARD_OFFSET, ABIOTIC_HAZARD_AMPLITUDE, ABIOTIC_HAZARD_PERIOD):
@@ -34,6 +35,7 @@ class Abiotic:
             "sawtooth": self._sawtooth,
             "ramp": self._ramp,
             "instant": self._instant,
+            "instant_fatal": self._instant_fatal,
         }[self.ABIOTIC_HAZARD_SHAPE]
 
         if self.ABIOTIC_HAZARD_SHAPE == "flat" and self.ABIOTIC_HAZARD_AMPLITUDE > 0 and self.ABIOTIC_HAZARD_OFFSET > 0:
@@ -78,3 +80,10 @@ class Abiotic:
 
         mortality = np.random.beta(a=1, b=3, size=1)
         return mortality * self.ABIOTIC_HAZARD_AMPLITUDE
+
+    def _instant_fatal(self, step):
+        """Mortality function that every ABIOTIC_HAZARD_PERIOD steps kills all of the total living population; step 0 is unaffected"""
+        if step == 0 or step % self.ABIOTIC_HAZARD_PERIOD:
+            return 0
+        else:
+            return 1
