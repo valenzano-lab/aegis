@@ -35,6 +35,7 @@ def make_select(selected=None):
                         # className="plot-dropdown",
                         # multiple=True,
                         className="me-2",
+                        persistence=True,
                     ),
                 ],
             ),
