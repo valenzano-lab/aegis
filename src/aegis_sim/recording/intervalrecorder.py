@@ -36,7 +36,7 @@ class IntervalRecorder(Recorder):
 
         with open(self.odir / "phenotypes.csv", "ab") as f:
             age_limit = submodels.architect.architecture.AGE_LIMIT
-            trait_list = list(parameterization.traits.keys())
+            trait_list = [trait.name for trait in parameterization.traits.values() if trait.evolvable]
             n_traits = len(trait_list)
             header0 = np.repeat(trait_list, age_limit)
             header1 = list(np.arange(age_limit)) * n_traits
