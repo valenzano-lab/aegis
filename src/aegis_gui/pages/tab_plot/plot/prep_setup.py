@@ -222,6 +222,24 @@ FIG_SETUP = {
             "yaxis_title": "population size",
         },
     },
+    "egg number": {
+        "title": "egg number",
+        "supports_multi": True,
+        "prep_y": prep_y.get_egg_number_after_reproduction,
+        "prep_x": prep_x.get_steps_non_multiplied,
+        "prep_figure": "make_line_figure",
+        "description": dash.dcc.Markdown(
+            # TODO check this
+            """
+            """,
+            mathjax=True,
+        ),
+        # graph
+        "figure_layout": {
+            "xaxis_title": "simulation step",
+            "yaxis_title": "egg number",
+        },
+    },
     "resource amount before scavenging": {
         "title": "resource amount before scavenging",
         "supports_multi": True,

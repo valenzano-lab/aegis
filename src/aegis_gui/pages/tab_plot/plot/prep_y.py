@@ -105,6 +105,12 @@ def get_population_size_after_reproduction(container: Container, iloc=None):
     return ys, max_iloc
 
 
+def get_egg_number_after_reproduction(container: Container, iloc=None):
+    ys = container.get_egg_number_after_reproduction().number
+    max_iloc = None
+    return ys, max_iloc
+
+
 def get_resource_amount_before_scavenging(container: Container, iloc=None):
     ys = container.get_resource_amount_before_scavenging().resources
     max_iloc = None

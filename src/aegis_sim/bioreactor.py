@@ -40,6 +40,7 @@ class Bioreactor:
 
         # Record data
         recordingmanager.popsizerecorder.write_after_reproduction(self.population)
+        recordingmanager.popsizerecorder.write_egg_num_after_reproduction(self.eggs)
         recordingmanager.envdriftmaprecorder.write(step=variables.steps)
         recordingmanager.flushrecorder.collect("additive_age_structure", self.population.ages)  # population census
         recordingmanager.picklerecorder.write(self.population)

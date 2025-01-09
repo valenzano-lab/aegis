@@ -6,14 +6,17 @@ class PopsizeRecorder(Recorder):
     def __init__(self, odir):
         self.odir = odir
 
-    def write(self, population: Population, filename: str):
-        popsize = len(population)
+    def write(self, popsize: int, filename: str):
         path = self.odir / filename
         with open(path, "a") as file_:
             file_.write(f"{popsize}\n")
 
     def write_before_reproduction(self, population):
-        self.write(population, "popsize_before_reproduction.csv")
+        self.write(len(population), "popsize_before_reproduction.csv")
 
     def write_after_reproduction(self, population):
-        self.write(population, "popsize_after_reproduction.csv")
+        self.write(len(population), "popsize_after_reproduction.csv")
+
+    def write_egg_num_after_reproduction(self, eggs):
+        eggnum = len(eggs) if eggs is not None else 0
+        self.write(eggnum, "eggnum_after_reproduction.csv")

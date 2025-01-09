@@ -61,6 +61,8 @@ class Container:
         )
         self.paths["popsize_before_reproduction"] = self.basepath / "popsize_before_reproduction.csv"
         self.paths["popsize_after_reproduction"] = self.basepath / "popsize_after_reproduction.csv"
+        self.paths["eggnum_after_reproduction"] = self.basepath / "eggnum_after_reproduction.csv"
+
         if not self.paths["log"].is_file():
             logging.error(f"No AEGIS log found at path {self.paths['log']}.")
 
@@ -355,6 +357,13 @@ class Container:
         data.index.names = ["steps"]
         data.columns = ["popsize"]
         return data
+
+    def get_egg_number_after_reproduction(self):
+        data = pd.read_csv(self.get_path("eggnum_after_reproduction"), header=None)
+        data.index.names = ["steps"]
+        data.columns = ["number"]
+        return data
+
 
     def get_resource_amount_before_scavenging(self):
         data = pd.read_csv(self.get_path("resources_before_scavenging"), header=None)
