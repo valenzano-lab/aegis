@@ -73,6 +73,7 @@ It is modeled using periodic functions with a period of **ABIOTIC_HAZARD_PERIOD*
 shape of **ABIOTIC_HAZARD_SHAPE** and constant background mortality of **ABIOTIC_HAZARD_OFFSET** (negative or positive).
 Negative hazard is clipped to zero.
 Available hazard shapes (waveforms) are flat, sinusoidal, square, triangle, sawtooth, ramp (backward sawtooth) and instant (Dirac comb / impulse train).
+Importantly, it only affects the living individuals (i.e. it does not affect eggs, if applicable).
 
 
 ## REPRODUCTION
