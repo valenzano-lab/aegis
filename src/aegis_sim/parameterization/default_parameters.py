@@ -425,6 +425,24 @@ DEFAULT_PARAMETERS = {
         drange="{composite, modifying}",
         inrange=lambda x: x in ("composite", "modifying"),
     ),
+    "G_surv_lo": Parameter(
+        key="G_surv_lo",
+        name="",
+        domain="genetics",
+        default=0,
+        info="Minimum survival rate",
+        dtype=float,
+        drange="",
+    ),
+    "G_surv_hi": Parameter(
+        key="G_surv_hi",
+        name="",
+        domain="genetics",
+        default=1,
+        info="Maximum survival rate",
+        dtype=float,
+        drange="",
+    ),
     "G_repr_lo": Parameter(
         key="G_repr_lo",
         name="",
@@ -563,7 +581,8 @@ DEFAULT_PARAMETERS = {
         info="Wave form of abiotic hazard",
         dtype=str,
         drange="{sinusoidal, flat, triangle, square, sawtooth, ramp, instant, instant_fatal}",
-        inrange=lambda x: x in {"sinusoidal", "flat", "triangle", "square", "sawtooth", "ramp", "instant", "instant_fatal"},
+        inrange=lambda x: x
+        in {"sinusoidal", "flat", "triangle", "square", "sawtooth", "ramp", "instant", "instant_fatal"},
     ),
     #
     #
@@ -693,24 +712,6 @@ DEFAULT_PARAMETERS = {
         default="binary",
         info="",
         dtype=str,
-        drange="",
-    ),
-    "G_surv_lo": Parameter(
-        key="G_surv_lo",
-        name="",
-        domain="composite genetic architecture",
-        default=0,
-        info="Minimum survival rate",
-        dtype=float,
-        drange="",
-    ),
-    "G_surv_hi": Parameter(
-        key="G_surv_hi",
-        name="",
-        domain="composite genetic architecture",
-        default=1,
-        info="Maximum survival rate",
-        dtype=float,
         drange="",
     ),
     "G_surv_initgeno": Parameter(
