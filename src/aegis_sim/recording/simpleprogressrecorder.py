@@ -17,7 +17,7 @@ class SimpleProgressRecorder(Recorder):
         # self.init_headers()
 
     # def init_headers(self):
-    #     content = ("step", "ETA", "t1M", "runtime", "stg/min", "popsize")
+    #     content = ("step", "ETA", "t1M", "runtime", "steps/min", "popsize")
     #     with open(self.odir / "progress.log", "ab") as f:
     #         np.savetxt(f, [content], fmt="%-10s", delimiter="| ")
 
