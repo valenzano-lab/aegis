@@ -9,6 +9,7 @@ src/gui/sim_data
 bootstrap-icons-1.11.3
 tests/*.yml
 tests/*/*
+aegis.code-workspace
 
 ### Python ###
 # Byte-compiled / optimized / DLL files
