@@ -53,6 +53,7 @@ setuptools.setup(
             "black",
             "tabulate",
             "pdoc",
+            # "dash[testing]",  # GUI
         ]
     },
 )
