@@ -2,15 +2,24 @@
 
 import numpy as np
 from aegis_sim import parameterization
-
-from aegis_sim.constants import EVOLVABLE_TRAITS
+from aegis_sim.constants import GENETIC_TRAITS
 
 
 class Phenotypes:
+    """
+    Wrapper for phenotype vectors.
+    Shape is [individuals, phenotypic values].
+    Traits are ordered as in GENETIC_TRAITS.
+    """
+
     def __init__(self, array):
 
-        # TODO perform this check somewhere
-        # assert array.shape[1] == constants.TRAIT_N * parameterization.parametermanager.parameters.AGE_LIMIT
+        if len(array.shape) > 1:  # TODO remove this condition once the 'hacky' solution is gone
+            number_of_evolvable_traits = Phenotypes.get_number_of_evolvable_traits()
+            AGE_LIMIT = parameterization.parametermanager.parameters.AGE_LIMIT
+            assert (
+                array.shape[1] == number_of_evolvable_traits * AGE_LIMIT
+            ), f"{array.shape[1]}, {number_of_evolvable_traits}, {AGE_LIMIT}"
 
         # clip phenotype to [0,1] / Apply lo and hi bound
         array = self.clip_array_to_01(array)
@@ -28,7 +37,7 @@ class Phenotypes:
     #     # df.index.name = "individual"
 
     #     # Edit columns
-    #     traits = constants.EVOLVABLE_TRAITS
+    #     traits = constants.GENETIC_TRAITS
 
     #     # AGE_LIMIT = parameterization.parametermanager.parameters.AGE_LIMIT
     #     ages = [str(a) for a in range(AGE_LIMIT)]
@@ -36,6 +45,10 @@ class Phenotypes:
     #     df.columns = multi_columns
 
     #     return df
+
+    @staticmethod
+    def get_number_of_evolvable_traits():
+        return sum(trait.evolvable for trait in parameterization.traits.values())
 
     def get(self, individuals=slice(None), loci=slice(None)):
         return self.array[individuals, loci]
@@ -89,7 +102,7 @@ class Phenotypes:
             # Eggs do not have computed phenotypes. Only when they hatch, are their phenotypes computed.
             return array
 
-        for trait_name in EVOLVABLE_TRAITS:
+        for trait_name in GENETIC_TRAITS:
             lo = parameterization.traits[trait_name].lo
             hi = parameterization.traits[trait_name].hi
 
@@ -106,7 +119,7 @@ class Phenotypes:
         return array
 
     def get_trait_position(self, trait_name):
-        index = EVOLVABLE_TRAITS.index(trait_name)
+        index = GENETIC_TRAITS.index(trait_name)
         AGE_LIMIT = parameterization.parametermanager.parameters.AGE_LIMIT
         start = index * AGE_LIMIT
         end = start + AGE_LIMIT

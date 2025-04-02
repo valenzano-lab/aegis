@@ -1,6 +1,3 @@
-from aegis_sim import constants
-
-
 class Trait:
     """Genetic trait
 

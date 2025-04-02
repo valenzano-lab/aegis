@@ -14,7 +14,7 @@ def init_traits(self):
 
     traits = {}
     next_trait_start_position = 0
-    for traitname in constants.EVOLVABLE_TRAITS:
+    for traitname in constants.GENETIC_TRAITS:
         trait = Trait(
             name=traitname,
             cnf=parametermanager.parameters,
