@@ -71,7 +71,7 @@ class Container:
             self.set_paths()
         return self.paths[name]
 
-    def get_record_structure():
+    def get_record_structure(self):
         # TODO
         return
 
@@ -146,7 +146,7 @@ class Container:
 
     def get_config(self):
         if "config" not in self.data:
-            path = self.basepath.parent / f"{self.basepath.stem}.yml"
+            path = self.basepath.parent / f"{self.basepath}.yml"
             with open(path, "r") as file_:
                 custom_config = yaml.safe_load(file_)
             # default_config = get_default_parameters()
@@ -185,7 +185,10 @@ class Container:
         return self._read_json(self.get_path("input_summary"))
 
     def get_envidriftmap(self):
-        return pd.read_csv(self.get_path("envdriftmap"), header=None)
+        path = self.get_path("envdriftmap")
+        if path.exists():
+            return pd.read_csv(self.get_path("envdriftmap"), header=None)
+        return None
 
     ##########
     # TABLES #
@@ -229,7 +232,7 @@ class Container:
         name == count
         index.name == age_class
         """
-        AGE_LIMIT = self.get_config()["AGE_LIMIT"]
+        AGE_LIMIT = self.get_final_config()["AGE_LIMIT"]
         table = (
             self.get_demography_observed_snapshot(record_index)
             .ages.value_counts()
@@ -363,7 +366,6 @@ class Container:
         data.index.names = ["steps"]
         data.columns = ["number"]
         return data
-
 
     def get_resource_amount_before_scavenging(self):
         data = pd.read_csv(self.get_path("resources_before_scavenging"), header=None)
