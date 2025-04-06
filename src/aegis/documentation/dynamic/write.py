@@ -66,16 +66,56 @@ def dict_to_markdown(data_dict, output_file):
             md_file.write(f"{value}\n\n")  # Add double newline to separate paragraphs
 
 
-write_dictlists_as_markdown_table(
-    get_default_parameter_dictlists(),
-    path=here / "default_parameters.md",
-    preamble=parameter_specifications_preamble,
-)
-write_dictlists_as_markdown_table(
-    specifications.output_specifications,
-    path=here / "output_specifications.md",
-    preamble=specifications.output_specifications_preamble,
-)
+def write_def_param_md():
+    dict_list = get_default_parameter_dictlists()
+    path = here / "default_parameters.md"
+    preamble = parameter_specifications_preamble
+    # Requires tabulate package
+    # dict_list like OUTPUT_SPECIFICATIONS; [{col1: val1, col2, val2, ...}, {col1: val1', col2: val2', ...}, ...]
+    df = pd.DataFrame(dict_list)
+    md = df.to_markdown()
+    with open(path, "w") as file_:
+        if preamble:
+            file_.writelines(preamble)
+        file_.writelines(md)
+
+
+def write_output_specifications_md():
+    dict_list = specifications.output_specifications
+    path = here / "output_specifications.md"
+    preamble = specifications.output_specifications_preamble
+    # Requires tabulate package
+    # dict_list like OUTPUT_SPECIFICATIONS; [{col1: val1, col2, val2, ...}, {col1: val1', col2: val2', ...}, ...]
+    df = pd.DataFrame(dict_list)
+
+    df_info = df[["path", "description"]]
+    df_struct = df.drop("description", axis=1)
+    md_info = df_info.to_markdown()
+    md_struct = df_struct.to_markdown()
+    with open(path, "w") as file_:
+        if preamble:
+            file_.writelines(preamble)
+        file_.write("\n## File description\n")
+        file_.writelines(md_info)
+        file_.write("\n## File structure\n")
+        file_.writelines(md_struct)
+
+
+# write_dictlists_as_markdown_table(
+# get_default_parameter_dictlists(),
+# path=here / "default_parameters.md",
+# preamble=parameter_specifications_preamble,
+# )
+
+write_def_param_md()
+
+write_output_specifications_md()
+
+# write_dictlists_as_markdown_table(
+#     specifications.output_specifications,
+#     path=here / "output_specifications.md",
+#     preamble=specifications.output_specifications_preamble,
+# )
 dict_to_markdown(
     TEXTS_DOMAIN_MD,
     output_file=here / "submodel_specifications.md",
