@@ -38,6 +38,7 @@ class SummaryRecorder(Recorder):
         time granularity: N/A
         frequency parameter: once
         structure: A json dictionary.
+        header: None
         """
         try:
             storage_use = get_folder_size_with_du(self.odir)
@@ -61,12 +62,13 @@ class SummaryRecorder(Recorder):
         # OUTPUT SPECIFICATION
         path: /input_summary.json
         filetype: json
-        category: genotype
+        category: log
         description: A json dictionary documenting a number of simulation traits at the start of the simulation; e.g. random seed, time at start.
         trait granularity:
         time granularity:
         frequency parameter: once
         structure: A json dictionary.
+        header: None
         """
         summary = {
             "random_seed": variables.random_seed,

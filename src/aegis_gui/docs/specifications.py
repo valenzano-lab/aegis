@@ -8,6 +8,8 @@ from aegis_sim.recording.summaryrecorder import SummaryRecorder
 from aegis_sim.recording.terecorder import TERecorder
 from aegis_sim.recording.ticker import Ticker
 from aegis_sim.recording.intervalrecorder import IntervalRecorder
+from aegis_sim.recording.popsizerecorder import PopsizeRecorder
+from aegis_sim.recording.resourcerecorder import ResourcesRecorder
 
 
 def extract_output_specification_from_docstring(method):
@@ -54,6 +56,11 @@ output_specifications = [
         Ticker.write,
         IntervalRecorder.write_genotypes,
         IntervalRecorder.write_phenotypes,
+        PopsizeRecorder.write_before_reproduction,
+        PopsizeRecorder.write_after_reproduction,
+        PopsizeRecorder.write_egg_num_after_reproduction,
+        ResourcesRecorder.write_before_scavenging,
+        ResourcesRecorder.write_after_scavenging,
     )
     for specification in extract_output_specification_from_docstring(
         method=method

@@ -48,7 +48,8 @@ class FeatherRecorder(Recorder):
         trait granularity: individual
         time granularity: snapshot
         frequency parameter: SNAPSHOT_RATE
-        structure: A bool matrix
+        structure: A bool matrix; rows: individuals, columns: genome positions, values: bit states
+        header: genome positions
         """
         df_gen = pd.DataFrame(np.array(population.genomes.flatten()))
         df_gen.reset_index(drop=True, inplace=True)
@@ -67,7 +68,7 @@ class FeatherRecorder(Recorder):
         trait granularity: individual
         time granularity: snapshot
         frequency parameter: SNAPSHOT_RATE
-        structure: A float matrix
+        structure: A float matrix; rows: individuals, columns: individual phenotypic traits (depending on which traits are evolvable and what is max lifespan), values: trait values
         """
         # TODO bugged, wrong header
         df_phe = pd.DataFrame(population.phenotypes.get())
@@ -87,6 +88,7 @@ class FeatherRecorder(Recorder):
         time granularity: snapshot
         frequency parameter: SNAPSHOT_RATE
         structure: A matrix of ints and floats
+        header: ['ages', 'births', 'birthdays', 'sizes', 'sexes']
         """
         dem_attrs = [
             "ages",

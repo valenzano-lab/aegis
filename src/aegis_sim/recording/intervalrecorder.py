@@ -55,7 +55,8 @@ class IntervalRecorder(Recorder):
         trait granularity: population mean
         time granularity: snapshot
         frequency parameter: INTERVAL_RATE
-        structure: A float matrix.
+        structure: A float matrix; rows: recordings, columns: genome positions, values: average bit states
+        header: two-row header; first row: genome position, second row: which chromosomal set (0 or 1)
         """
         with open(self.odir / "genotypes.csv", "ab") as f:
             array = population.genomes.flatten().mean(0)
@@ -73,7 +74,8 @@ class IntervalRecorder(Recorder):
         trait granularity: population median
         time granularity: snapshot
         frequency parameter: INTERVAL_RATE
-        structure: A float matrix
+        structure: A float matrix; rows: recordings, columns: individual phenotypic traits, values: median trait values
+        header: two-row header; first row: trait name, second row: age
         """
         with open(self.odir / "phenotypes.csv", "ab") as f:
             array = np.median(population.phenotypes.get(), 0)

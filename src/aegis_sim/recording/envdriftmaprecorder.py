@@ -25,8 +25,9 @@ class Envdriftmaprecorder(Recorder):
         description: XOR map for genome (0 = original phenotypic effect, 1 = opposite phenotypic effect). Recorded every ENVDRIFT_RATE steps.
         trait granularity: N/A
         time granularity: N/A
-        frequency parameter: once
-        structure:
+        frequency parameter: ENVDRIFT_RATE
+        header: None
+        structure: row: record, column: genome position, value: 0 or 1
         """
         envdrift = submodels.architect.envdrift
 

@@ -64,6 +64,7 @@ class FlushRecorder(Recorder):
         time granularity: interval
         frequency parameter: INTERVAL_RATE
         structure: An int matrix.
+        header: list of ages from 0 to AGE_LIMIT (inclusive)
         """
         with open(self.odir / f"{filename}.csv", "ab") as f:
             array = np.array(collected_values)
