@@ -70,9 +70,7 @@ Most documentation about the model is available within the GUI itself, including
 - [An In Silico Model to Simulate the Evolution of Biological Aging (2016)](https://www.biorxiv.org/content/10.1101/037952v1)
 <!-- TODO including ODD as modeled by https://www.jasss.org/23/2/7.html-->
 
-### API reference
-
-Exhaustive, searchable API reference made by pdoc is available [here](https://valenzano-lab.github.io/aegis/).
+Dynamically generated API reference made by pdoc is available [here](https://valenzano-lab.github.io/aegis/).
 
 ## Contributors
 
