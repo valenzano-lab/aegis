@@ -73,16 +73,35 @@ def layout(sim=None):  # use function to ensure statelessness
         ]
 
     faq = [
-        # html.H3("Frequently Asked Questions"),
-        # dbc.Accordion(
-        #     [
-        #         dbc.AccordionItem(
-        #             """Life history traits are generally thought of as observable phenotypes such as death and reproduction events. When computing rates of life history traits on a population level (e.g. fertility), one would divide the number of offspring by the number of sexually mature individual""",
-        #             title="What is meant by 'intrinsic'?",
-        #         ),
-        #     ],
-        #     start_collapsed=True,
-        # ),
+        html.H3("Frequently Asked Questions", style={"marginTop": "2rem"}),
+        dbc.Accordion(
+            [
+                dbc.AccordionItem(
+                    """
+                    Intrinsic trait refers to a hypothetical trait that is limited only by genetics, and would be observed in an ideal environment.
+                    For example, intrinsic mortality refers to mortality that occurs regardless of environmental conditions (amount of food, infection hazards, etc.).
+                    \n
+                    Life history traits are generally understood as observable phenotypes such as death and reproduction events. 
+                    However, when interpreting observed phenotypes, it is useful to distinguish between the observed and intrinsic levels of a specific trait.
+                    For example, individuals of most species are more likely to die as they get older, which reflects some intrinsic state that deteriorates with age.
+                    This intrinsic state is not directly observable, and can only be estimated from the simple binary observed state 'dead' or 'alive'.
+                    """,
+                    title="What is meant by 'intrinsic'?",
+                ),
+                dbc.AccordionItem(
+                    """Life history traits arise from the interplay between intrinsic (genetic) and extrinsic (environmental) factors.
+                    In evolutionary analyses, distinguishing these sources of variation is crucial: genetic components are heritable and thus subject to selection,
+                    whereas environmental influences are not. Nevertheless, selection acts on the realised phenotype-the integrated outcome of both genetic architecture and
+                    environmental context. While disentangling these effects is often infeasible in empirical systems, simulations offer a tractable means of doing so.
+                    This partitioning enables the investigation of how evolutionary processes act on intrinsic traits to shape phenotypic outcomes.
+                    Furthermore, life history traits are mostly observed as pointwise events, such as a reproductive event or a death; thus mortality and fertility
+                    can only be meaningfully extracted from population-level data. In AEGIS, intrinsic traits are transparent to the user.
+                    """,
+                    title="Why distinguish 'intrinsic' and 'observed' traits?",
+                ),
+            ],
+            start_collapsed=True,
+        ),
     ]
 
     # TODO plot initially

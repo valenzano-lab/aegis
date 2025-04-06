@@ -16,7 +16,10 @@ def get_graph(graph_name):
                 config={"displayModeBar": False},
                 className="figure",
             ),
-            dash.html.Div(slider.make_slider(graph_name), style={"width": "100%", "margin": "1rem 0 0 25px"}),
+            dash.html.Div(
+                [dash.html.Span("Record slider"), slider.make_slider(graph_name)],
+                style={"width": "100%", "margin": "1rem 0 0 25px"},
+            ),
         ],
         id={"type": "graph-div", "index": graph_name},
     )
