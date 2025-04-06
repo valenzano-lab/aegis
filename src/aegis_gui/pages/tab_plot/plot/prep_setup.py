@@ -3,26 +3,72 @@ import dash_bootstrap_components as dbc
 from aegis_gui.pages.tab_plot.plot import prep_y
 from aegis_gui.pages.tab_plot.plot import prep_x
 
+AGGREGATION_BADGES = {
+    "Population average": "Values shown in the plot are averaged over all individuals alive at the time of recording.",
+    "Population median": "Values shown in the plot are medians among the individuals alive at the time of recording.",
+    "Interval average": "Values shown in the plot are averages over a number of recordings made in a given interval.",
+    "Interval median": "Values shown in the plot are medians among a number of recordings made in a given interval.",
+}
 
 FIG_SETUP = {
-    "bit states": {
-        "title": "bit states",
-        "supports_multi": False,
-        "prep_y": prep_y.get_bit_states,
-        "prep_x": prep_x.get_steps_multiplied,
-        "prep_figure": "make_heatmap_figure",
+    "life table": {
+        "title": "life table",
+        "supports_multi": True,
+        "prep_y": prep_y.get_life_table,
+        "prep_x": prep_x.get_ages,
+        "prep_figure": "make_bar_figure_not_stacked",
         "description": dash.dcc.Markdown(
             """
-            Bit states for each site at a given step.
+            Age structure of the population.
             \n
-            Population averages. Interval averages.
             """,
             mathjax=True,
         ),
+        "aggregation": ["Interval average"],
         # graph
         "figure_layout": {
-            "xaxis_title": "simulation step",
-            "yaxis_title": "genome site",
+            "xaxis_title": "age class",
+            "yaxis_title": "proportion of living individuals",
+        },
+    },
+    # BUG goes up and down when the snapshot_rate is very low
+    "total survivorship": {
+        "title": "total survivorship",
+        "supports_multi": True,
+        "prep_y": prep_y.get_total_survivorship,
+        "prep_x": prep_x.get_ages,
+        "prep_figure": "make_line_figure",
+        "description": dash.dcc.Markdown(
+            """
+            Observed expected probability to survive to a specific age (when all sources of mortality are considered).
+            """,
+            mathjax=True,
+        ),
+        "aggregation": ["Population average", "Interval average"],
+        # graph
+        "figure_layout": {
+            "xaxis_title": "age class",
+            "yaxis_title": "total survivorship",
+        },
+    },
+    "intrinsic survivorship": {
+        "title": "intrinsic survivorship",
+        "supports_multi": True,
+        "prep_y": prep_y.get_intrinsic_survivorship,
+        "prep_x": prep_x.get_ages,
+        "prep_figure": "make_line_figure",
+        "description": dash.dcc.Markdown(
+            # TODO clarify
+            """
+            Expected probability to survive to a specific age class only given genetic mortality.
+            """,
+            mathjax=True,
+        ),
+        "aggregation": ["Population median"],
+        # graph
+        "figure_layout": {
+            "xaxis_title": "age class",
+            "yaxis_title": "intrinsic survivorship",
         },
     },
     "death table": {
@@ -33,12 +79,12 @@ FIG_SETUP = {
         "prep_figure": "make_bar_figure_stacked",
         "description": dash.dcc.Markdown(
             """
-            Number of deaths per age class, stratified by cause.
+            Number of deaths per age class, stratified by cause of death.
             \n
-            Interval averages.
             """,
             mathjax=True,
         ),
+        "aggregation": ["Interval average"],
         # graph
         "figure_layout": {
             "xaxis_title": "age class",
@@ -46,52 +92,23 @@ FIG_SETUP = {
         },
     },
     "death table normalized": {
-        "title": "death table normalized",
+        "title": "death table (normalized)",
         "supports_multi": False,
         "prep_y": prep_y.get_death_table_normalized,
         "prep_x": prep_x.get_ages,
         "prep_figure": "make_bar_figure_stacked",
         "description": dash.dcc.Markdown(
             """
-            Number of deaths per age class, stratified by cause.
-            \n
-            Interval averages.
+            Number of deaths per age class, normalized and stratified by cause of death.
             """,
             mathjax=True,
         ),
+        "aggregation": ["Interval average"],
         # graph
         "figure_layout": {
             "xaxis_title": "age class",
             "yaxis_title": "number of deaths",
             "yaxis": {"range": [0, 1]},
-        },
-    },
-    "derived allele frequencies": {
-        "title": "derived allele frequencies",
-        "supports_multi": False,
-        "prep_y": prep_y.get_derived_allele_freq,
-        "prep_x": prep_x.get_ages,
-        "prep_figure": "make_hist_figure",
-        "description": dash.dcc.Markdown(
-            """
-            Sites with derived allele frequency of 0 are ignored.
-            Ancestral states were the most common states an interval ago.
-            \n
-            """,
-            mathjax=True,
-        ),
-        "nbinsx": 10,
-        # graph
-        "figure_layout": {
-            "xaxis_title": "derived allele frequency",
-            "yaxis_title": "number of genome sites",
-            "xaxis": {
-                "range": [0, 1],
-            },
-            # Change log scale of y axis
-            # "yaxis": {
-            #     "type": "log",
-            # },
         },
     },
     "intrinsic mortality": {
@@ -103,11 +120,11 @@ FIG_SETUP = {
         "description": dash.dcc.Markdown(
             """
             Genetic (individual-specific, heritable) mortality at a given age.
-            \n
-            Population medians.
+            This mortality is experienced by the individuals regardless of the environmental conditions.
             """,
             mathjax=True,
         ),
+        "aggregation": ["Population median"],
         # dash.html.Span(
         #     "tooltips", id="tooltip-target-1", style={"textDecoration": "underline", "cursor": "pointer"}
         # ),
@@ -126,60 +143,19 @@ FIG_SETUP = {
         "prep_figure": "make_line_figure",
         "description": dash.dcc.Markdown(
             """
-            Observed (individual-specific, heritable) mortality at a given age (all sources of mortality considered).
+            Observed (individual-specific, heritable) mortality at a given age.
+            In contrast to intrinsic mortality, in this measure all sources of mortality are considered.
             \n
-            Population averages. Interval averages.
-            \n
-            Missing data points are for age classes at which no living individuals have been observed.
+            Missing data points are for age classes at which no living individuals have been observed, so no mortality
+            can be computed.
             """,
             mathjax=True,
         ),
+        "aggregation": ["Population average", "Interval average"],
         # graph
         "figure_layout": {
             "xaxis_title": "age class",
             "yaxis_title": "total mortality",
-        },
-    },
-    # BUG goes up and down when the snapshot_rate is very low
-    "total survivorship": {
-        "title": "total survivorship",
-        "supports_multi": True,
-        "prep_y": prep_y.get_total_survivorship,
-        "prep_x": prep_x.get_ages,
-        "prep_figure": "make_line_figure",
-        "description": dash.dcc.Markdown(
-            """
-            Observed expected probability to survive to a specific age (when all sources of mortality are considered).
-            \n
-            Population averages. Interval averages.
-            """,
-            mathjax=True,
-        ),
-        # graph
-        "figure_layout": {
-            "xaxis_title": "age class",
-            "yaxis_title": "total survivorship",
-        },
-    },
-    "intrinsic survivorship": {
-        "title": "intrinsic survivorship",
-        "supports_multi": True,
-        "prep_y": prep_y.get_intrinsic_survivorship,
-        "prep_x": prep_x.get_ages,
-        "prep_figure": "make_line_figure",
-        "description": dash.dcc.Markdown(
-            # TODO clarify
-            """
-            Expected probability to survive to a specific age class only given genetic mortality.
-            \n
-            Computed using the median intrinsic mortalities.
-            """,
-            mathjax=True,
-        ),
-        # graph
-        "figure_layout": {
-            "xaxis_title": "age class",
-            "yaxis_title": "intrinsic survivorship",
         },
     },
     "life expectancy": {
@@ -191,16 +167,79 @@ FIG_SETUP = {
         "description": dash.dcc.Markdown(
             # TODO check this
             """
-            Expected lifespan at birth. Plotted over the course of the simulation.
+            Expected lifespan at birth.
             \n
-            Population averages.
+            Plotted over the course of the simulation.
             """,
             mathjax=True,
         ),
+        "aggregation": ["Population average"],
         # graph
         "figure_layout": {
             "xaxis_title": "simulation step",
             "yaxis_title": "life expectancy",
+        },
+    },
+    "birth table": {
+        "title": "birth table",
+        "supports_multi": True,
+        "prep_y": prep_y.get_birth_table,
+        "prep_x": prep_x.get_ages,
+        "prep_figure": "make_bar_figure_not_stacked",
+        "description": dash.dcc.Markdown(
+            """
+            The number of newborns produced by parents of a given age class.
+            \n
+            """,
+            mathjax=True,
+        ),
+        "aggregation": [],
+        # graph
+        "figure_layout": {
+            "xaxis_title": "age class",
+            "yaxis_title": "number of newborns",
+        },
+    },
+    "observed fertility": {
+        "title": "observed fertility",
+        "supports_multi": True,
+        "prep_y": prep_y.get_fertility,
+        "prep_x": prep_x.get_ages,
+        "prep_figure": "make_line_figure",
+        "description": dash.dcc.Markdown(
+            """
+            The observed probability of producing offspring at each age class.
+            """,
+            mathjax=True,
+        ),
+        "aggregation": ["Population median"],
+        # graph
+        "figure_layout": {
+            "xaxis_title": "age class",
+            "yaxis_title": "observed fertility",
+        },
+    },
+    "intrinsic fertility": {
+        "title": "intrinsic fertility",
+        "supports_multi": True,
+        "prep_y": prep_y.get_fertility_intrinsic,
+        "prep_x": prep_x.get_ages,
+        "prep_figure": "make_line_figure",
+        "description": dash.dcc.Markdown(
+            """
+            Genetic (individual-specific, heritable) probability of producing offspring at a given age class.
+            """,
+            mathjax=True,
+        ),
+        "aggregation": ["Population median"],
+        # dash.html.Span(
+        #     "tooltips", id="tooltip-target-1", style={"textDecoration": "underline", "cursor": "pointer"}
+        # ),
+        # dbc.Tooltip("This is the first tooltip", target="tooltip-target-1"),
+        # graph
+        "figure_layout": {
+            "xaxis_title": "age class",
+            "yaxis_title": "intrinsic fertility",
         },
     },
     "population size": {
@@ -213,9 +252,12 @@ FIG_SETUP = {
             # TODO check this
             """
             Number of living individuals, counted after the reproduction phase.
+            \n
+            Plotted over the course of the simulation.
             """,
             mathjax=True,
         ),
+        "aggregation": [],
         # graph
         "figure_layout": {
             "xaxis_title": "simulation step",
@@ -231,9 +273,13 @@ FIG_SETUP = {
         "description": dash.dcc.Markdown(
             # TODO check this
             """
+            Number of eggs produced and not yet hatched and added to the population of living individuals.
+            \n
+            Plotted over the course of the simulation.
             """,
             mathjax=True,
         ),
+        "aggregation": [],
         # graph
         "figure_layout": {
             "xaxis_title": "simulation step",
@@ -249,10 +295,13 @@ FIG_SETUP = {
         "description": dash.dcc.Markdown(
             # TODO check this
             """
-            Amount of available resources
+            Amount of available resources before scavenging.
+            \n
+            Plotted over the course of the simulation.
             """,
             mathjax=True,
         ),
+        "aggregation": [],
         # graph
         "figure_layout": {
             "xaxis_title": "simulation step",
@@ -268,58 +317,17 @@ FIG_SETUP = {
         "description": dash.dcc.Markdown(
             # TODO check this
             """
-            Amount of available resources
+            Amount of available resources after scavenging.
+            \n
+            Plotted over the course of the simulation.
             """,
             mathjax=True,
         ),
+        "aggregation": [],
         # graph
         "figure_layout": {
             "xaxis_title": "simulation step",
             "yaxis_title": "resource amount",
-        },
-    },
-    "observed fertility": {
-        "title": "observed fertility",
-        "supports_multi": True,
-        "prep_y": prep_y.get_fertility,
-        "prep_x": prep_x.get_ages,
-        "prep_figure": "make_line_figure",
-        "description": dash.dcc.Markdown(
-            """
-            The intrinsic probability to produce a single offspring at each age class.
-            \n
-            Population medians.
-            """,
-            mathjax=True,
-        ),
-        # graph
-        "figure_layout": {
-            "xaxis_title": "age class",
-            "yaxis_title": "observed fertility",
-        },
-    },
-    "intrinsic fertility": {
-        "title": "intrinsic fertility",
-        "supports_multi": True,
-        "prep_y": prep_y.get_fertility_intrinsic,
-        "prep_x": prep_x.get_ages,
-        "prep_figure": "make_line_figure",
-        "description": dash.dcc.Markdown(
-            """
-            Genetic (individual-specific, heritable) fertility at a given age.
-            \n
-            Population medians.
-            """,
-            mathjax=True,
-        ),
-        # dash.html.Span(
-        #     "tooltips", id="tooltip-target-1", style={"textDecoration": "underline", "cursor": "pointer"}
-        # ),
-        # dbc.Tooltip("This is the first tooltip", target="tooltip-target-1"),
-        # graph
-        "figure_layout": {
-            "xaxis_title": "age class",
-            "yaxis_title": "intrinsic fertility",
         },
     },
     # "cumulative reproduction": {
@@ -363,44 +371,6 @@ FIG_SETUP = {
     #         "yaxis_title": "lifetime number of offspring",
     #     },
     # },
-    "birth table": {
-        "title": "birth table",
-        "supports_multi": True,
-        "prep_y": prep_y.get_birth_table,
-        "prep_x": prep_x.get_ages,
-        "prep_figure": "make_bar_figure_not_stacked",
-        "description": dash.dcc.Markdown(
-            """
-            The number of newborns produced by parents of a given age class.
-            \n
-            """,
-            mathjax=True,
-        ),
-        # graph
-        "figure_layout": {
-            "xaxis_title": "age class",
-            "yaxis_title": "number of newborns",
-        },
-    },
-    "life table": {
-        "title": "life table",
-        "supports_multi": True,
-        "prep_y": prep_y.get_life_table,
-        "prep_x": prep_x.get_ages,
-        "prep_figure": "make_bar_figure_not_stacked",
-        "description": dash.dcc.Markdown(
-            """
-            The proportion of living individuals.
-            \n
-            """,
-            mathjax=True,
-        ),
-        # graph
-        "figure_layout": {
-            "xaxis_title": "age class",
-            "yaxis_title": "proportion of living individuals",
-        },
-    },
     # "death structure": {
     #     "title": "death structure",
     # "supports_multi": True,
@@ -431,4 +401,56 @@ FIG_SETUP = {
     #         # "yaxis": {"range": [0, 1]},
     #     },
     # },
+    "bit states": {
+        "title": "bit states",
+        "supports_multi": False,
+        "prep_y": prep_y.get_bit_states,
+        "prep_x": prep_x.get_steps_multiplied,
+        "prep_figure": "make_heatmap_figure",
+        "description": dash.dcc.Markdown(
+            """
+            Average bit states for each pseudogenomic site at a given simulation step.
+            A pseudogenomic site can be either in a 0 or a 1 state.
+            Each column represents an average pseudogenome.
+            \n
+            Note that results from only one simulation (the first from the selection) can be plotted at a single time.
+            """,
+            mathjax=True,
+        ),
+        "aggregation": ["Population average", "Interval average"],
+        # graph
+        "figure_layout": {
+            "xaxis_title": "simulation step",
+            "yaxis_title": "genome site",
+        },
+    },
+    "derived allele frequencies": {
+        "title": "derived allele frequencies",
+        "supports_multi": False,
+        "prep_y": prep_y.get_derived_allele_freq,
+        "prep_x": prep_x.get_ages,
+        "prep_figure": "make_hist_figure",
+        "description": dash.dcc.Markdown(
+            """
+            Frequency of alleles whose state is flipped in comparison to the ancestral state.
+            Here, the ancestral state is the most frequent state in the previous genome record.
+            Sites with derived allele frequency of 0 are ignored.
+            """,
+            mathjax=True,
+        ),
+        "aggregation": [],
+        "nbinsx": 10,
+        # graph
+        "figure_layout": {
+            "xaxis_title": "derived allele frequency",
+            "yaxis_title": "number of genome sites",
+            "xaxis": {
+                "range": [0, 1],
+            },
+            # Change log scale of y axis
+            # "yaxis": {
+            #     "type": "log",
+            # },
+        },
+    },
 }

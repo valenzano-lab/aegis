@@ -1,5 +1,6 @@
 import dash
-from aegis_gui.pages.tab_plot.plot.prep_setup import FIG_SETUP
+import dash_bootstrap_components as dbc
+from aegis_gui.pages.tab_plot.plot.prep_setup import FIG_SETUP, AGGREGATION_BADGES
 from aegis_gui.pages.tab_plot import slider
 from aegis_gui.pages.tab_plot import download
 from aegis_gui.utilities import log
@@ -36,12 +37,23 @@ def get_graph_metadata(graph_name):
     return dash.html.Div(
         [
             dash.html.P(
-                children=info["title"],
+                children=info["title"].upper(),
                 className="figure-title",
             ),
             dash.html.Div(
                 children=info["description"],
                 className="figure-description",
+            ),
+            dash.html.Div(
+                children=[
+                    dbc.Badge(agg, color="primary", className="aggbadge me-1", id=f"badge-{agg}")
+                    for agg in info["aggregation"]
+                ]
+                + [
+                    dbc.Tooltip(AGGREGATION_BADGES[agg], target=f"badge-{agg}", placement="top")
+                    for agg in info["aggregation"]
+                ],
+                className="figure-badges",
             ),
             download.get_figure_download_button(figure_id=graph_name),
             download.get_figure_download_dcc(figure_id=graph_name),

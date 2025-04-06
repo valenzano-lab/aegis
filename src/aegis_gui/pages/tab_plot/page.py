@@ -72,8 +72,21 @@ def layout(sim=None):  # use function to ensure statelessness
             # tabs.get_tabs_multi_layout(),
         ]
 
+    faq = [
+        # html.H3("Frequently Asked Questions"),
+        # dbc.Accordion(
+        #     [
+        #         dbc.AccordionItem(
+        #             """Life history traits are generally thought of as observable phenotypes such as death and reproduction events. When computing rates of life history traits on a population level (e.g. fertility), one would divide the number of offspring by the number of sexually mature individual""",
+        #             title="What is meant by 'intrinsic'?",
+        #         ),
+        #     ],
+        #     start_collapsed=True,
+        # ),
+    ]
+
     # TODO plot initially
-    children = [html.Div(children=PREFACE + body)]
+    children = [html.Div(children=PREFACE + body + faq)]
 
     return html.Div(id="plot-section", children=children)
 

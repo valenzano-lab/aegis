@@ -17,5 +17,9 @@
 }
 
 .figure-description {
-  margin-bottom: 2rem;
+  margin-bottom: 1rem;
+}
+
+.aggbadge {
+  margin: 0 0 1rem 0;
 }

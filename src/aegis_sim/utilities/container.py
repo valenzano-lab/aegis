@@ -374,7 +374,7 @@ class Container:
         return data
 
     def get_resource_amount_after_scavenging(self):
-        data = pd.read_csv(self.get_path("resources_before_scavenging"), header=None)
+        data = pd.read_csv(self.get_path("resources_after_scavenging"), header=None)
         data.index.names = ["steps"]
         data.columns = ["resources"]
         return data
