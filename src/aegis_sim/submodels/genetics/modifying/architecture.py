@@ -6,6 +6,7 @@ from aegis_sim import parameterization
 from aegis_sim.submodels.genetics.modifying.gpm_decoder import GPM_decoder
 from aegis_sim.submodels.genetics.modifying.gpm import GPM
 from aegis_sim.submodels.genetics import ploider
+from aegis_sim.dataclasses.phenotypes import Phenotypes
 
 
 class ModifyingArchitecture:
@@ -31,7 +32,7 @@ class ModifyingArchitecture:
             phenolist=phenolist,
         )
 
-        self.n_phenotypic_values = AGE_LIMIT * constants.TRAIT_N
+        # self.n_phenotypic_values = AGE_LIMIT * constants.TRAIT_N
 
         self.AGE_LIMIT = AGE_LIMIT
 
@@ -44,8 +45,8 @@ class ModifyingArchitecture:
     def init_genome_array(self, popsize):
         return np.zeros(shape=(popsize, *self.get_shape()), dtype=np.bool_)
 
-    def init_phenotype_array(self, popsize):
-        return np.zeros(shape=(popsize, self.n_phenotypic_values))
+    # def init_phenotype_array(self, popsize):
+    #     return np.zeros(shape=(popsize, self.n_phenotypic_values))
 
     def compute(self, genomes):
 
@@ -59,9 +60,7 @@ class ModifyingArchitecture:
         # Apply phenomap
         phenomapped = self.phenomap(
             interpretome=genomes.reshape(len(genomes), -1),
-            zeropheno=self.init_phenotype_array(
-                popsize=len(genomes),
-            ),
+            zeropheno=Phenotypes.init_phenotype_array(popsize=len(genomes)).array,
         )
 
         # TODO damn ugly!

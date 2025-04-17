@@ -33,8 +33,6 @@ class CompositeArchitecture:
             THRESHOLD,
         )
 
-        self.n_phenotypic_values = AGE_LIMIT * constants.TRAIT_N
-
     def get_number_of_bits(self):
         return ploider.ploider.y * self.n_loci * self.BITS_PER_LOCUS
 
@@ -50,9 +48,6 @@ class CompositeArchitecture:
             array[:, :, trait.slice] = array[:, :, trait.slice] < trait.initgeno
 
         return array
-
-    def init_phenotype_array(self, popsize):
-        return np.zeros(shape=(popsize, self.n_phenotypic_values))
 
     def compute(self, genomes):
 

@@ -25,6 +25,13 @@ class Phenotypes:
         array = self.clip_array_to_01(array)
         self.array = array
 
+    @staticmethod
+    def init_phenotype_array(popsize):
+        AGE_LIMIT = parameterization.parametermanager.parameters.AGE_LIMIT
+        number_phenotypic_values = AGE_LIMIT * Phenotypes.get_number_of_evolvable_traits()
+        array = np.zeros(shape=(popsize, number_phenotypic_values))
+        return Phenotypes(array)
+
     def __len__(self):
         return len(self.array)
 
