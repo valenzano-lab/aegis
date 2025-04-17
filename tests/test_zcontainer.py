@@ -30,14 +30,19 @@ def test_get_path(container_instance: Container):
     _ = container_instance.get_path(name="envdriftmap")
     _ = container_instance.get_path(name="snapshots")
     _ = container_instance.get_path(name="pickles")
-    _ = container_instance.get_path(name="te")
+    # _ = container_instance.get_path(name="te")
     _ = container_instance.get_path(name="popsize_before_reproduction")
     _ = container_instance.get_path(name="popsize_after_reproduction")
     _ = container_instance.get_path(name="eggnum_after_reproduction")
+    _ = container_instance.get_path(name="phenomap")
 
 
 def test_get_record_structure(container_instance: Container):
     _ = container_instance.get_record_structure()
+
+
+def test_get_phenomap(container_instance: Container):
+    _ = container_instance.get_phenomap()
 
 
 def test_get_log(container_instance: Container):
@@ -129,9 +134,9 @@ def test_get_phenotype_intrinsic_interval(container_instance: Container):
     _ = container_instance.get_phenotype_intrinsic_interval(trait="grow")
 
 
-def test_get_survival_analysis_TE_observed_interval(container_instance: Container):
-    _ = container_instance.get_survival_analysis_TE_observed_interval(record_index=0)
-    _ = container_instance.get_survival_analysis_TE_observed_interval(record_index=-1)
+# def test_get_survival_analysis_TE_observed_interval(container_instance: Container):
+#     _ = container_instance.get_survival_analysis_TE_observed_interval(record_index=0)
+#     _ = container_instance.get_survival_analysis_TE_observed_interval(record_index=-1)
 
 
 def test_get_population_size_before_reproduction(container_instance: Container):

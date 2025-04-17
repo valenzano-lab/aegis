@@ -55,16 +55,21 @@ class Container:
             (self.basepath / "pickles").glob("*"),
             key=lambda path: int(path.stem),
         )
-        self.paths["te"] = sorted(
-            (self.basepath / "te").glob("*"),
-            key=lambda path: int(path.stem),
-        )
+        # self.paths["te"] = sorted(
+        #     (self.basepath / "te").glob("*"),
+        #     key=lambda path: int(path.stem),
+        # )
         self.paths["popsize_before_reproduction"] = self.basepath / "popsize_before_reproduction.csv"
         self.paths["popsize_after_reproduction"] = self.basepath / "popsize_after_reproduction.csv"
         self.paths["eggnum_after_reproduction"] = self.basepath / "eggnum_after_reproduction.csv"
 
         if not self.paths["log"].is_file():
             logging.error(f"No AEGIS log found at path {self.paths['log']}.")
+
+    def get_paths(self):
+        if self.paths is None:
+            self.set_paths()
+        return self.paths
 
     def get_path(self, name):
         if self.paths is None:
@@ -188,6 +193,12 @@ class Container:
         path = self.get_path("envdriftmap")
         if path.exists():
             return pd.read_csv(self.get_path("envdriftmap"), header=None)
+        return None
+
+    def get_phenomap(self):
+        path = self.get_path("phenomap")
+        if path.exists():
+            return pd.read_csv(self.get_path("phenomap"))
         return None
 
     ##########
