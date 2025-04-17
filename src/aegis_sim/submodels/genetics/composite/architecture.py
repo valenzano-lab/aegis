@@ -40,7 +40,6 @@ class CompositeArchitecture:
         return (ploider.ploider.y, self.n_loci, self.BITS_PER_LOCUS)
 
     def init_genome_array(self, popsize):
-        # TODO enable initgeno
         # TODO enable agespecific False
         array = np.random.random(size=(popsize, *self.get_shape()))
 

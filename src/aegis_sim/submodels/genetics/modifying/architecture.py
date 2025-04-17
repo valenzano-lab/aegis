@@ -43,7 +43,13 @@ class ModifyingArchitecture:
         return (ploider.ploider.y, self.length, 1)
 
     def init_genome_array(self, popsize):
-        return np.zeros(shape=(popsize, *self.get_shape()), dtype=np.bool_)
+        array = np.random.random(size=(popsize, *self.get_shape()))
+
+        # Only neut (G_neut_initgeno) matters here
+        for trait in parameterization.traits.values():
+            array[:, :, trait.slice] = array[:, :, trait.slice] < trait.initgeno
+
+        return array
 
     # def init_phenotype_array(self, popsize):
     #     return np.zeros(shape=(popsize, self.n_phenotypic_values))
