@@ -40,5 +40,31 @@ def recombination(genomes, RECOMBINATION_RATE):
     recombined[:, 1] = np.where(reco_final, chromatid1, chromatid2)
 
     recombined = recombined.reshape(genomes.shape)
+    recombined = recombined[::2]  # Look at first comment in the function
 
-    return recombined[::2]  # Look at first comment in the function
+    return recombined
+
+
+# Loop version of the vectorized function above
+def recombination_via_pairs(genomes, RECOMBINATION_RATE):
+
+    if RECOMBINATION_RATE == 0:
+        return genomes
+
+    flat_genomes = genomes.reshape(len(genomes), 2, -1)
+
+    n_sites = flat_genomes.shape[-1]
+
+    n_recombination_sites = np.random.binomial(n=n_sites, p=RECOMBINATION_RATE, size=len(flat_genomes))
+
+    for i, n in enumerate(n_recombination_sites):
+        chiasmata = np.random.randint(1, n_sites, size=n, dtype=np.int32)
+        for chiasma in chiasmata:
+            flat_genomes[i, 0, :chiasma], flat_genomes[i, 1, :chiasma] = (
+                flat_genomes[i, 1, :chiasma],
+                flat_genomes[i, 0, :chiasma],
+            )
+
+    unflattened_genomes = flat_genomes.reshape(genomes.shape)
+
+    return unflattened_genomes
