@@ -35,8 +35,9 @@ def recombination(genomes, RECOMBINATION_RATE):
     # Choose bits from first or second chromatid
     # recombined = np.empty(flat_genomes.shape, bool)
     recombined = np.empty(flat_genomes.shape, dtype=np.bool_)
-    recombined[:, 0] = np.choose(reco_final, [chromatid1, chromatid2])
-    recombined[:, 1] = np.choose(reco_final, [chromatid2, chromatid1])
+    recombined[:, 0] = np.where(reco_final, chromatid2, chromatid1)
+    recombined[:, 1] = np.where(reco_final, chromatid1, chromatid2)
+
     recombined = recombined.reshape(genomes.shape)
 
     return recombined[::2]  # Look at first comment in the function
