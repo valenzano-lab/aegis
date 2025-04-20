@@ -7,3 +7,4 @@ def init(self, custom_config_path, pickle_path, RANDOM_SEED):
     self.pickle_path = pickle_path
     self.random_seed = np.random.randint(1, 10**6) if RANDOM_SEED is None else RANDOM_SEED
     np.random.seed(self.random_seed)
+    self.rng = np.random.default_rng(self.random_seed)
