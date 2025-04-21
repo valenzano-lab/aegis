@@ -15,11 +15,9 @@ class Phenotypes:
     def __init__(self, array):
 
         if len(array.shape) > 1:  # TODO remove this condition once the 'hacky' solution is gone
-            number_of_evolvable_traits = Phenotypes.get_number_of_evolvable_traits()
-            AGE_LIMIT = parameterization.parametermanager.parameters.AGE_LIMIT
             assert (
-                array.shape[1] == number_of_evolvable_traits * AGE_LIMIT
-            ), f"{array.shape[1]}, {number_of_evolvable_traits}, {AGE_LIMIT}"
+                array.shape[1] == parameterization.expected_phenotype_length
+            ), f"Array shape ({array.shape[1]}) should be equal to ({parameterization.expected_phenotype_length})"
 
         # clip phenotype to [0,1] / Apply lo and hi bound
         array = self.clip_array_to_01(array)
@@ -27,9 +25,7 @@ class Phenotypes:
 
     @staticmethod
     def init_phenotype_array(popsize):
-        AGE_LIMIT = parameterization.parametermanager.parameters.AGE_LIMIT
-        number_phenotypic_values = AGE_LIMIT * Phenotypes.get_number_of_evolvable_traits()
-        array = np.zeros(shape=(popsize, number_phenotypic_values))
+        array = np.zeros(shape=(popsize, parameterization.expected_phenotype_length))
         return Phenotypes(array)
 
     def __len__(self):

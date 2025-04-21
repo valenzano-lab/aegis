@@ -95,4 +95,5 @@ class Mutator:
         multipliers = multipliers.reshape(mutation_probabilities.shape)
         return mutation_probabilities * (1 + multipliers)
 
+
 mutator = Mutator()

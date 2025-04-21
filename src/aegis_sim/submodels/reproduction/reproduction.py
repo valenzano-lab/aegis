@@ -34,10 +34,8 @@ class Reproducer:
 
         if self.REPRODUCTION_MODE == "sexual":
             genomes = recombination(genomes, self.RECOMBINATION_RATE)
-            # TODO fix muta_prob that is also being split
             genomes, ages, muta_prob = pairing(Genomes(genomes), parental_sexes, ages, muta_prob)
 
-        # TODO muta_prob does not work currently
         genomes = self.mutator._mutate(genomes, muta_prob, ages)
         genomes = Genomes(genomes)
         return genomes
