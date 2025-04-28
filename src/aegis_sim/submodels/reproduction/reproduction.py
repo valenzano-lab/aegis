@@ -1,6 +1,6 @@
 from aegis_sim.dataclasses.genomes import Genomes
 from aegis_sim.submodels.reproduction.pairing import pairing
-from aegis_sim.submodels.reproduction.recombination import recombination
+from aegis_sim.submodels.reproduction.recombination import recombination, recombination_via_pairs
 
 
 class Reproducer:
@@ -33,7 +33,8 @@ class Reproducer:
     def generate_offspring_genomes(self, genomes, muta_prob, ages, parental_sexes) -> Genomes:
 
         if self.REPRODUCTION_MODE == "sexual":
-            genomes = recombination(genomes, self.RECOMBINATION_RATE)
+            # genomes = recombination(genomes, self.RECOMBINATION_RATE)
+            genomes = recombination_via_pairs(genomes, self.RECOMBINATION_RATE)
             genomes, ages, muta_prob = pairing(Genomes(genomes), parental_sexes, ages, muta_prob)
 
         genomes = self.mutator._mutate(genomes, muta_prob, ages)
