@@ -44,4 +44,7 @@ class Architect:
         pheno_array = self.architecture.compute(envgenomes)
         assert len(pheno_array) == len(genomes)  # no individuals are lost during the computation
 
-        return Phenotypes(pheno_array)
+        smooth_pheno_array = Phenotypes.gaussian_smoothing(pheno_array)
+        phenotypes = Phenotypes(smooth_pheno_array)
+
+        return phenotypes

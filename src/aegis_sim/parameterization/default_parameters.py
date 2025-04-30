@@ -403,6 +403,17 @@ DEFAULT_PARAMETERS = {
         drange="[0, inf)",
         inrange=lambda x: x >= 0,
     ),
+    "SMOOTHING_FACTOR": Parameter(
+        key="SMOOTHING_FACTOR",
+        name="",
+        domain="genetics",
+        default=0,
+        info="Gaussian sigma factor for smoothing of phenotypes",
+        info_extended="0 for no smoothing",
+        dtype=float,
+        drange="[0, inf)",
+        inrange=lambda x: x >= 0,
+    ),
     "PLOIDY": Parameter(
         key="PLOIDY",
         name="",

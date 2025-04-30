@@ -110,7 +110,7 @@ class Phenotypes:
             hi = parameterization.traits[trait_name].hi
 
             # get old values
-            _, _, slice_ = self.get_trait_position(trait_name=trait_name)
+            _, _, slice_ = Phenotypes.get_trait_position(trait_name=trait_name)
             values = array[:, slice_]
 
             # clip
@@ -121,7 +121,31 @@ class Phenotypes:
 
         return array
 
-    def get_trait_position(self, trait_name):
+    @staticmethod
+    def gaussian_smoothing(array):
+
+        SMOOTHING_FACTOR = parameterization.parametermanager.parameters.SMOOTHING_FACTOR
+        if SMOOTHING_FACTOR == 0:
+            return array
+
+        for trait_name in GENETIC_TRAITS:
+            # get old values
+            _, _, slice_ = Phenotypes.get_trait_position(trait_name=trait_name)
+            values = array[:, slice_]
+
+            if values.size == 0:
+                continue
+
+            # clip
+            new_values = gaussian_smooth_rows_with_padding(values, sigma=SMOOTHING_FACTOR)
+
+            # set new values
+            array[:, slice_] = new_values
+
+        return array
+
+    @staticmethod
+    def get_trait_position(trait_name):
         index = GENETIC_TRAITS.index(trait_name)
         AGE_LIMIT = parameterization.parametermanager.parameters.AGE_LIMIT
         start = index * AGE_LIMIT
@@ -151,3 +175,20 @@ class Phenotypes:
     # def from_feather(path: pathlib.Path):
     #     from_feather = pd.read_feather(path)
     #     return Phenotypes(array=from_feather)
+
+
+# Smoothing functions
+def gaussian_kernel1d(sigma, radius=None):
+    if radius is None:
+        radius = int(3 * sigma)
+    x = np.arange(-radius, radius + 1)
+    kernel = np.exp(-0.5 * (x / sigma) ** 2)
+    kernel /= kernel.sum()
+    return kernel
+
+
+def gaussian_smooth_rows_with_padding(array_2d, sigma):
+    kernel = gaussian_kernel1d(sigma)
+    pad = len(kernel) // 2
+    smoothed = np.array([np.convolve(np.pad(row, pad, mode="reflect"), kernel, mode="valid") for row in array_2d])
+    return smoothed
