@@ -1,6 +1,6 @@
 """
 This script is executed when AEGIS is imported (`import aegis`). Execute functions by running `aegis.run_from_{}`.
-AEGIS can be started in multiple ways; each of these functions starts AEGIS from a different context. 
+AEGIS can be started in multiple ways; each of these functions starts AEGIS from a different context.
 """
 
 import logging
@@ -15,7 +15,11 @@ from aegis.parse import get_parser
 def start_from_terminal():
     parser = get_parser()
     args = parser.parse_args()
+
     set_logging(level=logging.DEBUG)
+
+    numba_logger = logging.getLogger("numba")
+    numba_logger.setLevel(logging.WARNING)
 
     if args.command == "sim":
         config_path = pathlib.Path(args.config_path).absolute() if args.config_path else None

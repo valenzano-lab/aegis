@@ -5,6 +5,7 @@ from aegis_sim import variables
 from aegis_sim import submodels
 from aegis_sim.constants import VALID_CAUSES_OF_DEATH
 from aegis_sim.dataclasses.population import Population
+from aegis_sim.dataclasses.individual import Group
 from aegis_sim.recording import recordingmanager
 from aegis_sim.parameterization import parametermanager
 from aegis_sim.submodels.resources.starvation import starvation
@@ -12,9 +13,9 @@ from aegis_sim.submodels.resources.resources import resources
 
 
 class Bioreactor:
-    def __init__(self, population: Population):
-        self.eggs: Population = None
-        self.population: Population = population
+    def __init__(self, population: Group):
+        self.eggs: Group = None
+        self.group: Group = population
 
     ##############
     # MAIN LOGIC #
@@ -31,7 +32,7 @@ class Bioreactor:
         self.mortalities()
         resources.replenish()
 
-        recordingmanager.popsizerecorder.write_before_reproduction(self.population)
+        recordingmanager.popsizerecorder.write_before_reproduction(self.group)
         self.growth()  # size increase
         self.reproduction()  # reproduction
         self.age()  # age increment and potentially death
@@ -39,19 +40,19 @@ class Bioreactor:
         submodels.architect.envdrift.evolve(step=variables.steps)
 
         # Record data
-        recordingmanager.popsizerecorder.write_after_reproduction(self.population)
+        recordingmanager.popsizerecorder.write_after_reproduction(self.group)
         recordingmanager.popsizerecorder.write_egg_num_after_reproduction(self.eggs)
         recordingmanager.envdriftmaprecorder.write(step=variables.steps)
-        recordingmanager.flushrecorder.collect("additive_age_structure", self.population.ages)  # population census
-        recordingmanager.picklerecorder.write(self.population)
-        recordingmanager.featherrecorder.write(self.population)
-        recordingmanager.guirecorder.record(self.population)
+        recordingmanager.flushrecorder.collect("additive_age_structure", self.group.ages)  # population census
+        recordingmanager.picklerecorder.write(self.group)
+        recordingmanager.featherrecorder.write(self.group)
+        recordingmanager.guirecorder.record(self.group)
         recordingmanager.flushrecorder.flush()
         recordingmanager.popgenstatsrecorder.write(
-            self.population.genomes, self.population.phenotypes.extract(ages=self.population.ages, trait_name="muta")
+            self.group.genomes, self.group.phenotypes.extract(ages=self.group.ages, trait_name="muta")
         )  # TODO defers calculation of mutation rates; hacky
         recordingmanager.summaryrecorder.record_memuse()
-        recordingmanager.terecorder.record(self.population.ages, "alive")
+        recordingmanager.terecorder.record(self.group.ages, "alive")
 
     ###############
     # STEP LOGIC #
@@ -73,21 +74,21 @@ class Bioreactor:
                 raise ValueError(f"Invalid source of mortality '{source}'")
 
     def mortality_intrinsic(self):
-        probs_surv = self.population.phenotypes.extract(ages=self.population.ages, trait_name="surv")
-        age_hazard = submodels.frailty.modify(hazard=1 - probs_surv, ages=self.population.ages)
+        probs_surv = self.group.phenotypes.extract(ages=self.group.ages, trait_name="surv")
+        age_hazard = submodels.frailty.modify(hazard=1 - probs_surv, ages=self.group.ages)
         mask_kill = variables.rng.random(len(probs_surv)) < age_hazard
         self._kill(mask_kill=mask_kill, causeofdeath="intrinsic")
 
     def mortality_abiotic(self):
         hazard = submodels.abiotic(variables.steps)
-        age_hazard = submodels.frailty.modify(hazard=hazard, ages=self.population.ages)
-        mask_kill = variables.rng.random(len(self.population)) < age_hazard
+        age_hazard = submodels.frailty.modify(hazard=hazard, ages=self.group.ages)
+        mask_kill = variables.rng.random(len(self.group)) < age_hazard
         self._kill(mask_kill=mask_kill, causeofdeath="abiotic")
 
     def mortality_infection(self):
-        submodels.infection(self.population)
+        submodels.infection(self.group)
         # TODO add age hazard
-        mask_kill = self.population.infection == -1
+        mask_kill = self.group.infection == -1
         self._kill(mask_kill=mask_kill, causeofdeath="infection")
 
     def mortality_predation(self):
@@ -98,13 +99,13 @@ class Bioreactor:
 
     def mortality_starvation(self):
         recordingmanager.resourcerecorder.write_before_scavenging()
-        resources_scavenged = resources.scavenge(np.ones(len(self.population)))
+        resources_scavenged = resources.scavenge(np.ones(len(self.group)))
         recordingmanager.resourcerecorder.write_after_scavenging()
         # mask_kill = starvation.get_mask_kill(
         #     n=len(self.population),
         #     resources_scavenged=resources_scavenged.sum(),
         # )
-        mask_kill = starvation.get_mask_kill(ages=self.population.ages, resources_scavenged=resources_scavenged.sum())
+        mask_kill = starvation.get_mask_kill(ages=self.group.ages, resources_scavenged=resources_scavenged.sum())
         self._kill(mask_kill=mask_kill, causeofdeath="starvation")
 
     def reproduction(self):
@@ -114,11 +115,11 @@ class Bioreactor:
 
         # Check if fertile
         mask_fertile = (
-            self.population.ages >= parametermanager.parameters.MATURATION_AGE
+            self.group.ages >= parametermanager.parameters.MATURATION_AGE
         )  # Check if mature; mature if survived MATURATION_AGE full cycles
         if parametermanager.parameters.REPRODUCTION_ENDPOINT > 0:
             mask_menopausal = (
-                self.population.ages >= parametermanager.parameters.REPRODUCTION_ENDPOINT
+                self.group.ages >= parametermanager.parameters.REPRODUCTION_ENDPOINT
             )  # Check if menopausal; menopausal when lived through REPRODUCTION_ENDPOINT full cycles
             mask_fertile = (mask_fertile) & (~mask_menopausal)
 
@@ -126,7 +127,7 @@ class Bioreactor:
             return
 
         # Check if reproducing
-        probs_repr = self.population.phenotypes.extract(ages=self.population.ages, trait_name="repr", part=mask_fertile)
+        probs_repr = self.group.phenotypes.extract(ages=self.group.ages, trait_name="repr", part=mask_fertile)
 
         # Binomial calculation
         n = parametermanager.parameters.MAX_OFFSPRING_NUMBER
@@ -141,22 +142,22 @@ class Bioreactor:
             return
 
         # Indices of reproducing individuals
-        who = np.repeat(np.arange(len(self.population)), num_repr)
+        who = np.repeat(np.arange(len(self.group)), num_repr)
 
         # Count ages at reproduction
-        ages_repr = self.population.ages[who]
+        ages_repr = self.group.ages[who]
         recordingmanager.flushrecorder.collect("age_at_birth", ages_repr)
 
         # Increase births statistics
-        self.population.births += num_repr
+        # self.group.births += num_repr
+        self.group.increase_births(num_repr)
 
         # Generate offspring genomes
-        parental_genomes = self.population.genomes.get(individuals=who)
-        parental_sexes = self.population.sexes[who]
+        parental_genomes = self.group.genomes.get(individuals=who)
 
-        muta_prob = self.population.phenotypes.extract(ages=self.population.ages, trait_name="muta", part=mask_repr)[
-            mask_repr
-        ]
+        parental_sexes = self.group.sexes[who]
+
+        muta_prob = self.group.phenotypes.extract(ages=self.group.ages, trait_name="muta", part=mask_repr)[mask_repr]
         muta_prob = np.repeat(muta_prob, num_repr[mask_repr])
 
         offspring_genomes = submodels.reproduction.generate_offspring_genomes(
@@ -175,7 +176,7 @@ class Bioreactor:
         offspring_sexes = offspring_sexes[order]
 
         # Make eggs
-        eggs = Population.make_eggs(
+        eggs = Group.make_eggs(
             offspring_genomes=offspring_genomes,
             step=variables.steps,
             offspring_sexes=offspring_sexes,
@@ -195,15 +196,15 @@ class Bioreactor:
         # max_growth_potential = self.population.phenotypes.extract(ages=self.population.ages, trait_name="grow")
         # gathered_resources = submodels.resources.scavenge(max_growth_potential)
         # self.population.sizes += gathered_resources
-        self.population.sizes += 1
+        self.group.increase_sizes()
 
     def age(self):
         """Increase age of all by one and kill those that surpass age limit.
         Age denotes the number of full cycles that an individual survived and reproduced.
         AGE_LIMIT is the maximum number of full cycles an individual can go through.
         """
-        self.population.ages += 1
-        mask_kill = self.population.ages >= parametermanager.parameters.AGE_LIMIT
+        self.group.increment_age()
+        mask_kill = self.group.ages >= parametermanager.parameters.AGE_LIMIT
         self._kill(mask_kill=mask_kill, causeofdeath="age_limit")
 
     def hatch(self):
@@ -215,7 +216,7 @@ class Bioreactor:
 
         # If REPRODUCTION_REGULATION is True, only reproduce until MAX_POPULATION_SIZE
         if parametermanager.parameters.REPRODUCTION_REGULATION:
-            current_population_size = len(self.population)
+            current_population_size = len(self.group)
             remaining_capacity = resources.capacity - current_population_size
             # If no remaining capacity, do not reproduce
             if remaining_capacity < 1:
@@ -227,18 +228,16 @@ class Bioreactor:
 
         # If something to hatch
         if (
-            (
-                parametermanager.parameters.INCUBATION_PERIOD == -1 and len(self.population) == 0
-            )  # hatch when everyone dead
+            (parametermanager.parameters.INCUBATION_PERIOD == -1 and len(self.group) == 0)  # hatch when everyone dead
             or (parametermanager.parameters.INCUBATION_PERIOD == 0)  # hatch immediately
             or (
                 parametermanager.parameters.INCUBATION_PERIOD > 0
                 and variables.steps % parametermanager.parameters.INCUBATION_PERIOD == 0
             )  # hatch with delay
         ):
-
-            self.eggs.phenotypes = submodels.architect.__call__(self.eggs.genomes)
-            self.population += self.eggs
+            # self.eggs.phenotypes = submodels.architect.__call__(self.eggs.genomes)
+            self.eggs.set_phenotypes(submodels.architect.__call__(self.eggs.genomes))
+            self.group += self.eggs
             self.eggs = None
 
     ################
@@ -256,13 +255,13 @@ class Bioreactor:
 
         # Count ages at death
         # if causeofdeath != "age_limit":
-        ages_death = self.population.ages[mask_kill]
+        ages_death = self.group.ages[mask_kill]
         recordingmanager.flushrecorder.collect(f"age_at_{causeofdeath}", ages_death)
         recordingmanager.terecorder.record(ages_death, "dead")
 
         # Retain survivors
-        self.population *= ~mask_kill
+        self.group *= ~mask_kill
 
     def __len__(self):
         """Return the number of living individuals and saved eggs."""
-        return len(self.population) + len(self.eggs) if self.eggs is not None else len(self.population)
+        return len(self.group) + len(self.eggs) if self.eggs is not None else len(self.group)

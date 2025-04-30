@@ -4,7 +4,6 @@ import numpy as np
 
 import pathlib
 
-from aegis_sim.dataclasses.population import Population
 from .recorder import Recorder
 from aegis_sim import variables
 
@@ -21,7 +20,7 @@ class FeatherRecorder(Recorder):
         self.init_dir(self.odir_phenotypes)
         self.init_dir(self.odir_demography)
 
-    def write(self, population: Population):
+    def write(self, population):
         """Record demographic, genetic and phenotypic data from the current population."""
 
         # If not final snapshots to be taken, and about to skip or the population is extinct, do not write.
@@ -37,7 +36,7 @@ class FeatherRecorder(Recorder):
         self.write_phenotypes(step=step, population=population)
         self.write_demography(step=step, population=population)
 
-    def write_genotypes(self, step: int, population: Population):
+    def write_genotypes(self, step: int, population):
         """
 
         # OUTPUT SPECIFICATION
@@ -56,7 +55,7 @@ class FeatherRecorder(Recorder):
         df_gen.columns = [str(c) for c in df_gen.columns]
         df_gen.to_feather(self.odir_genotypes / f"{step}.feather")
 
-    def write_phenotypes(self, step: int, population: Population):
+    def write_phenotypes(self, step: int, population):
         # TODO add more info to columns and rows
         """
 
@@ -71,12 +70,13 @@ class FeatherRecorder(Recorder):
         structure: A float matrix; rows: individuals, columns: individual phenotypic traits (depending on which traits are evolvable and what is max lifespan), values: trait values
         """
         # TODO bugged, wrong header
+
         df_phe = pd.DataFrame(population.phenotypes.get())
         df_phe.reset_index(drop=True, inplace=True)
         df_phe.columns = [str(c) for c in df_phe.columns]
         df_phe.to_feather(self.odir_phenotypes / f"{step}.feather")
 
-    def write_demography(self, step: int, population: Population):
+    def write_demography(self, step: int, population):
         """
 
         # OUTPUT SPECIFICATION
@@ -90,15 +90,22 @@ class FeatherRecorder(Recorder):
         structure: A matrix of ints and floats
         header: ['ages', 'births', 'birthdays', 'sizes', 'sexes']
         """
-        dem_attrs = [
-            "ages",
-            "births",
-            "birthdays",
-            # "generations",
-            "sizes",
-            "sexes",
-        ]
-        demo = {attr: getattr(population, attr) for attr in dem_attrs}
-        df_dem = pd.DataFrame(demo, columns=dem_attrs)
+        # dem_attrs = [
+        #     "ages",
+        #     "births",
+        #     "birthdays",
+        #     # "generations",
+        #     "sizes",
+        #     "sexes",
+        # ]
+        # demo = {attr: getattr(population, attr) for attr in dem_attrs}
+        demo = {
+            "ages": population.ages,
+            "births": population.births,
+            "birthdays": population.birthdays,
+            "sizes": population.sizes,
+            "sexes": population.sexes,
+        }
+        df_dem = pd.DataFrame(demo, columns=demo.keys())
         df_dem.reset_index(drop=True, inplace=True)
         df_dem.to_feather(self.odir_demography / f"{step}.feather")

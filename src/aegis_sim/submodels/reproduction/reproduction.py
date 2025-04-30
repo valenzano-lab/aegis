@@ -34,6 +34,7 @@ class Reproducer:
 
         if self.REPRODUCTION_MODE == "sexual":
             # genomes = recombination(genomes, self.RECOMBINATION_RATE)
+            assert len(genomes.shape) == 4, len(genomes.shape)
             genomes = recombination_via_pairs(genomes, self.RECOMBINATION_RATE)
             genomes, ages, muta_prob = pairing(Genomes(genomes), parental_sexes, ages, muta_prob)
 

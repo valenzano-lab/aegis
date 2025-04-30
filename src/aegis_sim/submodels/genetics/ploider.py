@@ -22,7 +22,7 @@ class Ploider:
             A bool numpy array with shape (population size, genome length, BITS_PER_LOCUS)
         """
 
-        assert len(loci.shape) == 4, len(loci.shape)  # e.g. (45, 2, 250, 8)
+        assert len(loci.shape) == 4, loci.shape  # e.g. (45, 2, 250, 8)
         assert loci.shape[1] == 2, loci.shape[1]  # ploidy
 
         # TODO handle polyploidy too

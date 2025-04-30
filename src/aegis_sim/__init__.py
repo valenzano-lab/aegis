@@ -1,7 +1,7 @@
 import logging
 import pathlib
 
-from aegis_sim.dataclasses.population import Population
+from aegis_sim.dataclasses.individual import Group
 from aegis_sim.bioreactor import Bioreactor
 from aegis_sim import variables, submodels, parameterization
 from aegis_sim.parameterization import parametermanager
@@ -11,16 +11,16 @@ from aegis_sim.recording import recordingmanager
 def run(custom_config_path, pickle_path, overwrite, custom_input_params):
     init(custom_config_path, overwrite, pickle_path, custom_input_params)
 
-    population = (
-        Population.initialize(
+    group = (
+        Group.initialize(
             n=parametermanager.parameters.INITIAL_POPULATION_SIZE,
             AGE_LIMIT=parametermanager.parameters.AGE_LIMIT,
         )
         if pickle_path is None
-        else Population.load_pickle_from(pickle_path)
+        else Group.load_pickle_from(pickle_path)
     )
 
-    bioreactor = Bioreactor(population)
+    bioreactor = Bioreactor(group)
 
     sim(bioreactor=bioreactor)
 
@@ -64,14 +64,14 @@ def sim(bioreactor):
     recordingmanager.summaryrecorder.write_input_summary(ticker_pid=recordingmanager.ticker.pid)
     # TODO hacky solution of decrementing and incrementing steps
     variables.steps -= 1
-    recordingmanager.featherrecorder.write(bioreactor.population)
+    recordingmanager.featherrecorder.write(bioreactor.group)
     variables.steps += 1
 
     # sim
     recordingmanager.phenomaprecorder.write()
 
     while (variables.steps <= parametermanager.parameters.STEPS_PER_SIMULATION) and not recordingmanager.is_extinct():
-        recordingmanager.progressrecorder.write(len(bioreactor.population))
+        recordingmanager.progressrecorder.write(len(bioreactor.group))
         recordingmanager.simpleprogressrecorder.write()
         bioreactor.run_step()
         variables.steps += 1
