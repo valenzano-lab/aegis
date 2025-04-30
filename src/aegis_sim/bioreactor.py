@@ -49,7 +49,9 @@ class Bioreactor:
         recordingmanager.guirecorder.record(self.group)
         recordingmanager.flushrecorder.flush()
         recordingmanager.popgenstatsrecorder.write(
-            self.group.genomes, self.group.phenotypes.extract(ages=self.group.ages, trait_name="muta")
+            # self.group.genomes, self.group.phenotypes.extract(ages=self.group.ages, trait_name="muta")
+            self.group.genomes,
+            self.group.extract_traits("muta"),
         )  # TODO defers calculation of mutation rates; hacky
         recordingmanager.summaryrecorder.record_memuse()
         recordingmanager.terecorder.record(self.group.ages, "alive")
@@ -74,7 +76,7 @@ class Bioreactor:
                 raise ValueError(f"Invalid source of mortality '{source}'")
 
     def mortality_intrinsic(self):
-        probs_surv = self.group.phenotypes.extract(ages=self.group.ages, trait_name="surv")
+        probs_surv = self.group.extract_traits("surv")  # phenotypes.extract(ages=self.group.ages, trait_name="surv")
         age_hazard = submodels.frailty.modify(hazard=1 - probs_surv, ages=self.group.ages)
         mask_kill = variables.rng.random(len(probs_surv)) < age_hazard
         self._kill(mask_kill=mask_kill, causeofdeath="intrinsic")
@@ -127,7 +129,8 @@ class Bioreactor:
             return
 
         # Check if reproducing
-        probs_repr = self.group.phenotypes.extract(ages=self.group.ages, trait_name="repr", part=mask_fertile)
+        # probs_repr = self.group.phenotypes.extract(ages=self.group.ages, trait_name="repr", part=mask_fertile)
+        probs_repr = self.group.extract_traits("repr", part=mask_fertile)
 
         # Binomial calculation
         n = parametermanager.parameters.MAX_OFFSPRING_NUMBER
@@ -157,7 +160,8 @@ class Bioreactor:
 
         parental_sexes = self.group.sexes[who]
 
-        muta_prob = self.group.phenotypes.extract(ages=self.group.ages, trait_name="muta", part=mask_repr)[mask_repr]
+        # muta_prob = self.group.phenotypes.extract(ages=self.group.ages, trait_name="muta", part=mask_repr)[mask_repr]
+        muta_prob = self.group.extract_traits("muta", part=mask_repr)[mask_repr]
         muta_prob = np.repeat(muta_prob, num_repr[mask_repr])
 
         offspring_genomes = submodels.reproduction.generate_offspring_genomes(
@@ -235,7 +239,6 @@ class Bioreactor:
                 and variables.steps % parametermanager.parameters.INCUBATION_PERIOD == 0
             )  # hatch with delay
         ):
-            # self.eggs.phenotypes = submodels.architect.__call__(self.eggs.genomes)
             self.eggs.set_phenotypes(submodels.architect.__call__(self.eggs.genomes))
             self.group += self.eggs
             self.eggs = None

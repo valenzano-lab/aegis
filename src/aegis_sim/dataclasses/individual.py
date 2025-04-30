@@ -7,6 +7,9 @@ from aegis_sim.dataclasses.genomes import Genomes
 from aegis_sim import submodels
 from aegis_sim import variables
 
+from aegis_sim.parameterization import parametermanager
+from aegis_sim import parameterization
+
 
 class Group:
     def __init__(self, individuals):
@@ -47,7 +50,7 @@ class Group:
 
             egg = Individual(
                 genome=offspring_genomes[i],
-                phenotype=Phenotypes(array=Phenotypes.init_phenotype_array(1).array[0]),
+                phenotype=None,
                 age=0,
                 births=0,
                 birthday=step,
@@ -164,6 +167,25 @@ class Group:
         for individual, phenotype in zip(self.individuals, phenotypes.array):
             individual.set_phenotype(phenotype)
 
+    def extract_traits(self, trait_name, part=None):
+        values = []
+
+        if part is None:
+            for individual in self.individuals:
+                value = individual.get_trait(trait_name)
+                values.append(value)
+
+        else:
+            for individual, condition in zip(self.individuals, part):
+                if not condition:
+                    value = 0
+                else:
+                    value = individual.get_trait(trait_name)
+                values.append(value)
+
+        values = np.array(values)
+        return values
+
 
 class Individual:
     def __init__(
@@ -188,6 +210,9 @@ class Individual:
         self.sex = sex
         self.generation = generation
 
+        if self.phenotype is not None:
+            self.unpack_phenotype()
+
     def increment_age(self):
         self.age += 1
 
@@ -199,6 +224,76 @@ class Individual:
 
     def set_phenotype(self, phenotype):
         self.phenotype = Phenotypes(phenotype)
+        self.unpack_phenotype()
+
+    def unpack_phenotype(self):
+        if len(self.phenotype.array.shape) == 2:
+            array = self.phenotype.array[0]
+        else:
+            array = self.phenotype.array
+
+        assert len(array.shape) == 1
+
+        self.phenotype.array = array
+
+    #     s, e, slice_ = Phenotypes.get_trait_position(trait_name="surv")
+    #     self.trait_surv = array[s:e]
+    #     s, e, slice_ = Phenotypes.get_trait_position(trait_name="repr")
+    #     self.trait_repr = array[s:e]
+    #     s, e, slice_ = Phenotypes.get_trait_position(trait_name="muta")
+    #     self.trait_muta = array[s:e]
+    #     print(s, e, slice_)
+    #     s, e, slice_ = Phenotypes.get_trait_position(trait_name="neut")
+    #     self.trait_neut = array[s:e]
+
+    def get_trait(self, trait_name):
+
+        trait = parameterization.traits[trait_name]
+
+        if not trait.evolvable:
+            return trait.initpheno
+        else:
+            position = trait.start
+            if trait.agespecific:
+                position += self.age
+            return self.phenotype.array[position]
 
     def __str__(self):
         return self.birthday
+
+    # def get(self, individuals=slice(None), loci=slice(None)):
+    #     return self.array[individuals, loci]
+
+    #     # TODO Shift some responsibilities to Phenotypes dataclass
+
+    #     # Generate index of target individuals
+
+    #     n_individuals = len(self)
+
+    #     which_individuals = np.arange(n_individuals)
+
+    #     if part is not None:
+    #         which_individuals = which_individuals[part]
+
+    #     # Fetch trait in question
+    #     trait = parameterization.traits[trait_name]
+
+    #     # Reminder.
+    #     # Traits can be evolvable and age-specific (thus different across individuals and ages)
+    #     # Traits can be evolvable and non age-specific (thus different between individuals but same across ages)
+    #     # Traits can be non-evolvable (thus same for all individuals at all ages)
+
+    #     if not trait.evolvable:
+    #         probs = trait.initpheno
+    #     else:
+    #         which_loci = trait.start
+    #         if trait.agespecific:
+    #             shift_by_age = ages[which_individuals]
+    #             which_loci += shift_by_age
+    #         probs = self.get(which_individuals, which_loci)
+
+    #     # expand values back into an array with shape of whole population
+    #     final_probs = np.zeros(n_individuals, dtype=np.float32)
+    #     final_probs[which_individuals] += probs
+
+    #     return final_probs
