@@ -45,6 +45,7 @@ setuptools.setup(
         "urllib3==1.26.19",
         "psutil",
         "kaleido",  # for image export for dash figures TODO use a simpler method
+        "numba",
     ],
     extras_require={
         "dev": [
