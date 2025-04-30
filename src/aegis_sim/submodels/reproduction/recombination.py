@@ -1,4 +1,5 @@
 import numpy as np
+from numba import njit
 from aegis_sim import variables
 from aegis_sim.utilities.funcs import profile_time
 
@@ -46,37 +47,65 @@ def recombination(genomes, RECOMBINATION_RATE):
     return recombined
 
 
-# Loop version of the vectorized function above
-def recombination_via_pairs(genomes, RECOMBINATION_RATE):
+# # Loop version of the vectorized function above
+# def recombination_via_pairs(genomes, RECOMBINATION_RATE):
 
+#     if RECOMBINATION_RATE == 0:
+#         return genomes
+
+#     flat_genomes = genomes.reshape(len(genomes), 2, -1)
+
+#     n_sites = flat_genomes.shape[-1]
+
+#     n_recombination_sites = np.random.binomial(
+#         n=n_sites,
+#         p=RECOMBINATION_RATE,
+#         size=len(flat_genomes),
+#     )
+
+#     # Produce all random numbers immediately
+#     chiasmata_list = variables.rng.integers(
+#         low=1,
+#         high=n_sites,
+#         size=(len(n_recombination_sites), max(n_recombination_sites)),
+#         dtype=np.int32,
+#     )  # [low, high)
+
+#     for i, (chiasmata, n) in enumerate(zip(chiasmata_list, n_recombination_sites)):
+#         for chiasma in chiasmata[:n]:
+#             flat_genomes[i, 0, :chiasma], flat_genomes[i, 1, :chiasma] = (
+#                 flat_genomes[i, 1, :chiasma],
+#                 flat_genomes[i, 0, :chiasma],
+#             )
+
+#     unflattened_genomes = flat_genomes.reshape(genomes.shape)
+
+#     return unflattened_genomes
+
+
+@njit
+def recombination_via_pairs_numba(flat_genomes, n_recombination_sites, chiasmata_list):
+    for i in range(len(flat_genomes)):
+        for j in range(n_recombination_sites[i]):
+            chiasma = chiasmata_list[i, j]
+            flat_genomes[i, 0, :chiasma], flat_genomes[i, 1, :chiasma] = (
+                flat_genomes[i, 1, :chiasma].copy(),
+                flat_genomes[i, 0, :chiasma].copy(),
+            )
+    return flat_genomes
+
+
+def recombination_via_pairs(genomes, RECOMBINATION_RATE):
     if RECOMBINATION_RATE == 0:
         return genomes
 
-    flat_genomes = genomes.reshape(len(genomes), 2, -1)
-
+    flat_genomes = genomes.reshape(len(genomes), 2, -1).copy()
     n_sites = flat_genomes.shape[-1]
+    n_recombination_sites = np.random.binomial(n=n_sites, p=RECOMBINATION_RATE, size=len(flat_genomes))
 
-    n_recombination_sites = np.random.binomial(
-        n=n_sites,
-        p=RECOMBINATION_RATE,
-        size=len(flat_genomes),
-    )
+    max_n = max(n_recombination_sites)
+    chiasmata_list = variables.rng.integers(low=1, high=n_sites, size=(len(flat_genomes), max_n), dtype=np.int32)
 
-    # Produce all random numbers immediately
-    chiasmata_list = variables.rng.integers(
-        low=1,
-        high=n_sites,
-        size=(len(n_recombination_sites), max(n_recombination_sites)),
-        dtype=np.int32,
-    )  # [low, high)
+    flat_genomes = recombination_via_pairs_numba(flat_genomes, n_recombination_sites, chiasmata_list)
 
-    for i, (chiasmata, n) in enumerate(zip(chiasmata_list, n_recombination_sites)):
-        for chiasma in chiasmata[:n]:
-            flat_genomes[i, 0, :chiasma], flat_genomes[i, 1, :chiasma] = (
-                flat_genomes[i, 1, :chiasma],
-                flat_genomes[i, 0, :chiasma],
-            )
-
-    unflattened_genomes = flat_genomes.reshape(genomes.shape)
-
-    return unflattened_genomes
+    return flat_genomes.reshape(genomes.shape)

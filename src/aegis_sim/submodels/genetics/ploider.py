@@ -1,3 +1,6 @@
+import numpy as np
+
+
 class Ploider:
     """ """
 
@@ -20,22 +23,23 @@ class Ploider:
         """
 
         assert len(loci.shape) == 4, len(loci.shape)  # e.g. (45, 2, 250, 8)
-        assert loci.shape[1] in (1, 2), loci.shape[1]  # ploidy
+        assert loci.shape[1] == 2, loci.shape[1]  # ploidy
 
         # TODO handle polyploidy too
         # compute homozygous (0, 1) or heterozygous (0.5)
-        zygosity = loci.mean(1)
-        mask = zygosity == 0.5
 
-        # correct heterozygous with DOMINANCE_FACTOR
-        if isinstance(self.DOMINANCE_FACTOR, list):
-            zygosity[mask] = self.DOMINANCE_FACTOR[mask]
-        else:
-            zygosity[mask] = self.DOMINANCE_FACTOR
+        # Three options: both 1, heterozygous, both 0
 
-        assert len(zygosity.shape) == 3, len(zygosity.shape)
+        # If at least one is 1 then 1; otherwise 0
+        arr = np.logical_or(loci[:, 0], loci[:, 1]).astype(np.float64)
 
-        return zygosity
+        # Heterozygous
+        is_heterozygous = np.logical_xor(loci[:, 0], loci[:, 1])
+        arr[is_heterozygous] = self.DOMINANCE_FACTOR
+
+        assert len(arr.shape) == 3, len(arr.shape)
+
+        return arr
 
 
 ploider = Ploider()

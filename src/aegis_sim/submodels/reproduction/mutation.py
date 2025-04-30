@@ -49,6 +49,9 @@ class Mutator:
         Instead of generating a random probability for every bit in the array of genomes,
         generate random indices of bits that could be mutated."""
 
+        if genomes.size == 0:
+            return genomes
+
         bits_per_genome = genomes[0].size
 
         muta_prob = self.apply_mutation_age_multiplier(
