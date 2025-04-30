@@ -1,5 +1,6 @@
 import numpy as np
 from aegis_sim import constants
+from aegis_sim import variables
 
 from aegis_sim.submodels.genetics.composite.interpreter import Interpreter
 from aegis_sim import parameterization
@@ -41,7 +42,7 @@ class CompositeArchitecture:
 
     def init_genome_array(self, popsize):
         # TODO enable agespecific False
-        array = np.random.random(size=(popsize, *self.get_shape()))
+        array = variables.rng.random(size=(popsize, *self.get_shape()))
 
         for trait in parameterization.traits.values():
             array[:, :, trait.slice] = array[:, :, trait.slice] < trait.initgeno

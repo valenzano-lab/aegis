@@ -5,6 +5,7 @@ These numbers can be loosely understood as gene activity.
 """
 
 import numpy as np
+from aegis_sim import variables
 
 
 class Interpreter:
@@ -86,7 +87,7 @@ class Interpreter:
         Position-independent.
         """
         sums = loci.mean(2)
-        rand_values = np.random.random(loci.shape[:-1]) < 0.5
+        rand_values = variables.rng.random(loci.shape[:-1]) < 0.5
         return np.select([sums == 0, (sums > 0) & (sums < 1), sums == 1], [0, rand_values, 1])
 
     def _binary_switch(self, loci):

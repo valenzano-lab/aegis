@@ -1,6 +1,7 @@
 import numpy as np
 
 from aegis_sim import constants
+from aegis_sim import variables
 from aegis_sim import parameterization
 
 from aegis_sim.submodels.genetics.modifying.gpm_decoder import GPM_decoder
@@ -43,7 +44,7 @@ class ModifyingArchitecture:
         return (ploider.ploider.y, self.length, 1)
 
     def init_genome_array(self, popsize):
-        array = np.random.random(size=(popsize, *self.get_shape()))
+        array = variables.rng.random(size=(popsize, *self.get_shape()))
 
         # Only neut (G_neut_initgeno) matters here
         for trait in parameterization.traits.values():

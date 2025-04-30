@@ -6,6 +6,7 @@ Decides which individuals to eliminate when there is overcrowding.
 import logging
 import numpy as np
 from aegis_sim.submodels.frailty import frailty
+from aegis_sim import variables
 
 
 class Starvation:
@@ -72,7 +73,7 @@ class Starvation:
         mortalities[mortalities > self.STARVATION_MORTALITY_MAXIMUM] = self.STARVATION_MORTALITY_MAXIMUM
 
         # Compute mortality mask
-        random_probabilities = np.random.random(population_size)
+        random_probabilities = variables.rng.random(population_size)
         mask = random_probabilities < mortalities
 
         return mask
@@ -86,7 +87,7 @@ class Starvation:
     #     # when ratio == 2, kill_probability is set to >0
     #     kill_probability = 2 / (1 + np.exp(-ratio + 1)) - 1
 
-    #     random_probabilities = np.random.random(n)
+    #     random_probabilities = variables.rng.random(n)
     #     mask = random_probabilities < kill_probability
     #     return mask
 
@@ -98,7 +99,7 @@ class Starvation:
     #     The probability of dying resets to the base value once the population dips under the maximum allowed size.
     #     """
     #     surv_probability = (1 - self.STARVATION_MAGNITUDE) ** self.consecutive_overshoot_n
-    #     random_probabilities = np.random.random(n)
+    #     random_probabilities = variables.rng.random(n)
     #     mask = random_probabilities > surv_probability
     #     return mask
 
@@ -111,7 +112,7 @@ class Starvation:
     #     """
     #     surv_probability = (resource_availability / n) ** self.consecutive_overshoot_n
     #     f = frailty.modify(1 - surv_probability, 10)
-    #     random_probabilities = np.random.random(n)
+    #     random_probabilities = variables.rng.random(n)
     #     mask = random_probabilities > surv_probability
     #     return mask
 
@@ -121,7 +122,7 @@ class Starvation:
 
     #     The population size is brought down to the maximum allowed size in one go.
     #     """
-    #     indices = np.random.choice(n, n - int(resource_availability), replace=False)
+    #     indices = variables.rng.choice(n, n - int(resource_availability), replace=False)
     #     mask = np.zeros(n, dtype=np.bool_)
     #     mask[indices] = True
     #     return mask
@@ -132,7 +133,7 @@ class Starvation:
     # #     The proportion is defined as the parameter CLIFF_SURVIVORSHIP.
     # #     This function will not necessarily bring the population below the maximum allowed size.
     # #     """
-    # #     indices = np.random.choice(
+    # #     indices = variables.rng.choice(
     # #         n,
     # #         int(resource_availability * self.CLIFF_SURVIVORSHIP),
     # #         replace=False,
@@ -192,7 +193,7 @@ class Starvation:
     #     mask = np.zeros(n, dtype=np.bool_)
 
     #     a = np.arange(n)
-    #     indices_dead = np.random.choice(a, size=n - int(resource_availability), p=p, replace=False)
+    #     indices_dead = variables.rng.choice(a, size=n - int(resource_availability), p=p, replace=False)
     #     mask[indices_dead] = True
     #     return mask
 

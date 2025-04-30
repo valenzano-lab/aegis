@@ -1,4 +1,5 @@
 import numpy as np
+from aegis_sim import variables
 
 
 class Mutator:
@@ -20,7 +21,7 @@ class Mutator:
         """Induce germline mutations."""
 
         if random_probabilities is None:
-            random_probabilities = np.random.random(genomes.shape)
+            random_probabilities = variables.rng.random(genomes.shape)
 
         # Broadcast to fit [individual, chromatid, locus, bit] shape
         mutation_probabilities = muta_prob[:, None, None, None]
@@ -57,15 +58,15 @@ class Mutator:
         )
 
         # Calculate number of bits to mutate
-        n_mutations_per_individual = np.random.binomial(n=bits_per_genome, p=muta_prob, size=len(genomes))
+        n_mutations_per_individual = variables.rng.binomial(n=bits_per_genome, p=muta_prob, size=len(genomes))
         n_mutations_total = np.sum(n_mutations_per_individual)
 
         # Generate indices to mutate
         mutation_indices = (
             np.repeat(np.arange(len(genomes)), n_mutations_per_individual),
-            np.random.randint(genomes.shape[1], size=n_mutations_total),
-            np.random.randint(genomes.shape[2], size=n_mutations_total),
-            np.random.randint(genomes.shape[3], size=n_mutations_total),
+            variables.rng.integers(genomes.shape[1], size=n_mutations_total),
+            variables.rng.integers(genomes.shape[2], size=n_mutations_total),
+            variables.rng.integers(genomes.shape[3], size=n_mutations_total),
         )
 
         # Extract indices of 0-bits and 1-bits
@@ -74,8 +75,8 @@ class Mutator:
         bits1_indices = bits.nonzero()[0]
 
         # Take into consideration the MUTATION_RATIO
-        bits0_include = np.random.random(len(bits0_indices)) < self.rate_0to1
-        bits1_include = np.random.random(len(bits1_indices)) < self.rate_1to0
+        bits0_include = variables.rng.random(len(bits0_indices)) < self.rate_0to1
+        bits1_include = variables.rng.random(len(bits1_indices)) < self.rate_1to0
         bits0_indices = bits0_indices[bits0_include]
         bits1_indices = bits1_indices[bits1_include]
 

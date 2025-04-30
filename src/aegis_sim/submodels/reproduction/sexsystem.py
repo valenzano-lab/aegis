@@ -1,4 +1,5 @@
 import numpy as np
+from aegis_sim import variables
 
 
 class SexSystem:
@@ -6,4 +7,4 @@ class SexSystem:
         pass
 
     def get_sex(self, n):
-        return (np.random.random(n) < 0.5).astype(np.int32)
+        return (variables.rng.random(n) < 0.5).astype(np.int32)

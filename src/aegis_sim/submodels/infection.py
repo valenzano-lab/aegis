@@ -8,6 +8,7 @@ Infection status:
 
 import math
 import numpy as np
+from aegis_sim import variables
 
 
 class Infection:
@@ -48,7 +49,7 @@ class Infection:
         if len(population) == 0:
             return
 
-        probs = np.random.random(len(population))
+        probs = variables.rng.random(len(population))
 
         # current status
         infected = population.infection == 1

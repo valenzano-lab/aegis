@@ -75,13 +75,13 @@ class Bioreactor:
     def mortality_intrinsic(self):
         probs_surv = self.population.phenotypes.extract(ages=self.population.ages, trait_name="surv")
         age_hazard = submodels.frailty.modify(hazard=1 - probs_surv, ages=self.population.ages)
-        mask_kill = np.random.random(len(probs_surv)) < age_hazard
+        mask_kill = variables.rng.random(len(probs_surv)) < age_hazard
         self._kill(mask_kill=mask_kill, causeofdeath="intrinsic")
 
     def mortality_abiotic(self):
         hazard = submodels.abiotic(variables.steps)
         age_hazard = submodels.frailty.modify(hazard=hazard, ages=self.population.ages)
-        mask_kill = np.random.random(len(self.population)) < age_hazard
+        mask_kill = variables.rng.random(len(self.population)) < age_hazard
         self._kill(mask_kill=mask_kill, causeofdeath="abiotic")
 
     def mortality_infection(self):
@@ -93,7 +93,7 @@ class Bioreactor:
     def mortality_predation(self):
         probs_kill = submodels.predation(len(self))
         # TODO add age hazard
-        mask_kill = np.random.random(len(self)) < probs_kill
+        mask_kill = variables.rng.random(len(self)) < probs_kill
         self._kill(mask_kill=mask_kill, causeofdeath="predation")
 
     def mortality_starvation(self):
@@ -134,7 +134,7 @@ class Bioreactor:
 
         assert np.all(p <= 1)
         assert np.all(p >= 0)
-        num_repr = np.random.binomial(n=n, p=p)
+        num_repr = variables.rng.binomial(n=n, p=p)
         mask_repr = num_repr > 0
 
         if sum(num_repr) == 0:
@@ -170,7 +170,7 @@ class Bioreactor:
         # Randomize order of newly laid egg attributes ..
         # .. because the order will affect their probability to be removed because of limited carrying capacity
         order = np.arange(len(offspring_sexes))
-        np.random.shuffle(order)
+        variables.rng.shuffle(order)
         offspring_genomes = offspring_genomes[order]
         offspring_sexes = offspring_sexes[order]
 
@@ -222,7 +222,7 @@ class Bioreactor:
                 self.eggs = None
                 return
             elif remaining_capacity < len(self.eggs):
-                indices = np.random.choice(len(self.eggs), size=int(remaining_capacity), replace=False)
+                indices = variables.rng.choice(len(self.eggs), size=int(remaining_capacity), replace=False)
                 self.eggs *= indices
 
         # If something to hatch
