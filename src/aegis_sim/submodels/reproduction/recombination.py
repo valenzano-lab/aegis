@@ -1,5 +1,6 @@
 import numpy as np
 from aegis_sim import variables
+from aegis_sim.utilities.funcs import profile_time
 
 
 def recombination(genomes, RECOMBINATION_RATE):
@@ -55,11 +56,22 @@ def recombination_via_pairs(genomes, RECOMBINATION_RATE):
 
     n_sites = flat_genomes.shape[-1]
 
-    n_recombination_sites = np.random.binomial(n=n_sites, p=RECOMBINATION_RATE, size=len(flat_genomes))
+    n_recombination_sites = np.random.binomial(
+        n=n_sites,
+        p=RECOMBINATION_RATE,
+        size=len(flat_genomes),
+    )
 
-    for i, n in enumerate(n_recombination_sites):
-        chiasmata = np.random.randint(1, n_sites, size=n, dtype=np.int32)
-        for chiasma in chiasmata:
+    # Produce all random numbers immediately
+    chiasmata_list = variables.rng.integers(
+        low=1,
+        high=n_sites,
+        size=(len(n_recombination_sites), max(n_recombination_sites)),
+        dtype=np.int32,
+    )  # [low, high)
+
+    for i, (chiasmata, n) in enumerate(zip(chiasmata_list, n_recombination_sites)):
+        for chiasma in chiasmata[:n]:
             flat_genomes[i, 0, :chiasma], flat_genomes[i, 1, :chiasma] = (
                 flat_genomes[i, 1, :chiasma],
                 flat_genomes[i, 0, :chiasma],
