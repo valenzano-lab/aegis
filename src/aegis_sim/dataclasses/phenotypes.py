@@ -1,5 +1,6 @@
 """Wrapper for phenotype vectors."""
 
+import numba
 import numpy as np
 from aegis_sim import parameterization
 from aegis_sim.constants import GENETIC_TRAITS
@@ -137,7 +138,8 @@ class Phenotypes:
                 continue
 
             # clip
-            new_values = gaussian_smooth_rows_with_padding(values, sigma=SMOOTHING_FACTOR)
+
+            new_values = gaussian_smooth_rows_with_padding_numba(values, sigma=SMOOTHING_FACTOR)
 
             # set new values
             array[:, slice_] = new_values
@@ -192,3 +194,50 @@ def gaussian_smooth_rows_with_padding(array_2d, sigma):
     pad = len(kernel) // 2
     smoothed = np.array([np.convolve(np.pad(row, pad, mode="reflect"), kernel, mode="valid") for row in array_2d])
     return smoothed
+
+
+@numba.njit
+def create_gaussian_kernel1d(sigma):
+    radius = int(3 * sigma)
+    size = 2 * radius + 1
+    kernel = np.empty(size, dtype=np.float64)
+    for i in range(size):
+        x = i - radius
+        kernel[i] = np.exp(-(x * x) / (2 * sigma * sigma))
+    kernel /= kernel.sum()
+    return kernel
+
+
+@numba.njit
+def reflect_pad_1d(row, pad):
+    padded = np.empty(row.size + 2 * pad, dtype=np.float64)
+    for i in range(pad):
+        padded[i] = row[pad - i]
+    padded[pad : pad + row.size] = row
+    for i in range(pad):
+        padded[pad + row.size + i] = row[row.size - 2 - i]
+    return padded
+
+
+@numba.njit
+def convolve_valid(padded_row, kernel):
+    output = np.empty(padded_row.size - kernel.size + 1, dtype=np.float64)
+    for i in range(output.size):
+        val = 0.0
+        for j in range(kernel.size):
+            val += padded_row[i + j] * kernel[j]
+        output[i] = val
+    return output
+
+
+@numba.njit
+def gaussian_smooth_rows_with_padding_numba(array_2d, sigma):
+    kernel = create_gaussian_kernel1d(sigma)
+    pad = kernel.size // 2
+    n_rows, n_cols = array_2d.shape
+    output = np.empty_like(array_2d)
+    for i in range(n_rows):
+        padded_row = reflect_pad_1d(array_2d[i], pad)
+        smoothed_row = convolve_valid(padded_row, kernel)
+        output[i] = smoothed_row
+    return output
