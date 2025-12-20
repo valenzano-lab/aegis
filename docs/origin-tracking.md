@@ -2,7 +2,7 @@
 
 This document describes the design and implementation of origin tracking in AEGIS. Origin tracking is useful when the simulation has population structure (i.e. there are multiple populations between individuals can migrate and mate) and we want to understand which parts of the genome originate from which population.
 
-## How origin tracking works?
+## How does origin tracking work?
 An array `origins` is saved in the `Population` object. It has the same dimensions of the `genomes` array; it is an integer array. At initialization, all the `origins` vectors for individuals in one population carry one value (e.g. 1), while all individuals in the other population carry another (e.g. 2). When two individuals sexually reproduce, their offspring will get some bits from one parent, and some from the other, depending on how the gametes recombine. As the genome for the offspring is assembled, so are the `origins` vectors recombined and saved.
 
 ### An example of two individuals reproducing and the resulting offspring
