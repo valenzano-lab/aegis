@@ -37,7 +37,7 @@ def test_frailty(custom_input_params):
     try:
         run(
             custom_config_path=path,
-            pickle_path=None,
+            pickle_path=[],
             overwrite=True,
             custom_input_params=custom_input_params,
         )

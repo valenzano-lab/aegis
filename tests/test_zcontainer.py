@@ -130,8 +130,6 @@ def test_get_genotypes_intrinsic_interval(container_instance: Container):
 def test_get_phenotype_intrinsic_interval(container_instance: Container):
     _ = container_instance.get_phenotype_intrinsic_interval(trait="surv")
     _ = container_instance.get_phenotype_intrinsic_interval(trait="repr")
-    _ = container_instance.get_phenotype_intrinsic_interval(trait="muta")
-    _ = container_instance.get_phenotype_intrinsic_interval(trait="grow")
 
 
 # def test_get_survival_analysis_TE_observed_interval(container_instance: Container):

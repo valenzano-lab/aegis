@@ -8,17 +8,21 @@ from aegis_sim.parameterization import parametermanager
 from aegis_sim.recording import recordingmanager
 
 
-def run(custom_config_path, pickle_path, overwrite, custom_input_params):
+def run(custom_config_path, pickle_path, overwrite, custom_input_params, pickle_weights=None):
     init(custom_config_path, overwrite, pickle_path, custom_input_params)
 
-    population = (
-        Population.initialize(
+    if pickle_path:
+        # Ensure backward compatibility: convert single path to list
+        if not isinstance(pickle_path, list):
+            pickle_path = [pickle_path]
+        logging.info(f"Initializing a population using pre-evolved populations from: {pickle_path}")
+        population = load_pre_evolved(pickle_path, pickle_weights)
+    else:
+        logging.info("Initializing new population. Not using pre-evolved populations")
+        population = Population.initialize(
             n=parametermanager.parameters.INITIAL_POPULATION_SIZE,
             AGE_LIMIT=parametermanager.parameters.AGE_LIMIT,
         )
-        if pickle_path is None
-        else Population.load_pickle_from(pickle_path)
-    )
 
     bioreactor = Bioreactor(population)
 
@@ -80,3 +84,25 @@ def sim(bioreactor):
     recordingmanager.summaryrecorder.write_output_summary()
     logging.info("Simulation finished.")
     recordingmanager.ticker.stop_process()
+
+def load_pre_evolved(pickle_paths, pickle_weights=None):
+    """
+    Load and combine pre-evolved populations from pickle files.
+    
+    :param pickle_paths: List of pathlib.Path objects pointing to pickle files.
+    :param pickle_weights: List of float weights for combining populations. Defaults to 1.
+    """
+    if pickle_weights is None:
+        pickle_weights = [1.0] * len(pickle_paths)
+    
+    # Load and sample populations
+    populations = [
+        Population.load_pickle_from(path).sample(weight)
+        for path, weight in zip(pickle_paths, pickle_weights)
+    ]
+
+    # Combine populations into one
+    combined_population = populations[0]
+    for population in populations[1:]:
+        combined_population += population
+    return combined_population

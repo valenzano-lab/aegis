@@ -1,6 +1,5 @@
 """
-This script is executed when AEGIS is imported (`import aegis`). Execute functions by running `aegis.run_from_{}`.
-AEGIS can be started in multiple ways; each of these functions starts AEGIS from a different context.
+This script is executed when AEGIS is imported (`import aegis`). 
 """
 
 import logging
@@ -9,23 +8,25 @@ import pathlib
 import aegis_gui
 import aegis_sim
 from aegis.log import set_logging
-from aegis.parse import get_parser
+from aegis.args_parsing import AegisArgumentParser
 
 
 def start_from_terminal():
-    parser = get_parser()
-    args = parser.parse_args()
+    parser = AegisArgumentParser()
+
+    # Parse and validate arguments
+    args = parser.parse_and_validate()
+
     set_logging(level=logging.DEBUG)
     logging.getLogger("numba").setLevel(logging.ERROR)
 
     if args.command == "sim":
-        config_path = pathlib.Path(args.config_path).absolute() if args.config_path else None
-        pickle_path = pathlib.Path(args.pickle_path).absolute() if args.pickle_path else None
         aegis_sim.run(
-            custom_config_path=config_path,
-            pickle_path=pickle_path,
+            custom_config_path=process_config_path(args.config_path),
+            pickle_path=process_pickle_paths(args.pickle_path),
             overwrite=args.overwrite,
             custom_input_params={},
+            pickle_weights=args.pickle_weights,
         )
     elif args.command == "gui":
         if args.server:
@@ -34,3 +35,9 @@ def start_from_terminal():
             aegis_gui.run(environment="local", debug=args.debug)
     else:
         parser.print_help()
+
+def process_config_path(config_path):
+    return pathlib.Path(config_path).absolute() if config_path else None
+
+def process_pickle_paths(raw_pickle_paths):
+    return [pathlib.Path(path).absolute() for path in raw_pickle_paths]

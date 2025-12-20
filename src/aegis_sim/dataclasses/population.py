@@ -1,6 +1,7 @@
 import numpy as np
 import pickle
 import pathlib
+import logging
 
 from aegis_sim.dataclasses.genomes import Genomes
 from aegis_sim.dataclasses.phenotypes import Phenotypes
@@ -69,11 +70,11 @@ class Population:
     def __getitem__(self, index):
         """Return a subpopulation."""
         return Population(
-            genomes=self.genomes.get(individuals=index),
+            genomes=Genomes(self.genomes.get(individuals=index)),
             ages=self.ages[index],
             births=self.births[index],
             birthdays=self.birthdays[index],
-            phenotypes=self.phenotypes.get(individuals=index),
+            phenotypes=Phenotypes(self.phenotypes.get(individuals=index)),
             infection=self.infection[index],
             sizes=self.sizes[index],
             sexes=self.sexes[index],
@@ -92,6 +93,18 @@ class Population:
             else:
                 setattr(self, attr, getattr(self, attr)[index])
         return self
+
+    def sample(self, fraction):
+        """Return a population with a fraction of individuals (at least 1)."""
+        if fraction <= 0:
+            raise ValueError("Fraction must be greater than 0")
+        if fraction > 1:
+            raise ValueError("Fraction must be less than or equal to 1")
+        
+        n_sample = max(1, int(len(self) * fraction))
+        logging.info(f"Sampling fraction is {fraction}; {n_sample} individuals from population of {len(self)} sampled.")
+        indices = np.random.choice(len(self), size=n_sample, replace=False)
+        return self[indices]
 
     def __iadd__(self, population):
         """Merge with another population."""
@@ -115,8 +128,8 @@ class Population:
     #     self *= order
 
     @staticmethod
-    def load_pickle_from(path: pathlib.Path):
-        assert path.exists(), f"pickle_path {path} does not exist"
+    def load_pickle_from(path: pathlib.Path) -> "Population":
+        assert path.exists(), f"There is not pickle file at path: {path}. Cannot load population."
         with open(path, "rb") as file_:
             return pickle.load(file_)
 
