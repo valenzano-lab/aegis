@@ -1089,6 +1089,16 @@ DEFAULT_PARAMETERS = {
         drange="{None, (-inf, inf)}",
         inrange=lambda x: True,
     ),
+    "ORIGIN_TRACKING": Parameter(
+        key="ORIGIN_TRACKING",
+        name="",
+        domain="technical",
+        default="",
+        info="Tracking of bit origins",
+        dtype=str,
+        drange="{'', population_level}",
+        inrange=lambda x: isinstance(x, str),
+    ),
     "PHENOMAP_METHOD": Parameter(
         key="PHENOMAP_METHOD",
         name="",

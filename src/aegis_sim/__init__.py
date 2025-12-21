@@ -23,6 +23,8 @@ def run(custom_config_path, pickle_path, overwrite, custom_input_params, pickle_
             n=parametermanager.parameters.INITIAL_POPULATION_SIZE,
             AGE_LIMIT=parametermanager.parameters.AGE_LIMIT,
         )
+        if parametermanager.parameters.ORIGIN_TRACKING == "population_level":
+            population.reset_origins(origin_tracking_number=1)
 
     bioreactor = Bioreactor(population)
 
@@ -85,7 +87,7 @@ def sim(bioreactor):
     logging.info("Simulation finished.")
     recordingmanager.ticker.stop_process()
 
-def load_pre_evolved(pickle_paths, pickle_weights=None):
+def load_pre_evolved(pickle_paths, pickle_weights=None) -> Population:
     """
     Load and combine pre-evolved populations from pickle files.
     
@@ -100,7 +102,14 @@ def load_pre_evolved(pickle_paths, pickle_weights=None):
         Population.load_pickle_from(path).sample(weight)
         for path, weight in zip(pickle_paths, pickle_weights)
     ]
+    logging.info(f"Loaded {len(populations)} pre-evolved populations from pickle files.")
 
+    # Ensure all populations have origins reset
+    if parametermanager.parameters.ORIGIN_TRACKING == "population_level":
+        for origin_tracking_number, population in enumerate(populations):
+            population.reset_origins(origin_tracking_number=origin_tracking_number)
+
+    logging.info(f"Reset origins for all loaded populations with shape: {population.origins.shape()}")
     # Combine populations into one
     combined_population = populations[0]
     for population in populations[1:]:

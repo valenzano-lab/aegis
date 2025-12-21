@@ -153,18 +153,28 @@ class Bioreactor:
         # Generate offspring genomes
         parental_genomes = self.population.genomes.get(individuals=who)
         parental_sexes = self.population.sexes[who]
+        parental_origins = self.population.origins.get(individuals=who) if self.population.origins is not None else None
 
         muta_prob = self.population.phenotypes.extract(ages=self.population.ages, trait_name="muta", part=mask_repr)[
             mask_repr
         ]
         muta_prob = np.repeat(muta_prob, num_repr[mask_repr])
 
-        offspring_genomes = submodels.reproduction.generate_offspring_genomes(
+        if parental_origins is not None:
+            assert parental_genomes.shape == parental_origins.shape, "Parental genomes and origins shape mismatch: {} vs {}".format(
+                parental_genomes.shape, parental_origins.shape
+            )
+        offspring_genomes, offspring_origins = submodels.reproduction.generate_offspring_genomes(
             genomes=parental_genomes,
             muta_prob=muta_prob,
             ages=ages_repr,
             parental_sexes=parental_sexes,
+            origins=parental_origins,
         )
+        if offspring_origins is not None:
+            assert offspring_genomes.shape() == offspring_origins.shape(), "Offspring genomes and origins shape mismatch: {} vs {}".format(
+                offspring_genomes.shape(), offspring_origins.shape()
+            )
         offspring_sexes = submodels.sexsystem.get_sex(len(offspring_genomes))
 
         # Randomize order of newly laid egg attributes ..
@@ -173,6 +183,8 @@ class Bioreactor:
         variables.rng.shuffle(order)
         offspring_genomes = offspring_genomes[order]
         offspring_sexes = offspring_sexes[order]
+        if offspring_origins is not None:
+            offspring_origins = offspring_origins[order]
 
         # Make eggs
         eggs = Population.make_eggs(
@@ -180,6 +192,7 @@ class Bioreactor:
             step=variables.steps,
             offspring_sexes=offspring_sexes,
             parental_generations=np.zeros(len(offspring_sexes)),  # TODO replace with working calculation
+            offspring_origins=offspring_origins,
         )
         if self.eggs is None:
             self.eggs = eggs

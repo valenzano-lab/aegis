@@ -84,28 +84,28 @@ def recombination(genomes, RECOMBINATION_RATE):
 
 
 @njit
-def recombination_via_pairs_numba(flat_genomes, n_recombination_sites, chiasmata_list):
-    for i in range(len(flat_genomes)):
+def recombination_via_pairs_numba(flat_bitarray, n_recombination_sites, chiasmata_list):
+    for i in range(len(flat_bitarray)):
         for j in range(n_recombination_sites[i]):
             chiasma = chiasmata_list[i, j]
-            flat_genomes[i, 0, :chiasma], flat_genomes[i, 1, :chiasma] = (
-                flat_genomes[i, 1, :chiasma].copy(),
-                flat_genomes[i, 0, :chiasma].copy(),
+            flat_bitarray[i, 0, :chiasma], flat_bitarray[i, 1, :chiasma] = (
+                flat_bitarray[i, 1, :chiasma].copy(),
+                flat_bitarray[i, 0, :chiasma].copy(),
             )
-    return flat_genomes
+    return flat_bitarray
 
 
-def recombination_via_pairs(genomes, RECOMBINATION_RATE):
-    if RECOMBINATION_RATE == 0:
-        return genomes
+def recombination_via_pairs(bitarray, n_recombination_sites, chiasmata_list):
+    flat_bitarray = bitarray.reshape(len(bitarray), 2, -1).copy()
+    flat_bitarray = recombination_via_pairs_numba(flat_bitarray, n_recombination_sites, chiasmata_list)
+    return flat_bitarray.reshape(bitarray.shape)
 
-    flat_genomes = genomes.reshape(len(genomes), 2, -1).copy()
-    n_sites = flat_genomes.shape[-1]
-    n_recombination_sites = np.random.binomial(n=n_sites, p=RECOMBINATION_RATE, size=len(flat_genomes))
+def get_recombination_parameters(bitarray, RECOMBINATION_RATE):
+    flat_bitarray = bitarray.reshape(len(bitarray), 2, -1).copy()
+    n_sites = flat_bitarray.shape[-1]
+    n_recombination_sites = np.random.binomial(n=n_sites, p=RECOMBINATION_RATE, size=len(flat_bitarray))
 
     max_n = max(n_recombination_sites)
-    chiasmata_list = variables.rng.integers(low=1, high=n_sites, size=(len(flat_genomes), max_n), dtype=np.int32)
+    chiasmata_list = variables.rng.integers(low=1, high=n_sites, size=(len(flat_bitarray), max_n), dtype=np.int32)
 
-    flat_genomes = recombination_via_pairs_numba(flat_genomes, n_recombination_sites, chiasmata_list)
-
-    return flat_genomes.reshape(genomes.shape)
+    return n_recombination_sites, chiasmata_list

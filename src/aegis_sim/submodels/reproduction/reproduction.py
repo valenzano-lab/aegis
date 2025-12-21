@@ -1,6 +1,12 @@
-from aegis_sim.dataclasses.genomes import Genomes
-from aegis_sim.submodels.reproduction.pairing import pairing
-from aegis_sim.submodels.reproduction.recombination import recombination, recombination_via_pairs
+import logging
+from aegis_sim.dataclasses.bitarray import BitArray, Genomes, Origins
+from aegis_sim.submodels.reproduction.mutation import Mutator
+from aegis_sim.submodels.reproduction.pairing import pairing, get_mating_pairs
+from aegis_sim.submodels.reproduction.recombination import (
+    recombination,
+    recombination_via_pairs,
+    get_recombination_parameters,
+)
 
 
 class Reproducer:
@@ -28,15 +34,53 @@ class Reproducer:
     def __init__(self, RECOMBINATION_RATE, REPRODUCTION_MODE, mutator):
         self.RECOMBINATION_RATE = RECOMBINATION_RATE
         self.REPRODUCTION_MODE = REPRODUCTION_MODE
-        self.mutator = mutator
+        self.mutator: Mutator = mutator
 
-    def generate_offspring_genomes(self, genomes, muta_prob, ages, parental_sexes) -> Genomes:
+    def generate_offspring_genomes(
+        self, genomes, muta_prob, ages, parental_sexes, origins
+    ) -> tuple[Genomes, Origins]:
 
         if self.REPRODUCTION_MODE == "sexual":
             # genomes = recombination(genomes, self.RECOMBINATION_RATE)
-            genomes = recombination_via_pairs(genomes, self.RECOMBINATION_RATE)
-            genomes, ages, muta_prob = pairing(Genomes(genomes), parental_sexes, ages, muta_prob)
+            if self.RECOMBINATION_RATE > 0:
+                n_recombination_sites, chiasmata_list = get_recombination_parameters(
+                    genomes, self.RECOMBINATION_RATE
+                )
+                genomes = recombination_via_pairs(
+                    genomes, n_recombination_sites, chiasmata_list
+                )
+                if origins is not None:
+                    origins = recombination_via_pairs(
+                        origins, n_recombination_sites, chiasmata_list
+                    )
+
+            males, females, n_pairs, which_male_gamete, which_female_gamete = (
+                get_mating_pairs(parental_sexes)
+            )
+            ages = ages[females]
+            muta_prob = muta_prob[females]
+
+            genomes = pairing(
+                Genomes(genomes),
+                males,
+                females,
+                n_pairs,
+                which_male_gamete=which_male_gamete,
+                which_female_gamete=which_female_gamete,
+            )
+            if origins is not None:
+                origins = pairing(
+                    Origins(origins),
+                    males,
+                    females,
+                    n_pairs,
+                    which_male_gamete=which_male_gamete,
+                    which_female_gamete=which_female_gamete,
+                )
 
         genomes = self.mutator._mutate(genomes, muta_prob, ages)
         genomes = Genomes(genomes)
-        return genomes
+        if not isinstance(origins, Origins) and origins is not None:
+            origins = Origins(origins)
+
+        return genomes, origins

@@ -49,6 +49,9 @@ class CompositeArchitecture:
 
         return array
 
+    def init_origins_array(self, popsize, origin_tracking_number):
+        return np.ones(shape=(popsize, *self.get_shape())) * origin_tracking_number
+
     def compute(self, genomes):
 
         if genomes.shape[1] == 1:  # Do not calculate mean if genomes are haploid

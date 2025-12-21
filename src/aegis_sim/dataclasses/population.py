@@ -2,8 +2,9 @@ import numpy as np
 import pickle
 import pathlib
 import logging
+from typing import Optional
 
-from aegis_sim.dataclasses.genomes import Genomes
+from aegis_sim.dataclasses.bitarray import Genomes, Origins
 from aegis_sim.dataclasses.phenotypes import Phenotypes
 from aegis_sim import submodels
 
@@ -24,6 +25,7 @@ class Population:
         "infection",
         "sizes",
         "sexes",
+        "origins",
     )
 
     def __init__(
@@ -37,6 +39,7 @@ class Population:
         sizes,
         sexes,
         generations=None,
+        origins: Optional[Origins] = None,
     ):
         self.genomes = genomes
         self.ages = ages
@@ -47,8 +50,11 @@ class Population:
         self.sizes = sizes
         self.sexes = sexes
         self.generations = generations
+        self.origins = origins
 
         assert isinstance(phenotypes, Phenotypes)
+        if origins is not None:
+            assert isinstance(origins, Origins), f"Origin is of type {type(origins)}, must be Origins."
 
         if not (
             len(genomes)
@@ -79,6 +85,7 @@ class Population:
             sizes=self.sizes[index],
             sexes=self.sexes[index],
             generations=self.generations[index] if self.generations is not None else None,
+            origins=Origins(self.origins.get(individuals=index)) if self.origins is not None else None,
         )
 
     def __imul__(self, index):
@@ -88,6 +95,9 @@ class Population:
                 self.genomes.keep(individuals=index)
             elif attr == "phenotypes":
                 self.phenotypes.keep(individuals=index)
+            elif attr == "origins":
+                if self.origins is not None:
+                    self.origins.keep(individuals=index)
             elif attr == "generations":
                 self.generations = None
             else:
@@ -106,6 +116,11 @@ class Population:
         indices = np.random.choice(len(self), size=n_sample, replace=False)
         return self[indices]
 
+    def reset_origins(self, origin_tracking_number):
+        """Initialize origins if they are not already initialized."""
+        self.origins = Origins(submodels.architect.architecture.init_origins_array(
+            popsize=len(self), origin_tracking_number=origin_tracking_number))
+
     def __iadd__(self, population):
         """Merge with another population."""
 
@@ -115,6 +130,13 @@ class Population:
             elif attr == "phenotypes":
                 assert isinstance(population.phenotypes, Phenotypes)
                 self.phenotypes.add(population.phenotypes)
+            elif attr == "origins":
+                if self.origins is not None and population.origins is not None:
+                    self.origins.add(population.origins)
+                elif self.origins is not None and population.origins is None:
+                    raise ValueError(f"Cannot merge populations: self has origins ({len(self.origins)} elements) but population to add does not have origins ({len(population)} individuals). Origin tracking must be consistent.")
+                elif self.origins is None and population.origins is not None:
+                    raise ValueError(f"Cannot merge populations: self does not have origins but population to add has origins ({len(population.origins)} elements). Origin tracking must be consistent.")
             elif attr == "generations":
                 self.generations = None
             else:
@@ -138,13 +160,12 @@ class Population:
             pickle.dump(self, file_)
 
     @staticmethod
-    def initialize(n, AGE_LIMIT):
+    def initialize(n, AGE_LIMIT) -> "Population":
         genomes = Genomes(submodels.architect.architecture.init_genome_array(n))
         ages = np.random.randint(low=0, high=AGE_LIMIT, size=n, dtype=np.int32)
         births = np.zeros(n, dtype=np.int32)
         birthdays = np.zeros(n, dtype=np.int32)
         # generations = np.zeros(n, dtype=np.int32)
-        generations = None
 
         phenotypes = submodels.architect.__call__(genomes)
         assert isinstance(phenotypes, Phenotypes)
@@ -157,15 +178,16 @@ class Population:
             ages=ages,
             births=births,
             birthdays=birthdays,
-            generations=generations,
+            generations=None,
             phenotypes=phenotypes,
             infection=infection,
             sizes=sizes,
             sexes=sexes,
+            origins=None,
         )
 
     @staticmethod
-    def make_eggs(offspring_genomes: Genomes, step, offspring_sexes, parental_generations):
+    def make_eggs(offspring_genomes: Genomes, step, offspring_sexes, parental_generations, offspring_origins=None) -> "Population":
         n = len(offspring_genomes)
         eggs = Population(
             genomes=offspring_genomes,
@@ -179,5 +201,6 @@ class Population:
             infection=np.zeros(n, dtype=np.int32),
             sizes=np.zeros(n, dtype=np.float32),
             sexes=offspring_sexes,
+            origins=offspring_origins,
         )
         return eggs

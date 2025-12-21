@@ -52,6 +52,9 @@ class ModifyingArchitecture:
 
         return array
 
+    def init_origins_array(self, popsize, origin_tracking_number):
+        return np.ones(shape=(popsize, *self.get_shape())) * origin_tracking_number
+
     # def init_phenotype_array(self, popsize):
     #     return np.zeros(shape=(popsize, self.n_phenotypic_values))
 

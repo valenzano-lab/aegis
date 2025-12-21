@@ -17,9 +17,11 @@ class FeatherRecorder(Recorder):
         self.odir_genotypes = odir / "snapshots" / "genotypes"
         self.odir_phenotypes = odir / "snapshots" / "phenotypes"
         self.odir_demography = odir / "snapshots" / "demography"
+        self.odir_origins = odir / "snapshots" / "origins"
         self.init_dir(self.odir_genotypes)
         self.init_dir(self.odir_phenotypes)
         self.init_dir(self.odir_demography)
+        self.init_dir(self.odir_origins)
 
     def write(self, population: Population):
         """Record demographic, genetic and phenotypic data from the current population."""
@@ -33,9 +35,14 @@ class FeatherRecorder(Recorder):
 
         logging.debug(f"Snapshots recorded at step {step}.")
 
+        if len(population) == 0:
+            logging.debug("Population extinct; no feather file recorded.")
+            return
+
         self.write_genotypes(step=step, population=population)
         self.write_phenotypes(step=step, population=population)
         self.write_demography(step=step, population=population)
+        self.write_origins(step=step, population=population)
 
     def write_genotypes(self, step: int, population: Population):
         """
@@ -102,3 +109,22 @@ class FeatherRecorder(Recorder):
         df_dem = pd.DataFrame(demo, columns=dem_attrs)
         df_dem.reset_index(drop=True, inplace=True)
         df_dem.to_feather(self.odir_demography / f"{step}.feather")
+
+    def write_origins(self, step: int, population: Population):
+        """
+        # OUTPUT SPECIFICATION
+        path: /snapshots/origins/{step}.feather
+        filetype: feather
+        category: origins
+        description: A snapshot of origin information for all individuals at a certain simulation step.
+        trait granularity: individual
+        time granularity: snapshot
+        frequency parameter: SNAPSHOT_RATE
+        structure: A matrix containing origin data for each individual
+        """
+        if population.origins is None:
+            return
+        df_origins = pd.DataFrame(population.origins.flatten())
+        df_origins.reset_index(drop=True, inplace=True)
+        df_origins.columns = [str(c) for c in df_origins.columns]
+        df_origins.to_feather(self.odir_origins / f"{step}.feather")
