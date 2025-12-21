@@ -12,6 +12,13 @@ from aegis_sim.submodels.resources.resources import resources
 from aegis_sim.submodels.reproduction.sexsystem import SexSystem
 from aegis_sim.submodels.reproduction.matingmanager import MatingManager
 
+# Type specification for Intellisense
+architect: Architect
+reproduction: Reproducer
+sexsystem: SexSystem
+matingmanager: MatingManager
+infection: Infection
+popgenstats: PopgenStats
 
 def init(self, parametermanager):
 
