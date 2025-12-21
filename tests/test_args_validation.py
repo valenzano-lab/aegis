@@ -13,10 +13,8 @@ def test_validate_weights_mismatch(mock_exists):
     )
     parser = Mock()
 
-    validate_args(args, parser.error)
-    parser.error.assert_called_with(
-        "Number of pickle weights (2) must match number of pickle paths (1)"
-    )
+    with pytest.raises(ValueError, match=r"Number of pickle weights \(2\) must match number of pickle paths \(1\)"):
+        validate_args(args, parser.error)
 
 
 @patch("aegis.args_validation.pathlib.Path.exists", return_value=True)
@@ -29,10 +27,8 @@ def test_validate_more_paths_than_weights(mock_exists):
     )
     parser = Mock()
 
-    validate_args(args, parser.error)
-    parser.error.assert_called_with(
-        "Number of pickle weights (2) must match number of pickle paths (3)"
-    )
+    with pytest.raises(ValueError, match=r"Number of pickle weights \(2\) must match number of pickle paths \(3\)"):
+        validate_args(args, parser.error)
 
 
 @patch("aegis.args_validation.pathlib.Path.exists", return_value=True)
@@ -42,8 +38,8 @@ def test_validate_negative_weights(mock_exists):
     )
     parser = Mock()
 
-    validate_args(args, parser.error)
-    parser.error.assert_called_with("Pickle weights must be in range (0, 1]")
+    with pytest.raises(ValueError, match=r"Pickle weights must be in range \(0, 1\]"):
+        validate_args(args, parser.error)
 
 
 @patch("aegis.args_validation.pathlib.Path.exists", return_value=True)
@@ -53,8 +49,8 @@ def test_validate_zero_weights(mock_exists):
     )
     parser = Mock()
 
-    validate_args(args, parser.error)
-    parser.error.assert_called_with("Pickle weights must be in range (0, 1]")
+    with pytest.raises(ValueError, match=r"Pickle weights must be in range \(0, 1\]"):
+        validate_args(args, parser.error)
 
 
 @patch("aegis.args_validation.pathlib.Path.exists", return_value=True)
@@ -64,8 +60,8 @@ def test_validate_weights_greater_than_one(mock_exists):
     )
     parser = Mock()
 
-    validate_args(args, parser.error)
-    parser.error.assert_called_with("Pickle weights must be in range (0, 1]")
+    with pytest.raises(ValueError, match=r"Pickle weights must be in range \(0, 1\]"):
+        validate_args(args, parser.error)
 
 
 @patch("aegis.args_validation.pathlib.Path.exists", return_value=True)
@@ -75,8 +71,7 @@ def test_validate_valid_weights(mock_exists):
     )
     parser = Mock()
 
-    validate_args(args, parser.error)
-    parser.error.assert_not_called()
+    validate_args(args, parser.error)  # Should not raise
 
 
 @patch("aegis.args_validation.pathlib.Path.exists", return_value=True)
@@ -86,8 +81,7 @@ def test_validate_no_weights(mock_exists):
     )
     parser = Mock()
 
-    validate_args(args, parser.error)
-    parser.error.assert_not_called()
+    validate_args(args, parser.error)  # Should not raise
 
 
 @patch("aegis.args_validation.pathlib.Path.exists", return_value=False)
@@ -97,5 +91,5 @@ def test_validate_missing_pickle_file(mock_exists):
     )
     parser = Mock()
 
-    validate_args(args, parser.error)
-    parser.error.assert_called_with("Pickle file not found: missing.pkl")
+    with pytest.raises(ValueError, match="Pickle file not found: missing.pkl"):
+        validate_args(args, parser.error)
