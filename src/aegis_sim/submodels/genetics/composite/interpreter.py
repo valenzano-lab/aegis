@@ -103,6 +103,7 @@ class Interpreter:
         )  # If the locus is turned on, make the value in the output array be the binary value
         return values
 
+    @staticmethod
     def _uniform(loci):
         """Return normalized sum of bits.
 
