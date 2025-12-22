@@ -116,10 +116,14 @@ class Population:
         indices = np.random.choice(len(self), size=n_sample, replace=False)
         return self[indices]
 
-    def reset_origins(self, origin_tracking_number):
+    def set_origins(self, origin_tracking_number):
         """Initialize origins if they are not already initialized."""
         self.origins = Origins(submodels.architect.architecture.init_origins_array(
             popsize=len(self), origin_tracking_number=origin_tracking_number))
+
+    def remove_origins(self):
+        """Remove origins data. Can be invoked when ORIGIN_TRACKING is 'no_tracking'."""
+        self.origins = None
 
     def __iadd__(self, population):
         """Merge with another population."""

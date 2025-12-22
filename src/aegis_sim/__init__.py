@@ -23,8 +23,10 @@ def run(custom_config_path, pickle_path, overwrite, custom_input_params, pickle_
             n=parametermanager.parameters.INITIAL_POPULATION_SIZE,
             AGE_LIMIT=parametermanager.parameters.AGE_LIMIT,
         )
-        if parametermanager.parameters.ORIGIN_TRACKING == "population_level":
-            population.reset_origins(origin_tracking_number=1)
+        if parametermanager.parameters.ORIGIN_TRACKING.startswith("pop_"):
+            origin_tracking_number = int(parametermanager.parameters.ORIGIN_TRACKING.lstrip("pop_"))
+            logging.info(f"Origin tracking number used to initialize the population: {origin_tracking_number}")
+            population.set_origins(origin_tracking_number=origin_tracking_number)
 
     bioreactor = Bioreactor(population)
 
@@ -105,11 +107,15 @@ def load_pre_evolved(pickle_paths, pickle_weights=None) -> Population:
     logging.info(f"Loaded {len(populations)} pre-evolved populations from pickle files.")
 
     # Ensure all populations have origins reset
-    if parametermanager.parameters.ORIGIN_TRACKING == "population_level":
-        for origin_tracking_number, population in enumerate(populations):
-            population.reset_origins(origin_tracking_number=origin_tracking_number)
+    if parametermanager.parameters.ORIGIN_TRACKING == "pickled":
+        # Do nothing, keep origins as they are in the pickles
+        logging.info("Successfully loaded origins from pickled populations.")
+        pass
+    elif parameterization.parameters.ORIGIN_TRACKING == "no_tracking":
+        for population in populations:
+            population.remove_origins()
+        logging.info("Successfully removed origins for no tracking mode.")
 
-    logging.info(f"Reset origins for all loaded populations with shape: {population.origins.shape()}")
     # Combine populations into one
     combined_population = populations[0]
     for population in populations[1:]:

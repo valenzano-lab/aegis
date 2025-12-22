@@ -18,15 +18,15 @@ def pairing(bitarray: BitArray, males, females, n_pairs, which_male_gamete, whic
     """Return assorted chromatids."""
 
     # Which gamete
-    male_genomes = bitarray.get(individuals=males)
-    male_gametes = male_genomes[np.arange(n_pairs), which_male_gamete]
+    male_bitarrays = bitarray.get(individuals=males)
+    male_gametes = male_bitarrays[np.arange(n_pairs), which_male_gamete]
 
-    female_genomes = bitarray.get(individuals=females)
-    female_gametes = female_genomes[np.arange(n_pairs), which_female_gamete]
+    female_bitarrays = bitarray.get(individuals=females)
+    female_gametes = female_bitarrays[np.arange(n_pairs), which_female_gamete]
 
     # Unify gametes
     gshape = bitarray.shape()
-    children = np.empty(shape=(n_pairs, *gshape[1:]), dtype=np.bool_)
+    children = np.empty(shape=(n_pairs, *gshape[1:]), dtype=bitarray.dtype)
     children[np.arange(n_pairs), 0] = male_gametes
     children[np.arange(n_pairs), 1] = female_gametes
 
