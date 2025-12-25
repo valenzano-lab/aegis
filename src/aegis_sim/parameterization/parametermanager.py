@@ -32,7 +32,7 @@ class ParameterManager:
         self.validate(custom_config_params)
         for k in default_parameters.keys():
             if k in custom_config_params and default_parameters[k] != custom_config_params[k]:
-                logging.debug(
+                logging.info(
                     f"-- {k} is different in config ({custom_config_params[k]}) vs default ({default_parameters[k]})"
                 )
 

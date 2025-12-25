@@ -36,7 +36,7 @@ class FeatherRecorder(Recorder):
         logging.debug(f"Snapshots recorded at step {step}.")
 
         if len(population) == 0:
-            logging.debug("Population extinct; no feather file recorded.")
+            logging.warning("Population extinct; no feather file recorded.")
             return
 
         self.write_genotypes(step=step, population=population)

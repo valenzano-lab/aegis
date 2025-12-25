@@ -17,7 +17,7 @@ def start_from_terminal():
     # Parse and validate arguments
     args = parser.parse_and_validate()
 
-    set_logging(level=logging.DEBUG)
+    set_logging(level=logging.INFO)
     logging.getLogger("numba").setLevel(logging.ERROR)
 
     if args.command == "sim":

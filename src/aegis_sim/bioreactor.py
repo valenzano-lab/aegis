@@ -25,7 +25,7 @@ class Bioreactor:
 
         # If extinct (no living individuals nor eggs left), do nothing
         if len(self) == 0:
-            logging.debug("Population went extinct.")
+            logging.warning("Population went extinct.")
             recordingmanager.summaryrecorder.extinct = True
         # Mortality sources
         self.mortalities()

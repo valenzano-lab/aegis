@@ -80,7 +80,7 @@ def reset_configs(n_clicks, filename, ids, current_values):
     for id_, current_value in zip(ids, current_values):
         param_name = id_["index"]
         if param_name not in config:
-            logging.debug(
+            logging.warning(
                 f"Parameter {param_name} is not in configuration; probably because it was generated under a different AEGIS version."
             )
             new_values.append(dash.no_update)
