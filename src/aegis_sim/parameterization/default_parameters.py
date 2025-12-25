@@ -1099,6 +1099,16 @@ DEFAULT_PARAMETERS = {
         drange="{no_tracking, pickled, pop_[0,255]}",
         inrange=lambda x: x in ("no_tracking", "pickled") or x.startswith("pop_") and 0 <= int(x.lstrip("pop_")) <= 255,
     ),
+    "ORIGIN_INCOMPATIBILITY_REPRODUCTIVE_PENALTY": Parameter(
+        key="ORIGIN_INCOMPATIBILITY_REPRODUCTIVE_PENALTY",
+        name="",
+        domain="technical",
+        default=0,
+        info="Maximum probability to fail to mate due to differences in genetic origin",
+        dtype=float,
+        drange="[0, 1]",
+        inrange=lambda x: 0 <= x <= 1,
+    ),
     "PHENOMAP_METHOD": Parameter(
         key="PHENOMAP_METHOD",
         name="",

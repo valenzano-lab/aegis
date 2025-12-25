@@ -20,6 +20,7 @@ matingmanager: MatingManager
 infection: Infection
 popgenstats: PopgenStats
 
+
 def init(self, parametermanager):
 
     ##################################
@@ -87,6 +88,8 @@ def init(self, parametermanager):
         RECOMBINATION_RATE=parametermanager.parameters.RECOMBINATION_RATE,
         REPRODUCTION_MODE=parametermanager.parameters.REPRODUCTION_MODE,
         mutator=mutator,
+        ORIGIN_TRACKING=parametermanager.parameters.ORIGIN_TRACKING,
+        ORIGIN_INCOMPATIBILITY_REPRODUCTIVE_PENALTY=parametermanager.parameters.ORIGIN_INCOMPATIBILITY_REPRODUCTIVE_PENALTY,
     )
 
     # Genetic architecture

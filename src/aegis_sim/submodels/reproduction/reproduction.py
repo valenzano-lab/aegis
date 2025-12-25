@@ -1,12 +1,7 @@
 import logging
-from aegis_sim.dataclasses.bitarray import BitArray, Genomes, Origins
+from aegis_sim.dataclasses.bitarray import Genomes, Origins
 from aegis_sim.submodels.reproduction.mutation import Mutator
-from aegis_sim.submodels.reproduction.pairing import pairing, get_mating_pairs
-from aegis_sim.submodels.reproduction.recombination import (
-    recombination,
-    recombination_via_pairs,
-    get_recombination_parameters,
-)
+from aegis_sim.submodels.reproduction import pairing, origin_compatibility, recombination
 
 
 class Reproducer:
@@ -31,9 +26,20 @@ class Reproducer:
 
     # TODO probably better to split mutation logic into another domain and cluster together with genetic architecture stuff
 
-    def __init__(self, RECOMBINATION_RATE, REPRODUCTION_MODE, mutator):
+    def __init__(
+        self,
+        RECOMBINATION_RATE,
+        REPRODUCTION_MODE,
+        mutator,
+        ORIGIN_TRACKING,
+        ORIGIN_INCOMPATIBILITY_REPRODUCTIVE_PENALTY,
+    ):
         self.RECOMBINATION_RATE = RECOMBINATION_RATE
         self.REPRODUCTION_MODE = REPRODUCTION_MODE
+        self.ORIGIN_TRACKING = ORIGIN_TRACKING
+        self.ORIGIN_INCOMPATIBILITY_REPRODUCTIVE_PENALTY = (
+            ORIGIN_INCOMPATIBILITY_REPRODUCTIVE_PENALTY
+        )
         self.mutator: Mutator = mutator
 
     def generate_offspring_genomes(
@@ -41,39 +47,56 @@ class Reproducer:
     ) -> tuple[Genomes, Origins]:
 
         if self.REPRODUCTION_MODE == "sexual":
-            # genomes = recombination(genomes, self.RECOMBINATION_RATE)
+
+            males, females = pairing.get_mating_pairs(parental_sexes)
+            logging.debug(f"Number of pairs after pairing: {len(males)}")
+
+            males, females = (
+                origin_compatibility.compute_position_dependent_incompatibility(
+                    males=males,
+                    females=females,
+                    origins=origins,
+                    ORIGIN_TRACKING=self.ORIGIN_TRACKING,
+                    ORIGIN_INCOMPATIBILITY_REPRODUCTIVE_PENALTY=self.ORIGIN_INCOMPATIBILITY_REPRODUCTIVE_PENALTY,
+                )
+            )
+            logging.debug(f"Number of pairs after origin incompatibility: {len(males)}")
+
+            # TODO Make more efficient by skipping individuals which are not mating due to origin incompatibility
             if self.RECOMBINATION_RATE > 0:
-                n_recombination_sites, chiasmata_list = get_recombination_parameters(
+                n_recombination_sites, chiasmata_list = recombination.get_recombination_parameters(
                     genomes, self.RECOMBINATION_RATE
                 )
-                genomes = recombination_via_pairs(
+                genomes = recombination.recombination_via_pairs(
                     genomes, n_recombination_sites, chiasmata_list
                 )
                 if origins is not None:
-                    origins = recombination_via_pairs(
+                    origins = recombination.recombination_via_pairs(
                         origins, n_recombination_sites, chiasmata_list
                     )
 
-            males, females, n_pairs, which_male_gamete, which_female_gamete = (
-                get_mating_pairs(parental_sexes)
-            )
             ages = ages[females]
             muta_prob = muta_prob[females]
 
-            genomes = pairing(
-                Genomes(genomes),
-                males,
-                females,
-                n_pairs,
+            assert len(males) == len(
+                females
+            ), "Number of successfully reproducing males and females must be equal"
+            which_male_gamete, which_female_gamete = pairing.get_which_gametes(
+                n_pairs=len(males)
+            )
+
+            genomes = pairing.pair(
+                bitarray=Genomes(genomes),
+                males=males,
+                females=females,
                 which_male_gamete=which_male_gamete,
                 which_female_gamete=which_female_gamete,
             )
             if origins is not None:
-                origins = pairing(
-                    Origins(origins),
-                    males,
-                    females,
-                    n_pairs,
+                origins = pairing.pair(
+                    bitarray=Origins(origins),
+                    males=males,
+                    females=females,
                     which_male_gamete=which_male_gamete,
                     which_female_gamete=which_female_gamete,
                 )

@@ -4,7 +4,7 @@ from aegis_sim import variables
 from aegis_sim.utilities.funcs import profile_time
 
 
-def recombination(genomes, RECOMBINATION_RATE):
+def recombine(genomes, RECOMBINATION_RATE):
     """Return recombined chromatids."""
 
     if RECOMBINATION_RATE == 0:
