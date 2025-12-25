@@ -22,10 +22,13 @@ class Interpreter:
         self.binary_weights = binary_weights / binary_weights.sum()
 
         # Parameters for the binary switch interpreter
+        # e.g. when BITS_PER_LOCUS is 4, binary_switch_weights are [4/7, 2/7, 1/7, 0]
         binary_switch_weights = 2 ** np.arange(self.BITS_PER_LOCUS)[::-1]
         binary_switch_weights[-1] = 0  # Switch bit does not add to locus value
-        self.binary_switch_weights = binary_switch_weights / binary_switch_weights.sum()
-        # e.g. when BITS_PER_LOCUS is 4, binary_switch_weights are [4/7, 2/7, 1/7, 0]
+        if self.BITS_PER_LOCUS > 1:
+            self.binary_switch_weights = binary_switch_weights / binary_switch_weights.sum()
+        else:
+            self.binary_switch_weights = binary_switch_weights
 
         # Parameters for the linear interpreter
         linear_weights = np.arange(self.BITS_PER_LOCUS)[::-1] + 1
