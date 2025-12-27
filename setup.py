@@ -54,6 +54,7 @@ setuptools.setup(
             "black",
             "tabulate",
             "pdoc",
+            "pytest-cov",
             # "dash[testing]",  # GUI
         ]
     },
