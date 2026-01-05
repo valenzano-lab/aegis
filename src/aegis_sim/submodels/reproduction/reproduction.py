@@ -33,6 +33,7 @@ class Reproducer:
         mutator,
         ORIGIN_TRACKING,
         ORIGIN_INCOMPATIBILITY_REPRODUCTIVE_PENALTY,
+        ORIGIN_INCOMPATIBILITY_MODE,
     ):
         self.RECOMBINATION_RATE = RECOMBINATION_RATE
         self.REPRODUCTION_MODE = REPRODUCTION_MODE
@@ -40,6 +41,7 @@ class Reproducer:
         self.ORIGIN_INCOMPATIBILITY_REPRODUCTIVE_PENALTY = (
             ORIGIN_INCOMPATIBILITY_REPRODUCTIVE_PENALTY
         )
+        self.ORIGIN_INCOMPATIBILITY_MODE = ORIGIN_INCOMPATIBILITY_MODE
         self.mutator: Mutator = mutator
 
     def generate_offspring_genomes(
@@ -51,15 +53,26 @@ class Reproducer:
             males, females = pairing.get_mating_pairs(parental_sexes)
             logging.debug(f"Number of pairs after pairing: {len(males)}")
 
-            males, females = (
-                origin_compatibility.compute_position_dependent_incompatibility(
-                    males=males,
-                    females=females,
-                    origins=origins,
-                    ORIGIN_TRACKING=self.ORIGIN_TRACKING,
-                    ORIGIN_INCOMPATIBILITY_REPRODUCTIVE_PENALTY=self.ORIGIN_INCOMPATIBILITY_REPRODUCTIVE_PENALTY,
+            if self.ORIGIN_INCOMPATIBILITY_MODE == "position_dependent":
+                males, females = (
+                    origin_compatibility.compute_position_dependent_incompatibility(
+                        males=males,
+                        females=females,
+                        origins=origins,
+                        ORIGIN_TRACKING=self.ORIGIN_TRACKING,
+                        ORIGIN_INCOMPATIBILITY_REPRODUCTIVE_PENALTY=self.ORIGIN_INCOMPATIBILITY_REPRODUCTIVE_PENALTY,
+                    )
                 )
-            )
+            elif self.ORIGIN_INCOMPATIBILITY_MODE == "position_independent":
+                males, females = (
+                    origin_compatibility.compute_position_independent_incompatibility(
+                        males=males,
+                        females=females,
+                        origins=origins,
+                        ORIGIN_TRACKING=self.ORIGIN_TRACKING,
+                        ORIGIN_INCOMPATIBILITY_REPRODUCTIVE_PENALTY=self.ORIGIN_INCOMPATIBILITY_REPRODUCTIVE_PENALTY,
+                    )
+                )
             logging.debug(f"Number of pairs after origin incompatibility: {len(males)}")
 
             # TODO Make more efficient by skipping individuals which are not mating due to origin incompatibility

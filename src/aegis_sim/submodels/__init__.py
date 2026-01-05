@@ -90,6 +90,7 @@ def init(self, parametermanager):
         mutator=mutator,
         ORIGIN_TRACKING=parametermanager.parameters.ORIGIN_TRACKING,
         ORIGIN_INCOMPATIBILITY_REPRODUCTIVE_PENALTY=parametermanager.parameters.ORIGIN_INCOMPATIBILITY_REPRODUCTIVE_PENALTY,
+        ORIGIN_INCOMPATIBILITY_MODE=parametermanager.parameters.ORIGIN_INCOMPATIBILITY_MODE,
     )
 
     # Genetic architecture

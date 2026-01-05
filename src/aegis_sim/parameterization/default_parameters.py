@@ -1109,6 +1109,16 @@ DEFAULT_PARAMETERS = {
         drange="[0, 1]",
         inrange=lambda x: 0 <= x <= 1,
     ),
+    "ORIGIN_INCOMPATIBILITY_MODE": Parameter(
+        key="ORIGIN_INCOMPATIBILITY_MODE",
+        name="",
+        domain="technical",
+        default="position_dependent",
+        info="Method for calculating origin incompatibility",
+        dtype=str,
+        drange="{position_dependent, position_independent}",
+        inrange=lambda x: x in ("position_dependent", "position_independent"),
+    ),
     "PHENOMAP_METHOD": Parameter(
         key="PHENOMAP_METHOD",
         name="",
