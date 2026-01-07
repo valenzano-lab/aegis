@@ -42,7 +42,7 @@ setuptools.setup(
         "platformdirs",
         "dash>=2.17.1",  # GUI
         "dash-bootstrap-components",  # GUI
-        "urllib3==1.26.19",
+        "urllib3==2.6.3",
         "psutil",
         "kaleido",  # for image export for dash figures TODO use a simpler method
         "numba",
