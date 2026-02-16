@@ -20,27 +20,26 @@ def start_from_terminal():
     logging.getLogger("numba").setLevel(logging.ERROR)
 
     if args.command == "sim":
-        resume_path = pathlib.Path(args.resume).absolute() if args.resume else None
+        config_path_str = validate_config_path(args.config_path)
+        config_path = pathlib.Path(config_path_str).absolute()
 
-        if resume_path is not None:
-            # Resume mode — no config_path, pickle_path, or overwrite needed
-            if args.pickle_path is not None:
-                print("Error: --pickle_path cannot be used with --resume.", file=sys.stderr)
-                sys.exit(1)
-            if args.overwrite:
-                print("Error: --overwrite cannot be used with --resume.", file=sys.stderr)
-                sys.exit(1)
+        if args.extend is not None and not args.resume:
+            print("Error: --extend can only be used with --resume (-r).", file=sys.stderr)
+            sys.exit(1)
+
+        if args.resume:
+            # Resume mode — derive output dir from config path
+            odir = config_path.parent / config_path.stem
             aegis_sim.run(
-                custom_config_path=None,
+                custom_config_path=config_path,
                 pickle_path=None,
                 overwrite=False,
                 custom_input_params={},
-                resume_path=resume_path,
+                resume_path=odir,
+                extend_steps=args.extend,
             )
         else:
             # Fresh or seed mode
-            config_path_str = validate_config_path(args.config_path)
-            config_path = pathlib.Path(config_path_str).absolute() if config_path_str else None
             pickle_path = pathlib.Path(args.pickle_path).absolute() if args.pickle_path else None
             aegis_sim.run(
                 custom_config_path=config_path,

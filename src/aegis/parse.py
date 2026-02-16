@@ -22,37 +22,45 @@ def get_parser():
     # subparser_sim
     subparser_sim = subparsers.add_parser("sim", help="run a simulation")
 
-    # Mutually exclusive: --resume vs (--config_path, --pickle_path, --overwrite)
-    sim_mode = subparser_sim.add_mutually_exclusive_group()
-
-    sim_mode.add_argument(
-        "-r",
-        "--resume",
-        type=str,
-        help="path to output directory to resume simulation from (uses latest checkpoint)",
-        default=None,
-    )
-
-    sim_mode.add_argument(
+    subparser_sim.add_argument(
         "-c",
         "--config_path",
         type=str,
-        help="path to config file",
-        default=None,
+        help="path to config file (always required)",
+        required=True,
     )
 
-    subparser_sim.add_argument(
-        "-p",
-        "--pickle_path",
-        type=str,
-        help="path to pickle file (seed mode)",
-        default=None,
-    )
-    subparser_sim.add_argument(
+    # -o, -p, -r are mutually exclusive
+    mode_group = subparser_sim.add_mutually_exclusive_group()
+
+    mode_group.add_argument(
         "-o",
         "--overwrite",
         action="store_true",
         help="overwrite old data with new simulation",
+        default=False,
+    )
+
+    mode_group.add_argument(
+        "-p",
+        "--pickle_path",
+        type=str,
+        help="path to pickle file (seed mode — new sim from saved population)",
+        default=None,
+    )
+
+    mode_group.add_argument(
+        "-r",
+        "--resume",
+        action="store_true",
+        help="resume simulation from latest checkpoint",
+        default=False,
+    )
+
+    subparser_sim.add_argument(
+        "--extend",
+        type=int,
+        help="extend a resumed simulation to this many total steps",
         default=None,
     )
 

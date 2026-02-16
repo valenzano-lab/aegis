@@ -10,6 +10,11 @@ CHECKPOINT_RATE parameter (in steps). When CHECKPOINT_RATE is 0 (the default),
 no checkpoints are saved. The checkpoint is written to ``<output_dir>/checkpoint``
 and overwritten each time, so only the latest state is kept on disk.
 
+An initial checkpoint is written before the simulation loop starts, so there
+is always something to resume from even if the program crashes on the first
+step. Subsequent checkpoints are written at the end of each step where
+``step % CHECKPOINT_RATE == 0``, overwriting the initial one.
+
 The save is atomic (write to a temp file, then rename) so a crash mid-write
 cannot corrupt the checkpoint.
 
@@ -35,22 +40,44 @@ Each checkpoint captures everything needed to reconstruct the simulation:
 - **custom_config_path**: path to the original config file, used to locate the
   output directory on resume
 
-Resuming from a checkpoint
---------------------------
-To resume, run::
+CLI usage
+---------
+``-c`` is always required. ``-r``, ``-o``, and ``-p`` are mutually exclusive::
 
-    python3 -m aegis sim -r <output_directory>
+    aegis sim -c config.yml              # fresh run
+    aegis sim -c config.yml -o           # fresh run, overwrite existing output
+    aegis sim -c config.yml -p pickle    # seed run (new sim from saved population)
+    aegis sim -c config.yml -r           # resume from checkpoint
+    aegis sim -c config.yml -r --extend 1500  # resume and extend to 1500 steps
 
-where ``<output_directory>`` is the simulation output folder (e.g.
-``temp/test_config``). AEGIS finds the checkpoint file in that directory
-and resumes from there.
+When ``-r`` is used and no output directory exists yet, AEGIS falls back to a
+fresh run. If the output directory exists but contains no checkpoint, an error
+is raised.
 
-This is mutually exclusive with ``-c`` (config), ``-o`` (overwrite), and
-``-p`` (pickle/seed). On resume, parameters are restored from the saved
-config, RNG states are set back, submodels are re-initialized, and all
-dynamic state (envdrift map, predator count, resource capacity, eggs) is
-injected. Recording continues in append mode — existing output files are
-not overwritten and headers are not re-written.
+Output truncation on resume
+----------------------------
+Between checkpoints, recorders append data to output files. If the sim crashes
+at step 783 but the last checkpoint was at step 700, the output files contain
+data for steps 700–783 that will be re-recorded on resume. To prevent
+duplicates, ``truncate_for_resume(checkpoint_step)`` is called during resume
+initialization. It:
+
+- Truncates per-step files (popsize, resources, eggs) to ``step - 1`` lines
+- Truncates rate-based files (progress, spectra, genotypes, phenotypes, popgen)
+  to the number of recordings that occurred before the checkpoint step, plus
+  any header lines
+- Deletes TE files whose collection window started at or after the checkpoint
+- Handles envdriftmap separately (uses ``step % rate == 0`` without the
+  step-1 special case)
+
+Snapshot files (feather format) are named by step number, so re-recording
+simply overwrites them. One-time files (config, summary) are also overwritten.
+
+Extending a simulation
+-----------------------
+``--extend N`` overrides ``STEPS_PER_SIMULATION`` to N after loading the
+checkpoint, allowing a completed simulation to continue beyond its original
+target. N must be greater than the checkpoint step.
 
 Checkpointing vs seeding
 -------------------------
