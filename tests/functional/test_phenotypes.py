@@ -1,7 +1,7 @@
 import pytest
 import logging
 import yaml
-from test_sim import test_experiment_path
+from tests.functional.conftest import test_experiment_path
 from aegis_sim import run
 
 logging.basicConfig(level=logging.INFO)
