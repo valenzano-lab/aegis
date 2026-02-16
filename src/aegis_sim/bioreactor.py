@@ -52,6 +52,7 @@ class Bioreactor:
         )  # TODO defers calculation of mutation rates; hacky
         recordingmanager.summaryrecorder.record_memuse()
         recordingmanager.terecorder.record(self.population.ages, "alive")
+        recordingmanager.checkpointrecorder.write(self.population, self.eggs)
 
     ###############
     # STEP LOGIC #

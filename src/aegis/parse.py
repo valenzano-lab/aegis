@@ -1,4 +1,17 @@
 import argparse
+import pathlib
+import sys
+
+
+def validate_config_path(path_str):
+    """Validate that a config path has a proper stem (not just an extension)."""
+    if path_str is None:
+        return None
+    p = pathlib.Path(path_str)
+    if p.stem == "" or p.stem.startswith("."):
+        print(f"Error: Config path '{path_str}' has no valid name (stem is empty or hidden).", file=sys.stderr)
+        sys.exit(1)
+    return path_str
 
 
 def get_parser():
@@ -8,18 +21,31 @@ def get_parser():
 
     # subparser_sim
     subparser_sim = subparsers.add_parser("sim", help="run a simulation")
-    subparser_sim.add_argument(
+
+    # Mutually exclusive: --resume vs (--config_path, --pickle_path, --overwrite)
+    sim_mode = subparser_sim.add_mutually_exclusive_group()
+
+    sim_mode.add_argument(
+        "-r",
+        "--resume",
+        type=str,
+        help="path to output directory to resume simulation from (uses latest checkpoint)",
+        default=None,
+    )
+
+    sim_mode.add_argument(
         "-c",
         "--config_path",
         type=str,
         help="path to config file",
         default=None,
     )
+
     subparser_sim.add_argument(
         "-p",
         "--pickle_path",
         type=str,
-        help="path to pickle file",
+        help="path to pickle file (seed mode)",
         default=None,
     )
     subparser_sim.add_argument(

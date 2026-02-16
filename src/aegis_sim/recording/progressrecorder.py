@@ -11,11 +11,12 @@ from aegis_sim.parameterization import parametermanager
 
 
 class ProgressRecorder(Recorder):
-    def __init__(self, odir: pathlib.Path):
+    def __init__(self, odir: pathlib.Path, resuming=False):
         self.odir = odir
         self.init_odir()
         self.time_start = time.time()
-        self.init_headers()
+        if not resuming:
+            self.init_headers()
 
     def init_headers(self):
         content = ("step", "ETA", "t1M", "runtime", "steps/min", "popsize")

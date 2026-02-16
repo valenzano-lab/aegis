@@ -17,6 +17,14 @@ class ParameterManager:
 
         self.parameters = self()
 
+    def init_from_config(self, final_config, custom_config_path):
+        """Initialize from a saved config dict (used when resuming from checkpoint)."""
+        self.custom_config_path = custom_config_path
+        self.custom_input_params = {}
+        self.final_config = final_config.copy()
+        self.parameters = types.SimpleNamespace(**final_config)
+        logging.info("Parameters restored from checkpoint.")
+
     def __call__(self):
         """
         Getting parameters from three sources:
