@@ -74,30 +74,42 @@ def test_get_record_structure(container):
 def test_get_log(container):
     result = container.get_log()
     assert isinstance(result, pd.DataFrame)
+    assert len(result) > 0
+    assert "step" in result.columns or result.shape[1] > 0
 
 
 def test_get_simple_log(container):
-    _ = container.get_simple_log()
+    result = container.get_simple_log()
+    assert result is not None
 
 
 def test_get_ticker(container):
-    _ = container.get_ticker()
+    result = container.get_ticker()
+    assert result is not None
+    assert len(result) == 19  # YYYY-MM-DD HH:MM:SS
 
 
 def test_get_config(container):
-    _ = container.get_config()
+    result = container.get_config()
+    assert isinstance(result, dict)
+    assert "STEPS_PER_SIMULATION" in result
+    assert result["STEPS_PER_SIMULATION"] == 100
 
 
 def test_get_final_config(container):
-    _ = container.get_final_config()
+    result = container.get_final_config()
+    assert isinstance(result, dict)
+    assert "STEPS_PER_SIMULATION" in result
 
 
 def test_get_output_summary(container):
-    _ = container.get_output_summary()
+    result = container.get_output_summary()
+    assert result is not None
 
 
 def test_get_input_summary(container):
-    _ = container.get_input_summary()
+    result = container.get_input_summary()
+    assert result is not None
 
 
 # --- Demography ---
@@ -134,54 +146,84 @@ def test_get_fert_observed_interval(container):
 # --- Population size ---
 
 def test_get_population_size_before_reproduction(container):
-    _ = container.get_population_size_before_reproduction()
+    result = container.get_population_size_before_reproduction()
+    assert isinstance(result, pd.DataFrame) or hasattr(result, '__len__')
+    assert len(result) == 100  # one entry per step
 
 
 def test_get_population_size_after_reproduction(container):
-    _ = container.get_population_size_after_reproduction()
+    result = container.get_population_size_after_reproduction()
+    assert len(result) == 100
 
 
 def test_get_egg_number_after_reproduction(container):
-    _ = container.get_egg_number_after_reproduction()
+    result = container.get_egg_number_after_reproduction()
+    assert len(result) == 100
 
 
 # --- Resources ---
 
 def test_get_resource_amount_before_scavenging(container):
-    _ = container.get_resource_amount_before_scavenging()
+    result = container.get_resource_amount_before_scavenging()
+    assert len(result) == 100
 
 
 def test_get_resource_amount_after_scavenging(container):
-    _ = container.get_resource_amount_after_scavenging()
+    result = container.get_resource_amount_after_scavenging()
+    assert len(result) == 100
 
 
 # --- Genomics / Phenomics ---
 
 def test_get_genotypes_intrinsic_snapshot(container):
-    _ = container.get_genotypes_intrinsic_snapshot(record_index=0)
-    _ = container.get_genotypes_intrinsic_snapshot(record_index=-1)
+    result = container.get_genotypes_intrinsic_snapshot(record_index=0)
+    assert isinstance(result, pd.DataFrame)
+    assert len(result) > 0, "Snapshot should contain at least one individual"
+
+    result_last = container.get_genotypes_intrinsic_snapshot(record_index=-1)
+    assert isinstance(result_last, pd.DataFrame)
+    assert len(result_last) > 0
 
 
 def test_get_phenotype_intrinsic_snapshot(container):
-    _ = container.get_phenotype_intrinsic_snapshot(record_index=0, trait=None)
-    _ = container.get_phenotype_intrinsic_snapshot(record_index=-1, trait=None)
+    result = container.get_phenotype_intrinsic_snapshot(record_index=0, trait=None)
+    assert isinstance(result, pd.DataFrame)
+    assert len(result) > 0
+
+    result_last = container.get_phenotype_intrinsic_snapshot(record_index=-1, trait=None)
+    assert len(result_last) > 0
 
 
 def test_get_demography_observed_snapshot(container):
-    _ = container.get_demography_observed_snapshot(record_index=0)
-    _ = container.get_demography_observed_snapshot(record_index=-1)
+    result = container.get_demography_observed_snapshot(record_index=0)
+    assert isinstance(result, pd.DataFrame)
+    assert len(result) > 0
+
+    result_last = container.get_demography_observed_snapshot(record_index=-1)
+    assert len(result_last) > 0
 
 
 def test_get_genotypes_intrinsic_interval(container):
-    _ = container.get_genotypes_intrinsic_interval()
+    result = container.get_genotypes_intrinsic_interval()
+    assert isinstance(result, pd.DataFrame)
+    assert len(result) > 0, "Interval genotypes should have data rows"
 
 
 def test_get_phenotype_intrinsic_interval_surv(container):
-    _ = container.get_phenotype_intrinsic_interval(trait="surv")
+    result = container.get_phenotype_intrinsic_interval(trait="surv")
+    assert isinstance(result, pd.DataFrame)
+    assert len(result) > 0
+    # Phenotype values should be in [0, 1] range
+    numeric_cols = result.select_dtypes(include="number")
+    if len(numeric_cols.columns) > 0:
+        assert numeric_cols.min().min() >= 0, "Phenotype values should be >= 0"
+        assert numeric_cols.max().max() <= 1, "Phenotype values should be <= 1"
 
 
 def test_get_phenotype_intrinsic_interval_repr(container):
-    _ = container.get_phenotype_intrinsic_interval(trait="repr")
+    result = container.get_phenotype_intrinsic_interval(trait="repr")
+    assert isinstance(result, pd.DataFrame)
+    assert len(result) > 0
 
 
 def test_get_phenotype_intrinsic_interval_optional_traits(container):

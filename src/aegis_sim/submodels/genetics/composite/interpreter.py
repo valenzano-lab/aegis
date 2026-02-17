@@ -105,7 +105,7 @@ class Interpreter:
         )  # If the locus is turned on, make the value in the output array be the binary value
         return values
 
-    def _uniform(loci):
+    def _uniform(self, loci):
         """Return normalized sum of bits.
 
         Medium resolution (can produce bits_per_locus+1 different numbers).

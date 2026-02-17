@@ -73,10 +73,10 @@ class TestGenomesGet:
         g = Genomes(arr)
         mask = np.array([True, False, True])
         result = g.get(individuals=mask)
-        assert result.shape[0] == 2
+        assert len(result) == 2
 
-    def test_get_returns_array_not_genomes(self):
-        """get() returns a plain ndarray, not a Genomes instance."""
+    def test_get_returns_array(self):
+        """get() returns a raw ndarray for numpy compatibility."""
         g = Genomes(np.ones((3, 2), dtype=bool))
         result = g.get(individuals=np.array([0]))
         assert isinstance(result, np.ndarray)

@@ -28,29 +28,6 @@ pytest tests/functional/test_checkpoint_resume.py::test_resume_no_duplicate_rows
 pytest tests/ -x -v
 ```
 
-## Structure
-
-```
-tests/
-├── conftest.py                          # shared fixtures (configs, write helper)
-├── unit/                                # fast, isolated tests
-│   ├── test_checkpoint.py               # Checkpoint save/load/find
-│   └── test_truncation.py               # _count_recordings, _truncate_file
-└── functional/                          # end-to-end simulation tests
-    ├── conftest.py                      # shared experiment path for legacy tests
-    ├── test_basic_sim.py                # fresh sim output files and line counts
-    ├── test_checkpoint_resume.py        # checkpoint + resume, no duplicate data
-    ├── test_seed_mode.py                # seed from pickle
-    ├── test_cli.py                      # CLI arg parsing and validation
-    ├── test_sim.py                      # basic sim smoke test
-    ├── test_frailty.py                  # frailty modifier parameter sweep
-    ├── test_maturity.py                 # maturation age parameter sweep
-    ├── test_phenotypes.py               # genome size and bits per locus
-    ├── test_resources.py                # starvation parameters
-    ├── test_gui.py                      # Dash app serves correctly
-    └── test_zcontainer.py               # Container class reads sim output
-```
-
 ## Notes
 
 - Unit tests are fast and don't run simulations.
@@ -59,3 +36,22 @@ tests/
 - Legacy tests write output to `tests/functional/experiments/` which is gitignored.
 - `test_zcontainer.py` depends on experiment output from other functional tests,
   so it should run after them (the `z` prefix ensures alphabetical ordering).
+
+## What's still missing
+
+See `tests/TODO.md` for the full prioritized list. Summary of gaps:
+
+- `Phenotypes` — clip_array_to_01, extract(), gaussian_smoothing()
+- `ParameterManager` — init_from_config, read_config_file, validate()
+- `Trait` — construction and validation
+- `Resources` — replenish, reduce, scavenge
+- `Starvation` — get_mask_kill (deficit mode, consecutive mode, max cap)
+- `MatingManager` — pair_up_polygamously
+- `SexSystem` — get_sex
+- `Mutator._mutate_by_index` — the fast-path mutation method
+- `Infection.__call__` — full SIR step
+- `CompositeArchitecture` / `ModifyingArchitecture` — coupled to parameterization; needs integration fixture
+- `GPM` / `GPM_decoder` — coupled to parameterization
+- `PopgenStats` — theta_w, theta_pi, tajimas_d, SFS, Fay & Wu (sample-based stats)
+- `utilities/analysis/*` — survival, reproduction, leslie, genome analysis functions
+- Functional tests — most `test_zcontainer.py` methods still lack data correctness assertions

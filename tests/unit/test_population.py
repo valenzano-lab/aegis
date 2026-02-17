@@ -83,7 +83,7 @@ class TestPopulationGetitem:
 
     NOTE: All tests here are xfail because __getitem__ passes raw ndarrays
     from Genomes.get() / Phenotypes.get() into Population.__init__, which
-    asserts isinstance(phenotypes, Phenotypes). This is a real bug.
+    asserts isinstance(phenotypes, Phenotypes). This is a known bug.
     """
 
     @pytest.mark.xfail(
