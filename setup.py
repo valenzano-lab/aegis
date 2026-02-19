@@ -51,6 +51,7 @@ setuptools.setup(
         "dev": [
             "pytest>=7.0",
             "pytest-xdist",
+            "hypothesis",
             "flake8",
             "black",
             "tabulate",

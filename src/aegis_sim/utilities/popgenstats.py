@@ -11,11 +11,11 @@ class PopgenStats:
     def __init__(self):
         self.pop_size_history = []
 
-    def record_pop_size_history(self, genomes):
+    def record_pop_size_history(self, pop_size):
         """Records population sizes at last 1000 steps"""
         if len(self.pop_size_history) >= 1000:
             del self.pop_size_history[0]
-        self.pop_size_history.append(len(genomes))
+        self.pop_size_history.append(pop_size)
 
     def calc(self, input_genomes, mutation_rates):
         """Calculates all popgen metrics

@@ -147,7 +147,7 @@ class TestPopgenStatsCalc:
         ps = PopgenStats()
         n = genomes_4d.shape[0]
         for _ in range(10):
-            ps.record_pop_size_history(np.empty(n))
+            ps.record_pop_size_history(n)
         params = SimpleNamespace(POPGENSTATS_SAMPLE_SIZE=0)
         with patch("aegis_sim.utilities.popgenstats.parametermanager") as mock_pm:
             mock_pm.parameters = params

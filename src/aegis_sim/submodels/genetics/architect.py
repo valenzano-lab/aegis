@@ -38,7 +38,7 @@ class Architect:
         """Translate genomes into an array of phenotypes probabilities."""
 
         # Apply the envdrift
-        envgenomes = self.envdrift.call(genomes.get_array())
+        envgenomes = self.envdrift.call(genomes.unpack())
         assert envgenomes.shape == genomes.shape()  # envgenome retains the same shape as genome array
 
         pheno_array = self.architecture.compute(envgenomes)

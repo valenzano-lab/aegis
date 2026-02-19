@@ -25,7 +25,7 @@ path = test_experiment_path.parent / "test_sim.yml"
             # "G_surv_initgeno": 0,
             # "G_repr_initgeno": 0,
         }
-        for mgs in [2, 100, 999, 1000]  # TODO fails for 1; is that wrong?
+        for mgs in [8, 104, 999, 1000]  # genome sizes not divisible by 8 are padded automatically
     ],
 )
 def test_MODIF_GENOME_SIZE(custom_input_params):

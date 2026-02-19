@@ -23,6 +23,14 @@ class ModifyingArchitecture:
     def __init__(self, PHENOMAP, AGE_LIMIT, MODIF_GENOME_SIZE):
         self.PHENOMAP = PHENOMAP
 
+        if MODIF_GENOME_SIZE % 8 != 0:
+            import logging
+            logging.warning(
+                f"MODIF_GENOME_SIZE ({MODIF_GENOME_SIZE}) is not divisible by 8. "
+                f"Packed bit storage will pad to the next multiple of 8. "
+                f"For optimal performance, use a genome size divisible by 8."
+            )
+
         self.gpm_decoder = GPM_decoder(PHENOMAP)
 
         self.length = MODIF_GENOME_SIZE

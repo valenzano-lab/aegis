@@ -2,17 +2,21 @@
 
 Profiled February 2026. Results from macOS, Python 3.12, NumPy + Numba.
 
+## Summary
+
+| Config | Original | Optimized | Speedup |
+|--------|----------|-----------|---------|
+| Default (composite, BPL=1, pop ~550) | 4.93ms/step | 0.92ms/step | 5.3x |
+| Hard nemaap (modifying, sexual, 2000 loci, R=25600, pop ~6000) | 16.05ms/step (8.9h for 2M steps) | 6.3ms/step (3.5h for 2M steps) | 2.5x |
+
 ## Optimizations Applied
 
 ### 1. Recombination (`recombination_via_pairs_numba`)
 
-The original numba function swapped genome slices with `.copy()` for each chiasma,
-scaling as O(n_chiasmata × n_sites). Replaced with a difference-array + prefix-sum
-approach that computes the net swap state per site in O(n_chiasmata + n_sites).
+Replaced slice-copy swap pattern with difference-array + prefix-sum approach.
+O(n_chiasmata × n_sites) → O(n_chiasmata + n_sites).
 
 File: `src/aegis_sim/submodels/reproduction/recombination.py`
-
-Microbenchmark (500 offspring, 250 loci):
 
 | BITS_PER_LOCUS | Original | Optimized | Speedup |
 |----------------|----------|-----------|---------|
@@ -21,110 +25,145 @@ Microbenchmark (500 offspring, 250 loci):
 
 ### 2. Buffered I/O for per-step recorders
 
-`PopsizeRecorder` and `ResourcesRecorder` were opening/closing files 5 times per step.
-Now they buffer writes in memory and flush every 100 entries or at checkpoint time.
+`PopsizeRecorder` and `ResourcesRecorder` buffer writes in memory, flushing every
+100 entries or at checkpoint time. Eliminates 5 file open/close cycles per step.
 
-Files:
-- `src/aegis_sim/recording/popsizerecorder.py`
-- `src/aegis_sim/recording/resourcerecorder.py`
-- `src/aegis_sim/recording/checkpointrecorder.py` (flushes buffers before saving)
-- `src/aegis_sim/__init__.py` (flushes buffers at end of simulation)
+Files: `popsizerecorder.py`, `resourcerecorder.py`, `checkpointrecorder.py`, `__init__.py`
 
-Recording overhead dropped from ~86ms to ~4ms per 200 steps (~21x).
+Recording overhead: ~86ms → ~4ms per 200 steps (21x).
 
 ### 3. Diploid-to-haploid conversion (`ploider.diploid_to_haploid`)
 
-The original code created three intermediate arrays (`logical_or` → `astype(float64)`
-→ `logical_xor` → scattered mask write). Replaced with a parallel numba kernel that
-reads both chromatids once and writes float32 output directly, using `prange` over
-individuals.
+Replaced `logical_or` + `astype(float64)` + `logical_xor` + scattered mask write
+with a parallel numba kernel. Single pass, float32 output, `prange` over individuals.
 
 File: `src/aegis_sim/submodels/genetics/ploider.py`
 
-| Version | Time (6000 ind, 2000 loci) | Speedup |
-|---------|---------------------------|---------|
-| Original (or + xor + scatter, f64) | 46.9ms | 1x |
-| np.where (f64) | 12.0ms | 3.9x |
-| numba prange (f32) | 2.4ms | 19.5x |
+46.9ms → 2.4ms per call at 6000 individuals (19.5x).
 
 ### 4. Phenodiff kernel (`apply_phenolist_numba`)
 
-The original kernel pre-gathered `vec_states = vectors[:, vec_indices]` (allocating a
-72MB temporary for 6000 individuals × 3000 phenolist entries), then ran a single-threaded
-double loop. Replaced with a parallel kernel that indexes directly into `vectors`,
-eliminating the temporary and parallelizing over individuals with `prange`. Phenolist
-index arrays are now cached on the GPM object (resolved once, reused every call).
+Eliminated 72MB temporary array (`vec_states = vectors[:, vec_indices]`). Kernel now
+indexes directly into `vectors` with `prange` over individuals. Phenolist index arrays
+cached on the GPM object.
 
 File: `src/aegis_sim/submodels/genetics/modifying/gpm.py`
 
-| Version | Time (6000 ind, 3000 phenolist) | Speedup |
-|---------|--------------------------------|---------|
-| Original (gather + sequential) | 108.9ms | 1x |
-| Parallel, no gather | 3.0ms | 36x |
+108.9ms → 3.0ms per call at 6000 individuals (36x).
 
 ### 5. Genomes init skip unnecessary astype
 
-`Genomes.__init__` always called `.astype(np.bool_)` even when the input was already
-bool, creating an unnecessary copy. Now checks dtype first.
+`Genomes.__init__` checks dtype before calling `.astype(np.bool_)`, skipping the copy
+when input is already bool.
 
 File: `src/aegis_sim/dataclasses/genomes.py`
 
-Minor saving (~0.3-0.5ms/step), but zero-risk and eliminates wasteful allocations.
+~0.3-0.5ms/step saved. Zero risk.
 
-## End-to-End Results
+### 6. Pairing gamete assembly (`pairing`)
 
-### Default config (composite, BPL=1, pop ~550)
+Replaced 4 intermediate array allocations (two `genomes.get` + two gamete selections +
+copy into children) with a single numba `prange` kernel that reads parent chromatids
+directly and writes children in one pass.
 
-Per-step time: 4.93ms → 0.92ms (5.3x overall speedup)
+File: `src/aegis_sim/submodels/reproduction/pairing.py`
 
-### Hard config: nemaap (modifying, sexual, 2000 loci, R=25600, pop ~6000)
+3.86ms → 1.19ms per call at 3000 pairs (3.2x).
 
-| Metric | Original | Optimized | Speedup |
-|--------|----------|-----------|---------|
-| Per step | 16.05ms | 8.4ms | 1.9x |
-| 2M step runtime | 8.9 hours | 4.7 hours | 1.9x |
+### 7. Packed bit genome storage (`Genomes`)
 
-Phase breakdown after all optimizations:
+Replaced `np.bool_` genome storage (1 byte per bit) with `np.uint8` packed storage
+(8 bits per byte). The `Genomes` class stores a packed array internally; `keep()`,
+`add()`, `__getitem__()` operate on packed data directly. `get()`, `unpack()`,
+`flatten()`, `get_array()` transparently unpack to bool for downstream modules.
 
-| Phase | Avg (ms) | % |
-|-------|----------|---|
-| Reproduction | 4.37 | 51.9% |
-| Hatching | 1.65 | 19.6% |
-| Mortalities | 1.40 | 16.6% |
-| Aging | 0.90 | 10.7% |
-| Recording | 0.09 | 1.1% |
+Files: `src/aegis_sim/dataclasses/genomes.py`, `src/aegis_sim/dataclasses/legacy_genomes.py`
 
-## Remaining Opportunities (diminishing returns)
+8x memory reduction for genome arrays. At 6000 individuals: 24MB → 3MB.
+Mortality (`keep`) and hatching (`add`) ~40-70% faster due to smaller copies.
 
-The remaining time is spread across many small memory-bandwidth-bound operations.
-Further optimization would require either significant refactors or architectural changes.
+The original `Genomes` class is preserved as `LegacyGenomes` for permanent
+reference testing. Non-divisible-by-8 genome sizes are handled with padding
+(warning logged).
 
-| Opportunity | Est. saving | Effort | Risk | Notes |
-|---|---|---|---|---|
-| `genomes.add` pre-allocated buffer | ~1ms/step | High | Medium | Refactor Genomes + Population to manage capacity/length |
-| `pairing` fancy indexing | ~0.5ms/step | Medium | Low | Fuse two `genomes.get` + gamete selection into one kernel |
-| `genomes.keep` boolean mask | ~0.3ms/step | Low | Low | Minor — callers already use bool masks in some cases |
-| `phenotypes.extract` scratch buffer | ~0.2ms/step | Low | Low | Reuse pre-allocated array instead of `np.zeros` each call |
+## Hard Config Final Breakdown (6.3ms/step)
+
+| Phase | Avg (ms) | % | Dominant cost |
+|-------|----------|---|---------------|
+| Reproduction | ~4.2 | ~68% | recombination, genomes.get (unpack) |
+| Hatching | ~1.0 | ~16% | ploider + phenodiff |
+| Mortalities | ~0.7 | ~11% | genomes.keep (packed, fast) |
+| Aging | ~0.2 | ~3% | genomes.keep (packed, fast) |
+| Recording | ~0.1 | ~1% | buffered, negligible |
+
+## Population Scaling (packed bit genomes, modifying architecture, 2000 loci)
+
+| Population | Genome memory | ms/step | 2M steps |
+|-----------|--------------|---------|----------|
+| 1,000 | 0.8 MB | 2.5ms | 1.4h |
+| 5,000 | 2.5 MB | 5.6ms | 3.1h |
+| 10,000 | 4.0 MB | 7.0ms | 3.9h |
+| 25,000 | 8.6 MB | 11.6ms | 6.4h |
+| 50,000 | 16.2 MB | 18.8ms | 10.5h |
+
+Scaling is roughly linear with population size. Without packed storage, 50K
+individuals would require ~130MB for genomes alone.
+
+## What's Left (diminishing returns)
+
+The remaining time is dominated by the `get()` unpack cost in reproduction:
+
+| Operation | What it does | Why it's hard to optimize further |
+|-----------|-------------|-----------------------------------|
+| `genomes.get` + unpack | Extracts parental genomes as bool for recombination/mutation | Would need recombination and mutation to work directly on packed bytes |
+| `genomes.keep` | Filters packed array after each kill | Already fast on packed data |
+| `genomes.add` | Concatenates packed arrays for offspring | Already fast on packed data |
+
+### Future: packed-native mutation and recombination
+
+Tasks 4 and 5 from the packed-bit-genomes spec describe adapting mutation (`by_index`
+with XOR masks on packed bytes) and recombination (byte-level swaps with bit masking
+at crossover boundaries) to work directly on packed data. This would eliminate the
+`get()` unpack cost in reproduction (~4ms/step), but requires careful bit-level
+programming and thorough testing. See `.kiro/specs/packed-bit-genomes/design.md`
+for the detailed design.
 
 ### Why mortality batching was not pursued
 
 Mortality sources have sequential dependencies — infection mutates population state,
 predation uses Verhulst dynamics based on current prey count, starvation depends on
-current population size for resource demand. `MORTALITY_ORDER` is configurable precisely
-because ordering matters biologically. Batching kills would change simulation semantics.
+current population size for resource demand. `MORTALITY_ORDER` is configurable because
+ordering matters biologically.
 
-### Next-level optimizations (large undertakings)
+### Next-level optimizations (architectural changes)
 
-- Packed bit arrays (8 bools per byte) to reduce genome memory 8x
-- C/Cython extensions for the genome array operations
-- GPU acceleration for the phenotype computation pipeline
+#### Pre-allocated population buffer
+
+Instead of `np.concatenate` to add offspring and fancy-index to remove dead, maintain
+a fixed-capacity buffer with a live-index list. Adding offspring writes into empty
+slots. Killing marks slots as dead. Compaction happens once per step or less.
+
+This eliminates repeated full-array copies but doesn't reduce the per-element cost.
+More invasive because it changes how every module accesses population data
+(indirection through live indices or views).
+
+Estimated impact: eliminates ~1-2ms/step of copy overhead. More impactful at very
+large populations where allocation/copy dominates.
+
+## Known Technical Debt
+
+### Dual RNG streams
+
+The codebase uses both the legacy global RNG (`np.random.*`) and the new-style
+Generator (`variables.rng`). Both are seeded from `RANDOM_SEED` so simulations are
+reproducible, but the split is unprincipled — there's no clear rule for which modules
+use which. See TODO in `src/aegis_sim/variables.py`.
 
 ## Profiling Scripts
 
 - `profile_sim.py` — cProfile of the full simulation loop
 - `profile_breakdown.py` — Wall-clock timing of each phase within `run_step()`
 
-Usage:
 ```
 python profiler/profile_sim.py
 python profiler/profile_breakdown.py

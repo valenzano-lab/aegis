@@ -27,6 +27,15 @@ class CompositeArchitecture:
         self.length = self.n_loci * BITS_PER_LOCUS
         self.AGE_LIMIT = AGE_LIMIT
 
+        total_bits = self.n_loci * BITS_PER_LOCUS
+        if total_bits % 8 != 0:
+            import logging
+            logging.warning(
+                f"Total genome bits per chromatid ({total_bits} = {self.n_loci} loci × {BITS_PER_LOCUS} BPL) "
+                f"is not divisible by 8. Packed bit storage will pad to the next multiple of 8. "
+                f"For optimal performance, adjust AGE_LIMIT, evolvable traits, or BITS_PER_LOCUS."
+            )
+
         self.evolvable = [trait for trait in parameterization.traits.values() if trait.evolvable]
 
         self.interpreter = Interpreter(

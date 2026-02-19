@@ -35,12 +35,14 @@ class TestGenomesInit:
         assert g.array[0, 1] == True
         assert g.array[0, 2] == True  # 0.5 is truthy
 
-    def test_bool_input_no_unnecessary_copy(self):
-        """Bool input should not allocate a new array (no-copy optimization)."""
+    def test_bool_input_packed_correctly(self):
+        """Bool input is packed into uint8 storage and unpacks to original."""
         arr = np.array([[True, False], [False, True]], dtype=np.bool_)
         g = Genomes(arr)
-        # Should share memory (no copy made)
-        assert np.shares_memory(g.array, arr)
+        # Internal storage should be packed uint8
+        assert g._packed.dtype == np.uint8
+        # Unpacking should recover the original values
+        np.testing.assert_array_equal(g.array, arr)
 
 
 class TestGenomesLen:

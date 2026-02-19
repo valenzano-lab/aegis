@@ -1,0 +1,38 @@
+"""Legacy bool-based genome storage.
+
+This is an exact copy of the original Genomes class before the packed bit
+optimization. It is kept permanently as a reference implementation for
+side-by-side validation testing. It is NOT used in production simulation code.
+"""
+
+import numpy as np
+
+
+class LegacyGenomes:
+    def __init__(self, array):
+        self.array = array if array.dtype == np.bool_ else array.astype(np.bool_)
+
+    def __len__(self):
+        return len(self.array)
+
+    def flatten(self):
+        return self.array.reshape(len(self), -1)
+
+    def get(self, individuals):
+        return self.array[individuals]
+
+    def add(self, genomes):
+        self.array = np.concatenate([self.array, genomes.array])
+
+    def keep(self, individuals):
+        self.array = self.array[individuals]
+
+    def get_array(self):
+        return self.array.copy()
+
+    def shape(self):
+        return self.array.shape
+
+    def __getitem__(self, key):
+        new_array = self.array[key]
+        return LegacyGenomes(new_array)
