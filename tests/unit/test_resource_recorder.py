@@ -19,6 +19,7 @@ class TestWriteBeforeScavenging:
         with patch("aegis_sim.recording.resourcerecorder.resources") as mock_res:
             mock_res.capacity = 500.0
             rec.write_before_scavenging()
+        rec.flush_all()
         content = (tmp_path / "resources_before_scavenging.csv").read_text()
         assert content == "500.0\n"
 
@@ -30,6 +31,7 @@ class TestWriteBeforeScavenging:
             rec.write_before_scavenging()
             mock_res.capacity = 80
             rec.write_before_scavenging()
+        rec.flush_all()
         lines = (tmp_path / "resources_before_scavenging.csv").read_text().strip().splitlines()
         assert lines == ["100", "80"]
 
@@ -39,6 +41,7 @@ class TestWriteBeforeScavenging:
         with patch("aegis_sim.recording.resourcerecorder.resources") as mock_res:
             mock_res.capacity = 1000
             rec.write_before_scavenging()
+        rec.flush_all()
         content = (tmp_path / "resources_before_scavenging.csv").read_text()
         assert content == "1000\n"
 
@@ -52,5 +55,6 @@ class TestWriteAfterScavenging:
         with patch("aegis_sim.recording.resourcerecorder.resources") as mock_res:
             mock_res.capacity = 350.5
             rec.write_after_scavenging()
+        rec.flush_all()
         content = (tmp_path / "resources_after_scavenging.csv").read_text()
         assert content == "350.5\n"

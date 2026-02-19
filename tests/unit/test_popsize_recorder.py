@@ -15,6 +15,7 @@ class TestPopsizeWrite:
         """First write creates the file with one line."""
         rec = PopsizeRecorder(odir=tmp_path)
         rec.write(42, "test.csv")
+        rec.flush_all()
         content = (tmp_path / "test.csv").read_text()
         assert content == "42\n"
 
@@ -24,6 +25,7 @@ class TestPopsizeWrite:
         rec.write(10, "test.csv")
         rec.write(20, "test.csv")
         rec.write(30, "test.csv")
+        rec.flush_all()
         lines = (tmp_path / "test.csv").read_text().strip().splitlines()
         assert lines == ["10", "20", "30"]
 
@@ -35,5 +37,6 @@ class TestEggNumAfterReproduction:
         """When eggs is None, writes 0."""
         rec = PopsizeRecorder(odir=tmp_path)
         rec.write_egg_num_after_reproduction(eggs=None)
+        rec.flush_all()
         content = (tmp_path / "eggnum_after_reproduction.csv").read_text()
         assert content == "0\n"

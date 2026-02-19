@@ -85,13 +85,40 @@ def recombination(genomes, RECOMBINATION_RATE):
 
 @njit
 def recombination_via_pairs_numba(flat_genomes, n_recombination_sites, chiasmata_list):
-    for i in range(len(flat_genomes)):
-        for j in range(n_recombination_sites[i]):
-            chiasma = chiasmata_list[i, j]
-            flat_genomes[i, 0, :chiasma], flat_genomes[i, 1, :chiasma] = (
-                flat_genomes[i, 1, :chiasma].copy(),
-                flat_genomes[i, 0, :chiasma].copy(),
-            )
+    """Optimized recombination using difference-array approach.
+
+    Instead of copying genome slices for each chiasma (O(n_sites) per chiasma),
+    we compute the net swap state per site using a difference array and prefix sum.
+    Each chiasma at position c toggles sites [0, c), so we track toggle counts
+    and only swap sites toggled an odd number of times.
+
+    This avoids the expensive slice-copy pattern that scaled poorly with genome size.
+    """
+    n_individuals = len(flat_genomes)
+    n_sites = flat_genomes.shape[2]
+
+    for i in range(n_individuals):
+        n_reco = n_recombination_sites[i]
+        if n_reco == 0:
+            continue
+
+        # Build difference array for toggle counts
+        counts = np.zeros(n_sites + 1, dtype=np.int32)
+        for j in range(n_reco):
+            c = chiasmata_list[i, j]
+            counts[0] += 1
+            if c < n_sites + 1:
+                counts[c] -= 1
+
+        # Prefix sum and swap where toggled odd number of times
+        running = np.int32(0)
+        for k in range(n_sites):
+            running += counts[k]
+            if running % 2 == 1:
+                tmp = flat_genomes[i, 0, k]
+                flat_genomes[i, 0, k] = flat_genomes[i, 1, k]
+                flat_genomes[i, 1, k] = tmp
+
     return flat_genomes
 
 

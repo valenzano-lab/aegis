@@ -1,7 +1,6 @@
 ### Custom ###
 
 tests/test_sim/*
-profiler
 ipynb
 temp
 .temp

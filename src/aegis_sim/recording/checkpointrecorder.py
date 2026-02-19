@@ -29,9 +29,14 @@ class CheckpointRecorder(Recorder):
         """
         from aegis_sim.checkpoint import Checkpoint
         from aegis_sim import submodels
+        from aegis_sim.recording import recordingmanager
 
         if skip("CHECKPOINT_RATE"):
             return
+
+        # Flush buffered recorders so on-disk files are consistent with the checkpoint
+        recordingmanager.popsizerecorder.flush_all()
+        recordingmanager.resourcerecorder.flush_all()
 
         step = variables.steps
         checkpoint = Checkpoint.capture(population, eggs, variables, submodels, parametermanager)

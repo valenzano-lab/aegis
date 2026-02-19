@@ -5,11 +5,27 @@ from aegis_sim.dataclasses.population import Population
 class PopsizeRecorder(Recorder):
     def __init__(self, odir):
         self.odir = odir
+        self._buffers = {}  # filename -> list of lines
 
     def write(self, popsize: int, filename: str):
-        path = self.odir / filename
-        with open(path, "a") as file_:
-            file_.write(f"{popsize}\n")
+        if filename not in self._buffers:
+            self._buffers[filename] = []
+        self._buffers[filename].append(str(popsize))
+        # Flush every 100 entries to avoid unbounded memory growth
+        if len(self._buffers[filename]) >= 100:
+            self._flush(filename)
+
+    def _flush(self, filename):
+        if filename in self._buffers and self._buffers[filename]:
+            path = self.odir / filename
+            with open(path, "a") as file_:
+                file_.write("\n".join(self._buffers[filename]) + "\n")
+            self._buffers[filename] = []
+
+    def flush_all(self):
+        """Flush all buffered data to disk."""
+        for filename in list(self._buffers.keys()):
+            self._flush(filename)
 
     def write_before_reproduction(self, population):
         """

@@ -174,6 +174,8 @@ def sim(bioreactor):
         variables.steps += 1
 
     # postsim
+    recordingmanager.popsizerecorder.flush_all()
+    recordingmanager.resourcerecorder.flush_all()
     recordingmanager.summaryrecorder.write_output_summary()
     logging.info("Simulation finished.")
     recordingmanager.ticker.stop_process()
