@@ -84,9 +84,11 @@ def test_get_simple_log(container):
 
 
 def test_get_ticker(container):
-    result = container.get_ticker()
-    assert result is not None
-    assert len(result) == 19  # YYYY-MM-DD HH:MM:SS
+    ticker = container.get_ticker()
+    assert ticker is not None
+    timestamp = ticker.read()
+    assert timestamp is not None
+    assert len(timestamp) == 19  # YYYY-MM-DD HH:MM:SS
 
 
 def test_get_config(container):
