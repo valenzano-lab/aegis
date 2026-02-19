@@ -5,7 +5,7 @@ import numpy as np
 
 class Genomes:
     def __init__(self, array):
-        self.array = array.astype(np.bool_)
+        self.array = array if array.dtype == np.bool_ else array.astype(np.bool_)
 
     def __len__(self):
         return len(self.array)

@@ -26,6 +26,22 @@ class TestGenomesInit:
         g = Genomes(arr)
         np.testing.assert_array_equal(g.array, arr)
 
+    def test_float_input_coerced(self):
+        """Float input is cast to bool (nonzero → True)."""
+        arr = np.array([[0.0, 1.0, 0.5], [0.0, 0.0, 0.0]])
+        g = Genomes(arr)
+        assert g.array.dtype == np.bool_
+        assert g.array[0, 0] == False
+        assert g.array[0, 1] == True
+        assert g.array[0, 2] == True  # 0.5 is truthy
+
+    def test_bool_input_no_unnecessary_copy(self):
+        """Bool input should not allocate a new array (no-copy optimization)."""
+        arr = np.array([[True, False], [False, True]], dtype=np.bool_)
+        g = Genomes(arr)
+        # Should share memory (no copy made)
+        assert np.shares_memory(g.array, arr)
+
 
 class TestGenomesLen:
     """Verify __len__ returns the number of individuals (first axis)."""
