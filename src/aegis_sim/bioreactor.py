@@ -27,6 +27,7 @@ class Bioreactor:
         if len(self) == 0:
             logging.debug("Population went extinct.")
             recordingmanager.summaryrecorder.extinct = True
+            return
         # Mortality sources
         self.mortalities()
         resources.replenish()
