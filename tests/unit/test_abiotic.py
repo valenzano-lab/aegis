@@ -122,3 +122,43 @@ class TestAbioticInvalidShape:
         """Constructing with a nonexistent shape raises KeyError."""
         with pytest.raises(KeyError):
             _make_abiotic("nonexistent_shape")
+
+
+class TestAbioticInstantDeterministic:
+    """Instant-deterministic waveform: kills exactly AMPLITUDE fraction every PERIOD steps, 0% otherwise."""
+
+    def test_at_zero(self):
+        """Step 0 is always unaffected."""
+        ab = _make_abiotic("instant_deterministic", offset=0.0, amplitude=0.4, period=50)
+        assert ab(0) == pytest.approx(0.0)
+
+    def test_at_period(self):
+        """At exactly the period boundary, mortality equals amplitude."""
+        ab = _make_abiotic("instant_deterministic", offset=0.0, amplitude=0.4, period=50)
+        assert ab(50) == pytest.approx(0.4)
+
+    def test_at_double_period(self):
+        """Fires again at 2x the period."""
+        ab = _make_abiotic("instant_deterministic", offset=0.0, amplitude=0.4, period=50)
+        assert ab(100) == pytest.approx(0.4)
+
+    def test_off_period(self):
+        """Between period boundaries, mortality is 0."""
+        ab = _make_abiotic("instant_deterministic", offset=0.0, amplitude=0.4, period=50)
+        assert ab(25) == pytest.approx(0.0)
+
+    def test_with_offset(self):
+        """Offset is added on top of the amplitude at the period boundary."""
+        ab = _make_abiotic("instant_deterministic", offset=0.1, amplitude=0.4, period=50)
+        assert ab(50) == pytest.approx(0.5)
+
+    def test_off_period_with_offset(self):
+        """Off-period steps still get the offset."""
+        ab = _make_abiotic("instant_deterministic", offset=0.1, amplitude=0.4, period=50)
+        assert ab(25) == pytest.approx(0.1)
+
+    def test_is_deterministic(self):
+        """Unlike 'instant', calling multiple times at the same step returns the same value."""
+        ab = _make_abiotic("instant_deterministic", offset=0.0, amplitude=0.4, period=50)
+        results = [ab(50) for _ in range(20)]
+        assert all(r == results[0] for r in results)
