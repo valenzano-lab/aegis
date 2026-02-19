@@ -137,6 +137,40 @@ class Genomes:
         """
         return self._unpack_original().copy()
 
+    def get_packed(self, individuals) -> np.ndarray:
+        """Return packed uint8 rows for the given individuals.
+
+        Args:
+            individuals: Index array or boolean mask.
+
+        Returns:
+            np.ndarray of uint8 with shape (n, ploidy, n_packed_bytes).
+            Returned array is a contiguous copy.
+        """
+        packed_rows = self._packed[individuals]
+        if len(packed_rows) == 0:
+            return np.empty(
+                (0, self._ploidy, self._n_packed_bytes), dtype=np.uint8
+            )
+        return np.ascontiguousarray(packed_rows)
+
+    @property
+    def n_loci(self) -> int:
+        """Number of loci in the genome."""
+        return self._n_loci
+
+    @property
+    def bits_per_locus(self) -> int:
+        """Bits per locus."""
+        return self._bits_per_locus
+
+    @property
+    def n_packed_bytes(self) -> int:
+        """Number of packed bytes per chromatid."""
+        return self._n_packed_bytes
+
+
+
     def shape(self):
         """Return the logical unpacked shape.
 

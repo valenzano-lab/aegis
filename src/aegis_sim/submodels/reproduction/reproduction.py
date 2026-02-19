@@ -1,6 +1,6 @@
 from aegis_sim.dataclasses.genomes import Genomes
-from aegis_sim.submodels.reproduction.pairing import pairing
-from aegis_sim.submodels.reproduction.recombination import recombination, recombination_via_pairs
+from aegis_sim.submodels.reproduction.pairing import pairing, pairing_packed
+from aegis_sim.submodels.reproduction.recombination import recombination, recombination_via_pairs, recombination_via_pairs_packed
 
 
 class Reproducer:
@@ -30,13 +30,13 @@ class Reproducer:
         self.REPRODUCTION_MODE = REPRODUCTION_MODE
         self.mutator = mutator
 
-    def generate_offspring_genomes(self, genomes, muta_prob, ages, parental_sexes) -> Genomes:
+    def generate_offspring_genomes(self, packed_genomes, muta_prob, ages, parental_sexes, n_loci, bits_per_locus) -> Genomes:
 
         if self.REPRODUCTION_MODE == "sexual":
             # genomes = recombination(genomes, self.RECOMBINATION_RATE)
-            genomes = recombination_via_pairs(genomes, self.RECOMBINATION_RATE)
-            genomes, ages, muta_prob = pairing(Genomes(genomes), parental_sexes, ages, muta_prob)
+            packed_genomes = recombination_via_pairs_packed(packed_genomes, n_loci, bits_per_locus, self.RECOMBINATION_RATE)
+            packed_genomes, ages, muta_prob = pairing_packed(packed_genomes, parental_sexes, ages, muta_prob, n_loci, bits_per_locus)
 
-        genomes = self.mutator._mutate(genomes, muta_prob, ages)
-        genomes = Genomes(genomes)
+        packed_genomes = self.mutator._mutate_packed(packed_genomes, muta_prob, ages, n_loci, bits_per_locus)
+        genomes = Genomes(packed_genomes, n_loci=n_loci, bits_per_locus=bits_per_locus)
         return genomes

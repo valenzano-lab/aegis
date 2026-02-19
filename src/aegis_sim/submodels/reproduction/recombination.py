@@ -136,3 +136,104 @@ def recombination_via_pairs(genomes, RECOMBINATION_RATE):
     flat_genomes = recombination_via_pairs_numba(flat_genomes, n_recombination_sites, chiasmata_list)
 
     return flat_genomes.reshape(genomes.shape)
+
+
+@njit
+def _compute_swap_mask(swap_mask, n_recombination_sites, chiasmata_list):
+    """Compute which bits should be swapped, using the same difference-array logic
+    as recombination_via_pairs_numba.
+
+    Instead of swapping in place, writes a boolean mask indicating which bit
+    positions should be swapped between chromatids.
+    """
+    n = len(swap_mask)
+    n_bits = swap_mask.shape[1]
+    for i in range(n):
+        n_reco = n_recombination_sites[i]
+        if n_reco == 0:
+            continue
+        counts = np.zeros(n_bits + 1, dtype=np.int32)
+        for j in range(n_reco):
+            c = chiasmata_list[i, j]
+            counts[0] += 1
+            if c < n_bits + 1:
+                counts[c] -= 1
+        running = np.int32(0)
+        for k in range(n_bits):
+            running += counts[k]
+            if running % 2 == 1:
+                swap_mask[i, k] = 1
+
+
+@njit
+def recombination_via_pairs_packed_numba(packed_genomes, swap_mask_packed):
+    """Apply crossover swaps on packed bytes using a packed swap mask.
+
+    For each individual, for each byte position:
+    - If swap_mask byte is 0x00: no swap (skip)
+    - If swap_mask byte is 0xFF: swap entire bytes between chromatids
+    - Otherwise: bitwise masking for partial-byte swaps
+    """
+    n = len(packed_genomes)
+    n_packed_bytes = packed_genomes.shape[2]
+    for i in range(n):
+        for b in range(n_packed_bytes):
+            mask = swap_mask_packed[i, b]
+            if mask == 0:
+                continue
+            elif mask == 255:  # 0xFF
+                tmp = packed_genomes[i, 0, b]
+                packed_genomes[i, 0, b] = packed_genomes[i, 1, b]
+                packed_genomes[i, 1, b] = tmp
+            else:
+                c0 = packed_genomes[i, 0, b]
+                c1 = packed_genomes[i, 1, b]
+                packed_genomes[i, 0, b] = (c0 & ~mask) | (c1 & mask)
+                packed_genomes[i, 1, b] = (c1 & ~mask) | (c0 & mask)
+    return packed_genomes
+
+
+def recombination_via_pairs_packed(packed_genomes, n_loci, bits_per_locus, RECOMBINATION_RATE):
+    """Recombination operating directly on packed uint8 arrays.
+
+    Uses the same RNG draws as recombination_via_pairs (binomial + integers)
+    to compute a swap mask, then applies swaps on packed bytes.
+
+    Args:
+        packed_genomes: np.uint8 array, shape (n_individuals, 2, n_packed_bytes)
+        n_loci: number of loci
+        bits_per_locus: bits per locus
+        RECOMBINATION_RATE: crossover probability per site
+
+    Returns:
+        np.uint8 array, same shape, with crossovers applied
+    """
+    if RECOMBINATION_RATE == 0:
+        return packed_genomes
+
+    n = len(packed_genomes)
+    n_total_bits = n_loci * bits_per_locus
+
+    # Same RNG calls as recombination_via_pairs
+    n_recombination_sites = np.random.binomial(n=n_total_bits, p=RECOMBINATION_RATE, size=n)
+
+    max_n = max(n_recombination_sites)
+    if max_n == 0:
+        return packed_genomes
+
+    chiasmata_list = variables.rng.integers(
+        low=1, high=n_total_bits, size=(n, max_n), dtype=np.int32
+    )
+
+    # Compute swap mask using difference-array approach (same logic as numba kernel)
+    swap_mask = np.zeros((n, n_total_bits), dtype=np.uint8)
+    _compute_swap_mask(swap_mask, n_recombination_sites, chiasmata_list)
+
+    # Pack the swap mask to uint8
+    swap_mask_packed = np.packbits(swap_mask, axis=-1, bitorder='big')
+
+    # Apply swaps on packed genomes
+    packed_genomes = packed_genomes.copy()
+    packed_genomes = recombination_via_pairs_packed_numba(packed_genomes, swap_mask_packed)
+    return packed_genomes
+

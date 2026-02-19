@@ -153,7 +153,9 @@ class Bioreactor:
         self.population.births += num_repr
 
         # Generate offspring genomes
-        parental_genomes = self.population.genomes.get(individuals=who)
+        parental_genomes = self.population.genomes.get_packed(individuals=who)
+        n_loci = self.population.genomes.n_loci
+        bits_per_locus = self.population.genomes.bits_per_locus
         parental_sexes = self.population.sexes[who]
 
         muta_prob = self.population.phenotypes.extract(ages=self.population.ages, trait_name="muta", part=mask_repr)[
@@ -162,10 +164,12 @@ class Bioreactor:
         muta_prob = np.repeat(muta_prob, num_repr[mask_repr])
 
         offspring_genomes = submodels.reproduction.generate_offspring_genomes(
-            genomes=parental_genomes,
+            packed_genomes=parental_genomes,
             muta_prob=muta_prob,
             ages=ages_repr,
             parental_sexes=parental_sexes,
+            n_loci=n_loci,
+            bits_per_locus=bits_per_locus,
         )
         offspring_sexes = submodels.sexsystem.get_sex(len(offspring_genomes))
 
