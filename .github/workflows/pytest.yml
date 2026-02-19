@@ -25,8 +25,9 @@ jobs:
           python3 -m pip install -e .[dev]
 
       - name: Run tests with pytest
+        timeout-minutes: 10
         run: |
-          pytest
+          pytest --timeout=120
 
       - name: Archive Pytest test report
         uses: actions/upload-artifact@v4
