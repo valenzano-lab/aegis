@@ -162,3 +162,11 @@ class TestAbioticInstantDeterministic:
         ab = _make_abiotic("instant_deterministic", offset=0.0, amplitude=0.4, period=50)
         results = [ab(50) for _ in range(20)]
         assert all(r == results[0] for r in results)
+
+
+    def test_amplitude_1_matches_instant_fatal(self):
+        """instant_deterministic with amplitude=1 should behave identically to instant_fatal."""
+        det = _make_abiotic("instant_deterministic", offset=0.0, amplitude=1.0, period=50)
+        fatal = _make_abiotic("instant_fatal", offset=0.0, amplitude=1.0, period=50)
+        for step in [0, 1, 25, 49, 50, 51, 99, 100]:
+            assert det(step) == pytest.approx(fatal(step)), f"Mismatch at step {step}"
