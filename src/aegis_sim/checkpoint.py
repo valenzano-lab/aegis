@@ -162,21 +162,60 @@ class Checkpoint:
         )
 
     def save(self, path: pathlib.Path):
-        """Serialize checkpoint to disk using atomic write (write to temp, then rename)."""
+        """Serialize checkpoint to disk using atomic write with backup.
+
+        Keeps the previous checkpoint as ``<path>.bak`` so that a SIGKILL
+        during the rename window cannot leave the user with zero valid
+        checkpoints.  Only promotes the current checkpoint to backup if
+        it can be successfully unpickled — a corrupt file is deleted instead.
+        """
         path.parent.mkdir(parents=True, exist_ok=True)
+        backup_path = path.with_suffix(".bak")
         fd, tmp_path = tempfile.mkstemp(dir=path.parent, suffix=".tmp")
         try:
             with open(fd, "wb") as f:
                 pickle.dump(self, f)
+            # Only back up the current checkpoint if it's valid
+            if path.exists():
+                if self._is_valid_checkpoint(path):
+                    path.replace(backup_path)
+                else:
+                    logging.warning(f"Existing checkpoint at {path} is corrupt; discarding instead of backing up.")
+                    path.unlink()
             pathlib.Path(tmp_path).replace(path)
         except BaseException:
             pathlib.Path(tmp_path).unlink(missing_ok=True)
             raise
         logging.debug(f"Checkpoint saved at step {self.step} to {path}")
 
+    @staticmethod
+    def _is_valid_checkpoint(path: pathlib.Path) -> bool:
+        """Return True if the file at *path* can be unpickled."""
+        try:
+            with open(path, "rb") as f:
+                pickle.load(f)
+            return True
+        except (pickle.UnpicklingError, EOFError, Exception):
+            return False
+
     @classmethod
     def load(cls, path: pathlib.Path) -> "Checkpoint":
-        """Deserialize checkpoint from disk."""
+        """Deserialize checkpoint from disk, falling back to backup if corrupt."""
+        backup_path = path.with_suffix(".bak")
+        try:
+            return cls._load_single(path)
+        except (pickle.UnpicklingError, EOFError) as primary_err:
+            if backup_path.exists():
+                logging.warning(
+                    f"Primary checkpoint at {path} is corrupt ({primary_err}); "
+                    f"falling back to backup at {backup_path}."
+                )
+                return cls._load_single(backup_path)
+            raise
+
+    @classmethod
+    def _load_single(cls, path: pathlib.Path) -> "Checkpoint":
+        """Load and validate a single checkpoint file."""
         with open(path, "rb") as f:
             checkpoint = pickle.load(f)
         if not isinstance(checkpoint, cls):
@@ -188,6 +227,9 @@ class Checkpoint:
     def find_latest(cls, odir: pathlib.Path) -> pathlib.Path:
         """Find the checkpoint file in an output directory.
 
+        Returns the primary checkpoint path if it exists. If only the backup
+        exists (e.g. after a SIGKILL during save), returns the backup path.
+
         Args:
             odir: The simulation output directory (e.g. ``temp/test_config``).
 
@@ -198,6 +240,12 @@ class Checkpoint:
             FileNotFoundError: If no checkpoint file is found.
         """
         checkpoint_path = odir / "checkpoint"
-        if not checkpoint_path.exists():
-            raise FileNotFoundError(f"No checkpoint file found in {odir}")
-        return checkpoint_path
+        backup_path = checkpoint_path.with_suffix(".bak")
+        if checkpoint_path.exists():
+            return checkpoint_path
+        if backup_path.exists():
+            logging.warning(
+                f"No primary checkpoint in {odir}, using backup {backup_path}."
+            )
+            return backup_path
+        raise FileNotFoundError(f"No checkpoint file found in {odir}")

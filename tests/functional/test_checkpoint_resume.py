@@ -228,3 +228,40 @@ def test_resume_errors_if_output_dir_exists_but_no_checkpoint(base_config, write
             custom_input_params={},
             resume_path=odir,
         )
+
+
+def test_resume_from_backup_after_corrupt_primary(checkpoint_config, write_config, tmp_path):
+    """If the primary checkpoint is corrupt, resume should fall back to .bak and finish."""
+    steps = checkpoint_config["STEPS_PER_SIMULATION"]
+    config_path = write_config(checkpoint_config)
+    odir = tmp_path / config_path.stem
+
+    # Run the full sim so we get a checkpoint + backup
+    aegis_sim.run(
+        custom_config_path=config_path,
+        pickle_path=None,
+        overwrite=False,
+        custom_input_params={},
+    )
+
+    checkpoint_path = odir / "checkpoint"
+    backup_path = checkpoint_path.with_suffix(".bak")
+    assert checkpoint_path.exists()
+    assert backup_path.exists()
+
+    # Corrupt the primary checkpoint (simulates truncation from SIGKILL)
+    with open(checkpoint_path, "wb") as f:
+        f.write(b"truncated garbage")
+
+    # Resume should fall back to .bak and complete
+    aegis_sim.run(
+        custom_config_path=config_path,
+        pickle_path=None,
+        overwrite=False,
+        custom_input_params={},
+        resume_path=odir,
+    )
+
+    popsize_file = odir / "popsize_before_reproduction.csv"
+    lines = popsize_file.read_text().strip().splitlines()
+    assert len(lines) == steps, f"Expected {steps} lines, got {len(lines)}"
