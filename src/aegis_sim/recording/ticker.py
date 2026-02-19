@@ -14,10 +14,15 @@ class Ticker(Recorder):
         self.pid = None
 
     def start_process(self):
-        self.process = Process(target=self.tick)
+        # daemon=True ensures this subprocess is automatically killed when the
+        # parent process exits, preventing orphaned ticker processes (e.g. if
+        # the simulation crashes or tests finish without calling stop_process).
+        # This does not affect normal operation: the parent stays alive for the
+        # entire simulation, so the ticker keeps running until stop_process()
+        # is called at the end of sim().
+        self.process = Process(target=self.tick, daemon=True)
         self.process.start()
         self.pid = self.process.pid
-        # TODO check if this continues when simulation is interrupted or terminated otherwise
 
     def stop_process(self):
         self.process.terminate()
