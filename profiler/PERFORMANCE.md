@@ -32,152 +32,97 @@ Files:
 
 Recording overhead dropped from ~86ms to ~4ms per 200 steps (~21x).
 
-## Results by Configuration
+### 3. Diploid-to-haploid conversion (`ploider.diploid_to_haploid`)
+
+The original code created three intermediate arrays (`logical_or` → `astype(float64)`
+→ `logical_xor` → scattered mask write). Replaced with a parallel numba kernel that
+reads both chromatids once and writes float32 output directly, using `prange` over
+individuals.
+
+File: `src/aegis_sim/submodels/genetics/ploider.py`
+
+| Version | Time (6000 ind, 2000 loci) | Speedup |
+|---------|---------------------------|---------|
+| Original (or + xor + scatter, f64) | 46.9ms | 1x |
+| np.where (f64) | 12.0ms | 3.9x |
+| numba prange (f32) | 2.4ms | 19.5x |
+
+### 4. Phenodiff kernel (`apply_phenolist_numba`)
+
+The original kernel pre-gathered `vec_states = vectors[:, vec_indices]` (allocating a
+72MB temporary for 6000 individuals × 3000 phenolist entries), then ran a single-threaded
+double loop. Replaced with a parallel kernel that indexes directly into `vectors`,
+eliminating the temporary and parallelizing over individuals with `prange`. Phenolist
+index arrays are now cached on the GPM object (resolved once, reused every call).
+
+File: `src/aegis_sim/submodels/genetics/modifying/gpm.py`
+
+| Version | Time (6000 ind, 3000 phenolist) | Speedup |
+|---------|--------------------------------|---------|
+| Original (gather + sequential) | 108.9ms | 1x |
+| Parallel, no gather | 3.0ms | 36x |
+
+### 5. Genomes init skip unnecessary astype
+
+`Genomes.__init__` always called `.astype(np.bool_)` even when the input was already
+bool, creating an unnecessary copy. Now checks dtype first.
+
+File: `src/aegis_sim/dataclasses/genomes.py`
+
+Minor saving (~0.3-0.5ms/step), but zero-risk and eliminates wasteful allocations.
+
+## End-to-End Results
 
 ### Default config (composite, BPL=1, pop ~550)
 
 Per-step time: 4.93ms → 0.92ms (5.3x overall speedup)
 
-| Phase          | Before | After  |
-|----------------|--------|--------|
-| Reproduction   | 80.8%  | 69.8%  |
-| Mortalities    | 7.9%   | 14.8%  |
-| Recording      | 8.7%   | 2.5%   |
-| Hatching       | 2.1%   | 10.5%  |
-| Aging          | 0.5%   | 2.3%   |
-
 ### Hard config: nemaap (modifying, sexual, 2000 loci, R=25600, pop ~6000)
 
-Per-step time: 16.05ms → 13.74ms (1.2x speedup, ~1.3 hours saved on a 2M-step run)
+| Metric | Original | Optimized | Speedup |
+|--------|----------|-----------|---------|
+| Per step | 16.05ms | 8.4ms | 1.9x |
+| 2M step runtime | 8.9 hours | 4.7 hours | 1.9x |
 
-| Phase          | Time % | Avg (ms) | Notes                                      |
-|----------------|--------|----------|--------------------------------------------|
-| Hatching       | 50.7%  | 6.82     | `architect.__call__()` phenotype computation |
-| Reproduction   | 31.7%  | 4.27     | Recombination + mutation + pairing          |
-| Mortalities    | 10.4%  | 1.40     | 5 sources × phenotype extraction            |
-| Aging          | 6.5%   | 0.87     | Age increment + phenotype recomputation     |
-| Recording      | 0.7%   | 0.10     | Buffered, negligible                        |
+Phase breakdown after all optimizations:
 
-Extrapolated 2M-step runtime: 8.9h → 7.6h.
+| Phase | Avg (ms) | % |
+|-------|----------|---|
+| Reproduction | 4.37 | 51.9% |
+| Hatching | 1.65 | 19.6% |
+| Mortalities | 1.40 | 16.6% |
+| Aging | 0.90 | 10.7% |
+| Recording | 0.09 | 1.1% |
 
-## Detailed Bottleneck Analysis (hard config)
+## Remaining Opportunities (diminishing returns)
 
-cProfile self-time breakdown (100 steps, pop growing from ~1600 to ~6700):
+The remaining time is spread across many small memory-bandwidth-bound operations.
+Further optimization would require either significant refactors or architectural changes.
 
-| Rank | Function                      | Self (s) | % of 1.74s | Location                          |
-|------|-------------------------------|----------|------------|-----------------------------------|
-| 1    | `ploider.diploid_to_haploid`  | 0.349    | 20.0%      | `submodels/genetics/ploider.py`   |
-| 2    | `gpm.phenodiff_accelerated`   | 0.337    | 19.3%      | `submodels/genetics/modifying/gpm.py` |
-| 3    | `genomes.keep`                | 0.188    | 10.8%      | `dataclasses/genomes.py`          |
-| 4    | `recombination_via_pairs`     | 0.167    | 9.6%       | `submodels/reproduction/recombination.py` |
-| 5    | `genomes.add`                 | 0.103    | 5.9%       | `dataclasses/genomes.py`          |
-| 6    | `genomes.get`                 | 0.098    | 5.6%       | `dataclasses/genomes.py`          |
-| 7    | `astype` (numpy)              | 0.063    | 3.6%       | type conversions                  |
-| 8    | `pairing`                     | 0.056    | 3.2%       | `submodels/reproduction/pairing.py` |
+| Opportunity | Est. saving | Effort | Risk | Notes |
+|---|---|---|---|---|
+| `genomes.add` pre-allocated buffer | ~1ms/step | High | Medium | Refactor Genomes + Population to manage capacity/length |
+| `pairing` fancy indexing | ~0.5ms/step | Medium | Low | Fuse two `genomes.get` + gamete selection into one kernel |
+| `genomes.keep` boolean mask | ~0.3ms/step | Low | Low | Minor — callers already use bool masks in some cases |
+| `phenotypes.extract` scratch buffer | ~0.2ms/step | Low | Low | Reuse pre-allocated array instead of `np.zeros` each call |
 
-### #1: `ploider.diploid_to_haploid` — 20.0%
+### Why mortality batching was not pursued
 
-Called once per step during hatching via `architect.__call__()`.
-Converts diploid genomes (N, 2, 2000, 1) to haploid (N, 2000, 1).
+Mortality sources have sequential dependencies — infection mutates population state,
+predation uses Verhulst dynamics based on current prey count, starvation depends on
+current population size for resource demand. `MORTALITY_ORDER` is configurable precisely
+because ordering matters biologically. Batching kills would change simulation semantics.
 
-Current code:
-```python
-arr = np.logical_or(loci[:, 0], loci[:, 1]).astype(np.float64)
-is_heterozygous = np.logical_xor(loci[:, 0], loci[:, 1])
-arr[is_heterozygous] = self.DOMINANCE_FACTOR
-```
+### Next-level optimizations (large undertakings)
 
-The `.astype(np.float64)` creates a full copy of the array as float64 (8x the memory
-of bool). Then `logical_xor` creates another full bool array. Then fancy indexing with
-the heterozygous mask does scattered writes.
-
-Potential improvements:
-- Use `np.where` to avoid the intermediate bool array and scattered write:
-  `arr = np.where(is_heterozygous, DOMINANCE_FACTOR, logical_or_result)`
-- Use float32 instead of float64 (halves memory bandwidth)
-- Fuse the logical_or and logical_xor into a single pass with numba
-
-### #2: `gpm.phenodiff_accelerated` — 19.3%
-
-Called once per step during hatching. The numba kernel `apply_phenolist_numba` loops
-over phenolist entries (outer) and individuals (inner):
-
-```python
-for i in range(n_phenos):        # ~3000 phenolist entries for MAAP
-    for j in range(n_individuals):  # ~6000 individuals
-        phenodiff[j, phenotype_indices[i]] += vec_states[j, i] * magnitudes[i]
-```
-
-This is ~18M scalar operations per step. The loop order is column-major (iterating
-individuals in the inner loop) which is good for cache locality on `phenodiff` rows,
-but `vec_states` access pattern is strided.
-
-Potential improvements:
-- Pre-build a sparse matrix from the phenolist (once at init) and use
-  `scipy.sparse.csr_matrix.dot()` — this would replace the double loop with
-  optimized BLAS-backed sparse matrix multiplication
-- Add `parallel=True` and `prange` over individuals
-- Group phenolist entries by `phenotype_indices[i]` to reduce scattered writes
-
-### #3: `genomes.keep` — 10.8%
-
-Called ~256 times per step (once per `_kill` call across all mortality sources).
-Each call does `self.array = self.array[individuals]` which is a fancy-indexed copy
-of a (N, 2, 2000, 1) bool array.
-
-With ~6000 individuals and 2000 loci, each genome array is ~24MB. Fancy indexing
-creates a new array each time.
-
-Potential improvements:
-- Batch all mortality sources into a single kill mask, then call `keep` once
-  instead of ~2-6 times per step. This is the biggest structural win here.
-- Use a boolean mask instead of integer indices (avoids index array allocation)
-
-### #4: `recombination_via_pairs` — 9.6%
-
-Already optimized. The remaining 167ms/100 steps is mostly numpy overhead
-(reshape, copy, binomial, random integers) around the numba kernel.
-
-### #5-6: `genomes.add` + `genomes.get` — 11.5% combined
-
-`add` does `np.concatenate` on large bool arrays during reproduction (merging
-offspring into population). `get` does fancy indexing to extract parental genomes.
-
-These are fundamentally memory-bandwidth-bound operations on large arrays.
-
-Potential improvements:
-- Pre-allocate a genome buffer with max capacity and use views instead of
-  concatenation. This avoids repeated allocation/copy cycles.
-
-### #7: `astype` — 3.6%
-
-Scattered across the codebase. The `Genomes.__init__` always calls
-`.astype(np.bool_)` even when the input is already bool. Adding a dtype check
-(`if array.dtype != np.bool_: array = array.astype(np.bool_)`) would skip
-unnecessary copies.
-
-### #8: `pairing` — 3.2%
-
-Sexual pairing logic with random gamete selection. Uses fancy indexing on genome
-arrays. Hard to optimize further without restructuring the reproduction pipeline.
-
-### Summary: where to focus next
-
-The top 3 targets for further optimization are:
-
-1. **Batch mortality kills** — call `_kill` once per step instead of per-source.
-   Would reduce `genomes.keep` calls from ~256 to ~1. Estimated saving: ~8-10%.
-
-2. **Sparse matrix for phenomap** — replace `apply_phenolist_numba` with a
-   precomputed sparse matrix multiply. Estimated saving: ~10-15%.
-
-3. **Optimize diploid_to_haploid** — fuse operations, use float32, avoid
-   intermediate arrays. Estimated saving: ~5-10%.
+- Packed bit arrays (8 bools per byte) to reduce genome memory 8x
+- C/Cython extensions for the genome array operations
+- GPU acceleration for the phenotype computation pipeline
 
 ## Profiling Scripts
 
-- `profile_sim.py` — cProfile of the full simulation loop. Shows cumulative and self time for all functions.
-- `profile_breakdown.py` — Wall-clock timing of each phase within `run_step()`. Quick way to see where time goes.
+- `profile_sim.py` — cProfile of the full simulation loop
+- `profile_breakdown.py` — Wall-clock timing of each phase within `run_step()`
 
 Usage:
 ```
