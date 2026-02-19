@@ -60,33 +60,119 @@ Per-step time: 16.05ms → 13.74ms (1.2x speedup, ~1.3 hours saved on a 2M-step 
 
 Extrapolated 2M-step runtime: 8.9h → 7.6h.
 
-## Remaining Bottlenecks (hard config)
+## Detailed Bottleneck Analysis (hard config)
 
-### Phenotype computation in `architect.__call__()` — 50.7% of step time
+cProfile self-time breakdown (100 steps, pop growing from ~1600 to ~6700):
 
-Called during hatching for all eggs. The pipeline is:
+| Rank | Function                      | Self (s) | % of 1.74s | Location                          |
+|------|-------------------------------|----------|------------|-----------------------------------|
+| 1    | `ploider.diploid_to_haploid`  | 0.349    | 20.0%      | `submodels/genetics/ploider.py`   |
+| 2    | `gpm.phenodiff_accelerated`   | 0.337    | 19.3%      | `submodels/genetics/modifying/gpm.py` |
+| 3    | `genomes.keep`                | 0.188    | 10.8%      | `dataclasses/genomes.py`          |
+| 4    | `recombination_via_pairs`     | 0.167    | 9.6%       | `submodels/reproduction/recombination.py` |
+| 5    | `genomes.add`                 | 0.103    | 5.9%       | `dataclasses/genomes.py`          |
+| 6    | `genomes.get`                 | 0.098    | 5.6%       | `dataclasses/genomes.py`          |
+| 7    | `astype` (numpy)              | 0.063    | 3.6%       | type conversions                  |
+| 8    | `pairing`                     | 0.056    | 3.2%       | `submodels/reproduction/pairing.py` |
 
-1. `ploider.diploid_to_haploid()` — logical_or + logical_xor on (N, 2, 2000, 1) bool arrays
-2. `GPM.phenodiff_accelerated()` → `apply_phenolist_numba()` — loops over phenolist entries, accumulating effects per individual. Currently sequential over the phenolist dimension.
-3. `Phenotypes.gaussian_smoothing()` → `gaussian_smooth_rows_with_padding_numba()` — 1D convolution per individual per trait.
-4. `Phenotypes.clip_array_to_01()` — lo/hi rescaling per trait.
+### #1: `ploider.diploid_to_haploid` — 20.0%
+
+Called once per step during hatching via `architect.__call__()`.
+Converts diploid genomes (N, 2, 2000, 1) to haploid (N, 2000, 1).
+
+Current code:
+```python
+arr = np.logical_or(loci[:, 0], loci[:, 1]).astype(np.float64)
+is_heterozygous = np.logical_xor(loci[:, 0], loci[:, 1])
+arr[is_heterozygous] = self.DOMINANCE_FACTOR
+```
+
+The `.astype(np.float64)` creates a full copy of the array as float64 (8x the memory
+of bool). Then `logical_xor` creates another full bool array. Then fancy indexing with
+the heterozygous mask does scattered writes.
 
 Potential improvements:
-- `apply_phenolist_numba`: add `parallel=True` over individuals, or convert the phenolist into a sparse matrix and use `scipy.sparse` dot product.
-- `gaussian_smooth_rows_with_padding_numba`: add `parallel=True` over rows (individuals are independent).
-- Batch the clip operation into a single vectorized call instead of looping over trait names.
+- Use `np.where` to avoid the intermediate bool array and scattered write:
+  `arr = np.where(is_heterozygous, DOMINANCE_FACTOR, logical_or_result)`
+- Use float32 instead of float64 (halves memory bandwidth)
+- Fuse the logical_or and logical_xor into a single pass with numba
 
-### Reproduction — 31.7% of step time
+### #2: `gpm.phenodiff_accelerated` — 19.3%
 
-With `MUTATION_METHOD=by_index` and `BITS_PER_LOCUS=1`, mutation is already efficient.
-The remaining cost is pairing (random indexing), recombination (now optimized), and
-offspring genome assembly via `np.concatenate`.
+Called once per step during hatching. The numba kernel `apply_phenolist_numba` loops
+over phenolist entries (outer) and individuals (inner):
 
-### Mortalities — 10.4% of step time
+```python
+for i in range(n_phenos):        # ~3000 phenolist entries for MAAP
+    for j in range(n_individuals):  # ~6000 individuals
+        phenodiff[j, phenotype_indices[i]] += vec_states[j, i] * magnitudes[i]
+```
 
-`phenotypes.extract()` is called once per mortality source. It creates a fresh
-`np.zeros` array and fills it via fancy indexing each time. Caching or batching
-extractions for multiple mortality sources in a single pass could help.
+This is ~18M scalar operations per step. The loop order is column-major (iterating
+individuals in the inner loop) which is good for cache locality on `phenodiff` rows,
+but `vec_states` access pattern is strided.
+
+Potential improvements:
+- Pre-build a sparse matrix from the phenolist (once at init) and use
+  `scipy.sparse.csr_matrix.dot()` — this would replace the double loop with
+  optimized BLAS-backed sparse matrix multiplication
+- Add `parallel=True` and `prange` over individuals
+- Group phenolist entries by `phenotype_indices[i]` to reduce scattered writes
+
+### #3: `genomes.keep` — 10.8%
+
+Called ~256 times per step (once per `_kill` call across all mortality sources).
+Each call does `self.array = self.array[individuals]` which is a fancy-indexed copy
+of a (N, 2, 2000, 1) bool array.
+
+With ~6000 individuals and 2000 loci, each genome array is ~24MB. Fancy indexing
+creates a new array each time.
+
+Potential improvements:
+- Batch all mortality sources into a single kill mask, then call `keep` once
+  instead of ~2-6 times per step. This is the biggest structural win here.
+- Use a boolean mask instead of integer indices (avoids index array allocation)
+
+### #4: `recombination_via_pairs` — 9.6%
+
+Already optimized. The remaining 167ms/100 steps is mostly numpy overhead
+(reshape, copy, binomial, random integers) around the numba kernel.
+
+### #5-6: `genomes.add` + `genomes.get` — 11.5% combined
+
+`add` does `np.concatenate` on large bool arrays during reproduction (merging
+offspring into population). `get` does fancy indexing to extract parental genomes.
+
+These are fundamentally memory-bandwidth-bound operations on large arrays.
+
+Potential improvements:
+- Pre-allocate a genome buffer with max capacity and use views instead of
+  concatenation. This avoids repeated allocation/copy cycles.
+
+### #7: `astype` — 3.6%
+
+Scattered across the codebase. The `Genomes.__init__` always calls
+`.astype(np.bool_)` even when the input is already bool. Adding a dtype check
+(`if array.dtype != np.bool_: array = array.astype(np.bool_)`) would skip
+unnecessary copies.
+
+### #8: `pairing` — 3.2%
+
+Sexual pairing logic with random gamete selection. Uses fancy indexing on genome
+arrays. Hard to optimize further without restructuring the reproduction pipeline.
+
+### Summary: where to focus next
+
+The top 3 targets for further optimization are:
+
+1. **Batch mortality kills** — call `_kill` once per step instead of per-source.
+   Would reduce `genomes.keep` calls from ~256 to ~1. Estimated saving: ~8-10%.
+
+2. **Sparse matrix for phenomap** — replace `apply_phenolist_numba` with a
+   precomputed sparse matrix multiply. Estimated saving: ~10-15%.
+
+3. **Optimize diploid_to_haploid** — fuse operations, use float32, avoid
+   intermediate arrays. Estimated saving: ~5-10%.
 
 ## Profiling Scripts
 

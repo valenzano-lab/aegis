@@ -1,4 +1,27 @@
 import numpy as np
+from numba import njit, prange
+
+
+@njit(parallel=True)
+def _diploid_to_haploid_numba(c0, c1, dominance_factor):
+    """Parallel numba kernel for diploid-to-haploid conversion.
+
+    Operates on uint8 views of bool arrays to avoid numba's bool limitations.
+    Returns float32 output: 1.0 for homozygous true, 0.0 for homozygous false,
+    dominance_factor for heterozygous.
+    """
+    out = np.empty(c0.shape, dtype=np.float32)
+    n0, n1, n2 = c0.shape
+    for i in prange(n0):
+        for j in range(n1):
+            for k in range(n2):
+                a = c0[i, j, k]
+                b = c1[i, j, k]
+                if a == b:
+                    out[i, j, k] = np.float32(a)
+                else:
+                    out[i, j, k] = dominance_factor
+    return out
 
 
 class Ploider:
@@ -19,23 +42,17 @@ class Ploider:
             loci: A bool numpy array with shape (population size, ploidy, genome length, BITS_PER_LOCUS)
 
         Returns:
-            A bool numpy array with shape (population size, genome length, BITS_PER_LOCUS)
+            A float numpy array with shape (population size, genome length, BITS_PER_LOCUS)
         """
 
         assert len(loci.shape) == 4, len(loci.shape)  # e.g. (45, 2, 250, 8)
         assert loci.shape[1] == 2, loci.shape[1]  # ploidy
 
-        # TODO handle polyploidy too
-        # compute homozygous (0, 1) or heterozygous (0.5)
-
-        # Three options: both 1, heterozygous, both 0
-
-        # If at least one is 1 then 1; otherwise 0
-        arr = np.logical_or(loci[:, 0], loci[:, 1]).astype(np.float64)
-
-        # Heterozygous
-        is_heterozygous = np.logical_xor(loci[:, 0], loci[:, 1])
-        arr[is_heterozygous] = self.DOMINANCE_FACTOR
+        arr = _diploid_to_haploid_numba(
+            loci[:, 0].view(np.uint8),
+            loci[:, 1].view(np.uint8),
+            np.float32(self.DOMINANCE_FACTOR),
+        )
 
         assert len(arr.shape) == 3, len(arr.shape)
 
