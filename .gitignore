@@ -7,6 +7,7 @@ temp
 src/gui/sim_data
 bootstrap-icons-1.11.3
 aegis.code-workspace
+.kiro
 
 # Test artifacts (experiment output from functional tests)
 tests/functional/experiments/
