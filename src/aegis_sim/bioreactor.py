@@ -185,7 +185,7 @@ class Bioreactor:
             self.eggs = eggs
         else:
             self.eggs += eggs
-        if len(self.eggs) > parametermanager.parameters.CARRYING_CAPACITY_EGGS:
+        if parametermanager.parameters.CARRYING_CAPACITY_EGGS != -1 and len(self.eggs) > parametermanager.parameters.CARRYING_CAPACITY_EGGS:
             indices = np.arange(len(self.eggs))[-parametermanager.parameters.CARRYING_CAPACITY_EGGS :]
             # TODO biased
             self.eggs *= indices
