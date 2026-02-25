@@ -1,7 +1,7 @@
 import logging
 import numpy as np
 from aegis_sim import parameterization
-from numba import njit
+from numba import njit, prange
 
 
 class GPM:
@@ -39,6 +39,27 @@ class GPM:
         if self.dummy:
             logging.info("Phenomap inactive.")
 
+        # Pre-resolved arrays for phenodiff_accelerated (cached to avoid
+        # recomputing every call). Populated lazily on first use because
+        # parameterization.traits may not be ready at __init__ time.
+        self._resolved = False
+        self._vec_indices = None
+        self._phenotype_indices = None
+        self._magnitudes = None
+
+    def _resolve_phenolist(self):
+        """Pre-resolve phenolist into numpy arrays (once)."""
+        if self._resolved:
+            return
+        vec_indices, traits, ages, magnitudes = zip(*self.phenolist)
+        self._vec_indices = np.array(vec_indices, dtype=np.int64)
+        self._magnitudes = np.array(magnitudes, dtype=np.float64)
+        self._phenotype_indices = np.array(
+            [parameterization.traits[trait].start + age for trait, age in zip(traits, ages)],
+            dtype=np.int64,
+        )
+        self._resolved = True
+
     def phenodiff(self, vectors, zeropheno):
         """
         vectors .. haploidized genomes of all individuals; shape is (n_individuals, ?)
@@ -68,15 +89,11 @@ class GPM:
             return vectors.dot(self.phenomatrix)
 
         elif self.phenolist is not None:
+            self._resolve_phenolist()
             phenodiff = zeropheno.copy()
-            vec_indices, traits, ages, magnitudes = zip(*self.phenolist)
-            vec_indices = np.array(vec_indices)
-            magnitudes = np.array(magnitudes)
-            vec_states = vectors[:, vec_indices]
-            phenotype_indices = np.array(
-                [parameterization.traits[trait].start + age for trait, age in zip(traits, ages)]
+            phenodiff = apply_phenolist_numba(
+                phenodiff, vectors, self._vec_indices, self._phenotype_indices, self._magnitudes,
             )
-            phenodiff = apply_phenolist_numba(phenodiff, vec_states, phenotype_indices, magnitudes)
             return phenodiff
 
         else:
@@ -91,16 +108,25 @@ class GPM:
             return phenodiff
 
 
-@njit
-def apply_phenolist_numba(phenodiff, vec_states, phenotype_indices, magnitudes):
+@njit(parallel=True)
+def apply_phenolist_numba(phenodiff, vectors, vec_indices, phenotype_indices, magnitudes):
+    """Apply phenolist effects to phenodiff, parallelized over individuals.
+
+    Instead of pre-gathering vec_states = vectors[:, vec_indices] (which allocates
+    a large temporary array), this kernel indexes directly into vectors.
+    The outer loop is over individuals (prange) so each thread writes to its own
+    row of phenodiff — no race conditions.
+
+    Args:
+        phenodiff: (n_individuals, n_phenotype_cols) output array, modified in place
+        vectors: (n_individuals, genome_size) haploidized genome values
+        vec_indices: (n_phenolist,) genome column index for each phenolist entry
+        phenotype_indices: (n_phenolist,) phenotype column index for each entry
+        magnitudes: (n_phenolist,) effect size for each entry
     """
-    phenodiff .. modification to phenotype vector for a specific trait; shape is (individual, phenotypic site)
-    vec_states .. state of each genomic site for each individual; shape is (individual, genomic site)
-    phenotype_indices .. position in the phenotype vector that is modified by the genomic site; shape is (genomic site)
-    magnitudes .. effect size for each site; shape is (genomic site)
-    """
-    n_individuals, n_phenos = vec_states.shape
-    for i in range(n_phenos):
-        for j in range(n_individuals):
-            phenodiff[j, phenotype_indices[i]] += vec_states[j, i] * magnitudes[i]
+    n_individuals = phenodiff.shape[0]
+    n_phenolist = vec_indices.shape[0]
+    for j in prange(n_individuals):
+        for i in range(n_phenolist):
+            phenodiff[j, phenotype_indices[i]] += vectors[j, vec_indices[i]] * magnitudes[i]
     return phenodiff

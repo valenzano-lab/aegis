@@ -14,7 +14,7 @@ class FlushRecorder(Recorder):
     Records collections.
     """
 
-    def __init__(self, odir: pathlib.Path):
+    def __init__(self, odir: pathlib.Path, resuming=False):
 
         self.odir = odir / "gui" / "spectra"
         self.init_odir()
@@ -30,7 +30,8 @@ class FlushRecorder(Recorder):
 
         self.collection = copy.deepcopy(self._collection)
 
-        self.init_headers()
+        if not resuming:
+            self.init_headers()
 
     def collect(self, key, ages):
         """Add data into memory which will be recorded later."""

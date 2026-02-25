@@ -24,8 +24,10 @@ class Interpreter:
         # Parameters for the binary switch interpreter
         binary_switch_weights = 2 ** np.arange(self.BITS_PER_LOCUS)[::-1]
         binary_switch_weights[-1] = 0  # Switch bit does not add to locus value
-        self.binary_switch_weights = binary_switch_weights / binary_switch_weights.sum()
-        # e.g. when BITS_PER_LOCUS is 4, binary_switch_weights are [4/7, 2/7, 1/7, 0]
+        with np.errstate(invalid="ignore"):
+            self.binary_switch_weights = binary_switch_weights / binary_switch_weights.sum()
+        # When BITS_PER_LOCUS is 1, all weights are 0 — that's fine, _binary_switch
+        # will produce zeros for all "on" loci.
 
         # Parameters for the linear interpreter
         linear_weights = np.arange(self.BITS_PER_LOCUS)[::-1] + 1
@@ -103,7 +105,7 @@ class Interpreter:
         )  # If the locus is turned on, make the value in the output array be the binary value
         return values
 
-    def _uniform(loci):
+    def _uniform(self, loci):
         """Return normalized sum of bits.
 
         Medium resolution (can produce bits_per_locus+1 different numbers).

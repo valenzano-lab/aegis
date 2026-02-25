@@ -5,7 +5,7 @@ import logging
 from aegis_sim import run  # Adjust the import to match your actual function location
 from aegis_sim.parameterization.default_parameters import DEFAULT_PARAMETERS
 from aegis_sim.utilities.container import Container
-from test_sim import test_experiment_path
+from tests.functional.conftest import test_experiment_path
 
 logging.basicConfig(level=logging.INFO)
 

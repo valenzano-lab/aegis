@@ -11,10 +11,11 @@ from aegis_sim import submodels
 
 class IntervalRecorder(Recorder):
 
-    def __init__(self, odir: pathlib.Path):
+    def __init__(self, odir: pathlib.Path, resuming=False):
         self.odir = odir / "gui"
         self.init_odir()
-        self.init_headers()
+        if not resuming:
+            self.init_headers()
 
     def record(self, population):
         """Record data that is needed by gui."""

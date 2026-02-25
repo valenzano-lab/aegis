@@ -49,7 +49,8 @@ setuptools.setup(
     ],
     extras_require={
         "dev": [
-            "pytest==6.2.4",
+            "pytest>=7.0",
+            "pytest-xdist",
             "flake8",
             "black",
             "tabulate",

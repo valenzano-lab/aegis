@@ -36,6 +36,7 @@ class Abiotic:
             "ramp": self._ramp,
             "instant": self._instant,
             "instant_fatal": self._instant_fatal,
+            "instant_deterministic": self._instant_deterministic,
         }[self.ABIOTIC_HAZARD_SHAPE]
 
         if self.ABIOTIC_HAZARD_SHAPE == "flat" and self.ABIOTIC_HAZARD_AMPLITUDE > 0 and self.ABIOTIC_HAZARD_OFFSET > 0:
@@ -87,3 +88,9 @@ class Abiotic:
             return 0
         else:
             return 1
+
+    def _instant_deterministic(self, step):
+        """Mortality function that every ABIOTIC_HAZARD_PERIOD steps kills exactly ABIOTIC_HAZARD_AMPLITUDE fraction of the living population; step 0 is unaffected"""
+        if step == 0 or step % self.ABIOTIC_HAZARD_PERIOD:
+            return 0
+        return self.ABIOTIC_HAZARD_AMPLITUDE

@@ -27,6 +27,7 @@ class Bioreactor:
         if len(self) == 0:
             logging.debug("Population went extinct.")
             recordingmanager.summaryrecorder.extinct = True
+            return
         # Mortality sources
         self.mortalities()
         resources.replenish()
@@ -52,6 +53,7 @@ class Bioreactor:
         )  # TODO defers calculation of mutation rates; hacky
         recordingmanager.summaryrecorder.record_memuse()
         recordingmanager.terecorder.record(self.population.ages, "alive")
+        recordingmanager.checkpointrecorder.write(self.population, self.eggs)
 
     ###############
     # STEP LOGIC #

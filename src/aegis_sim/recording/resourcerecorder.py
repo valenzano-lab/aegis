@@ -5,6 +5,25 @@ from aegis_sim.submodels.resources.resources import resources
 class ResourcesRecorder(Recorder):
     def __init__(self, odir):
         self.odir = odir
+        self._buffers = {}
+
+    def _buffered_write(self, value, filename):
+        if filename not in self._buffers:
+            self._buffers[filename] = []
+        self._buffers[filename].append(str(value))
+        if len(self._buffers[filename]) >= 100:
+            self._flush(filename)
+
+    def _flush(self, filename):
+        if filename in self._buffers and self._buffers[filename]:
+            path = self.odir / filename
+            with open(path, "a") as file_:
+                file_.write("\n".join(self._buffers[filename]) + "\n")
+            self._buffers[filename] = []
+
+    def flush_all(self):
+        for filename in list(self._buffers.keys()):
+            self._flush(filename)
 
     def write_before_scavenging(self):
         """
@@ -18,9 +37,7 @@ class ResourcesRecorder(Recorder):
         structure: A vector of numbers.
         header: None
         """
-        path = self.odir / "resources_before_scavenging.csv"
-        with open(path, "a") as file_:
-            file_.write(f"{resources.capacity}\n")
+        self._buffered_write(resources.capacity, "resources_before_scavenging.csv")
 
     def write_after_scavenging(self):
         """
@@ -34,6 +51,4 @@ class ResourcesRecorder(Recorder):
         structure: A vector of numbers.
         header: None
         """
-        path = self.odir / "resources_after_scavenging.csv"
-        with open(path, "a") as file_:
-            file_.write(f"{resources.capacity}\n")
+        self._buffered_write(resources.capacity, "resources_after_scavenging.csv")

@@ -51,9 +51,13 @@ class FeatherRecorder(Recorder):
         structure: A bool matrix; rows: individuals, columns: genome positions, values: bit states
         header: genome positions
         """
-        df_gen = pd.DataFrame(np.array(population.genomes.flatten()))
+        if len(population) == 0:
+            # Empty population can't be reshaped by genomes.flatten(); write empty feather
+            df_gen = pd.DataFrame()
+        else:
+            df_gen = pd.DataFrame(np.array(population.genomes.flatten()))
+            df_gen.columns = [str(c) for c in df_gen.columns]
         df_gen.reset_index(drop=True, inplace=True)
-        df_gen.columns = [str(c) for c in df_gen.columns]
         df_gen.to_feather(self.odir_genotypes / f"{step}.feather")
 
     def write_phenotypes(self, step: int, population: Population):

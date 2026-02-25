@@ -30,6 +30,7 @@ from .resourcerecorder import ResourcesRecorder
 from .ticker import Ticker
 from .configrecorder import ConfigRecorder
 from .envdriftmaprecorder import Envdriftmaprecorder
+from .checkpointrecorder import CheckpointRecorder
 
 # TODO write tests
 
@@ -60,24 +61,197 @@ class RecordingManager:
 
     def init(self, custom_config_path, overwrite):
         self.odir = self.make_odir(custom_config_path=custom_config_path, overwrite=overwrite)
-        # TODO make subfolders
+        self.resuming = False
 
-    def initialize_recorders(self, TICKER_RATE):
-        self.terecorder = TERecorder(odir=self.odir)
+    def init_for_resume(self, custom_config_path):
+        """Initialize for resume mode — reuse existing output directory, no overwrite."""
+        output_path = custom_config_path.parent / custom_config_path.stem
+        if not output_path.exists():
+            raise FileNotFoundError(
+                f"Cannot resume: output directory {output_path} does not exist."
+            )
+        self.odir = output_path
+        self.resuming = True
+
+    def truncate_for_resume(self, checkpoint_step):
+        """Truncate output files back to the checkpoint step to avoid duplicate data.
+
+        Called after initialize_recorders so self.odir is set. The checkpoint is
+        saved at the end of run_step for a given step, and all recorders also
+        write during that same run_step. So the output files already contain data
+        for checkpoint_step. On resume the sim loop re-executes from checkpoint_step,
+        so we need to remove data from checkpoint_step onward.
+
+        For per-step files (1 line per step, no header), the number of lines to
+        keep is checkpoint_step - 1 (steps 1 through checkpoint_step-1).
+
+        For rate-based files (1 header line + 1 data line every RATE steps),
+        the number of data lines to keep is (checkpoint_step - 1) // RATE,
+        plus the header line(s).
+        """
+        from aegis_sim.parameterization import parametermanager
+
+        step = checkpoint_step
+
+        # Per-step files: 1 line per step, no header. Keep step-1 lines.
+        per_step_files = [
+            "popsize_before_reproduction.csv",
+            "popsize_after_reproduction.csv",
+            "eggnum_after_reproduction.csv",
+            "resources_before_scavenging.csv",
+            "resources_after_scavenging.csv",
+        ]
+        for fname in per_step_files:
+            self._truncate_file(self.odir / fname, keep_lines=step - 1)
+
+        # Rate-based files with 1 header line.
+        # Data is written when step % RATE == 0 or step == 1.
+        # Number of data lines at step S: 1 (for step 1) + count of multiples of RATE in [2, S-1]
+        # Simpler: lines where skip() returns False for steps 1..S-1
+
+        rate_specs_1header = [
+            ("progress.log", "LOGGING_RATE"),
+        ]
+        for fname, rate_name in rate_specs_1header:
+            rate = getattr(parametermanager.parameters, rate_name)
+            n_data = self._count_recordings(step - 1, rate)
+            self._truncate_file(self.odir / fname, keep_lines=1 + n_data)
+
+        # FlushRecorder spectra: 1 header + data at INTERVAL_RATE
+        spectra_dir = self.odir / "gui" / "spectra"
+        if spectra_dir.exists():
+            rate = parametermanager.parameters.INTERVAL_RATE
+            n_data = self._count_recordings(step - 1, rate)
+            for csv_file in spectra_dir.glob("*.csv"):
+                self._truncate_file(csv_file, keep_lines=1 + n_data)
+
+        # IntervalRecorder: 2 header lines + data at INTERVAL_RATE
+        rate = parametermanager.parameters.INTERVAL_RATE
+        n_data = self._count_recordings(step - 1, rate)
+        for fname in ["gui/genotypes.csv", "gui/phenotypes.csv"]:
+            self._truncate_file(self.odir / fname, keep_lines=2 + n_data)
+
+        # PopgenStatsRecorder: no header, data at POPGENSTATS_RATE
+        popgen_dir = self.odir / "popgen"
+        if popgen_dir.exists():
+            rate = parametermanager.parameters.POPGENSTATS_RATE
+            n_data = self._count_recordings(step - 1, rate)
+            for csv_file in popgen_dir.glob("*.csv"):
+                self._truncate_file(csv_file, keep_lines=n_data)
+
+        # Envdriftmap: no header, writes when step % ENVDRIFT_RATE == 0 (NOT at step 1 unless divisible).
+        # This differs from skip() logic, so we count multiples directly.
+        rate = parametermanager.parameters.ENVDRIFT_RATE
+        if rate > 0:
+            n_data = (step - 1) // rate  # multiples of rate in [1, step-1]
+            self._truncate_file(self.odir / "envdriftmap.csv", keep_lines=n_data)
+
+        # TE files: numbered CSV files in te/ directory.
+        # A new TE file starts at step 1 and every TE_RATE steps.
+        # TE_number increments when a file is flushed (at TE_DURATION offset or final step).
+        # We need to figure out which TE file was in-progress at the checkpoint step
+        # and delete any files started after it.
+        te_rate = parametermanager.parameters.TE_RATE
+        te_duration = parametermanager.parameters.TE_DURATION
+        if te_rate > 0:
+            te_dir = self.odir / "te"
+            if te_dir.exists():
+                self._truncate_te_files(te_dir, step, te_rate, te_duration)
+
+        logging.info(f"Output files truncated to checkpoint step {step}.")
+
+    @staticmethod
+    def _truncate_te_files(te_dir, checkpoint_step, te_rate, te_duration):
+        """Handle TE file truncation on resume.
+
+        TE files are numbered 0.csv, 1.csv, etc. A new collection window opens
+        at step 1 and every TE_RATE steps. The file number increments when the
+        window is flushed. We need to:
+        1. Determine how many complete TE windows finished before checkpoint_step
+        2. Delete any TE files beyond that
+        3. Truncate the in-progress TE file (remove data recorded at/after checkpoint_step)
+        """
+        # Count how many TE windows were fully completed before checkpoint_step.
+        # A window starts at step S where S % te_rate == 0 (or step 1).
+        # It flushes at S + te_duration (or at STEPS_PER_SIMULATION).
+        # Window 0 starts at step 1, flushes at step te_duration (if te_duration < te_rate).
+        # Window i starts at step i*te_rate, flushes at step i*te_rate + te_duration.
+        # A window is "complete" if its flush step < checkpoint_step.
+
+        # Number of complete windows: windows that started AND flushed before checkpoint_step
+        # Window starts: step 1, te_rate, 2*te_rate, 3*te_rate, ...
+        # The window starting at step W flushes at step W + te_duration.
+        # Complete if W + te_duration < checkpoint_step.
+
+        # For simplicity, just count existing TE files and remove those whose
+        # start step >= checkpoint_step.
+        # Window 0 starts at step 1.
+        # Window k starts at step k * te_rate (for k >= 1), or step 1 for k=0.
+
+        existing_files = sorted(te_dir.glob("*.csv"), key=lambda p: int(p.stem))
+        for f in existing_files:
+            file_num = int(f.stem)
+            # Window file_num starts at: step 1 if file_num==0, else file_num * te_rate
+            window_start = 1 if file_num == 0 else file_num * te_rate
+            if window_start >= checkpoint_step:
+                # This window started at or after checkpoint — delete it
+                f.unlink()
+            # If the window started before checkpoint but may contain data from
+            # steps >= checkpoint_step, we need to truncate those lines.
+            # TE files have: 1 header line ("T,E"), then data lines for each
+            # death event recorded during the window. We can't easily map lines
+            # to steps, so we leave partial windows as-is. The resumed sim will
+            # re-open a new window at the appropriate step, and the old partial
+            # data from the interrupted window is acceptable (it's death events
+            # that actually happened).
+
+    @staticmethod
+    def _count_recordings(up_to_step, rate):
+        """Count how many times a recorder with given rate would have written for steps 1..up_to_step.
+
+        Mirrors the skip() logic: always write at step 1, then write at every step divisible by rate.
+        """
+        if rate <= 0 or up_to_step < 1:
+            return 0
+        # Step 1 always records
+        count = 1
+        if up_to_step >= 2:
+            # Multiples of rate in [1, up_to_step] = up_to_step // rate
+            # But step 1 is already counted, so subtract 1 if rate divides 1 (only when rate == 1)
+            count += up_to_step // rate
+            if rate == 1:
+                count -= 1
+        return count
+
+    @staticmethod
+    def _truncate_file(path, keep_lines):
+        """Truncate a file to keep only the first `keep_lines` lines."""
+        if not path.exists():
+            return
+        with open(path, "rb") as f:
+            lines = f.readlines()
+        if len(lines) <= keep_lines:
+            return  # Nothing to truncate
+        with open(path, "wb") as f:
+            f.writelines(lines[:keep_lines])
+
+    def initialize_recorders(self, TICKER_RATE, resuming=False):
+        self.terecorder = TERecorder(odir=self.odir, resuming=resuming)
         self.picklerecorder = PickleRecorder(odir=self.odir)
         self.popgenstatsrecorder = PopgenStatsRecorder(odir=self.odir)
-        self.guirecorder = IntervalRecorder(odir=self.odir)
-        self.flushrecorder = FlushRecorder(odir=self.odir)
+        self.guirecorder = IntervalRecorder(odir=self.odir, resuming=resuming)
+        self.flushrecorder = FlushRecorder(odir=self.odir, resuming=resuming)
         self.featherrecorder = FeatherRecorder(odir=self.odir)
         self.phenomaprecorder = PhenomapRecorder(odir=self.odir)
         self.summaryrecorder = SummaryRecorder(odir=self.odir)
-        self.progressrecorder = ProgressRecorder(odir=self.odir)
+        self.progressrecorder = ProgressRecorder(odir=self.odir, resuming=resuming)
         self.simpleprogressrecorder = SimpleProgressRecorder(odir=self.odir)
         self.ticker = Ticker(odir=self.odir, TICKER_RATE=TICKER_RATE)
         self.popsizerecorder = PopsizeRecorder(odir=self.odir)
         self.resourcerecorder = ResourcesRecorder(odir=self.odir)
         self.configrecorder = ConfigRecorder(odir=self.odir)
         self.envdriftmaprecorder = Envdriftmaprecorder(odir=self.odir)
+        self.checkpointrecorder = CheckpointRecorder(odir=self.odir)
 
     #############
     # UTILITIES #

@@ -1,4 +1,17 @@
 import argparse
+import pathlib
+import sys
+
+
+def validate_config_path(path_str):
+    """Validate that a config path has a proper stem (not just an extension)."""
+    if path_str is None:
+        return None
+    p = pathlib.Path(path_str)
+    if p.stem == "" or p.stem.startswith("."):
+        print(f"Error: Config path '{path_str}' has no valid name (stem is empty or hidden).", file=sys.stderr)
+        sys.exit(1)
+    return path_str
 
 
 def get_parser():
@@ -8,25 +21,46 @@ def get_parser():
 
     # subparser_sim
     subparser_sim = subparsers.add_parser("sim", help="run a simulation")
+
     subparser_sim.add_argument(
         "-c",
         "--config_path",
         type=str,
-        help="path to config file",
-        default=None,
+        help="path to config file (always required)",
+        required=True,
     )
-    subparser_sim.add_argument(
-        "-p",
-        "--pickle_path",
-        type=str,
-        help="path to pickle file",
-        default=None,
-    )
-    subparser_sim.add_argument(
+
+    # -o, -p, -r are mutually exclusive
+    mode_group = subparser_sim.add_mutually_exclusive_group()
+
+    mode_group.add_argument(
         "-o",
         "--overwrite",
         action="store_true",
         help="overwrite old data with new simulation",
+        default=False,
+    )
+
+    mode_group.add_argument(
+        "-p",
+        "--pickle_path",
+        type=str,
+        help="path to pickle file (seed mode — new sim from saved population)",
+        default=None,
+    )
+
+    mode_group.add_argument(
+        "-r",
+        "--resume",
+        action="store_true",
+        help="resume simulation from latest checkpoint",
+        default=False,
+    )
+
+    subparser_sim.add_argument(
+        "--extend",
+        type=int,
+        help="extend a resumed simulation to this many total steps",
         default=None,
     )
 

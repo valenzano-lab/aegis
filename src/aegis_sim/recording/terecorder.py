@@ -7,10 +7,15 @@ from aegis_sim.parameterization import parametermanager
 # BUG Header duplication; a copy ends up as first row
 
 class TERecorder(Recorder):
-    def __init__(self, odir):
+    def __init__(self, odir, resuming=False):
         self.odir = odir / "te"
         self.init_odir()
-        self.TE_number = 0
+        if resuming:
+            # Restore TE_number by counting existing TE files
+            existing = list(self.odir.glob("*.csv"))
+            self.TE_number = len(existing)
+        else:
+            self.TE_number = 0
 
     def record(self, T, e):
         """

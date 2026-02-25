@@ -1,15 +1,16 @@
 ### Custom ###
 
 tests/test_sim/*
-profiler
 ipynb
 temp
 .temp
 src/gui/sim_data
 bootstrap-icons-1.11.3
-tests/*.yml
-tests/*/*
 aegis.code-workspace
+.kiro
+
+# Test artifacts (experiment output from functional tests)
+tests/functional/experiments/
 
 ### Python ###
 # Byte-compiled / optimized / DLL files
