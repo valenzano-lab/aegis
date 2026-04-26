@@ -122,17 +122,23 @@ def recombination_via_pairs_numba(flat_genomes, n_recombination_sites, chiasmata
     return flat_genomes
 
 
-def recombination_via_pairs(genomes, RECOMBINATION_RATE):
+def recombination_via_pairs(genomes, RECOMBINATION_RATE, ancestry=None):
     if RECOMBINATION_RATE == 0:
-        return genomes
+        return (genomes, ancestry) if ancestry is not None else genomes
 
     flat_genomes = genomes.reshape(len(genomes), 2, -1).copy()
     n_sites = flat_genomes.shape[-1]
     n_recombination_sites = np.random.binomial(n=n_sites, p=RECOMBINATION_RATE, size=len(flat_genomes))
 
-    max_n = max(n_recombination_sites)
+    max_n = max(n_recombination_sites) if max(n_recombination_sites) > 0 else 1
     chiasmata_list = variables.rng.integers(low=1, high=n_sites, size=(len(flat_genomes), max_n), dtype=np.int32)
 
     flat_genomes = recombination_via_pairs_numba(flat_genomes, n_recombination_sites, chiasmata_list)
+
+    if ancestry is not None:
+        # Apply identical crossover events to ancestry (same chiasmata positions)
+        flat_ancestry = ancestry.reshape(len(ancestry), 2, -1).copy()
+        flat_ancestry = recombination_via_pairs_numba(flat_ancestry, n_recombination_sites, chiasmata_list)
+        return flat_genomes.reshape(genomes.shape), flat_ancestry.reshape(ancestry.shape)
 
     return flat_genomes.reshape(genomes.shape)

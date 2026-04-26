@@ -1,0 +1,42 @@
+# Hybrid run 1→2: 10% pop1 seeds spiked into pop2 environment (K=500)
+# Tracks fate of large-N (pop1) variants in small-N (pop2) background
+# Run: aegis sim -c runs/hybrid_run_1_2.yml -p runs/pop2_equilibrium/pickles/50000
+
+RANDOM_SEED: 100
+STEPS_PER_SIMULATION: 50000
+AGE_LIMIT: 30
+INITIAL_POPULATION_SIZE: 500
+
+SNAPSHOT_RATE: 1000
+SNAPSHOT_FINAL_COUNT: 10
+INTERVAL_RATE: 500
+POPGENSTATS_RATE: 1000
+PICKLE_RATE: 0
+CHECKPOINT_RATE: 5000
+
+MATURATION_AGE: 5
+MAX_OFFSPRING_NUMBER: 2
+REPRODUCTION_MODE: sexual
+RECOMBINATION_RATE: 0.1
+
+BITS_PER_LOCUS: 8
+G_surv_initgeno: 0.5
+G_surv_lo: 0.8
+G_surv_hi: 1.0
+G_repr_initgeno: 0.5
+
+ABIOTIC_HAZARD_OFFSET: 0.02
+ABIOTIC_HAZARD_AMPLITUDE: 0
+ABIOTIC_HAZARD_SHAPE: flat
+
+# Pop2 environment (small N)
+RESOURCE_INITIAL_AMOUNT: 500
+RESOURCE_MAXIMUM_AMOUNT: 500
+RESOURCE_ADDITIVE_GROWTH: 500
+RESOURCE_MULTIPLICATIVE_GROWTH: 0
+
+STARVATION_PENALTY: 0.1
+
+# Introgression: 10% of K=500 = 50 seeds from pop1
+INTROGRESSION_SOURCE: runs/pop1_equilibrium/pickles/50000
+INTROGRESSION_SEEDS: 50

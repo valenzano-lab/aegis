@@ -23,6 +23,7 @@ class Population:
         "infection",
         "sizes",
         "sexes",
+        "ancestry",
     )
 
     def __init__(
@@ -36,6 +37,7 @@ class Population:
         sizes,
         sexes,
         generations=None,
+        ancestry=None,
     ):
         self.genomes = genomes
         self.ages = ages
@@ -46,6 +48,9 @@ class Population:
         self.sizes = sizes
         self.sexes = sexes
         self.generations = generations
+        # ancestry: bool array, same shape as genomes.array; True = introgressed from source pop.
+        # None when introgression tracking is disabled (standard runs).
+        self.ancestry = ancestry
 
         assert isinstance(phenotypes, Phenotypes)
 
@@ -61,6 +66,12 @@ class Population:
             # == len(generations)
         ):
             raise ValueError("Population attributes must have equal length")
+
+    def __setstate__(self, state):
+        # Backward compat: pickles saved before ancestry field was added
+        self.__dict__.update(state)
+        if "ancestry" not in self.__dict__:
+            self.ancestry = None
 
     def __len__(self):
         """Return the number of living individuals."""
@@ -78,6 +89,7 @@ class Population:
             sizes=self.sizes[index],
             sexes=self.sexes[index],
             generations=self.generations[index] if self.generations is not None else None,
+            ancestry=self.ancestry[index] if self.ancestry is not None else None,
         )
 
     def __imul__(self, index):
@@ -89,6 +101,9 @@ class Population:
                 self.phenotypes.keep(individuals=index)
             elif attr == "generations":
                 self.generations = None
+            elif attr == "ancestry":
+                if self.ancestry is not None:
+                    self.ancestry = self.ancestry[index]
             else:
                 setattr(self, attr, getattr(self, attr)[index])
         return self
@@ -104,6 +119,14 @@ class Population:
                 self.phenotypes.add(population.phenotypes)
             elif attr == "generations":
                 self.generations = None
+            elif attr == "ancestry":
+                if self.ancestry is not None and population.ancestry is not None:
+                    self.ancestry = np.concatenate([self.ancestry, population.ancestry])
+                elif self.ancestry is not None or population.ancestry is not None:
+                    # one side has ancestry tracking, the other doesn't — treat missing as all-native
+                    a = self.ancestry if self.ancestry is not None else np.zeros(self.genomes.array.shape, dtype=np.bool_)
+                    b = population.ancestry if population.ancestry is not None else np.zeros(population.genomes.array.shape, dtype=np.bool_)
+                    self.ancestry = np.concatenate([a, b])
             else:
                 val = np.concatenate([getattr(self, attr), getattr(population, attr)])
                 setattr(self, attr, val)
@@ -149,22 +172,22 @@ class Population:
             infection=infection,
             sizes=sizes,
             sexes=sexes,
+            ancestry=None,
         )
 
     @staticmethod
-    def make_eggs(offspring_genomes: Genomes, step, offspring_sexes, parental_generations):
+    def make_eggs(offspring_genomes: Genomes, step, offspring_sexes, parental_generations, offspring_ancestry=None):
         n = len(offspring_genomes)
         eggs = Population(
             genomes=offspring_genomes,
             ages=np.zeros(n, dtype=np.int32),
             births=np.zeros(n, dtype=np.int32),
             birthdays=np.zeros(n, dtype=np.int32) + step,
-            # generations=parental_generations + 1,
             generations=None,
-            # phenotypes=submodels.architect.__call__(offspring_genomes), # Do not compute phenotypes until eggs are laid! Why? Because it is computationally expensive.
             phenotypes=Phenotypes.init_phenotype_array(n),
             infection=np.zeros(n, dtype=np.int32),
             sizes=np.zeros(n, dtype=np.float32),
             sexes=offspring_sexes,
+            ancestry=offspring_ancestry,
         )
         return eggs

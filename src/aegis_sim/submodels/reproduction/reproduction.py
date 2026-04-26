@@ -30,13 +30,17 @@ class Reproducer:
         self.REPRODUCTION_MODE = REPRODUCTION_MODE
         self.mutator = mutator
 
-    def generate_offspring_genomes(self, genomes, muta_prob, ages, parental_sexes) -> Genomes:
+    def generate_offspring_genomes(self, genomes, muta_prob, ages, parental_sexes, ancestry=None):
 
         if self.REPRODUCTION_MODE == "sexual":
-            # genomes = recombination(genomes, self.RECOMBINATION_RATE)
-            genomes = recombination_via_pairs(genomes, self.RECOMBINATION_RATE)
-            genomes, ages, muta_prob = pairing(Genomes(genomes), parental_sexes, ages, muta_prob)
+            if ancestry is not None:
+                genomes, ancestry = recombination_via_pairs(genomes, self.RECOMBINATION_RATE, ancestry=ancestry)
+                genomes, ages, muta_prob, ancestry = pairing(Genomes(genomes), parental_sexes, ages, muta_prob, ancestry=ancestry)
+            else:
+                genomes = recombination_via_pairs(genomes, self.RECOMBINATION_RATE)
+                genomes, ages, muta_prob = pairing(Genomes(genomes), parental_sexes, ages, muta_prob)
 
+        # Mutation flips genome bits — ancestry labels are not mutated
         genomes = self.mutator._mutate(genomes, muta_prob, ages)
         genomes = Genomes(genomes)
-        return genomes
+        return genomes, ancestry

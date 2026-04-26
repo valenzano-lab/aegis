@@ -31,7 +31,7 @@ def _assemble_children(genome_array, males, females, male_gamete_idx, female_gam
     return children
 
 
-def pairing(genomes: Genomes, parental_sexes, ages, muta_prob):
+def pairing(genomes: Genomes, parental_sexes, ages, muta_prob, ancestry=None):
     """Return assorted chromatids."""
 
     # Get pairs
@@ -42,6 +42,9 @@ def pairing(genomes: Genomes, parental_sexes, ages, muta_prob):
     if n_pairs == 0:
         gshape = genomes.shape()
         children = np.empty(shape=(0, *gshape[1:]), dtype=np.bool_)
+        if ancestry is not None:
+            empty_ancestry = np.empty(shape=(0, *ancestry.shape[1:]), dtype=ancestry.dtype)
+            return children, ages[females], muta_prob[females], empty_ancestry
         return children, ages[females], muta_prob[females]
 
     # Random gamete selection (chromatid 0 or 1 per parent)
@@ -52,6 +55,14 @@ def pairing(genomes: Genomes, parental_sexes, ages, muta_prob):
     children = _assemble_children(
         genomes.array, males, females, male_gamete_idx, female_gamete_idx,
     )
+
+    if ancestry is not None:
+        # Assemble offspring ancestry using same parent/gamete selections
+        offspring_ancestry = np.empty((n_pairs, *ancestry.shape[1:]), dtype=ancestry.dtype)
+        offspring_ancestry[:, 0] = ancestry[males, male_gamete_idx]
+        offspring_ancestry[:, 1] = ancestry[females, female_gamete_idx]
+        # TODO fix splitting of ages and muta_prob
+        return children, ages[females], muta_prob[females], offspring_ancestry
 
     # TODO fix splitting of ages and muta_prob
     return children, ages[females], muta_prob[females]

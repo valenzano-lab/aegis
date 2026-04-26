@@ -34,6 +34,10 @@ class CompositeArchitecture:
             THRESHOLD,
         )
 
+        # Fixed seed=0 so all populations (including hybridizing ones with different RANDOM_SEEDs)
+        # share an identical physical genome layout; locus_permutation[i] = physical position of logical locus i
+        self.locus_permutation = np.random.default_rng(0).permutation(self.n_loci)
+
     def get_number_of_bits(self):
         return ploider.ploider.y * self.n_loci * self.BITS_PER_LOCUS
 
@@ -45,7 +49,8 @@ class CompositeArchitecture:
         array = variables.rng.random(size=(popsize, *self.get_shape()))
 
         for trait in parameterization.traits.values():
-            array[:, :, trait.slice] = array[:, :, trait.slice] < trait.initgeno
+            phys_pos = self.locus_permutation[trait.start:trait.end]
+            array[:, :, phys_pos, :] = array[:, :, phys_pos, :] < trait.initgeno
 
         return array
 
@@ -55,6 +60,9 @@ class CompositeArchitecture:
             genomes = genomes[:, 0]
         else:
             genomes = ploider.ploider.diploid_to_haploid(genomes)
+
+        # Reorder from physical storage order to logical (trait×age) order
+        genomes = genomes[:, self.locus_permutation, :]
 
         interpretome = np.zeros(shape=(genomes.shape[0], genomes.shape[1]), dtype=np.float32)
         for trait in parameterization.traits.values():

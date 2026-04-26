@@ -31,6 +31,7 @@ from .ticker import Ticker
 from .configrecorder import ConfigRecorder
 from .envdriftmaprecorder import Envdriftmaprecorder
 from .checkpointrecorder import CheckpointRecorder
+from .ancestryrecorder import AncestryRecorder
 
 # TODO write tests
 
@@ -252,6 +253,7 @@ class RecordingManager:
         self.configrecorder = ConfigRecorder(odir=self.odir)
         self.envdriftmaprecorder = Envdriftmaprecorder(odir=self.odir)
         self.checkpointrecorder = CheckpointRecorder(odir=self.odir)
+        self.ancestryrecorder = AncestryRecorder(odir=self.odir)
 
     #############
     # UTILITIES #

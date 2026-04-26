@@ -46,6 +46,7 @@ def run(custom_config_path, pickle_path, overwrite, custom_input_params, resume_
             else Population.load_pickle_from(pickle_path)
         )
         eggs = None
+        population = _seed_introgression(population)
 
     bioreactor = Bioreactor(population)
     bioreactor.eggs = eggs
@@ -143,6 +144,50 @@ def init_resume(resume_path, extend_steps=None):
 
     return checkpoint.population, checkpoint.eggs
 
+
+def _seed_introgression(population: Population) -> Population:
+    """If INTROGRESSION_SOURCE and INTROGRESSION_SEEDS are set, load pop A from pickle,
+    sample the requested number of individuals, mark their ancestry as True (introgressed),
+    set pop B ancestry to False (native), and merge into one population.
+    Returns population unchanged if introgression is not configured.
+    """
+    import numpy as np
+
+    n_seeds = parametermanager.parameters.INTROGRESSION_SEEDS
+    source_path = parametermanager.parameters.INTROGRESSION_SOURCE
+
+    if n_seeds == 0 or source_path is None:
+        return population
+
+    source_path = pathlib.Path(source_path)
+    pop_a = Population.load_pickle_from(source_path)
+
+    if n_seeds > len(pop_a):
+        logging.warning(
+            f"INTROGRESSION_SEEDS={n_seeds} exceeds source population size {len(pop_a)}; "
+            f"clamping to {len(pop_a)}"
+        )
+        n_seeds = len(pop_a)
+
+    # Sample n_seeds individuals from pop A
+    indices = variables.rng.choice(len(pop_a), size=n_seeds, replace=False)
+    pop_a *= indices
+
+    genome_shape = pop_a.genomes.array.shape  # (n_seeds, ploidy, n_loci, bpl)
+
+    # Mark all pop A seeds as introgressed
+    pop_a.ancestry = np.ones(genome_shape, dtype=np.bool_)
+
+    # Mark all pop B individuals as native
+    pop_b_shape = population.genomes.array.shape
+    population.ancestry = np.zeros(pop_b_shape, dtype=np.bool_)
+
+    logging.info(
+        f"Introgression: seeding {n_seeds} individuals from {source_path} into population of {len(population)}"
+    )
+
+    population += pop_a
+    return population
 
 
 def sim(bioreactor):

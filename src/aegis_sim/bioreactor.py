@@ -53,6 +53,7 @@ class Bioreactor:
         recordingmanager.flushrecorder.collect("additive_age_structure", self.population.ages)  # population census
         recordingmanager.picklerecorder.write(self.population)
         recordingmanager.featherrecorder.write(self.population)
+        recordingmanager.ancestryrecorder.write(self.population)
         recordingmanager.guirecorder.record(self.population)
         recordingmanager.flushrecorder.flush()
         recordingmanager.popgenstatsrecorder.write(
@@ -160,17 +161,19 @@ class Bioreactor:
         # Generate offspring genomes
         parental_genomes = self.population.genomes.get(individuals=who)
         parental_sexes = self.population.sexes[who]
+        parental_ancestry = self.population.ancestry[who] if self.population.ancestry is not None else None
 
         muta_prob = self.population.phenotypes.extract(ages=self.population.ages, trait_name="muta", part=mask_repr)[
             mask_repr
         ]
         muta_prob = np.repeat(muta_prob, num_repr[mask_repr])
 
-        offspring_genomes = submodels.reproduction.generate_offspring_genomes(
+        offspring_genomes, offspring_ancestry = submodels.reproduction.generate_offspring_genomes(
             genomes=parental_genomes,
             muta_prob=muta_prob,
             ages=ages_repr,
             parental_sexes=parental_sexes,
+            ancestry=parental_ancestry,
         )
         offspring_sexes = submodels.sexsystem.get_sex(len(offspring_genomes))
 
@@ -180,6 +183,8 @@ class Bioreactor:
         variables.rng.shuffle(order)
         offspring_genomes = offspring_genomes[order]
         offspring_sexes = offspring_sexes[order]
+        if offspring_ancestry is not None:
+            offspring_ancestry = offspring_ancestry[order]
 
         # Make eggs
         eggs = Population.make_eggs(
@@ -187,6 +192,7 @@ class Bioreactor:
             step=variables.steps,
             offspring_sexes=offspring_sexes,
             parental_generations=np.zeros(len(offspring_sexes)),  # TODO replace with working calculation
+            offspring_ancestry=offspring_ancestry,
         )
         if self.eggs is None:
             self.eggs = eggs
