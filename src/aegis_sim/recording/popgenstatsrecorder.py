@@ -114,12 +114,15 @@ class PopgenStatsRecorder(Recorder):
         submodels.popgenstats.calc(genomes.array, mutation_rates)
 
         # Record simple statistics
-        array = list(submodels.popgenstats.emit_simple().values())
-        if None in array:
+        simple = submodels.popgenstats.emit_simple()
+        if None in simple.values():
             return
 
-        with open(self.odir / "simple.csv", "ab") as f:
-            np.savetxt(f, [array], delimiter=",", fmt="%1.3e")
+        simple_path = self.odir / "simple.csv"
+        with open(simple_path, "ab") as f:
+            if simple_path.stat().st_size == 0:
+                f.write((",".join(simple.keys()) + "\n").encode())
+            np.savetxt(f, [list(simple.values())], delimiter=",", fmt="%1.3e")
 
         # TODO when writing some metrics (e.g. reference genome, reference genome gsample) use the appropriate dtype (bool in that case)
 

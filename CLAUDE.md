@@ -120,6 +120,32 @@ pytest -x                  # stop on first failure
 pytest -n auto             # parallel (requires pytest-xdist)
 ```
 
+## Egg bank — biological context and intended use
+
+The egg system (`INCUBATION_PERIOD`, `CARRYING_CAPACITY_EGGS`) is a **special-purpose feature**, not part of the default simulation design. It was developed specifically to model **annual killifish environments**, where embryos enter diapause and are stored in the sediment as a multi-year egg bank.
+
+- **Default (`INCUBATION_PERIOD: 0`)**: eggs hatch immediately each step — effectively, reproduction just adds new individuals with no egg-stage. This is the standard setting for most research scenarios.
+- **`INCUBATION_PERIOD > 0`**: delayed hatching — eggs accumulate over multiple steps before hatching. Use only when modeling organisms with a discrete egg/diapause stage.
+- **`INCUBATION_PERIOD: -1`**: eggs hatch only after the entire adult population goes extinct. Extreme egg bank scenario.
+- **`CARRYING_CAPACITY_EGGS`**: caps the egg bank size (default `None` = no cap). Only relevant when `INCUBATION_PERIOD > 0`.
+
+**Do not add egg bank logic to general-purpose code paths.** If a new feature needs to interact with eggs, check whether it belongs in the killifish-specific scenario or in the default path.
+
+## Starvation — current design (as of April 2026)
+
+Starvation no longer acts as a separate kill event. Instead, at the start of each step, resources are scavenged and a `resource_ratio = min(1, capacity/N)` is computed. This ratio is applied proportionally to each individual's survival and reproduction phenotype at their current age:
+
+```
+effective_surv_i(age) = surv_i(age) × resource_ratio
+effective_repr_i(age) = repr_i(age) × resource_ratio
+```
+
+`mortality_starvation()` in `bioreactor.py` is a no-op kept for `MORTALITY_ORDER` compatibility. `STARVATION_MORTALITY_FACTOR` is no longer used.
+
+**With `REPRODUCTION_REGULATION: true`**: population is hard-capped at `resources.capacity`, so `resource_ratio` is always 1.0 and starvation has no effect. This is the cleanest setup for studying aging evolution in isolation.
+
+**With `REPRODUCTION_REGULATION: false`** (preferred for research): population can overshoot the resource level, causing proportional phenotypic penalization on surv and repr. This is the biologically intended density-feedback mechanism.
+
 ## Research context
 
 This is a **research tool** used by the Valenzano Lab. Changes are driven by scientific requirements, not software product requirements. When adding features:
@@ -127,6 +153,10 @@ This is a **research tool** used by the Valenzano Lab. Changes are driven by sci
 - New parameters should follow the `Parameter(...)` pattern in `default_parameters.py`
 - Config files are YAML; defaults must be sensible for typical runs
 - Output files land in a directory named after the config file (e.g., `config.yml` → `config/`)
+
+## Dropbox + Edit tool warning
+
+`src/aegis_sim/parameterization/default_parameters.py` is a large file (~1100 lines) that Dropbox appears to conflict-delete whenever any tool writes to it. **Do not use the Edit tool on this file.** If it needs to change, use `python3 -c "..."` to do the replacement and immediately run `git add` before Dropbox can interfere, or make the change via a direct `git` patch. The symptom is the file silently disappearing from disk after a write.
 
 ## Branch strategy
 

@@ -1,5 +1,8 @@
 ### Custom ###
 
+# Simulation run output — large binary/data files, not version-controlled
+runs/*/
+
 tests/test_sim/*
 ipynb
 temp

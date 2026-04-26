@@ -7,7 +7,6 @@ from aegis_sim.constants import VALID_CAUSES_OF_DEATH
 from aegis_sim.dataclasses.population import Population
 from aegis_sim.recording import recordingmanager
 from aegis_sim.parameterization import parametermanager
-from aegis_sim.submodels.resources.starvation import starvation
 from aegis_sim.submodels.resources.resources import resources
 
 
@@ -15,6 +14,8 @@ class Bioreactor:
     def __init__(self, population: Population):
         self.eggs: Population = None
         self.population: Population = population
+        self._starvation_steps: int = 0        # consecutive steps where N > resources
+        self._starvation_multiplier: float = 1.0  # (1 - STARVATION_PENALTY) ** _starvation_steps
 
     ##############
     # MAIN LOGIC #
@@ -28,6 +29,12 @@ class Bioreactor:
             logging.debug("Population went extinct.")
             recordingmanager.summaryrecorder.extinct = True
             return
+
+        # Scavenge resources and update the starvation multiplier.
+        # If N > resources: starvation counter increments and multiplier compounds.
+        # If resources >= N: counter resets to 0 and multiplier returns to 1.0.
+        self._scavenge_resources()
+
         # Mortality sources
         self.mortalities()
         resources.replenish()
@@ -76,7 +83,8 @@ class Bioreactor:
 
     def mortality_intrinsic(self):
         probs_surv = self.population.phenotypes.extract(ages=self.population.ages, trait_name="surv")
-        age_hazard = submodels.frailty.modify(hazard=1 - probs_surv, ages=self.population.ages)
+        effective_surv = probs_surv * self._starvation_multiplier
+        age_hazard = submodels.frailty.modify(hazard=1 - effective_surv, ages=self.population.ages)
         mask_kill = variables.rng.random(len(probs_surv)) < age_hazard
         self._kill(mask_kill=mask_kill, causeofdeath="intrinsic")
 
@@ -99,15 +107,10 @@ class Bioreactor:
         self._kill(mask_kill=mask_kill, causeofdeath="predation")
 
     def mortality_starvation(self):
-        recordingmanager.resourcerecorder.write_before_scavenging()
-        resources_scavenged = resources.scavenge(np.ones(len(self.population)))
-        recordingmanager.resourcerecorder.write_after_scavenging()
-        # mask_kill = starvation.get_mask_kill(
-        #     n=len(self.population),
-        #     resources_scavenged=resources_scavenged.sum(),
-        # )
-        mask_kill = starvation.get_mask_kill(ages=self.population.ages, resources_scavenged=resources_scavenged.sum())
-        self._kill(mask_kill=mask_kill, causeofdeath="starvation")
+        # Starvation now acts by scaling surv and repr phenotypes via _resource_ratio
+        # (set at the top of run_step before mortalities). No separate kill step needed.
+        # This method is kept so "starvation" remains a valid MORTALITY_ORDER entry.
+        pass
 
     def reproduction(self):
         """Generate offspring of reproducing individuals.
@@ -127,8 +130,10 @@ class Bioreactor:
         if not any(mask_fertile):
             return
 
-        # Check if reproducing
-        probs_repr = self.population.phenotypes.extract(ages=self.population.ages, trait_name="repr", part=mask_fertile)
+        probs_repr = (
+            self.population.phenotypes.extract(ages=self.population.ages, trait_name="repr", part=mask_fertile)
+            * self._starvation_multiplier
+        )
 
         # Binomial calculation
         n = parametermanager.parameters.MAX_OFFSPRING_NUMBER
@@ -187,7 +192,7 @@ class Bioreactor:
             self.eggs = eggs
         else:
             self.eggs += eggs
-        
+
         if parametermanager.parameters.CARRYING_CAPACITY_EGGS is not None and len(self.eggs) > parametermanager.parameters.CARRYING_CAPACITY_EGGS:
             indices = np.arange(len(self.eggs))[-parametermanager.parameters.CARRYING_CAPACITY_EGGS :]
             # TODO biased
@@ -247,6 +252,37 @@ class Bioreactor:
     ################
     # HELPER FUNCS #
     ################
+
+    def _scavenge_resources(self):
+        """Scavenge resources and update the compounding starvation multiplier.
+
+        If N > available resources (deficit): starvation counter increments by 1
+        and multiplier = (1 - STARVATION_PENALTY) ** counter.
+
+        If resources >= N: counter resets to 0 and multiplier returns to 1.0.
+
+        The multiplier is applied to each individual's age-specific surv and repr
+        phenotypes in mortality_intrinsic() and reproduction().
+        """
+        n = len(self.population)
+        if n == 0:
+            self._starvation_steps = 0
+            self._starvation_multiplier = 1.0
+            return
+
+        in_deficit = n > resources.capacity
+
+        recordingmanager.resourcerecorder.write_before_scavenging()
+        resources.scavenge(np.ones(n))
+        recordingmanager.resourcerecorder.write_after_scavenging()
+
+        if in_deficit:
+            self._starvation_steps += 1
+        else:
+            self._starvation_steps = 0
+
+        penalty = parametermanager.parameters.STARVATION_PENALTY
+        self._starvation_multiplier = (1.0 - penalty) ** self._starvation_steps
 
     def _kill(self, mask_kill, causeofdeath):
         """Kill individuals and record their data."""

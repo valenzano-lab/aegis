@@ -238,6 +238,18 @@ DEFAULT_PARAMETERS = {
         inrange=lambda x: 0 < x < 1,
         evalrange=[0.5, 0.75, 0.9],
     ),
+    "STARVATION_PENALTY": Parameter(
+        key="STARVATION_PENALTY",
+        name="",
+        domain="starvation",
+        default=0.1,
+        info="Per-step fractional penalty applied to surv and repr when N > resources. Compounds each consecutive step under deficit; resets when resources are sufficient.",
+        info_extended="effective_phenotype = phenotype * (1 - STARVATION_PENALTY) ** consecutive_starvation_steps. Set to 0 to disable.",
+        dtype=float,
+        drange="[0, 1)",
+        inrange=lambda x: 0 <= x < 1,
+        evalrange=[0.0, 0.05, 0.1, 0.2],
+    ),
     #
     #
     # RESOURCES

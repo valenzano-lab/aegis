@@ -8,7 +8,9 @@ from aegis_sim.dataclasses.population import Population
 from .recorder import Recorder
 from aegis_sim import variables
 
+from aegis_sim import parameterization
 from aegis_sim.parameterization import parametermanager
+from aegis_sim.constants import GENETIC_TRAITS
 from aegis_sim.utilities.funcs import steps_to_end, skip
 
 
@@ -61,7 +63,6 @@ class FeatherRecorder(Recorder):
         df_gen.to_feather(self.odir_genotypes / f"{step}.feather")
 
     def write_phenotypes(self, step: int, population: Population):
-        # TODO add more info to columns and rows
         """
 
         # OUTPUT SPECIFICATION
@@ -72,13 +73,27 @@ class FeatherRecorder(Recorder):
         trait granularity: individual
         time granularity: snapshot
         frequency parameter: SNAPSHOT_RATE
-        structure: A float matrix; rows: individuals, columns: individual phenotypic traits (depending on which traits are evolvable and what is max lifespan), values: trait values
+        structure: A float matrix; rows: individuals, columns: {trait}_{age} for each evolvable trait, values: trait values
+        header: {trait}_{age} e.g. surv_0, surv_1, ..., repr_0, repr_1, ...
         """
-        # TODO bugged, wrong header
         df_phe = pd.DataFrame(population.phenotypes.get())
         df_phe.reset_index(drop=True, inplace=True)
-        df_phe.columns = [str(c) for c in df_phe.columns]
+        df_phe.columns = self._phenotype_columns()
         df_phe.to_feather(self.odir_phenotypes / f"{step}.feather")
+
+    @staticmethod
+    def _phenotype_columns():
+        AGE_LIMIT = parametermanager.parameters.AGE_LIMIT
+        cols = []
+        for trait_name in GENETIC_TRAITS:
+            trait = parameterization.traits[trait_name]
+            if not trait.evolvable:
+                continue
+            if trait.agespecific:
+                cols.extend(f"{trait_name}_{age}" for age in range(AGE_LIMIT))
+            else:
+                cols.append(trait_name)
+        return cols
 
     def write_demography(self, step: int, population: Population):
         """
