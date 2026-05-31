@@ -32,6 +32,7 @@ from .configrecorder import ConfigRecorder
 from .envdriftmaprecorder import Envdriftmaprecorder
 from .checkpointrecorder import CheckpointRecorder
 from .ancestryrecorder import AncestryRecorder
+from .fastarecorder import FastaRecorder
 
 # TODO write tests
 
@@ -254,6 +255,7 @@ class RecordingManager:
         self.envdriftmaprecorder = Envdriftmaprecorder(odir=self.odir)
         self.checkpointrecorder = CheckpointRecorder(odir=self.odir)
         self.ancestryrecorder = AncestryRecorder(odir=self.odir)
+        self.fastarecorder = FastaRecorder(odir=self.odir)
 
     #############
     # UTILITIES #
