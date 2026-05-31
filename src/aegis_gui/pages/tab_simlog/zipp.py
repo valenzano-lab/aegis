@@ -1,8 +1,9 @@
-from dash import html, dcc, Output, Input, State, MATCH, callback
+from dash import html, dcc, Output, Input, MATCH, callback, ctx, no_update
+import logging
 import pathlib
 import zipfile
 import io
-from aegis_gui.utilities import log
+from aegis_gui.utilities import log, utilities
 import dash_bootstrap_components as dbc
 
 
@@ -24,14 +25,22 @@ def get_zip_button_layout(filename):
 @callback(
     Output({"type": "zip-dcc-download", "index": MATCH}, "data"),
     Input({"type": "zip-download-button", "index": MATCH}, "n_clicks"),
-    State({"type": "config-download-basepath", "index": MATCH}, "children"),
     prevent_initial_call=True,
     # running=[(Output("zip-download-button", "disabled"), True, False)] # currently not supported
 )
-def generate_zip(n_clicks, basepath):
+def generate_zip(n_clicks):
     if n_clicks is None:
-        return
-    folder_path = pathlib.Path(basepath)
+        return no_update
+    triggered = ctx.triggered_id
+    if not isinstance(triggered, dict) or "index" not in triggered:
+        return no_update
+    try:
+        # Derive the path server-side from the button's index (the sim name).
+        # NEVER trust an absolute path sent by the browser.
+        folder_path = utilities.safe_sim_path(triggered["index"])
+    except utilities.UnsafeSimNameError as exc:
+        logging.warning("Rejected zip request: %s", exc)
+        return no_update
     zip_buffer = zip_folder(folder_path)
     return dcc.send_bytes(zip_buffer.getvalue(), f"{folder_path.name}.zip")
 

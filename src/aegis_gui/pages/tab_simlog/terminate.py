@@ -1,3 +1,4 @@
+import logging
 import dash
 from aegis_gui.utilities import utilities, log, manipulate
 
@@ -24,8 +25,15 @@ def button_terminate_simulation(n_clicks):
     if n_clicks is None:
         return dash.no_update
 
-    button_id = dash.callback_context.triggered[0]["prop_id"].split(".")[0]
-    filename = eval(button_id)["index"]
-    # TODO do not use eval
+    triggered = dash.ctx.triggered_id
+    if not isinstance(triggered, dict) or "index" not in triggered:
+        return dash.no_update
+
+    try:
+        filename = utilities.safe_sim_name(triggered["index"])
+    except utilities.UnsafeSimNameError as exc:
+        logging.warning("Rejected terminate request: %s", exc)
+        return dash.no_update
+
     manipulate.terminate_simulation(filename)
     return dash.no_update

@@ -1,4 +1,5 @@
-from dash import callback, Output, Input, State, ALL, MATCH, ctx, html
+from dash import callback, Output, Input, State, ALL, MATCH, ctx, html, no_update
+import logging
 from aegis_gui.utilities import log, utilities
 import dash_bootstrap_components as dbc
 import dash
@@ -42,18 +43,21 @@ def change_simlog(n_clicks, current):
 
     # If delete button triggered the action, delete the simulation
     if isinstance(ctx.triggered_id, dict) and ctx.triggered_id.get("type") == "delete-simulation-button":
-        filename = ctx.triggered_id["index"]
-        config_path = utilities.get_config_path(filename)
-        sim_path = config_path.parent / filename
-        remove_simulation_data(sim_path=sim_path, config_path=config_path)
+        try:
+            filename = utilities.safe_sim_name(ctx.triggered_id["index"])
+        except utilities.UnsafeSimNameError as exc:
+            logging.warning("Rejected delete request: %s", exc)
+            return no_update
+        delete_simulation(filename=filename)
         return current
     else:
         raise Exception
 
 
 def delete_simulation(filename):
+    filename = utilities.safe_sim_name(filename)
     config_path = utilities.get_config_path(filename)
-    sim_path = config_path.parent / filename
+    sim_path = utilities.safe_sim_path(filename)
     remove_simulation_data(sim_path=sim_path, config_path=config_path)
 
 
@@ -84,8 +88,11 @@ def toggle_modal(n1, n2, n3, filename, current_options, one_click_deletion):
 
     if ctx.triggered_id == "delete-simulation-button" and n1 is not None:
         if one_click_deletion:
-            # repeating myself below
-            delete_simulation(filename=filename)
+            try:
+                delete_simulation(filename=filename)
+            except utilities.UnsafeSimNameError as exc:
+                logging.warning("Rejected one-click delete: %s", exc)
+                return False, no_update, no_update
             new_options = [d for d in current_options if d["label"] != filename]
             return False, new_options, new_options[0]["value"] if new_options else ""
         return True, dash.no_update, dash.no_update
@@ -94,7 +101,11 @@ def toggle_modal(n1, n2, n3, filename, current_options, one_click_deletion):
         return False, dash.no_update, dash.no_update
 
     if ctx.triggered_id == "permanently-delete" and n3 is not None:
-        delete_simulation(filename=filename)
+        try:
+            delete_simulation(filename=filename)
+        except utilities.UnsafeSimNameError as exc:
+            logging.warning("Rejected delete: %s", exc)
+            return False, no_update, no_update
         new_options = [d for d in current_options if d["label"] != filename]
         return False, new_options, new_options[0]["value"] if new_options else ""
 
