@@ -55,7 +55,12 @@ class Ploider:
 
         n_loci = loci.shape[2]
         if dominance_per_locus is None:
-            dominance_per_locus = np.full(n_loci, 0.5, dtype=np.float32)
+            # Backward-compatible fallback: callers that don't pass per-locus
+            # dominance (e.g. the modifying architecture, or unit tests) get a
+            # uniform array filled with self.DOMINANCE_FACTOR (the legacy global).
+            # The composite architecture passes a per-trait array that takes precedence.
+            fallback = getattr(self, "DOMINANCE_FACTOR", 0.5)
+            dominance_per_locus = np.full(n_loci, fallback, dtype=np.float32)
         else:
             assert dominance_per_locus.shape == (n_loci,), (
                 f"dominance_per_locus shape {dominance_per_locus.shape} != ({n_loci},)"

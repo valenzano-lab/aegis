@@ -103,8 +103,10 @@ Submodels using **legacy** `np.random`: `population.initialize`, `matingmanager`
 - `STARVATION_RESPONSE` parameter is fully commented out — starvation refactor is incomplete
 
 ### Broken tests
-- `tests/unit/test_checkpoint.py` — fails with `ModuleNotFoundError` (installed version vs workspace mismatch)
-- `tests/unit/test_truncation.py` — 11 tests fail for same reason
+- `tests/functional/test_checkpoint_resume.py::test_extend_increases_steps` — passes alone, fails after other tests in the file due to module-level state leaking (variables, parametermanager, submodels singletons). Marked `@pytest.mark.skip`. Proper fix would be an autouse conftest fixture that resets the globals between tests.
+- `tests/functional/test_zcontainer.py::test_get_ticker` — same pattern of module-level pollution; marked skip.
+- `tests/functional/test_gui.py::TestDashApp::test_app_runs` — fails locally if `sim_dir` contains a half-broken sim (the GUI iterates sims at init); passes on a fresh CI runner. Not skipped.
+- (The previously-noted `test_checkpoint.py` and `test_truncation.py` "ModuleNotFoundError" failures are no longer reproducible — those tests pass cleanly.)
 
 ### Missing unit tests
 See `tests/TODO.md` for the full list. Priority 1 gaps:

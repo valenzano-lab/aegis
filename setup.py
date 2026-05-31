@@ -51,6 +51,7 @@ setuptools.setup(
         "dev": [
             "pytest>=7.0",
             "pytest-xdist",
+            "pytest-timeout",
             "flake8",
             "black",
             "tabulate",
