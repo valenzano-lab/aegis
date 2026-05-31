@@ -80,6 +80,18 @@ AEGIS offers two genetic architectures – composite and modifying. They are mut
 """
 
 
+experimental_text = """
+GUI
+Experimental interventions — controlled perturbations applied during a simulation to enable specific measurements that aren't accessible from passive observation.
+
+The current intervention is **forced allele injection**: at a configured step, AEGIS sets a known allele (0 or 1) at a specific (TRAIT, AGE, BIT) locus on chromatid 0 of a fraction of the living population. The SelectionRecorder then tracks the allele frequency over time, which can be fitted (e.g. with `runs/fit_s.py`) to estimate the selection coefficient s = d/dt log(p/(1-p)).
+
+This is NOT the same as natural per-bit mutation (driven by the `muta` trait), which is unchanged. It's a deliberate experimental knock-in, like dosing the population with a known variant at a known location.
+
+Targeting a selectable trait (surv, repr, grow) measures real selection; targeting a neutral locus (requires `G_neut_evolvable=True`) gives the drift-only null control.
+"""
+
+
 def get_texts(func):
     return {
         "starvation": func(starvation.Starvation),
@@ -95,6 +107,7 @@ def get_texts(func):
         "environmental drift": func(Envdrift),
         "technical": "",  # TODO add
         "other": "",  # TODO add
+        "experimental": experimental_text,
     }
 
 
