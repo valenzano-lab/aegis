@@ -83,8 +83,20 @@ FIG_LAYOUT_DARK_MODE = dict(
 )
 
 
-def make_empty_figure(dark_mode=False):
-    return go.Figure(layout=go.Layout({**FIG_LAYOUT, **(FIG_LAYOUT_DARK_MODE if dark_mode else {})}))
+def make_empty_figure(dark_mode=False, message=None):
+    layout = {**FIG_LAYOUT, **(FIG_LAYOUT_DARK_MODE if dark_mode else {})}
+    fig = go.Figure(layout=go.Layout(layout))
+    if message:
+        fig.add_annotation(
+            text=message,
+            xref="paper", yref="paper",
+            x=0.5, y=0.5,
+            showarrow=False,
+            font=dict(size=14, color=dark_mode_white if dark_mode else "rgb(80, 80, 80)"),
+        )
+        fig.update_xaxes(visible=False)
+        fig.update_yaxes(visible=False)
+    return fig
 
 
 def make_scatter_figure(id_, xs, ys, selected_sims, dark_mode=False):
@@ -228,4 +240,95 @@ def make_bar_figure_not_stacked(id_, xs, ys, selected_sims, dark_mode=False):
             # width=420,
         ),
     )
+    return figure
+
+
+# ----- v3: Muller plot (stacked area) ---------------------------------------
+
+def make_stacked_area_muller(id_, xs, ys, selected_sims, dark_mode=False):
+    """Muller plot — relative frequencies of founder lineages over time, stacked.
+
+    Single-sim only. The first valid sim in ys is plotted; others (if any) are
+    ignored with a note in the legend. ys[i] is the dict returned by
+    prep_y.get_lineage_muller — keys: "steps", "stack" (n_founders x n_steps),
+    "founders" (list of founder lineage_id).
+    """
+    valid = [(y, sim) for y, sim in zip(ys, selected_sims) if y is not None]
+    if not valid:
+        return make_empty_figure(
+            dark_mode=dark_mode,
+            message="No lineage data — enable LINEAGE_TRACING + LINEAGE_RATE>0 in the config.",
+        )
+
+    data, _ = valid[0]
+    steps = data["steps"]
+    stack = data["stack"]
+    founders = data["founders"]
+
+    # Relative frequencies per step
+    import numpy as np
+    totals = stack.sum(axis=0)
+    rel = np.where(totals > 0, stack / np.maximum(totals, 1), 0)
+
+    traces = []
+    for i, founder_id in enumerate(founders):
+        traces.append(
+            go.Scatter(
+                x=steps,
+                y=rel[i],
+                name=f"founder {founder_id}",
+                stackgroup="muller",
+                mode="lines",
+                line=dict(width=0),
+                showlegend=(i < 10),  # legend explodes with many founders; cap at 10
+            )
+        )
+
+    figure = go.Figure(
+        data=traces,
+        layout=go.Layout(
+            {
+                **FIG_LAYOUT,
+                **(FIG_LAYOUT_DARK_MODE if dark_mode else {}),
+                **FIG_SETUP[id_]["figure_layout"],
+            },
+        ),
+    )
+    figure.update_yaxes(range=[0, 1])
+    return figure
+
+
+# ----- v3: Selection-coefficient (s) trajectory -----------------------------
+
+def make_allele_freq_trajectory(id_, xs, ys, selected_sims, dark_mode=False):
+    """Allele frequency over time at the ALLELE_INJECTION locus.
+
+    Each ys[i] is either a 1-D numpy array (the allele_freq trajectory) or None.
+    Sims that ran without ALLELE_INJECTION_STEP>0 contribute None and are
+    skipped silently. If no sim has data, an empty-with-message figure is shown.
+    """
+    valid = [(x, y, sim) for x, y, sim in zip(xs, ys, selected_sims) if y is not None]
+    if not valid:
+        return make_empty_figure(
+            dark_mode=dark_mode,
+            message="No selection log — set ALLELE_INJECTION_STEP>0 in the config.",
+        )
+
+    figure = go.Figure(
+        data=[
+            go.Scatter(
+                x=x, y=y, mode="lines", name=sim,
+                line=dict(color=bootstrap_colors[i % len(bootstrap_colors)]),
+            )
+            for i, (x, y, sim) in enumerate(valid)
+        ],
+        layout=go.Layout(
+            {
+                **FIG_LAYOUT,
+                **(FIG_LAYOUT_DARK_MODE if dark_mode else {}),
+                **FIG_SETUP[id_]["figure_layout"],
+            },
+        ),
+    )
+    figure.update_yaxes(range=[0, 1])
     return figure

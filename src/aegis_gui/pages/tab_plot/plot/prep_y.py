@@ -136,3 +136,78 @@ def get_bit_states(container: Container, iloc=None):
     ys = container.get_genotypes_intrinsic_interval()  # unsorted
     max_iloc = None
     return ys, max_iloc
+
+
+# ----- v3: lineage Muller plot + selection-coefficient trajectory -----------
+
+def get_allele_freq_trajectory(container: Container, iloc=None):
+    """Allele frequency over time at the injection locus.
+
+    Returns (freq_series, None). Returns (None, None) if SelectionRecorder
+    didn't write a log (ALLELE_INJECTION_STEP was 0 or LINEAGE_RATE was 0).
+    """
+    sel = container.get_selection_log()
+    if sel is None or len(sel) == 0:
+        return None, None
+    return sel["allele_freq"].to_numpy(), None
+
+
+def get_lineage_muller(container: Container, iloc=None):
+    """Founder-lineage frequencies over time, as a (n_founders, n_steps) matrix.
+
+    Returns (matrix_dict, None) where matrix_dict has keys "steps" and "stack".
+    Returns (None, None) if LINEAGE_TRACING was off (no births.csv).
+    """
+    import numpy as np
+
+    births = container.get_lineage_births()
+    if births is None or len(births) == 0:
+        return None, None
+    deaths = container.get_lineage_deaths()
+
+    parent_of = dict(zip(births["lineage_id"].tolist(), births["parent_lineage_id"].tolist()))
+    birth_step = dict(zip(births["lineage_id"].tolist(), births["step"].tolist()))
+    death_step = (
+        dict(zip(deaths["lineage_id"].tolist(), deaths["step"].tolist()))
+        if deaths is not None
+        else {}
+    )
+
+    # Memoized founder lookup (climb parent chain until parent == -1)
+    founder = {}
+
+    def find_founder(lid):
+        if lid in founder:
+            return founder[lid]
+        chain = []
+        cur = lid
+        while parent_of.get(cur, -1) != -1:
+            if cur in founder:
+                root = founder[cur]
+                for x in chain:
+                    founder[x] = root
+                return root
+            chain.append(cur)
+            cur = parent_of[cur]
+        for x in chain + [cur]:
+            founder[x] = cur
+        return cur
+
+    for lid in parent_of:
+        find_founder(lid)
+
+    max_step = int(max(births["step"].max(), deaths["step"].max() if deaths is not None and len(deaths) else 0))
+    steps = np.arange(0, max_step + 1)
+    unique_founders = sorted(set(founder.values()))
+    counts = {f: np.zeros(len(steps), dtype=np.int64) for f in unique_founders}
+
+    for lid, b_step in birth_step.items():
+        d_step = death_step.get(lid, max_step + 1)
+        f = founder[lid]
+        lo = int(b_step)
+        hi = min(int(d_step), max_step + 1)
+        if hi > lo:
+            counts[f][lo:hi] += 1
+
+    stack = np.stack([counts[f] for f in unique_founders], axis=0)
+    return {"steps": steps, "stack": stack, "founders": unique_founders}, None

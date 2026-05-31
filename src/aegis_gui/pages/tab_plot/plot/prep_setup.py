@@ -453,4 +453,52 @@ FIG_SETUP = {
             # },
         },
     },
+    # v3: Muller plot (clonal expansion / contraction of founder lineages over time)
+    # Active only when LINEAGE_TRACING=True and LINEAGE_RATE>0. Falls back to an
+    # empty figure with an explanatory message if those weren't set.
+    "muller (clonal dynamics)": {
+        "title": "muller (clonal dynamics)",
+        "supports_multi": False,
+        "prep_y": prep_y.get_lineage_muller,
+        "prep_x": prep_x.get_none,
+        "prep_figure": "make_stacked_area_muller",
+        "description": dash.dcc.Markdown(
+            """
+            Stacked-area frequency of founder lineages over time. Each band is one
+            founder (an initial-population member); band thickness = number of
+            living descendants at that step.
+            \n\nRequires `LINEAGE_TRACING: true` and `LINEAGE_RATE > 0` in the
+            simulation config. Asexual reproduction only.
+            """,
+            mathjax=True,
+        ),
+        "aggregation": [],
+        "figure_layout": {
+            "xaxis_title": "step",
+            "yaxis_title": "relative frequency",
+        },
+    },
+    # v3: Selection-coefficient experiment — allele frequency over time at the
+    # ALLELE_INJECTION locus. Falls back to an empty figure when no log exists.
+    "allele frequency trajectory": {
+        "title": "allele frequency trajectory",
+        "supports_multi": True,
+        "prep_y": prep_y.get_allele_freq_trajectory,
+        "prep_x": prep_x.get_steps_non_multiplied,
+        "prep_figure": "make_allele_freq_trajectory",
+        "description": dash.dcc.Markdown(
+            """
+            Frequency of the injected allele over time. Slope (after the injection
+            step) under additive selection is the selection coefficient *s*; use
+            `runs/fit_s.py` for the regression.
+            \n\nRequires `ALLELE_INJECTION_STEP > 0` in the simulation config.
+            """,
+            mathjax=True,
+        ),
+        "aggregation": [],
+        "figure_layout": {
+            "xaxis_title": "step",
+            "yaxis_title": "allele frequency",
+        },
+    },
 }

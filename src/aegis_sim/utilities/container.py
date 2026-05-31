@@ -414,6 +414,36 @@ class Container:
             self.set_paths()
         return stem in self.paths
 
+    # ----- v3 artifact accessors (lineage + selection) ---------------------
+    # These read CSVs produced by LINEAGE_TRACING / ALLELE_INJECTION pipelines.
+    # All return None when the corresponding file is missing, so callers
+    # (e.g. GUI Plot tab) can render a "data not available" placeholder
+    # instead of crashing.
+
+    def get_lineage_births(self):
+        """Read /lineage/births.csv as a DataFrame, or None if not written.
+        Columns: step, lineage_id, parent_lineage_id."""
+        path = self.basepath / "lineage" / "births.csv"
+        if not path.is_file():
+            return None
+        return pd.read_csv(path, header=0)
+
+    def get_lineage_deaths(self):
+        """Read /lineage/deaths.csv as a DataFrame, or None if not written.
+        Columns: step, lineage_id, cause."""
+        path = self.basepath / "lineage" / "deaths.csv"
+        if not path.is_file():
+            return None
+        return pd.read_csv(path, header=0)
+
+    def get_selection_log(self):
+        """Read /selection/selection.csv as a DataFrame, or None if not written.
+        Columns: step, n_alive, n_alleles, n_carriers, allele_freq."""
+        path = self.basepath / "selection" / "selection.csv"
+        if not path.is_file():
+            return None
+        return pd.read_csv(path, header=0)
+
     def has_ticker_stopped(self):
         return self.get_ticker().has_stopped()
 
