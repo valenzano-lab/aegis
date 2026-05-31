@@ -1,39 +1,10 @@
-/* Style dcc.Dropdown to look like dbc.Select */
+/* Style dcc.Dropdown to look like dbc.Select (matching Bootstrap form-control). */
 .Select-control {
-  /* display: block;
-  width: 100%;
-  height: calc(1.5em + 0.75rem + 2px);
-  padding: 0.375rem 0.75rem;
-  font-size: 1rem;
-  font-weight: 400;
-  line-height: 1.5;
-  color: #495057;
-  background-color: #fff;
-  background-clip: padding-box;
-  border: 1px solid #ced4da;
-  border-radius: 0.25rem;
-  transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out; */
-  /* padding: 0.375rem 2.25rem 0.375rem 0.75rem;
-  font-size: 1rem;
-  font-weight: 400;
-  line-height: 1.5;
-  color: var(--bs-body-color); */
-  /* position: relative; */
-  /* flex: 1 1 auto; */
-  /* width: 1%; */
-  /* min-width: 0; */
-  /* color: var(--bs-body-color); */
   border: var(--bs-border-width) solid var(--bs-border-color);
   border-radius: var(--bs-border-radius);
   background-color: var(--bs-body-bg) !important;
   height: 2.5rem;
-  /* padding: 0; */
-  /* margin: 0; */
 }
-
-/* .Select-input > input {
-  margin: 0.375rem 2.25rem 0.375rem 0.75rem;
-} */
 
 #dropdown-multi {
   margin-bottom: 0.5rem;
@@ -41,39 +12,4 @@
 
 .Select-value {
   height: 1.8rem;
-  /* height:100%; */
 }
-
-.Select-plot-dropdown {
-}
-.Select-input {
-}
-
-/* .bootstrap-dropdown .Select-placeholder,
-.bootstrap-dropdown .Select--single .Select-value {
-  color: #495057;
-}
-
-.bootstrap-dropdown .Select-menu-outer {
-  border-radius: 0.25rem;
-  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
-  border: 1px solid #ced4da;
-}
-
-.bootstrap-dropdown .Select-option.is-focused {
-  background-color: #e9ecef;
-}
-
-.bootstrap-dropdown .Select-option.is-selected {
-  background-color: #007bff;
-  color: #fff;
-}
-
-.bootstrap-dropdown .Select-arrow-zone {
-  padding: 0;
-  color: #495057;
-}
-
-.bootstrap-dropdown .Select-clear-zone {
-  display: none;
-} */

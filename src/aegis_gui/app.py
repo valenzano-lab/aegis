@@ -28,7 +28,9 @@ def get_app():
             # dbc.themes.BOOTSTRAP,
             # dbc.icons.BOOTSTRAP,
         ],  # Do not use external_stylesheets
-        assets_ignore="styles-dark.css",  # *.css in assets are automatically imported; they need to be explicitly ignored
+        # Dark mode is handled by Bootstrap 5.3+ `data-bs-theme="dark"` on <html>
+        # (toggled by the clientside callback in offcanvas.py). Custom AEGIS surfaces
+        # respond via [data-bs-theme=dark] selectors in styles_colors.css.
         use_pages=True,
     )
 

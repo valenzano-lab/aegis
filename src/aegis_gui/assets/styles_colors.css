@@ -1,134 +1,41 @@
+/* Custom color tokens used by AEGIS-specific surfaces (cards, tables).
+   Bootstrap 5.3+ tokens (--bs-*) are used wherever possible so dbc
+   components and our custom surfaces share the same palette and both
+   respond to data-bs-theme=light/dark. The few variables below cover
+   the gaps: figure cards, hover effects, subtle table fills.
+
+   The old palette (--mid-black, --offwhite, --bckg, --interacted, ...)
+   was a half-finished dark-mode attempt with no active references; the
+   .dtype-* / .domain-* label classes were rendered by a since-removed
+   table-row layout. Both were removed in the v3 visual refresh. */
+
 :root {
-  --background-color: #101112;
-  --mid-black: rgb(24, 25, 27);
-  --mid-black-hover: #222325;
+  --aegis-card-bg: rgba(0, 0, 0, 0.03);
+  --aegis-card-bg-hover-glow: rgba(228, 178, 104, 0.15);
+  --aegis-table-row-bg: rgba(0, 0, 0, 0.01);
+  --aegis-table-header-bg: rgba(0, 0, 0, 0.05);
+}
 
-  --midmidmid-black: rgb(17, 18, 19);
-  --midmid-black: #151617;
-  --offwhite: rgb(190, 189, 183);
-
-  --lite-black: rgb(46, 49, 51);
-  --litelite-black: rgb(65, 69, 71);
-  --prim: rgb(228, 178, 104);
-  --sec: rgb(29, 124, 219);
-
-  --bckg: rgb(240, 250, 255);
-  --blue: rgb(220, 240, 255);
-  --bluish: rgb(250, 250, 255);
-  --lightblue: rgb(50, 80, 100);
-  --veryblue: rgb(0, 30, 100);
-
-  --interacted: rgb(70, 100, 150);
-  --can-interact: rgb(180, 210, 240);
-  --cannot-interact: rgb(250, 240, 240);
-  --can-interact-hover: rgb(130, 160, 190);
-
-  --black1: rgba(0, 0, 0, 0.01);
-  --black3: rgba(0, 0, 0, 0.03);
-  --black10: rgba(0, 0, 0, 0.1);
-
-  --button-pressed: rgba(164, 164, 164, 0.5);
+[data-bs-theme="dark"] {
+  --aegis-card-bg: rgba(255, 255, 255, 0.05);
+  --aegis-card-bg-hover-glow: rgba(228, 178, 104, 0.25);
+  --aegis-table-row-bg: rgba(255, 255, 255, 0.02);
+  --aegis-table-header-bg: rgba(255, 255, 255, 0.07);
 }
 
 td {
-  background-color: var(--black1);
+  background-color: var(--aegis-table-row-bg);
 }
+
 th {
-  background-color: var(--black3);
-}
-
-body {
-  /* background-color: var(--background-color); */
-
-  /* -ms-overflow-style: none;
-  scrollbar-width: none;
-  overflow-y: scroll; */
-}
-
-body::-webkit-scrollbar {
-  /* display: none; */
-  /* for Chrome, Safari, and Opera */
-}
-
-td {
-  /* color: rgb(200, 200, 200); */
-  /* td.td-info { */
-  /* color: var(--offwhite); */
-  /* } */
-}
-
-input:focus {
-  /* outline: 2px solid var(--prim) !important; */
-}
-
-.domain,
-.dtype {
-}
-
-.svg-plot {
-}
-
-.dropdown-div {
-}
-
-.plot-div {
-}
-
-#landing-section {
-  /* color: white; */
-}
-
-#figure-container {
+  background-color: var(--aegis-table-header-bg);
 }
 
 .figure-card {
-  /* outline: 5px solid red; */
-  background-color: var(--black3);
-  /* color: var(--offwhite); */
+  background-color: var(--aegis-card-bg);
 }
 
 .figure-card:hover {
-  box-shadow: 0 0 10px rgb(228, 178, 104, 0.1);
+  box-shadow: 0 0 10px var(--aegis-card-bg-hover-glow);
   transition: box-shadow 0.1s ease;
-}
-
-label.dtype-str,
-label.domain-recording {
-  color: rgb(212, 116, 116);
-  background-color: rgba(255, 195, 195, 0.3);
-}
-
-label.dtype-int {
-  color: rgb(147, 187, 53);
-  background-color: rgba(226, 255, 173, 0.3);
-}
-
-label.dtype-float {
-  color: rgb(200, 144, 13);
-  background-color: rgba(255, 255, 167, 0.3);
-}
-
-label.dtype-bool {
-  color: rgb(53, 178, 187);
-  background-color: rgba(179, 235, 255, 0.3);
-}
-
-label.domain-ecology {
-  color: rgb(86, 176, 45);
-  background-color: rgba(212, 255, 199, 0.3);
-}
-
-label.domain-initialization {
-  color: rgb(103, 129, 231);
-  background-color: rgba(189, 193, 255, 0.3);
-}
-
-label.domain-genetics {
-  color: rgb(147, 104, 217);
-  background-color: rgba(229, 180, 255, 0.3);
-}
-
-label.domain-computation {
-  color: rgb(217, 89, 196);
-  background-color: rgba(255, 192, 238, 0.3);
 }

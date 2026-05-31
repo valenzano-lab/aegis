@@ -1,8 +1,3 @@
-/* @font-face {
-  font-family: "Quicksand";
-  src: url("fonts/Quicksand.ttf") format("truetype");
-} */
-
 @font-face {
   font-family: "Inter";
   src: url("fonts/Inter.ttf") format("truetype");
@@ -26,10 +21,23 @@
 }
 
 .tooltip-underline {
-  /* text-decoration: underline #888 dotted; */
   cursor: help;
 }
 
 h1 {
   padding-bottom: 1rem;
+}
+
+/* Utility — merged from former styles_dcc.css */
+.invisible {
+  display: none;
+}
+
+/* Buttons — merged from former styles_buttons.css */
+i.bi-file-arrow-down-fill {
+  margin-right: 5px;
+}
+
+#plot-bottom-right-panel button {
+  margin-right: 0.5rem;
 }
