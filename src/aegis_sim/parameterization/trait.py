@@ -16,6 +16,10 @@ class Trait:
         self.agespecific = get("agespecific")
         self.interpreter = get("interpreter")
         self.initgeno = get("initgeno")
+        # Per-trait dominance coefficient h for diploid-to-haploid collapse.
+        # None means "inherit global DOMINANCE_FACTOR". The architecture builds
+        # a per-locus array from these values at init time.
+        self.dominance = get("dominance")
 
         # Relevant if genetic architecture is modifying
         self.initpheno = get("initpheno")

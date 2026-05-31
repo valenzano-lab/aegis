@@ -38,6 +38,16 @@ class CompositeArchitecture:
         # share an identical physical genome layout; locus_permutation[i] = physical position of logical locus i
         self.locus_permutation = np.random.default_rng(0).permutation(self.n_loci)
 
+        # Per-locus dominance coefficient h, indexed by *physical* locus position
+        # (because diploid_to_haploid operates on the physical layout, before reorder).
+        # Built from each trait's G_<trait>_dominance value (default 0.5 = codominant).
+        self.dominance_per_locus = np.full(self.n_loci, 0.5, dtype=np.float32)
+        for trait in parameterization.traits.values():
+            if trait.length == 0:
+                continue
+            phys_pos = self.locus_permutation[trait.start:trait.end]
+            self.dominance_per_locus[phys_pos] = np.float32(trait.dominance)
+
     def get_number_of_bits(self):
         return ploider.ploider.y * self.n_loci * self.BITS_PER_LOCUS
 
@@ -59,7 +69,7 @@ class CompositeArchitecture:
         if genomes.shape[1] == 1:  # Do not calculate mean if genomes are haploid
             genomes = genomes[:, 0]
         else:
-            genomes = ploider.ploider.diploid_to_haploid(genomes)
+            genomes = ploider.ploider.diploid_to_haploid(genomes, dominance_per_locus=self.dominance_per_locus)
 
         # Reorder from physical storage order to logical (trait×age) order
         genomes = genomes[:, self.locus_permutation, :]

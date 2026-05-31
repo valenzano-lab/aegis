@@ -1,0 +1,33 @@
+# Smoke test for per-trait dominance.
+# Surv: recessive (h=0). Repr: dominant (h=1). Others: default codominant (0.5).
+# After loading, dominance_per_locus should have a mix of 0.0, 1.0, and 0.5 values
+# at the appropriate physical positions.
+
+RANDOM_SEED: 1
+STEPS_PER_SIMULATION: 10
+AGE_LIMIT: 10
+INITIAL_POPULATION_SIZE: 50
+
+PICKLE_RATE: 0
+CHECKPOINT_RATE: 0
+SNAPSHOT_RATE: 0
+INTERVAL_RATE: 0
+POPGENSTATS_RATE: 0
+
+# The point of this test
+G_surv_dominance: 0.0    # fully recessive
+G_repr_dominance: 1.0    # fully dominant
+
+MATURATION_AGE: 2
+MAX_OFFSPRING_NUMBER: 2
+REPRODUCTION_MODE: asexual
+ENVDRIFT_RATE: 0
+BITS_PER_LOCUS: 8
+
+ABIOTIC_HAZARD_OFFSET: 0
+ABIOTIC_HAZARD_AMPLITUDE: 0
+ABIOTIC_HAZARD_SHAPE: flat
+
+RESOURCE_INITIAL_AMOUNT: 200
+RESOURCE_MAXIMUM_AMOUNT: 500
+RESOURCE_ADDITIVE_GROWTH: 100
