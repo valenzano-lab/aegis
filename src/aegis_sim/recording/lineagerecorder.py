@@ -9,6 +9,7 @@ from aegis_sim.parameterization import parametermanager
 
 
 HEADER = "step,lineage_id,parent_lineage_id\n"
+DEATHS_HEADER = "step,lineage_id,cause\n"
 
 
 class LineageRecorder(Recorder):
@@ -31,7 +32,9 @@ class LineageRecorder(Recorder):
         self.odir = odir / "lineage"
         self.init_odir()
         self._file_path = self.odir / "births.csv"
+        self._deaths_path = self.odir / "deaths.csv"
         self._file = None
+        self._deaths_file = None
         self._writes_since_flush = 0
 
     def _ensure_open(self):
@@ -43,6 +46,14 @@ class LineageRecorder(Recorder):
         self._file = open(self._file_path, mode)
         if mode == "w":
             self._file.write(HEADER)
+
+    def _ensure_deaths_open(self):
+        if self._deaths_file is not None:
+            return
+        mode = "a" if self._deaths_path.exists() and self._deaths_path.stat().st_size > 0 else "w"
+        self._deaths_file = open(self._deaths_path, mode)
+        if mode == "w":
+            self._deaths_file.write(DEATHS_HEADER)
 
     def write_initial(self, lineage_ids):
         if parametermanager.parameters.LINEAGE_RATE <= 0:
@@ -68,11 +79,25 @@ class LineageRecorder(Recorder):
             self._file.write(f"{step},{cid},{pid}\n")
         self._maybe_flush()
 
+    def write_deaths(self, lineage_ids, causeofdeath, step):
+        if parametermanager.parameters.LINEAGE_RATE <= 0:
+            return
+        if lineage_ids is None or len(lineage_ids) == 0:
+            return
+        self._ensure_deaths_open()
+        for lid in np.asarray(lineage_ids, dtype=np.int64).tolist():
+            self._deaths_file.write(f"{step},{lid},{causeofdeath}\n")
+        # Reuse the same flush counter as births.
+        self._maybe_flush()
+
     def _maybe_flush(self):
         self._writes_since_flush += 1
         rate = parametermanager.parameters.LINEAGE_RATE
         if rate > 0 and self._writes_since_flush >= rate:
-            self._file.flush()
+            if self._file is not None:
+                self._file.flush()
+            if self._deaths_file is not None:
+                self._deaths_file.flush()
             self._writes_since_flush = 0
 
     def close(self):
@@ -80,6 +105,10 @@ class LineageRecorder(Recorder):
             self._file.flush()
             self._file.close()
             self._file = None
+        if self._deaths_file is not None:
+            self._deaths_file.flush()
+            self._deaths_file.close()
+            self._deaths_file = None
 
     # Compatibility no-op so the recorder can be safely added to the standard
     # end-of-step recording cycle if anyone wires it in there (currently we

@@ -329,6 +329,13 @@ class Bioreactor:
         recordingmanager.flushrecorder.collect(f"age_at_{causeofdeath}", ages_death)
         recordingmanager.terecorder.record(ages_death, "dead")
 
+        if self.population.lineage_id is not None:
+            recordingmanager.lineagerecorder.write_deaths(
+                lineage_ids=self.population.lineage_id[mask_kill],
+                causeofdeath=causeofdeath,
+                step=variables.steps,
+            )
+
         # Retain survivors
         self.population *= ~mask_kill
 
