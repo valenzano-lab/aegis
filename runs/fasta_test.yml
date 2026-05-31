@@ -12,6 +12,7 @@ INITIAL_POPULATION_SIZE: 200
 
 PICKLE_RATE: 0          # writes only at last step
 FASTA_RATE: 50          # FASTA dump every 50 steps (and step 1 + last step)
+VCF_RATE: 50            # VCF dump on the same cadence
 SNAPSHOT_RATE: 0
 INTERVAL_RATE: 0
 POPGENSTATS_RATE: 0
