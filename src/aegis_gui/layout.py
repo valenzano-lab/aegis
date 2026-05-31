@@ -8,12 +8,26 @@ from aegis_gui.guisettings.GuiSettings import gui_settings
 
 
 def get_app_layout():
-    return html.Div(
+    # Responsive Bootstrap grid: sidebar (3 cols on md+, full width below)
+    # next to main (9 cols on md+). On small screens the cols stack — the
+    # sidebar appears above main as a horizontal nav strip.
+    return dbc.Container(
         id="body-container",
+        fluid=True,
         children=[
             dcc.Location(id="url", refresh=False),
-            get_sidebar(),
-            html.Div(id="main-container", children=[dash.page_container]),
+            dbc.Row(
+                [
+                    dbc.Col(get_sidebar(), xs=12, md=3, lg=2, id="sidebar-col"),
+                    dbc.Col(
+                        html.Div(id="main-container", children=[dash.page_container]),
+                        xs=12,
+                        md=9,
+                        lg=10,
+                    ),
+                ],
+                className="g-0",
+            ),
         ],
     )
 
