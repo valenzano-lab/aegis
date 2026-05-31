@@ -11,7 +11,15 @@ test_experiment_path.mkdir(exist_ok=True, parents=True)
 
 @pytest.fixture
 def base_config():
-    """Minimal config dict for a short simulation."""
+    """Minimal config dict for a short simulation.
+
+    Tuned for robust viability (G_surv_lo=0.9, MATURATION_AGE=3) so tests
+    exercise the simulation pipeline rather than population-extinction edge
+    cases. Without these, the post-Apr-27 initgeno=0.5 defaults combined
+    with small N=200 make these tests flaky (population dies before
+    STEPS_PER_SIMULATION). Tests that specifically want to study
+    extinction should override these in their own config dict.
+    """
     return {
         "STEPS_PER_SIMULATION": 100,
         "LOGGING_RATE": 10,
@@ -23,6 +31,10 @@ def base_config():
         "PICKLE_RATE": 50,
         "INITIAL_POPULATION_SIZE": 200,
         "CARRYING_CAPACITY_EGGS": 500,
+        # Viability tuning — avoid extinction in small-N tests
+        "G_surv_lo": 0.9,
+        "MATURATION_AGE": 3,
+        "G_repr_hi": 1.0,
     }
 
 
