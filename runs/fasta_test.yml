@@ -1,35 +1,46 @@
-# Tiny sim for FASTA round-trip validation.
-# Goal: produce a final-step pickle that we can encode to FASTA, decode back,
-# and check that genome bits + architect-derived phenotypes are identical.
+# Demo config for FASTA + VCF + round-trip validation.
+# Designed to run to completion (no extinction) with the v3 defaults
+# (G_surv_lo=0.7, lo/hi-aware composite architecture, codominant h=0.5)
+# so new users get a clean smoke test on first run.
 #
-# ENVDRIFT off so the architect is deterministic given the genome array
-# (no time-evolving envdrift state to snapshot).
+# After running:
+#   aegis sim -c runs/fasta_test.yml -o
+#   python runs/fasta_roundtrip.py
+# Expected: bits identical, phenotype max-diff = 0, no extinction.
 
 RANDOM_SEED: 42
-STEPS_PER_SIMULATION: 200
-AGE_LIMIT: 20
-INITIAL_POPULATION_SIZE: 200
+STEPS_PER_SIMULATION: 500
+AGE_LIMIT: 30
+INITIAL_POPULATION_SIZE: 500
 
-PICKLE_RATE: 0          # writes only at last step
-FASTA_RATE: 50          # FASTA dump every 50 steps (and step 1 + last step)
-VCF_RATE: 50            # VCF dump on the same cadence
+# Recording — keep output dir small; PICKLE_RATE=0 writes only the final pickle
+PICKLE_RATE: 0
+CHECKPOINT_RATE: 0
 SNAPSHOT_RATE: 0
 INTERVAL_RATE: 0
 POPGENSTATS_RATE: 0
-CHECKPOINT_RATE: 0
 
-MATURATION_AGE: 3
+# Demo the two new genome-export formats
+FASTA_RATE: 100        # genome FASTA every 100 steps (and step 1 + final)
+VCF_RATE: 100          # VCF on the same cadence
+
+# Sexual reproduction with a healthy fertility ceiling
+MATURATION_AGE: 5
 MAX_OFFSPRING_NUMBER: 2
 REPRODUCTION_MODE: sexual
 RECOMBINATION_RATE: 0.1
+G_repr_hi: 1.0         # midpoint repr = 0.5 with default initgeno=0.5 → robust
 
+# Deterministic architect (no time-evolving envdrift state to snapshot)
 BITS_PER_LOCUS: 8
 ENVDRIFT_RATE: 0
 
-ABIOTIC_HAZARD_OFFSET: 0.02
+# No abiotic mortality — keeps the demo cleanly viable
+ABIOTIC_HAZARD_OFFSET: 0.0
 ABIOTIC_HAZARD_AMPLITUDE: 0
 ABIOTIC_HAZARD_SHAPE: flat
 
-RESOURCE_INITIAL_AMOUNT: 200
-RESOURCE_MAXIMUM_AMOUNT: 2000
-RESOURCE_ADDITIVE_GROWTH: 200
+# Resources — generous, never limiting
+RESOURCE_INITIAL_AMOUNT: 1000
+RESOURCE_MAXIMUM_AMOUNT: 5000
+RESOURCE_ADDITIVE_GROWTH: 500

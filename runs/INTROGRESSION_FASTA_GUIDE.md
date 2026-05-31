@@ -50,18 +50,18 @@ INTROGRESSION_SEEDS: 20                                         # how many pop-A
 There's a tiny example config and a script that round-trips the FASTA back to genomes + phenotypes:
 
 ```bash
-aegis sim -c runs/fasta_test.yml -o     # writes runs/fasta_test/fasta/step1.{genome.fasta,mapping.json}
+aegis sim -c runs/fasta_test.yml -o     # ~10s; writes 6 FASTA + 6 VCF snapshots, final pickle
 python runs/fasta_roundtrip.py          # encodes pickle → FASTA → decode → asserts bit + phenotype equality
 ```
 
-Expected output:
+Expected output (numbers vary slightly with RANDOM_SEED but bit count matches genome shape):
 
 ```
-OK bits: all 88960 bits identical across 139 individuals
+OK bits: all 661440 bits identical across 689 individuals
 OK phenotypes: max |diff| = 0.00e+00
 ```
 
-A side-by-side phenotype plot is written to `runs/fasta_test/roundtrip.png`.
+A side-by-side phenotype plot is written to `runs/fasta_test/roundtrip.png`. The sim should run all 500 configured steps without extinction.
 
 ---
 
@@ -212,5 +212,6 @@ If any of these blocks your analysis, let Dario know and they can be added quick
 - `src/aegis_sim/recording/fastarecorder.py` — the recorder that runs during simulation when `FASTA_RATE > 0`.
 - `src/aegis_sim/__init__.py` (`_seed_introgression`) — the introgression seeding logic.
 - `src/aegis_sim/recording/ancestryrecorder.py` — writes mean introgression fraction per locus over time (`ancestry.csv` in the output dir).
-- `runs/fasta_test.yml` — minimal config that exercises the FASTA path.
+- `runs/fasta_test.yml` — robust demo config (N=500, 500 steps, no abiotic mortality) that runs to completion and produces both FASTA and VCF snapshots.
+- `runs/_fasta_test_minimal.yml` — tiny stress-test variant (N=200, 200 steps, with abiotic hazard); included for testing the round-trip on a near-extinct population.
 - `runs/fasta_roundtrip.py` — reference script for decoding a FASTA back to phenotypes.
