@@ -35,6 +35,7 @@ from .ancestryrecorder import AncestryRecorder
 from .fastarecorder import FastaRecorder
 from .vcfrecorder import VCFRecorder
 from .lineagerecorder import LineageRecorder
+from .selectionrecorder import SelectionRecorder
 
 # TODO write tests
 
@@ -260,6 +261,7 @@ class RecordingManager:
         self.fastarecorder = FastaRecorder(odir=self.odir)
         self.vcfrecorder = VCFRecorder(odir=self.odir)
         self.lineagerecorder = LineageRecorder(odir=self.odir)
+        self.selectionrecorder = SelectionRecorder(odir=self.odir)
 
     #############
     # UTILITIES #

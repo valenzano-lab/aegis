@@ -1,0 +1,45 @@
+# Small sim for the selection-coefficient (s) experiment.
+# Injects allele=1 at surv age 5 bit 0 in 5% of the population at step 50.
+# Tracks allele freq for the remaining 150 steps; expect upward trajectory (positive s)
+# because under the binary interpreter, 1s at a surv locus boost survival.
+
+RANDOM_SEED: 11
+STEPS_PER_SIMULATION: 300
+AGE_LIMIT: 20
+INITIAL_POPULATION_SIZE: 1000
+
+PICKLE_RATE: 0
+CHECKPOINT_RATE: 0
+SNAPSHOT_RATE: 0
+INTERVAL_RATE: 0
+POPGENSTATS_RATE: 0
+LINEAGE_RATE: 0
+FASTA_RATE: 0
+VCF_RATE: 0
+
+# The experiment
+ALLELE_INJECTION_STEP: 30
+ALLELE_INJECTION_TRAIT: surv
+ALLELE_INJECTION_AGE: 5
+ALLELE_INJECTION_BIT: 0
+ALLELE_INJECTION_ALLELE: 1
+ALLELE_INJECTION_FRACTION: 0.05
+
+# Keep population stable
+MATURATION_AGE: 3
+MAX_OFFSPRING_NUMBER: 2
+REPRODUCTION_MODE: asexual
+ENVDRIFT_RATE: 0
+BITS_PER_LOCUS: 8
+
+ABIOTIC_HAZARD_OFFSET: 0.0
+ABIOTIC_HAZARD_AMPLITUDE: 0
+ABIOTIC_HAZARD_SHAPE: flat
+
+# Start with moderate surv-bit density: pop survives but injected 1 still boosts surv
+G_surv_initgeno: 0.6
+G_repr_initgeno: 0.8     # ensure enough offspring to replace deaths
+
+RESOURCE_INITIAL_AMOUNT: 1000
+RESOURCE_MAXIMUM_AMOUNT: 5000
+RESOURCE_ADDITIVE_GROWTH: 500

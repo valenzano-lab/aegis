@@ -35,6 +35,13 @@ class Bioreactor:
         # If resources >= N: counter resets to 0 and multiplier returns to 1.0.
         self._scavenge_resources()
 
+        # Selection-coefficient experiment: forced allele introduction at a specific step.
+        if variables.steps == parametermanager.parameters.ALLELE_INJECTION_STEP:
+            self._inject_allele()
+
+        # Selection-coefficient experiment: log allele frequency at the introduction locus.
+        recordingmanager.selectionrecorder.write(self.population)
+
         # Mortality sources
         self.mortalities()
         resources.replenish()
@@ -342,3 +349,52 @@ class Bioreactor:
     def __len__(self):
         """Return the number of living individuals and saved eggs."""
         return len(self.population) + len(self.eggs) if self.eggs is not None else len(self.population)
+
+    def _inject_allele(self):
+        """Set ALLELE_INJECTION_ALLELE at the (TRAIT, AGE, BIT) locus on chromatid 0
+        of a ALLELE_INJECTION_FRACTION-sized random subset of the living population.
+        Recomputes phenotypes for the whole population so the new allele is expressed
+        immediately."""
+        from aegis_sim import parameterization
+
+        n = len(self.population)
+        if n == 0:
+            logging.warning("ALLELE_INJECTION_STEP reached but population is empty; skipping.")
+            return
+
+        trait_name = parametermanager.parameters.ALLELE_INJECTION_TRAIT
+        age = int(parametermanager.parameters.ALLELE_INJECTION_AGE)
+        bit_in_locus = int(parametermanager.parameters.ALLELE_INJECTION_BIT)
+        allele = bool(int(parametermanager.parameters.ALLELE_INJECTION_ALLELE))
+        fraction = float(parametermanager.parameters.ALLELE_INJECTION_FRACTION)
+
+        trait = parameterization.traits.get(trait_name)
+        if trait is None or trait.length == 0:
+            raise ValueError(
+                f"ALLELE_INJECTION_TRAIT={trait_name!r} is not a valid evolvable trait (length=0)."
+            )
+        if trait.agespecific is True:
+            if not (0 <= age < trait.length):
+                raise ValueError(f"ALLELE_INJECTION_AGE={age} out of range [0, {trait.length}) for trait {trait_name}.")
+            logical_locus = trait.start + age
+        else:
+            logical_locus = trait.start
+
+        bits_per_locus = self.population.genomes.array.shape[-1]
+        if not (0 <= bit_in_locus < bits_per_locus):
+            raise ValueError(f"ALLELE_INJECTION_BIT={bit_in_locus} out of range [0, {bits_per_locus}).")
+
+        physical_locus = int(submodels.architect.architecture.locus_permutation[logical_locus])
+
+        n_carriers = max(1, int(round(n * fraction)))
+        indices = variables.rng.choice(n, size=n_carriers, replace=False)
+        self.population.genomes.array[indices, 0, physical_locus, bit_in_locus] = allele
+
+        # Recompute phenotypes for the whole population so the new allele is expressed
+        # by the affected individuals' current age slot (cheap; same call as init).
+        self.population.phenotypes = submodels.architect(self.population.genomes)
+
+        logging.info(
+            "Mutation introduced at step %d: trait=%s age=%d bit=%d allele=%d in %d/%d individuals (chromatid 0, physical_locus=%d).",
+            variables.steps, trait_name, age, bit_in_locus, int(allele), n_carriers, n, physical_locus,
+        )
