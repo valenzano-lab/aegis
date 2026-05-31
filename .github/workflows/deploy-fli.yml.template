@@ -1,0 +1,82 @@
+# Auto-deploy AEGIS GUI to the FLI webserver on every push to v2.
+#
+# To activate this workflow, do the following:
+#
+# 1. On the FLI server, create a deploy user (or use an existing one) that
+#    has read+write on the deployment directory and sudo permission to
+#    restart the AEGIS service. Generate an SSH keypair specifically for
+#    this deployment:
+#
+#        ssh-keygen -t ed25519 -f ~/.ssh/aegis_github_deploy -N ''
+#
+#    Append the public key to ~/.ssh/authorized_keys on the FLI server.
+#
+# 2. Copy the private key into a GitHub secret:
+#    https://github.com/valenzano-lab/aegis/settings/secrets/actions
+#    Add the following four secrets:
+#
+#        FLI_SSH_HOST       e.g. genome.leibniz-fli.de
+#        FLI_SSH_USER       the deploy username
+#        FLI_SSH_KEY        the *private* key contents (paste the whole file)
+#        FLI_DEPLOY_PATH    absolute path on the server, e.g. /srv/aegis
+#
+#    (Optionally also FLI_RESTART_CMD if your service name isn't aegis-gui.)
+#
+# 3. Rename this file to .github/workflows/deploy-fli.yml (drop the
+#    .template suffix). The workflow will activate on the next push to v2.
+#
+# 4. Manually run it once via the GitHub Actions UI ("Run workflow") and
+#    watch the log to make sure the SSH connects, the pull succeeds, and
+#    the service comes back up. If anything fails, the workflow logs will
+#    show exactly which step broke.
+#
+# Safety:
+# - The workflow only runs on push to v2, never on PRs or other branches.
+# - It uses `git fetch + git reset --hard origin/v2` to handle the case
+#   where the server-side checkout has drifted (avoids spurious "your
+#   branch has diverged" errors).
+# - It does NOT run pytest or any other validation — the assumption is
+#   that the pytest CI workflow has already passed on this commit. If
+#   you want a tighter gate, add `needs: [test]` and have this workflow
+#   depend on the pytest job.
+
+name: deploy-fli
+
+on:
+  push:
+    branches:
+      - v2
+  workflow_dispatch:  # also allows manual triggering from the GitHub UI
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set up SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.FLI_SSH_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -H "${{ secrets.FLI_SSH_HOST }}" >> ~/.ssh/known_hosts
+
+      - name: Deploy on FLI server
+        env:
+          FLI_HOST: ${{ secrets.FLI_SSH_HOST }}
+          FLI_USER: ${{ secrets.FLI_SSH_USER }}
+          FLI_PATH: ${{ secrets.FLI_DEPLOY_PATH }}
+          RESTART_CMD: ${{ secrets.FLI_RESTART_CMD || 'sudo systemctl restart aegis-gui' }}
+        run: |
+          ssh -i ~/.ssh/deploy_key "$FLI_USER@$FLI_HOST" << EOF
+            set -e
+            cd "$FLI_PATH"
+            echo "==> current commit before pull:"
+            git rev-parse HEAD
+            git fetch origin v2
+            git reset --hard origin/v2
+            echo "==> current commit after pull:"
+            git rev-parse HEAD
+            pip install -e ".[dev]" --upgrade --quiet
+            echo "==> restarting service"
+            $RESTART_CMD
+            echo "==> deploy complete"
+          EOF
