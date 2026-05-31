@@ -48,6 +48,9 @@ def run(custom_config_path, pickle_path, overwrite, custom_input_params, resume_
         eggs = None
         population = _seed_introgression(population)
 
+        if parametermanager.parameters.LINEAGE_TRACING and population.lineage_id is not None:
+            recordingmanager.lineagerecorder.write_initial(population.lineage_id)
+
     bioreactor = Bioreactor(population)
     bioreactor.eggs = eggs
     sim(bioreactor=bioreactor)
@@ -80,6 +83,17 @@ def init(custom_config_path, overwrite=False, pickle_path=None, custom_input_par
 
     recordingmanager.init(custom_config_path, overwrite)
     recordingmanager.initialize_recorders(TICKER_RATE=parametermanager.parameters.TICKER_RATE)
+
+    if (
+        parametermanager.parameters.LINEAGE_TRACING
+        and parametermanager.parameters.REPRODUCTION_MODE != "asexual"
+    ):
+        logging.warning(
+            "LINEAGE_TRACING is True but REPRODUCTION_MODE is %r; lineage IDs will be "
+            "assigned to the initial population only and NOT propagated to offspring. "
+            "Sexual lineage tracing is not yet implemented.",
+            parametermanager.parameters.REPRODUCTION_MODE,
+        )
 
 
 def init_resume(resume_path, extend_steps=None):

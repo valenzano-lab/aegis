@@ -1,0 +1,33 @@
+# Tiny asexual sim to exercise LINEAGE_TRACING.
+# After running:
+#   - check runs/lineage_test/lineage/births.csv has initial-pop rows + birth rows
+#   - load runs/lineage_test/pickles/<step> and inspect population.lineage_id
+
+RANDOM_SEED: 7
+STEPS_PER_SIMULATION: 30
+AGE_LIMIT: 10
+INITIAL_POPULATION_SIZE: 50
+
+PICKLE_RATE: 0           # writes only at last step
+CHECKPOINT_RATE: 0
+SNAPSHOT_RATE: 0
+INTERVAL_RATE: 0
+POPGENSTATS_RATE: 0
+
+LINEAGE_TRACING: true
+LINEAGE_RATE: 1          # flush every birth event (small sim — fine)
+
+MATURATION_AGE: 2
+MAX_OFFSPRING_NUMBER: 2
+REPRODUCTION_MODE: asexual
+
+BITS_PER_LOCUS: 8
+ENVDRIFT_RATE: 0
+
+ABIOTIC_HAZARD_OFFSET: 0.0     # keep pop alive long enough to see births
+ABIOTIC_HAZARD_AMPLITUDE: 0
+ABIOTIC_HAZARD_SHAPE: flat
+
+RESOURCE_INITIAL_AMOUNT: 200
+RESOURCE_MAXIMUM_AMOUNT: 500
+RESOURCE_ADDITIVE_GROWTH: 100

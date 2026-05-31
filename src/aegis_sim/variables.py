@@ -14,6 +14,18 @@ def init(self, custom_config_path, pickle_path, RANDOM_SEED):
     # abiotic, envdrift, recombination, gpm_decoder, popgenstats.
     np.random.seed(self.random_seed)
     self.rng = np.random.default_rng(self.random_seed)
+    self.lineage_counter = 0
+
+
+def next_lineage_ids(n):
+    """Reserve and return n consecutive lineage IDs starting from the current counter.
+
+    Module-level singleton state — call only after variables.init().
+    """
+    import aegis_sim.variables as v
+    start = v.lineage_counter
+    v.lineage_counter += n
+    return np.arange(start, start + n, dtype=np.int64)
 
 
 def restore_from_checkpoint(self, checkpoint):

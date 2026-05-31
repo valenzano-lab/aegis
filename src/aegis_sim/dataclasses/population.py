@@ -24,6 +24,8 @@ class Population:
         "sizes",
         "sexes",
         "ancestry",
+        "lineage_id",
+        "parent_lineage_id",
     )
 
     def __init__(
@@ -38,6 +40,8 @@ class Population:
         sexes,
         generations=None,
         ancestry=None,
+        lineage_id=None,
+        parent_lineage_id=None,
     ):
         self.genomes = genomes
         self.ages = ages
@@ -51,6 +55,10 @@ class Population:
         # ancestry: bool array, same shape as genomes.array; True = introgressed from source pop.
         # None when introgression tracking is disabled (standard runs).
         self.ancestry = ancestry
+        # lineage_id, parent_lineage_id: int64 arrays of length len(genomes).
+        # Both None when LINEAGE_TRACING is disabled (standard runs).
+        self.lineage_id = lineage_id
+        self.parent_lineage_id = parent_lineage_id
 
         assert isinstance(phenotypes, Phenotypes)
 
@@ -68,10 +76,14 @@ class Population:
             raise ValueError("Population attributes must have equal length")
 
     def __setstate__(self, state):
-        # Backward compat: pickles saved before ancestry field was added
+        # Backward compat: pickles saved before ancestry/lineage fields were added
         self.__dict__.update(state)
         if "ancestry" not in self.__dict__:
             self.ancestry = None
+        if "lineage_id" not in self.__dict__:
+            self.lineage_id = None
+        if "parent_lineage_id" not in self.__dict__:
+            self.parent_lineage_id = None
 
     def __len__(self):
         """Return the number of living individuals."""
@@ -90,6 +102,8 @@ class Population:
             sexes=self.sexes[index],
             generations=self.generations[index] if self.generations is not None else None,
             ancestry=self.ancestry[index] if self.ancestry is not None else None,
+            lineage_id=self.lineage_id[index] if self.lineage_id is not None else None,
+            parent_lineage_id=self.parent_lineage_id[index] if self.parent_lineage_id is not None else None,
         )
 
     def __imul__(self, index):
@@ -104,6 +118,10 @@ class Population:
             elif attr == "ancestry":
                 if self.ancestry is not None:
                     self.ancestry = self.ancestry[index]
+            elif attr in ("lineage_id", "parent_lineage_id"):
+                current = getattr(self, attr)
+                if current is not None:
+                    setattr(self, attr, current[index])
             else:
                 setattr(self, attr, getattr(self, attr)[index])
         return self
@@ -127,6 +145,18 @@ class Population:
                     a = self.ancestry if self.ancestry is not None else np.zeros(self.genomes.array.shape, dtype=np.bool_)
                     b = population.ancestry if population.ancestry is not None else np.zeros(population.genomes.array.shape, dtype=np.bool_)
                     self.ancestry = np.concatenate([a, b])
+            elif attr in ("lineage_id", "parent_lineage_id"):
+                self_val = getattr(self, attr)
+                other_val = getattr(population, attr)
+                if self_val is None and other_val is None:
+                    continue
+                # If only one side has lineage IDs, treat the missing side as -1 sentinels.
+                # (No lineage tracking on one side means we cannot reconstruct ancestry — keep what we have.)
+                if self_val is None:
+                    self_val = np.full(len(self.genomes), -1, dtype=np.int64)
+                if other_val is None:
+                    other_val = np.full(len(population.genomes), -1, dtype=np.int64)
+                setattr(self, attr, np.concatenate([self_val, other_val]))
             else:
                 val = np.concatenate([getattr(self, attr), getattr(population, attr)])
                 setattr(self, attr, val)
@@ -149,6 +179,9 @@ class Population:
 
     @staticmethod
     def initialize(n, AGE_LIMIT):
+        from aegis_sim.parameterization import parametermanager
+        from aegis_sim import variables
+
         genomes = Genomes(submodels.architect.architecture.init_genome_array(n))
         ages = np.random.randint(low=0, high=AGE_LIMIT, size=n, dtype=np.int32)
         births = np.zeros(n, dtype=np.int32)
@@ -162,6 +195,14 @@ class Population:
         infection = np.zeros(n, dtype=np.int32)
         sizes = np.zeros(n, dtype=np.float32)
         sexes = submodels.sexsystem.get_sex(n)
+
+        if parametermanager.parameters.LINEAGE_TRACING:
+            lineage_id = variables.next_lineage_ids(n)
+            parent_lineage_id = np.full(n, -1, dtype=np.int64)
+        else:
+            lineage_id = None
+            parent_lineage_id = None
+
         return Population(
             genomes=genomes,
             ages=ages,
@@ -173,10 +214,20 @@ class Population:
             sizes=sizes,
             sexes=sexes,
             ancestry=None,
+            lineage_id=lineage_id,
+            parent_lineage_id=parent_lineage_id,
         )
 
     @staticmethod
-    def make_eggs(offspring_genomes: Genomes, step, offspring_sexes, parental_generations, offspring_ancestry=None):
+    def make_eggs(
+        offspring_genomes: Genomes,
+        step,
+        offspring_sexes,
+        parental_generations,
+        offspring_ancestry=None,
+        offspring_lineage_id=None,
+        offspring_parent_lineage_id=None,
+    ):
         n = len(offspring_genomes)
         eggs = Population(
             genomes=offspring_genomes,
@@ -189,5 +240,7 @@ class Population:
             sizes=np.zeros(n, dtype=np.float32),
             sexes=offspring_sexes,
             ancestry=offspring_ancestry,
+            lineage_id=offspring_lineage_id,
+            parent_lineage_id=offspring_parent_lineage_id,
         )
         return eggs

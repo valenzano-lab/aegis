@@ -34,6 +34,7 @@ from .checkpointrecorder import CheckpointRecorder
 from .ancestryrecorder import AncestryRecorder
 from .fastarecorder import FastaRecorder
 from .vcfrecorder import VCFRecorder
+from .lineagerecorder import LineageRecorder
 
 # TODO write tests
 
@@ -258,6 +259,7 @@ class RecordingManager:
         self.ancestryrecorder = AncestryRecorder(odir=self.odir)
         self.fastarecorder = FastaRecorder(odir=self.odir)
         self.vcfrecorder = VCFRecorder(odir=self.odir)
+        self.lineagerecorder = LineageRecorder(odir=self.odir)
 
     #############
     # UTILITIES #

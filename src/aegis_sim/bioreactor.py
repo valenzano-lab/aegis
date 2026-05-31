@@ -179,6 +179,18 @@ class Bioreactor:
         )
         offspring_sexes = submodels.sexsystem.get_sex(len(offspring_genomes))
 
+        # Lineage tracking — asexual only (sexual would need plumbing through pairing.py;
+        # the warn-and-skip happens once at the start of the sim, not per step).
+        offspring_lineage_id = None
+        offspring_parent_lineage_id = None
+        if parametermanager.parameters.LINEAGE_TRACING and self.population.lineage_id is not None:
+            if parametermanager.parameters.REPRODUCTION_MODE == "asexual":
+                # For asexual reproduction, len(offspring_genomes) == len(who), and
+                # offspring[i] descends from parent at self.population[who[i]].
+                if len(offspring_genomes) == len(who):
+                    offspring_parent_lineage_id = self.population.lineage_id[who].astype(np.int64)
+                    offspring_lineage_id = variables.next_lineage_ids(len(offspring_genomes))
+
         # Randomize order of newly laid egg attributes ..
         # .. because the order will affect their probability to be removed because of limited carrying capacity
         order = np.arange(len(offspring_sexes))
@@ -187,6 +199,14 @@ class Bioreactor:
         offspring_sexes = offspring_sexes[order]
         if offspring_ancestry is not None:
             offspring_ancestry = offspring_ancestry[order]
+        if offspring_lineage_id is not None:
+            offspring_lineage_id = offspring_lineage_id[order]
+            offspring_parent_lineage_id = offspring_parent_lineage_id[order]
+            recordingmanager.lineagerecorder.write_births(
+                parent_lineage_ids=offspring_parent_lineage_id,
+                child_lineage_ids=offspring_lineage_id,
+                step=variables.steps,
+            )
 
         # Make eggs
         eggs = Population.make_eggs(
@@ -195,6 +215,8 @@ class Bioreactor:
             offspring_sexes=offspring_sexes,
             parental_generations=np.zeros(len(offspring_sexes)),  # TODO replace with working calculation
             offspring_ancestry=offspring_ancestry,
+            offspring_lineage_id=offspring_lineage_id,
+            offspring_parent_lineage_id=offspring_parent_lineage_id,
         )
         if self.eggs is None:
             self.eggs = eggs
