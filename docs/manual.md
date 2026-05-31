@@ -22,12 +22,13 @@ duplicating.
 
 1. [Installation](#installation)
 2. [Running a simulation](#running-a-simulation)
-3. [Output formats](#output-formats)
-4. [Output: FASTA vs VCF — when to use which](#output-fasta-vs-vcf--when-to-use-which)
-5. [Lineage tracing and Muller plots](#lineage-tracing-and-muller-plots)
-6. [Selection-coefficient experiments](#selection-coefficient-experiments)
-7. [Introgression](#introgression)
-8. [Post-processing scripts in `runs/`](#post-processing-scripts-in-runs)
+3. [Trait phenotype ranges (`G_<trait>_lo` / `G_<trait>_hi`)](#trait-phenotype-ranges-g_trait_lo--g_trait_hi)
+4. [Output formats](#output-formats)
+5. [Output: FASTA vs VCF — when to use which](#output-fasta-vs-vcf--when-to-use-which)
+6. [Lineage tracing and Muller plots](#lineage-tracing-and-muller-plots)
+7. [Selection-coefficient experiments](#selection-coefficient-experiments)
+8. [Introgression](#introgression)
+9. [Post-processing scripts in `runs/`](#post-processing-scripts-in-runs)
 
 (Sections grow over time as features land; this is a living document.)
 
@@ -58,6 +59,41 @@ aegis gui                                # launch the Dash GUI
 
 Configs are YAML. Outputs land in a directory named after the config
 file: `path/to/config.yml` → `path/to/config/`.
+
+---
+
+## Trait phenotype ranges (`G_<trait>_lo` / `G_<trait>_hi`)
+
+Every evolvable trait has a configurable phenotypic range — a floor and a ceiling. The composite architecture maps the interpreter's `[0, 1]` output onto the trait's `[lo, hi]` range:
+
+```
+phenotype = G_<trait>_lo + (G_<trait>_hi - G_<trait>_lo) * interpreter_output
+```
+
+So an individual whose locus bits give an interpreter output of 0.5 gets a phenotype at the **midpoint** of `[lo, hi]` — not 0.5.
+
+This matters because small populations need a survival floor to be viable when `G_surv_initgeno=0.5` (the biologically motivated default — 50% random initial bits, both positive and negative selection observable from the outset). Without `lo > 0`, a fresh genome gives surv ~0.5 per age step → expected lifespan ~2 steps → guaranteed extinction.
+
+Defaults (v2.3.2+):
+
+| Trait | `lo` | `hi` | Notes |
+|---|---|---|---|
+| surv | **0.7** | 1.0 | floor at 0.7 means surv never collapses to 0; a 50%-genome individual has surv ~0.85 per age |
+| repr | 0.0 | 0.5 | a 50%-genome fertile individual has ~0.25 chance to reproduce per step |
+| neut | 0.0 | 1.0 | neutral by definition; no phenotype effect anyway |
+| muta | 0.0 | 1.0 | scales the per-bit mutation rate |
+| grow | 0.0 | 1.0 | grow trait is a stub today; effect TBD when growth is wired into the loop |
+
+Set any of these per-config in YAML:
+
+```yaml
+G_surv_lo: 0.9          # high-survival regime (e.g. lab-protected populations)
+G_repr_hi: 0.8          # higher fertility ceiling
+```
+
+Or interactively in the GUI's "genetics" accordion.
+
+Note for users running long evolutionary simulations: a high `G_surv_lo` softens selection on surv — every individual gets at least `lo` survival regardless of how bad its surv-locus genome is. Use small `lo` (or zero) when you specifically want to study the death of bad-survival genotypes.
 
 ---
 

@@ -78,7 +78,11 @@ class CompositeArchitecture:
         for trait in parameterization.traits.values():
             loci = genomes[:, trait.slice]  # fetch
             probs = self.interpreter.call(loci, trait.interpreter)  # interpret
-            # self.diffuse(probs)
+            # Map the [0, 1] interpreter output onto the trait's [lo, hi] phenotypic range.
+            # This is what makes G_<trait>_lo / G_<trait>_hi do anything — without this scaling
+            # the lo/hi parameters are parsed but discarded. Defaults: G_surv_lo=0.7, G_surv_hi=1.0
+            # (surv never goes to 0); G_repr_lo=0, G_repr_hi=0.5; others lo=0, hi=1.
+            probs = trait.lo + (trait.hi - trait.lo) * probs
             interpretome[:, trait.slice] += probs  # add back
 
         return interpretome
