@@ -95,6 +95,15 @@ def get_sidebar():
                             )
                         ]
                     ),
+                    dbc.NavItem(
+                        [
+                            dbc.NavLink(
+                                [dash.html.I(className="bi bi-newspaper"), "News"],
+                                href=gui_settings.wrap_href("news"),
+                                id="link-nav-news",
+                            )
+                        ]
+                    ),
                 ]
                 + sim_tracker.init_tracker_box()
                 + [offcanvas.get_offcanvas_trigger(), offcanvas.get_offcanvas()],

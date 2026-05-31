@@ -5,7 +5,7 @@ from aegis_gui.guisettings.GuiSettings import gui_settings
 
 
 @dash.callback(
-    [dash.Output(f"link-nav-{page}", "active") for page in ["home", "config", "plot", "simlog", "wiki"]],
+    [dash.Output(f"link-nav-{page}", "active") for page in ["home", "config", "plot", "simlog", "wiki", "news"]],
     [dash.Input("url", "pathname")],
 )
 def toggle_active_links(pathname):
@@ -14,7 +14,7 @@ def toggle_active_links(pathname):
         pathname = "/"
     return [
         pathname == f"/{page}" or (page == "home" and pathname == "/")
-        for page in ["home", "config", "plot", "simlog", "wiki"]
+        for page in ["home", "config", "plot", "simlog", "wiki", "news"]
     ]
 
 

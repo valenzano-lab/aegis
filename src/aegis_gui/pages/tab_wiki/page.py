@@ -34,13 +34,13 @@ def layout() -> html.Div:
             dbc.Select(
                 id="select",
                 options=[
+                    {"label": "Operational manual (how to use AEGIS)", "value": "manual"},
                     {"label": "Specification of the genetic architecture in AEGIS", "value": "genarch"},
                     {"label": "Specification of output files", "value": "output"},
                     {"label": "Specification of input parameters", "value": "input"},
                     {"label": "Specification of submodels", "value": "submodels"},
-                    # {"label": "Disabled option", "value": "3", "disabled": True},
                 ],
-                value="input",
+                value="manual",
                 style={"marginBottom": "1rem"},
                 persistence=True,
             ),
@@ -54,6 +54,13 @@ def layout() -> html.Div:
     [dash.Input("select", "value")],  # Listens to changes in the Select dropdown
 )
 def update_select_container(selected_value):
+    if selected_value == "manual":
+        manual_path = pathlib.Path(aegis.__file__).parent / "documentation" / "manual.md"
+        if not manual_path.is_file():
+            return html.P(f"Manual not found at {manual_path}.")
+        with open(manual_path, "r") as file_:
+            text = file_.read()
+        return dash.dcc.Markdown(children=text, mathjax=True)
     if selected_value == "output":
         return [
             # html.H6("Specification of output files"),
