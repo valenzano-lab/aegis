@@ -54,6 +54,7 @@ class Bioreactor:
         recordingmanager.picklerecorder.write(self.population)
         recordingmanager.featherrecorder.write(self.population)
         recordingmanager.ancestryrecorder.write(self.population)
+        recordingmanager.fastarecorder.write(self.population)
         recordingmanager.guirecorder.record(self.population)
         recordingmanager.flushrecorder.flush()
         recordingmanager.popgenstatsrecorder.write(
