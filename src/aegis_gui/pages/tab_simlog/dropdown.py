@@ -5,7 +5,7 @@ import dash_bootstrap_components as dbc
 from aegis_sim.utilities.container import Container
 from aegis_gui.utilities import utilities
 import pathlib
-from aegis_gui.pages.tab_simlog import delete, terminate, download, zipp, open_folder, goplot
+from aegis_gui.pages.tab_simlog import delete, terminate, download, zipp, open_folder, goplot, artifact_download
 from aegis_sim.utilities.get_folder_size import get_folder_size_with_du
 from aegis_gui.guisettings.GuiSettings import gui_settings
 
@@ -118,6 +118,17 @@ def update_info_div(selected_path):
             style={"display": "flex"},
         )
     )
+
+    # Per-artifact downloads — one button per v3 output subdir that exists.
+    # Renders nothing if none of fasta/, vcf/, lineage/, selection/, pickles/ are present.
+    artifact_buttons = artifact_download.make_buttons(path.stem, path)
+    if artifact_buttons:
+        list_items.append(
+            dbc.ListGroupItem(
+                artifact_buttons,
+                style={"display": "flex", "flexWrap": "wrap"},
+            )
+        )
     if gui_settings.ENVIRONMENT == "local":
         list_items.append(
             dbc.ListGroupItem(
