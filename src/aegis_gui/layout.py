@@ -5,6 +5,7 @@ from aegis_gui.utilities import sim_tracker
 from aegis_gui.utilities.utilities import get_icon
 from aegis_gui import offcanvas
 from aegis_gui.guisettings.GuiSettings import gui_settings
+from aegis_sim import _version as aegis_version
 
 
 def get_app_layout():
@@ -28,7 +29,32 @@ def get_app_layout():
                 ],
                 className="g-0",
             ),
+            get_footer(),
         ],
+    )
+
+
+def get_footer():
+    """Small version footer at the bottom of every page.
+
+    Shows the running package version, the git commit short hash (when set
+    via AEGIS_GIT_COMMIT at container build time), and the build date.
+    Lets a sysadmin verify which AEGIS revision is live without inspecting
+    the container internals.
+    """
+    return html.Footer(
+        html.Small(
+            aegis_version.version_string(),
+            className="text-muted",
+        ),
+        id="aegis-version-footer",
+        style={
+            "textAlign": "center",
+            "padding": "1rem 0 0.5rem 0",
+            "marginTop": "2rem",
+            "fontSize": "0.75rem",
+            "opacity": "0.6",
+        },
     )
 
 
