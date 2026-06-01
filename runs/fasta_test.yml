@@ -23,6 +23,7 @@ POPGENSTATS_RATE: 0
 # Demo the two new genome-export formats
 FASTA_RATE: 100        # genome FASTA every 100 steps (and step 1 + final)
 VCF_RATE: 100          # VCF on the same cadence
+GVCF_RATE: 100         # multi-sample gVCF in FASTA coordinates
 
 # Sexual reproduction with a healthy fertility ceiling
 MATURATION_AGE: 5

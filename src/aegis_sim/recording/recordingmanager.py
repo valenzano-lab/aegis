@@ -34,6 +34,7 @@ from .checkpointrecorder import CheckpointRecorder
 from .ancestryrecorder import AncestryRecorder
 from .fastarecorder import FastaRecorder
 from .vcfrecorder import VCFRecorder
+from .gvcfrecorder import GVCFRecorder
 from .lineagerecorder import LineageRecorder
 from .selectionrecorder import SelectionRecorder
 
@@ -260,6 +261,7 @@ class RecordingManager:
         self.ancestryrecorder = AncestryRecorder(odir=self.odir)
         self.fastarecorder = FastaRecorder(odir=self.odir)
         self.vcfrecorder = VCFRecorder(odir=self.odir)
+        self.gvcfrecorder = GVCFRecorder(odir=self.odir)
         self.lineagerecorder = LineageRecorder(odir=self.odir)
         self.selectionrecorder = SelectionRecorder(odir=self.odir)
 
