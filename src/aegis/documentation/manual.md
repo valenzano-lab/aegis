@@ -201,12 +201,133 @@ system (which is unchanged and still driven by the `muta` trait).
 
 ## Introgression
 
-(Section to be expanded.) See `runs/INTROGRESSION_FASTA_GUIDE.md` for
-the current end-to-end recipe. Key parameters: `INTROGRESSION_SOURCE`
-(pickle path of pop A) + `INTROGRESSION_SEEDS` (number of pop-A
-individuals to seed into the running pop B). The `ancestry` array on
-each individual then tracks introgressed alleles locus-by-locus
-through recombination and mutation.
+The introgression machinery (from v2.1) lets you seed a pre-evolved
+population into a running simulation and track introgressed alleles
+locus-by-locus through recombination. The key parameters are
+`INTROGRESSION_SOURCE` (pickle path of donor population A) and
+`INTROGRESSION_SEEDS` (number of A-individuals to seed into the
+recipient population B at simulation start).
+
+See `runs/INTROGRESSION_FASTA_GUIDE.md` for the basic CLI recipe.
+This section covers the **experimental design** for a publishable
+introgression-detection study.
+
+### Recommended three-phase design
+
+Most introgression-detection statistics (ABBA-BABA, Patterson's D,
+f-statistics) assume that the variation visible in the data is
+**standing variation present at the time of admixture**, not new
+mutations that arose during or after the admixture event. The cleanest
+way to make AEGIS match that assumption is to run the experiment in
+three phases with mutation behaving differently in each.
+
+**Phase 1 — evolution (mutation ON).**
+Run two independent simulations from a common ancestor (or with
+different `RANDOM_SEED`s) so populations A and B diverge naturally.
+Mutation rate is at the default for both. End each phase 1 run with a
+pickle. Length: enough generations to produce useful divergence
+between A and B but not so much that they saturate against any
+read-based aligner — see "Mutation-rate calibration" below.
+
+**Phase 2 — introgression (mutation OFF).**
+Seed N individuals from A's final pickle into a continuation of B
+(set `INTROGRESSION_SOURCE` to A's pickle, `INTROGRESSION_SEEDS=N`).
+**Turn mutation off** for this phase: every variant that the downstream
+detection pipeline sees is then either ancestral, derived in A, derived
+in B, or derived in the introgression source — a clean phylogenetic
+interpretation, no "did this variant arise post-admixture or
+pre-admixture?" confound. Easiest way to disable mutation in AEGIS:
+
+```yaml
+G_muta_initpheno: 0
+```
+
+(when `G_muta_evolvable: False`, the default — `initpheno` becomes
+the constant mutation rate. Set to 0 for no mutation.)
+
+If you've made the muta trait evolvable, also set:
+
+```yaml
+G_muta_lo: 0
+G_muta_hi: 0
+```
+
+Length of phase 2: **roughly 50–200 generations**. Long enough for
+recombination to break introgressed haplotypes into ~10–100 kb-sized
+blocks that ABBA-BABA + read pipelines can actually call, short enough
+that drift hasn't eaten the signal. 100 generations is a reasonable
+default for typical population sizes.
+
+**Phase 3 — analysis.**
+At the end of phase 2, AEGIS emits the population's FASTA + gVCF
+(set `FASTA_RATE` and `GVCF_RATE` to write at the final step). Send
+the FASTA through Badread, the reads through Clair3, the per-sample
+gVCFs through GLnexus, and the joint VCF into your ABBA-BABA tool.
+Compare the result against the AEGIS-emitted gVCF (which is
+position-aligned ground truth) to measure the detection pipeline's
+accuracy.
+
+### Why mutation off in phase 2
+
+Three reasons stack:
+
+1. **Cleaner statistical interpretation.** ABBA-BABA assumes mutations
+   are not arising during the admixture period; turning them off in
+   AEGIS aligns the simulation with the test's assumptions.
+2. **Stable read-mapping coordinates.** Without new mutations,
+   per-base divergence from any pre-phase-2 reference doesn't grow.
+   The Badread→aligner pipeline stays in its high-quality regime
+   throughout the analysis window.
+3. **Pure recombination signal.** With mutation off, the only thing
+   happening to introgressed segments is recombinational shuffling
+   plus drift. That's exactly the dynamic introgression-detection
+   methods are designed to identify.
+
+### Mutation-rate calibration in phase 1
+
+AEGIS's per-bit mutation rate has subtle interaction with the 4-letter
+FASTA encoding: in the 4-letter packing each base = 2 bits, so a
+single bit mutation always flips the base. The effective per-base
+mutation rate is roughly 2× the per-bit rate. With the default
+`G_muta_initpheno=0.001`, after ~500 phase-1 steps each base position
+has ~63% probability of having mutated at least once — vastly more
+than the ~5-10% divergence nanopore aligners can handle gracefully.
+
+For introgression-detection experiments specifically you'll typically
+want a 10–100× lower mutation rate, so populations diverge enough to
+form distinct phylogenetic groups without exceeding aligner tolerance:
+
+```yaml
+G_muta_initpheno: 0.00001     # or smaller, calibrate to phase-1 length
+```
+
+### Reference choice for read mapping
+
+Three options for what reads get aligned to, ordered by robustness to
+divergence:
+
+| Reference                       | Robust to divergence? | Trade-off                            |
+|---------------------------------|------------------------|--------------------------------------|
+| Ancestral pre-divergence FASTA  | No — fails fast        | None when it works                   |
+| Joint multi-population consensus | Yes (standard choice) | Some signal at sites where the consensus is far from any single population |
+| Per-species consensus FASTA     | Best for high divergence | Loses introgression signal at sites that diverged in both donor and recipient |
+
+For ABBA-BABA / GLnexus pipelines, the **joint multi-population
+consensus** is the standard choice and what most workflows assume.
+
+### What the AEGIS-truth gVCF gives you
+
+Because the gVCF emitter applies the same XOR mask and FASTA packing
+as the FASTA exporter, **AEGIS-truth gVCF is position-aligned with
+the FASTA reads regardless of how far the population has evolved**.
+This makes it possible to:
+
+- Score the pipeline's per-position accuracy by comparing
+  Clair3+GLnexus-derived gVCF against AEGIS-truth gVCF.
+- Measure at what divergence level detection breaks down (a
+  publishable methods-paper result on its own).
+- Use the truth gVCF directly in ABBA-BABA as the "perfect-knowledge"
+  control case.
 
 ---
 
