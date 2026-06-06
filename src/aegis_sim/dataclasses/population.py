@@ -26,6 +26,7 @@ class Population:
         "ancestry",
         "lineage_id",
         "parent_lineage_id",
+        "positions",
     )
 
     def __init__(
@@ -42,6 +43,7 @@ class Population:
         ancestry=None,
         lineage_id=None,
         parent_lineage_id=None,
+        positions=None,
     ):
         self.genomes = genomes
         self.ages = ages
@@ -59,6 +61,9 @@ class Population:
         # Both None when LINEAGE_TRACING is disabled (standard runs).
         self.lineage_id = lineage_id
         self.parent_lineage_id = parent_lineage_id
+        # positions: int32 array of shape (n, 2) holding (q, r) axial hex coordinates
+        # on the toroidal lattice. None when LATTICE_MODE is disabled (standard runs).
+        self.positions = positions
 
         assert isinstance(phenotypes, Phenotypes)
 
@@ -76,7 +81,7 @@ class Population:
             raise ValueError("Population attributes must have equal length")
 
     def __setstate__(self, state):
-        # Backward compat: pickles saved before ancestry/lineage fields were added
+        # Backward compat: pickles saved before ancestry/lineage/positions fields were added
         self.__dict__.update(state)
         if "ancestry" not in self.__dict__:
             self.ancestry = None
@@ -84,6 +89,8 @@ class Population:
             self.lineage_id = None
         if "parent_lineage_id" not in self.__dict__:
             self.parent_lineage_id = None
+        if "positions" not in self.__dict__:
+            self.positions = None
 
     def __len__(self):
         """Return the number of living individuals."""
@@ -104,6 +111,7 @@ class Population:
             ancestry=self.ancestry[index] if self.ancestry is not None else None,
             lineage_id=self.lineage_id[index] if self.lineage_id is not None else None,
             parent_lineage_id=self.parent_lineage_id[index] if self.parent_lineage_id is not None else None,
+            positions=self.positions[index] if self.positions is not None else None,
         )
 
     def __imul__(self, index):
@@ -118,7 +126,7 @@ class Population:
             elif attr == "ancestry":
                 if self.ancestry is not None:
                     self.ancestry = self.ancestry[index]
-            elif attr in ("lineage_id", "parent_lineage_id"):
+            elif attr in ("lineage_id", "parent_lineage_id", "positions"):
                 current = getattr(self, attr)
                 if current is not None:
                     setattr(self, attr, current[index])
@@ -157,6 +165,19 @@ class Population:
                 if other_val is None:
                     other_val = np.full(len(population.genomes), -1, dtype=np.int64)
                 setattr(self, attr, np.concatenate([self_val, other_val]))
+            elif attr == "positions":
+                self_val = self.positions
+                other_val = population.positions
+                if self_val is None and other_val is None:
+                    continue
+                # Merging spatial + non-spatial populations is unusual. If one side has
+                # positions and the other doesn't, sentinel-fill (-1, -1) for the missing side.
+                # Lattice submodel must claim cells for these once the merge is realized.
+                if self_val is None:
+                    self_val = np.full((len(self.genomes), 2), -1, dtype=np.int32)
+                if other_val is None:
+                    other_val = np.full((len(population.genomes), 2), -1, dtype=np.int32)
+                self.positions = np.concatenate([self_val, other_val])
             else:
                 val = np.concatenate([getattr(self, attr), getattr(population, attr)])
                 setattr(self, attr, val)
@@ -203,6 +224,15 @@ class Population:
             lineage_id = None
             parent_lineage_id = None
 
+        # Spatial-model: when LATTICE_MODE is on, assign each individual a unique cell
+        # on the toroidal hex lattice. The lattice submodel owns the cell-occupancy
+        # bookkeeping; here we just record each individual's (q, r) coords. When
+        # LATTICE_MODE is off (default), positions stays None and behavior is unchanged.
+        if parametermanager.parameters.LATTICE_MODE:
+            positions = submodels.lattice.assign_initial_positions(n)
+        else:
+            positions = None
+
         return Population(
             genomes=genomes,
             ages=ages,
@@ -216,6 +246,7 @@ class Population:
             ancestry=None,
             lineage_id=lineage_id,
             parent_lineage_id=parent_lineage_id,
+            positions=positions,
         )
 
     @staticmethod
@@ -227,6 +258,7 @@ class Population:
         offspring_ancestry=None,
         offspring_lineage_id=None,
         offspring_parent_lineage_id=None,
+        offspring_positions=None,
     ):
         n = len(offspring_genomes)
         eggs = Population(
@@ -242,5 +274,6 @@ class Population:
             ancestry=offspring_ancestry,
             lineage_id=offspring_lineage_id,
             parent_lineage_id=offspring_parent_lineage_id,
+            positions=offspring_positions,
         )
         return eggs

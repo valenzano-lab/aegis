@@ -11,6 +11,7 @@ from aegis_sim.utilities.popgenstats import PopgenStats
 from aegis_sim.submodels.resources.resources import resources
 from aegis_sim.submodels.reproduction.sexsystem import SexSystem
 from aegis_sim.submodels.reproduction.matingmanager import MatingManager
+from aegis_sim.submodels import lattice
 
 
 def init(self, parametermanager):
@@ -42,6 +43,16 @@ def init(self, parametermanager):
     frailty.init(
         FRAILTY_MODIFIER=parametermanager.parameters.FRAILTY_MODIFIER,
         AGE_LIMIT=parametermanager.parameters.AGE_LIMIT,
+    )
+
+    # Spatial lattice — opt-in via LATTICE_MODE. When False (default), init
+    # leaves the lattice singleton inert and no other submodel calls it.
+    lattice.init(
+        LATTICE_MODE=parametermanager.parameters.LATTICE_MODE,
+        INITIAL_POPULATION_SIZE=parametermanager.parameters.INITIAL_POPULATION_SIZE,
+        LATTICE_TARGET_DENSITY=parametermanager.parameters.LATTICE_TARGET_DENSITY,
+        RESOURCE_MAXIMUM_AMOUNT=parametermanager.parameters.RESOURCE_MAXIMUM_AMOUNT,
+        rng_seed=parametermanager.parameters.RANDOM_SEED,
     )
 
     # Resources
