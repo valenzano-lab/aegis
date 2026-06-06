@@ -174,14 +174,50 @@ If it expects genotypes, use VCF.
 
 ## Lineage tracing and Muller plots
 
-(Section to be expanded.) See `runs/INTROGRESSION_FASTA_GUIDE.md` and
-`runs/muller_plot.py` for the current state. Lineage tracing is
-activated by `LINEAGE_TRACING: true` + `LINEAGE_RATE: > 0`; outputs
-land in `<output>/lineage/{births,deaths}.csv`.
+Lineage tracing is activated by `LINEAGE_TRACING: true` +
+`LINEAGE_RATE: > 0`. When on, every individual carries a unique
+`lineage_id` and the id of its parent (`parent_lineage_id`); outputs
+land in `<output>/lineage/{births,deaths}.csv`. Use `runs/muller_plot.py`
+or `runs/lattice_animate.py --color founder` to climb the parent
+chain back to founder ancestors.
 
-Only asexual reproduction is currently supported for lineage tracking;
-with sexual reproduction the feature logs a warning and falls back
-to no-op for offspring.
+**Important biological note: clonal lineage tracking is only meaningful
+for asexual reproduction.** For sexual reproduction it is a deliberate
+no-op:
+
+- Each sexual offspring has *two* parents, and is genetically a mix
+  of both contributions plus recombination. Assigning a single
+  `lineage_id` to a sexual offspring would force a choice — by
+  convention either matrilineal (mtDNA-style maternal-line descent)
+  or patrilineal (Y-chromosome-style paternal-line descent) — and
+  *both* convey only a fragment of the actual genetic ancestry.
+- Colouring a lattice plot by maternal-line "lineage" can produce
+  visually compelling "founder effect" stories that are misleading
+  if interpreted as genetic ancestry: a single light-blue cluster
+  doesn't mean the population descends from one founder, only that
+  its maternal lines all trace to one.
+
+For sexual reproduction, reconstruct ancestry **post-hoc from genome
+snapshots** with standard phylogenetic methods rather than relying on
+in-sim lineage IDs. The relevant outputs are already produced by
+existing AEGIS exporters:
+
+- **Pickle snapshots** (`PICKLE_RATE > 0`) — full Population objects
+  including genome bits and lattice positions at the snapshot step.
+- **FASTA exports** (`FASTA_RATE > 0`) — per-individual DNA-like
+  sequences; can be fed to standard tools (IQ-TREE, RAxML, FastTree)
+  for phylogenetic tree inference.
+- **VCF / gVCF exports** (`VCF_RATE > 0`, `GVCF_RATE > 0`) — biallelic
+  genotypes at every bit position; readable by PLINK / vcftools /
+  ADMIXTOOLS / GLnexus / scikit-allel for population-genetics
+  inference of ancestry, admixture, and tree structure.
+
+Per-individual `ancestry` arrays (set when `INTROGRESSION_SEEDS > 0`)
+provide a complementary signal: each bit's introgression status is
+tracked locus-by-locus through recombination, so `--color ancestry`
+on the lattice animation script shows the per-individual mean
+introgression fraction — a meaningful genetic-ancestry signal for
+sexual sims that the lineage-id coloring can't deliver.
 
 ---
 

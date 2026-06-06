@@ -13,8 +13,11 @@ SNAPSHOT_RATE: 0
 INTERVAL_RATE: 0
 POPGENSTATS_RATE: 0
 LATTICE_RECORD_RATE: 2
-LINEAGE_TRACING: true
-LINEAGE_RATE: 1
+# LINEAGE_TRACING off for sexual reproduction — clonal lineages don't make
+# biological sense under sexual reproduction. See "Lineage tracing" in the
+# manual: each sexual offspring has two parents, so a single lineage_id can
+# only capture matrilineal OR patrilineal descent, not genetic ancestry.
+# For sexual sims, use post-hoc analysis on FASTA / VCF / pickle snapshots.
 
 # Spatial model
 LATTICE_MODE: true

@@ -259,37 +259,30 @@ class Bioreactor:
                 if mother_slots is not None:
                     mother_slots = mother_slots[placed]
 
-        # Lineage tracking — matrilineal for sexual + lattice (offspring inherits
-        # mother's lineage); parent-tracked for asexual (single parent). For sexual
-        # without lattice the parent mapping is lost in pairing.py's shuffles, so
-        # we still skip lineage there.
+        # Lineage tracking — clonal lineages only make biological sense for
+        # asexual reproduction, where each offspring has a single parent. With
+        # sexual reproduction each individual is genetically a mix of two
+        # parents, so any single-parent "lineage_id" colouring is misleading
+        # (it shows e.g. matrilineal mtDNA-style descent only, not actual
+        # genetic ancestry). For sexual sims, reconstruct ancestry post-hoc
+        # from the genome snapshots (FASTA / VCF / pickle) using standard
+        # phylogenetic tools instead.
         offspring_lineage_id = None
         offspring_parent_lineage_id = None
-        if parametermanager.parameters.LINEAGE_TRACING and self.population.lineage_id is not None:
-            if parametermanager.parameters.REPRODUCTION_MODE == "asexual":
-                # For asexual reproduction, len(offspring_genomes) == len(who), and
-                # offspring[i] descends from parent at self.population[who[i]].
-                # If lattice placement filtered out some offspring, who[] must be
-                # filtered the same way so parent->child mapping stays correct.
-                if parametermanager.parameters.LATTICE_MODE and offspring_positions is not None:
-                    who_filtered = who[placed]
-                    if len(offspring_genomes) == len(who_filtered):
-                        offspring_parent_lineage_id = self.population.lineage_id[who_filtered].astype(np.int64)
-                        offspring_lineage_id = variables.next_lineage_ids(len(offspring_genomes))
-                else:
-                    if len(offspring_genomes) == len(who):
-                        offspring_parent_lineage_id = self.population.lineage_id[who].astype(np.int64)
-                        offspring_lineage_id = variables.next_lineage_ids(len(offspring_genomes))
-            elif (parametermanager.parameters.REPRODUCTION_MODE == "sexual"
-                  and parametermanager.parameters.LATTICE_MODE
-                  and mother_slots is not None
-                  and len(mother_slots) == len(offspring_genomes)):
-                # Sexual + lattice: matrilineal tracking. mother_slots[i] is the
-                # slot index in the parental pool; who[mother_slots[i]] is the
-                # mother's population index.
-                mother_pop_idx = who[mother_slots]
-                offspring_parent_lineage_id = self.population.lineage_id[mother_pop_idx].astype(np.int64)
-                offspring_lineage_id = variables.next_lineage_ids(len(offspring_genomes))
+        if (parametermanager.parameters.LINEAGE_TRACING
+                and self.population.lineage_id is not None
+                and parametermanager.parameters.REPRODUCTION_MODE == "asexual"):
+            # offspring[i] descends from parent at self.population[who[i]];
+            # filter `who` by `placed` if lattice placement dropped any births.
+            if parametermanager.parameters.LATTICE_MODE and offspring_positions is not None:
+                who_filtered = who[placed]
+                if len(offspring_genomes) == len(who_filtered):
+                    offspring_parent_lineage_id = self.population.lineage_id[who_filtered].astype(np.int64)
+                    offspring_lineage_id = variables.next_lineage_ids(len(offspring_genomes))
+            else:
+                if len(offspring_genomes) == len(who):
+                    offspring_parent_lineage_id = self.population.lineage_id[who].astype(np.int64)
+                    offspring_lineage_id = variables.next_lineage_ids(len(offspring_genomes))
 
         # Randomize order of newly laid egg attributes ..
         # .. because the order will affect their probability to be removed because of limited carrying capacity
