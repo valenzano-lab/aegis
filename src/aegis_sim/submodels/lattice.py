@@ -34,10 +34,14 @@ import numpy as np
 
 
 # Module-level singleton state. Populated by init() when LATTICE_MODE is on.
+# occupancy is a 2D bool array — True = cell is occupied. Population.positions
+# is the source of truth for *which* individual is at a cell; the lattice
+# only tracks occupancy/vacancy. This avoids correctness bugs when the
+# population is reindexed by mortality or merges.
 _state = {
     "rows": 0,
     "cols": 0,
-    "occupancy": None,  # 2D int32 array; -1 = empty, otherwise = individual index
+    "occupancy": None,  # 2D bool array; True = occupied
     "rng": None,
 }
 
@@ -68,7 +72,7 @@ def init(LATTICE_MODE, INITIAL_POPULATION_SIZE, LATTICE_TARGET_DENSITY,
 
     _state["rows"] = rows
     _state["cols"] = cols
-    _state["occupancy"] = np.full((rows, cols), -1, dtype=np.int32)
+    _state["occupancy"] = np.zeros((rows, cols), dtype=bool)
     _state["rng"] = np.random.default_rng(rng_seed)
 
     logging.info(
@@ -142,33 +146,26 @@ _RING_WALK_DIRS = (
 
 def is_empty(q: int, r: int) -> bool:
     q, r = _wrap(q, r)
-    return _state["occupancy"][q, r] == -1
+    return not _state["occupancy"][q, r]
 
 
-def occupant(q: int, r: int) -> int:
-    """Return the individual index at (q, r), or -1 if empty."""
+def claim(q: int, r: int) -> None:
+    """Mark cell (q, r) as occupied. Raises if already occupied — caller's
+    responsibility to vacate first when moving an individual."""
     q, r = _wrap(q, r)
-    return int(_state["occupancy"][q, r])
-
-
-def claim(q: int, r: int, individual_idx: int) -> None:
-    q, r = _wrap(q, r)
-    if _state["occupancy"][q, r] != -1:
-        raise RuntimeError(
-            f"Cannot claim cell ({q}, {r}) for individual {individual_idx}: "
-            f"already occupied by {_state['occupancy'][q, r]}"
-        )
-    _state["occupancy"][q, r] = individual_idx
+    if _state["occupancy"][q, r]:
+        raise RuntimeError(f"Cannot claim cell ({q}, {r}): already occupied")
+    _state["occupancy"][q, r] = True
 
 
 def vacate(q: int, r: int) -> None:
     q, r = _wrap(q, r)
-    _state["occupancy"][q, r] = -1
+    _state["occupancy"][q, r] = False
 
 
 def random_empty_anywhere() -> Optional[Tuple[int, int]]:
     """Pick a uniformly-random empty cell from the entire lattice. None if full."""
-    empties = np.argwhere(_state["occupancy"] == -1)
+    empties = np.argwhere(~_state["occupancy"])
     if len(empties) == 0:
         return None
     pick = _state["rng"].integers(0, len(empties))
@@ -179,16 +176,88 @@ def random_empty_adjacent(q: int, r: int) -> Optional[Tuple[int, int]]:
     """Pick a uniformly-random empty cell from the 6 neighbours of (q, r).
     None if all neighbours are occupied."""
     cells = neighbours(q, r)
-    empties = [(int(c[0]), int(c[1])) for c in cells if _state["occupancy"][c[0], c[1]] == -1]
+    empties = [(int(c[0]), int(c[1])) for c in cells if not _state["occupancy"][c[0], c[1]]]
     if not empties:
         return None
     return empties[_state["rng"].integers(0, len(empties))]
 
 
+def resync_occupancy_from_positions(positions: np.ndarray) -> None:
+    """Rebuild the occupancy grid from a Population.positions array.
+
+    Call after any operation that mutates the population (kills, hatching,
+    merges) to keep the lattice's occupancy state consistent with the source
+    of truth (Population.positions). Cheap: O(n_cells) clear + O(n) set.
+    """
+    if _state["occupancy"] is None:
+        return
+    _state["occupancy"].fill(False)
+    if positions is None or len(positions) == 0:
+        return
+    qs = positions[:, 0] % _state["rows"]
+    rs = positions[:, 1] % _state["cols"]
+    _state["occupancy"][qs, rs] = True
+
+
+def migrate(positions: np.ndarray, migration_rate: float, migration_long_rate: float) -> None:
+    """Migrate each individual on the lattice in-place.
+
+    For each individual, roll a single random number:
+      < migration_long_rate              -> long-distance jump to a random
+                                            empty cell anywhere on the lattice
+      < migration_long_rate + migration_rate -> local move to a random adjacent
+                                            empty cell
+      otherwise                          -> stay put
+
+    Movement only happens if a target cell is available; otherwise the
+    individual stays in place. `positions` is mutated in place; the
+    occupancy grid is kept in sync.
+
+    Long-range first so the two probabilities are interpretable
+    independently (each has its stated meaning regardless of the other).
+    """
+    if _state["occupancy"] is None or positions is None or len(positions) == 0:
+        return
+    if migration_rate <= 0 and migration_long_rate <= 0:
+        return
+
+    rng = _state["rng"]
+    n = len(positions)
+    rolls = rng.random(n)
+
+    # Process long-range first so a successful long jump precludes a local move.
+    long_threshold = migration_long_rate
+    local_threshold = migration_long_rate + migration_rate
+
+    for i in range(n):
+        roll = rolls[i]
+        if roll >= local_threshold:
+            continue  # neither move
+        cur_q = int(positions[i, 0])
+        cur_r = int(positions[i, 1])
+        if roll < long_threshold:
+            target = random_empty_anywhere()
+        else:
+            target = random_empty_adjacent(cur_q, cur_r)
+        if target is None:
+            continue  # no destination, stay put
+        # Move: vacate old cell, claim new cell, update positions
+        vacate(cur_q, cur_r)
+        claim(target[0], target[1])
+        positions[i, 0] = target[0]
+        positions[i, 1] = target[1]
+
+
+def n_empty() -> int:
+    """Count of empty cells on the lattice. Diagnostic; not hot-path."""
+    if _state["occupancy"] is None:
+        return 0
+    return int((~_state["occupancy"]).sum())
+
+
 def assign_initial_positions(n: int) -> np.ndarray:
     """Assign n unique empty cells to the initial population. Returns an
-    (n, 2) int32 array of (q, r) coordinates. Cells are claimed in the
-    occupancy grid; subsequent attempts to claim them will fail.
+    (n, 2) int32 array of (q, r) coordinates. Cells are marked occupied.
     """
     if _state["occupancy"] is None:
         raise RuntimeError("Lattice not initialised; call submodels.lattice.init(...) first")
@@ -202,11 +271,8 @@ def assign_initial_positions(n: int) -> np.ndarray:
             f"reduce INITIAL_POPULATION_SIZE."
         )
 
-    # Random subset of empty cells. argwhere is fine for init; for hot-path use
-    # the dedicated helpers above.
-    empties = np.argwhere(_state["occupancy"] == -1)
+    empties = np.argwhere(~_state["occupancy"])
     pick = _state["rng"].choice(len(empties), size=n, replace=False)
     chosen = empties[pick].astype(np.int32)
-    for i, (q, r) in enumerate(chosen):
-        _state["occupancy"][q, r] = i
+    _state["occupancy"][chosen[:, 0], chosen[:, 1]] = True
     return chosen

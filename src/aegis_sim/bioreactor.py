@@ -46,6 +46,17 @@ class Bioreactor:
         self.mortalities()
         resources.replenish()
 
+        # Spatial lattice: migrate surviving individuals before reproduction.
+        # Dead individuals' cells have been vacated by _kill via resync; this
+        # step gives the survivors a chance to move into new cells. No-op
+        # when LATTICE_MODE is False.
+        if parametermanager.parameters.LATTICE_MODE and self.population.positions is not None:
+            submodels.lattice.migrate(
+                positions=self.population.positions,
+                migration_rate=parametermanager.parameters.MIGRATION_RATE,
+                migration_long_rate=parametermanager.parameters.MIGRATION_LONG_RATE,
+            )
+
         recordingmanager.popsizerecorder.write_before_reproduction(self.population)
         self.growth()  # size increase
         self.reproduction()  # reproduction
@@ -283,9 +294,25 @@ class Bioreactor:
             )  # hatch with delay
         ):
 
+            # Lattice mode requires eggs to carry positions, assigned at reproduction
+            # time. If they don't, fail loudly rather than silently corrupt the
+            # lattice with (-1, -1) sentinel positions. (Offspring placement on
+            # the lattice is the next commit.)
+            if parametermanager.parameters.LATTICE_MODE and self.eggs.positions is None:
+                raise NotImplementedError(
+                    "LATTICE_MODE=True requires offspring placement on the lattice, "
+                    "which is not yet wired into reproduction. Use LATTICE_MODE=False "
+                    "for now, or wait for the lattice-reproduction commit."
+                )
+
             self.eggs.phenotypes = submodels.architect.__call__(self.eggs.genomes)
             self.population += self.eggs
             self.eggs = None
+
+            # Sync lattice occupancy after population growth so migration sees
+            # all hatched individuals. No-op when LATTICE_MODE is False.
+            if parametermanager.parameters.LATTICE_MODE and self.population.positions is not None:
+                submodels.lattice.resync_occupancy_from_positions(self.population.positions)
 
     ################
     # HELPER FUNCS #
@@ -346,6 +373,11 @@ class Bioreactor:
 
         # Retain survivors
         self.population *= ~mask_kill
+
+        # Keep the lattice's occupancy grid consistent with population.positions
+        # after the shrink. No-op when LATTICE_MODE is False.
+        if parametermanager.parameters.LATTICE_MODE and self.population.positions is not None:
+            submodels.lattice.resync_occupancy_from_positions(self.population.positions)
 
     def __len__(self):
         """Return the number of living individuals and saved eggs."""
