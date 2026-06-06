@@ -52,9 +52,62 @@ def load_snapshots(lattice_dir: pathlib.Path) -> list:
     return snapshots
 
 
-def _color_values(df: pd.DataFrame, color_by: str) -> np.ndarray:
+_FOUNDER_LOOKUP_CACHE: dict = {}
+
+
+def _build_founder_lookup(sim_dir: pathlib.Path) -> dict:
+    """Build {lineage_id -> founder_id} by climbing the parent chain in births.csv.
+
+    Returns an empty dict if no births.csv is found (lineage was per-individual
+    only; nothing to climb).
+    """
+    if sim_dir in _FOUNDER_LOOKUP_CACHE:
+        return _FOUNDER_LOOKUP_CACHE[sim_dir]
+    births_path = sim_dir / "lineage" / "births.csv"
+    if not births_path.is_file():
+        _FOUNDER_LOOKUP_CACHE[sim_dir] = {}
+        return {}
+    births = pd.read_csv(births_path)
+    parent_of = dict(zip(births["lineage_id"].tolist(),
+                         births["parent_lineage_id"].tolist()))
+    founder = {}
+
+    def climb(lid):
+        if lid in founder:
+            return founder[lid]
+        path = []
+        cur = lid
+        while parent_of.get(cur, -1) != -1:
+            if cur in founder:
+                root = founder[cur]
+                for x in path:
+                    founder[x] = root
+                return root
+            path.append(cur)
+            cur = parent_of[cur]
+        for x in path + [cur]:
+            founder[x] = cur
+        return cur
+
+    for lid in parent_of:
+        climb(lid)
+    _FOUNDER_LOOKUP_CACHE[sim_dir] = founder
+    return founder
+
+
+def _color_values(df: pd.DataFrame, color_by: str,
+                  founder_lookup: dict = None) -> np.ndarray:
     if color_by == "lineage":
+        # Default: per-individual lineage ID (busy, every offspring its own colour).
         return df["lineage_id"].to_numpy()
+    if color_by == "founder":
+        # Climb parent chain via births.csv → root founder. Surviving cluster
+        # then shows which initial founders' descendants persisted.
+        if not founder_lookup:
+            return df["lineage_id"].to_numpy()  # fall back
+        return np.array(
+            [founder_lookup.get(int(lid), int(lid)) for lid in df["lineage_id"]]
+        )
     if color_by == "ancestry":
         return df["ancestry_fraction"].to_numpy()
     if color_by == "age":
@@ -70,14 +123,14 @@ def _color_kwargs(color_by: str, values: np.ndarray) -> dict:
     if color_by == "ancestry":
         # ancestry fraction is in [0, 1] (or -1 if not tracked)
         return dict(c=values, cmap="coolwarm", vmin=0, vmax=1)
-    if color_by == "lineage":
+    if color_by in ("lineage", "founder"):
         # Discrete categorical — wrap to tab20 colormap
         return dict(c=values % 20, cmap="tab20")
     raise ValueError(color_by)
 
 
 def make_montage(snapshots: list, color_by: str, out_path: pathlib.Path,
-                 n_panels: int = 9) -> None:
+                 n_panels: int = 9, founder_lookup: dict = None) -> None:
     """Pick up to n_panels evenly-spaced snapshots and tile them."""
     import matplotlib
     matplotlib.use("Agg")
@@ -97,7 +150,7 @@ def make_montage(snapshots: list, color_by: str, out_path: pathlib.Path,
     for ax_idx, (step, df) in enumerate(chosen):
         ax = axes[ax_idx // cols][ax_idx % cols]
         x, y = axial_to_xy(df["q"].to_numpy(), df["r"].to_numpy())
-        values = _color_values(df, color_by)
+        values = _color_values(df, color_by, founder_lookup)
         kwargs = _color_kwargs(color_by, values)
         ax.scatter(x, y, s=10, **kwargs)
         ax.set_title(f"step {step}  (n={len(df)})", fontsize=10)
@@ -113,7 +166,7 @@ def make_montage(snapshots: list, color_by: str, out_path: pathlib.Path,
 
 
 def make_gif(snapshots: list, color_by: str, out_path: pathlib.Path,
-             fps: int = 8) -> None:
+             fps: int = 8, founder_lookup: dict = None) -> None:
     import matplotlib
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
@@ -146,7 +199,7 @@ def make_gif(snapshots: list, color_by: str, out_path: pathlib.Path,
     def update(frame_idx):
         step, df = snapshots[frame_idx]
         x, y = axial_to_xy(df["q"].to_numpy(), df["r"].to_numpy())
-        values = _color_values(df, color_by)
+        values = _color_values(df, color_by, founder_lookup)
         kwargs = _color_kwargs(color_by, values)
         ax.clear()
         ax.set_xlim(*x_lim)
@@ -170,8 +223,9 @@ def main():
     parser.add_argument("sim_dir", type=pathlib.Path,
                         help="AEGIS sim output directory (contains lattice/)")
     parser.add_argument("--mode", choices=("montage", "gif"), default="montage")
-    parser.add_argument("--color", choices=("lineage", "ancestry", "age", "sex"),
-                        default="lineage")
+    parser.add_argument("--color",
+                        choices=("lineage", "founder", "ancestry", "age", "sex"),
+                        default="founder")
     parser.add_argument("--fps", type=int, default=8)
     args = parser.parse_args()
 
@@ -186,12 +240,16 @@ def main():
         sys.exit(1)
     print(f"Loaded {len(snapshots)} snapshots from {lattice_dir}")
 
+    founder_lookup = _build_founder_lookup(args.sim_dir) if args.color == "founder" else None
+    if founder_lookup is not None and not founder_lookup:
+        print("Note: no lineage/births.csv found; founder coloring falls back to per-individual lineage.")
+
     if args.mode == "montage":
         out = lattice_dir / "montage.png"
-        make_montage(snapshots, args.color, out)
+        make_montage(snapshots, args.color, out, founder_lookup=founder_lookup)
     else:
         out = lattice_dir / "animation.gif"
-        make_gif(snapshots, args.color, out, fps=args.fps)
+        make_gif(snapshots, args.color, out, fps=args.fps, founder_lookup=founder_lookup)
 
 
 if __name__ == "__main__":

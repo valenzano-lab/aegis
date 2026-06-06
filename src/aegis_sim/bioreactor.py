@@ -259,8 +259,10 @@ class Bioreactor:
                 if mother_slots is not None:
                     mother_slots = mother_slots[placed]
 
-        # Lineage tracking — asexual only (sexual would need plumbing through pairing.py;
-        # the warn-and-skip happens once at the start of the sim, not per step).
+        # Lineage tracking — matrilineal for sexual + lattice (offspring inherits
+        # mother's lineage); parent-tracked for asexual (single parent). For sexual
+        # without lattice the parent mapping is lost in pairing.py's shuffles, so
+        # we still skip lineage there.
         offspring_lineage_id = None
         offspring_parent_lineage_id = None
         if parametermanager.parameters.LINEAGE_TRACING and self.population.lineage_id is not None:
@@ -270,8 +272,6 @@ class Bioreactor:
                 # If lattice placement filtered out some offspring, who[] must be
                 # filtered the same way so parent->child mapping stays correct.
                 if parametermanager.parameters.LATTICE_MODE and offspring_positions is not None:
-                    # `placed` was already applied to offspring_genomes above.
-                    # Re-derive the filtered `who` from the same mask.
                     who_filtered = who[placed]
                     if len(offspring_genomes) == len(who_filtered):
                         offspring_parent_lineage_id = self.population.lineage_id[who_filtered].astype(np.int64)
@@ -280,6 +280,16 @@ class Bioreactor:
                     if len(offspring_genomes) == len(who):
                         offspring_parent_lineage_id = self.population.lineage_id[who].astype(np.int64)
                         offspring_lineage_id = variables.next_lineage_ids(len(offspring_genomes))
+            elif (parametermanager.parameters.REPRODUCTION_MODE == "sexual"
+                  and parametermanager.parameters.LATTICE_MODE
+                  and mother_slots is not None
+                  and len(mother_slots) == len(offspring_genomes)):
+                # Sexual + lattice: matrilineal tracking. mother_slots[i] is the
+                # slot index in the parental pool; who[mother_slots[i]] is the
+                # mother's population index.
+                mother_pop_idx = who[mother_slots]
+                offspring_parent_lineage_id = self.population.lineage_id[mother_pop_idx].astype(np.int64)
+                offspring_lineage_id = variables.next_lineage_ids(len(offspring_genomes))
 
         # Randomize order of newly laid egg attributes ..
         # .. because the order will affect their probability to be removed because of limited carrying capacity
