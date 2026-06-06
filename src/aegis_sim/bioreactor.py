@@ -190,30 +190,50 @@ class Bioreactor:
         ]
         muta_prob = np.repeat(muta_prob, num_repr[mask_repr])
 
-        offspring_genomes, offspring_ancestry = submodels.reproduction.generate_offspring_genomes(
+        # When LATTICE_MODE + sexual, pass per-slot positions and the search
+        # radius to generate_offspring_genomes so matingmanager can do
+        # expanding-ring pairing. Otherwise the classical well-mixed pairing
+        # runs (parent_positions=None).
+        repr_parent_positions = None
+        repr_max_radius = 0
+        if (parametermanager.parameters.LATTICE_MODE
+                and self.population.positions is not None
+                and parametermanager.parameters.REPRODUCTION_MODE == "sexual"):
+            repr_parent_positions = self.population.positions[who]
+            repr_max_radius = int(parametermanager.parameters.MATING_MAX_SEARCH_RADIUS)
+
+        offspring_genomes, offspring_ancestry, mother_slots = submodels.reproduction.generate_offspring_genomes(
             genomes=parental_genomes,
             muta_prob=muta_prob,
             ages=ages_repr,
             parental_sexes=parental_sexes,
             ancestry=parental_ancestry,
+            parent_positions=repr_parent_positions,
+            max_search_radius=repr_max_radius,
         )
         offspring_sexes = submodels.sexsystem.get_sex(len(offspring_genomes))
 
-        # Spatial lattice: place each offspring at a random empty cell
-        # adjacent to its mother. If no adjacent empty cell, birth fails for
-        # that offspring (filtered out below). Currently asexual-only — for
-        # sexual reproduction, `who` may not align with offspring index after
-        # pairing.py shuffles indices, so we fall back to global placement
-        # there until the mating refactor lands. No-op when LATTICE_MODE is False.
+        # Spatial lattice: place each offspring at a random empty cell adjacent
+        # to its mother. If no adjacent empty cell, birth fails (filtered out
+        # below). No-op when LATTICE_MODE is False.
         offspring_positions = None
+        placed = None
         if parametermanager.parameters.LATTICE_MODE and self.population.positions is not None:
             asexual = parametermanager.parameters.REPRODUCTION_MODE == "asexual"
+            # Determine each offspring's mother's position.
             if asexual and len(offspring_genomes) == len(who):
                 parent_positions = self.population.positions[who]
+            elif (not asexual) and mother_slots is not None and len(mother_slots) == len(offspring_genomes):
+                # Sexual + lattice: mother_slots[i] is the slot index into
+                # parental_genomes; who[mother_slots[i]] is the population
+                # index of the mother of offspring i.
+                mother_population_idx = who[mother_slots]
+                parent_positions = self.population.positions[mother_population_idx]
             else:
-                # Sexual mode (or anything where offspring count doesn't equal
-                # parent-index count): no parent-tracked positions available
-                # here; use whole-lattice random placement as the fallback.
+                # No parent-position mapping available (e.g. sexual without
+                # lattice-aware pairing): fall back to whole-lattice random
+                # placement so the sim still progresses, with less spatial
+                # clustering.
                 parent_positions = None
 
             offspring_positions = np.full((len(offspring_genomes), 2), -1, dtype=np.int32)
@@ -230,15 +250,14 @@ class Bioreactor:
                 offspring_positions[i] = target
                 placed[i] = True
 
-            # Filter out offspring whose birth failed (no empty cell).
             if not placed.all():
                 offspring_genomes = offspring_genomes[placed]
                 offspring_sexes = offspring_sexes[placed]
                 if offspring_ancestry is not None:
                     offspring_ancestry = offspring_ancestry[placed]
                 offspring_positions = offspring_positions[placed]
-                # Note: ages_repr and muta_prob are not stored on offspring,
-                # so they don't need to be filtered. who is similarly not used past here.
+                if mother_slots is not None:
+                    mother_slots = mother_slots[placed]
 
         # Lineage tracking — asexual only (sexual would need plumbing through pairing.py;
         # the warn-and-skip happens once at the start of the sim, not per step).

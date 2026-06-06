@@ -30,17 +30,41 @@ class Reproducer:
         self.REPRODUCTION_MODE = REPRODUCTION_MODE
         self.mutator = mutator
 
-    def generate_offspring_genomes(self, genomes, muta_prob, ages, parental_sexes, ancestry=None):
+    def generate_offspring_genomes(self, genomes, muta_prob, ages, parental_sexes,
+                                   ancestry=None, parent_positions=None,
+                                   max_search_radius=0):
+        """Generate offspring genomes from parental input.
 
+        Asexual: each parent yields one offspring (same chromatids as parent).
+        Sexual: pairing pairs males and females. When `parent_positions` is given
+        (LATTICE_MODE), pairing is lattice-aware — see matingmanager. When None,
+        classical well-mixed pairing.
+
+        Returns `(genomes, ancestry, mother_slots)`. `mother_slots` is the slot
+        indices of the paired mothers (into the parental_genomes array). For
+        sexual, callers use this to look up mother positions for offspring
+        placement on the lattice. For asexual, mother_slots is None — the
+        caller already knows the parent->offspring mapping via `who`.
+        """
+        mother_slots = None
         if self.REPRODUCTION_MODE == "sexual":
             if ancestry is not None:
                 genomes, ancestry = recombination_via_pairs(genomes, self.RECOMBINATION_RATE, ancestry=ancestry)
-                genomes, ages, muta_prob, ancestry = pairing(Genomes(genomes), parental_sexes, ages, muta_prob, ancestry=ancestry)
+                genomes, ages, muta_prob, ancestry, mother_slots = pairing(
+                    Genomes(genomes), parental_sexes, ages, muta_prob,
+                    ancestry=ancestry,
+                    parent_positions=parent_positions,
+                    max_search_radius=max_search_radius,
+                )
             else:
                 genomes = recombination_via_pairs(genomes, self.RECOMBINATION_RATE)
-                genomes, ages, muta_prob = pairing(Genomes(genomes), parental_sexes, ages, muta_prob)
+                genomes, ages, muta_prob, mother_slots = pairing(
+                    Genomes(genomes), parental_sexes, ages, muta_prob,
+                    parent_positions=parent_positions,
+                    max_search_radius=max_search_radius,
+                )
 
         # Mutation flips genome bits — ancestry labels are not mutated
         genomes = self.mutator._mutate(genomes, muta_prob, ages)
         genomes = Genomes(genomes)
-        return genomes, ancestry
+        return genomes, ancestry, mother_slots
