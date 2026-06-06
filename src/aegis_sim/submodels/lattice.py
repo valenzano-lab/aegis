@@ -182,21 +182,32 @@ def random_empty_adjacent(q: int, r: int) -> Optional[Tuple[int, int]]:
     return empties[_state["rng"].integers(0, len(empties))]
 
 
-def resync_occupancy_from_positions(positions: np.ndarray) -> None:
-    """Rebuild the occupancy grid from a Population.positions array.
+def resync_occupancy_from_positions(*position_arrays) -> None:
+    """Rebuild the occupancy grid from one or more positions arrays.
 
-    Call after any operation that mutates the population (kills, hatching,
-    merges) to keep the lattice's occupancy state consistent with the source
-    of truth (Population.positions). Cheap: O(n_cells) clear + O(n) set.
+    Call after any operation that mutates the population or the egg
+    pool (kills, hatching, reproduction with delayed hatching, merges)
+    so the lattice's occupancy stays consistent with the source of truth.
+
+    Multiple arrays may be passed when eggs occupy lattice cells during
+    incubation: pass both Population.positions and Eggs.positions.
+    Sentinel rows (any coordinate < 0) are skipped — these represent
+    individuals not yet placed on the lattice. Cheap: O(n_cells) clear
+    + O(total positions) set.
     """
     if _state["occupancy"] is None:
         return
     _state["occupancy"].fill(False)
-    if positions is None or len(positions) == 0:
-        return
-    qs = positions[:, 0] % _state["rows"]
-    rs = positions[:, 1] % _state["cols"]
-    _state["occupancy"][qs, rs] = True
+    for positions in position_arrays:
+        if positions is None or len(positions) == 0:
+            continue
+        # Skip sentinel rows (e.g. (-1, -1) for eggs that failed placement)
+        valid = (positions[:, 0] >= 0) & (positions[:, 1] >= 0)
+        if not valid.any():
+            continue
+        qs = positions[valid, 0] % _state["rows"]
+        rs = positions[valid, 1] % _state["cols"]
+        _state["occupancy"][qs, rs] = True
 
 
 def migrate(positions: np.ndarray, migration_rate: float, migration_long_rate: float) -> None:

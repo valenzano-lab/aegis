@@ -1,0 +1,42 @@
+# Smoke test for the LATTICE_MODE=true spatial model with asexual reproduction.
+# Asexual is the cleanest first case because reproduction.py doesn't go through
+# pairing.py (which would shuffle indices and break parent->child mapping).
+#
+# Mating-aware sexual reproduction comes in the next commit. For now this
+# tests offspring placement + migration + death/hatch resync end-to-end.
+
+RANDOM_SEED: 7
+STEPS_PER_SIMULATION: 30
+AGE_LIMIT: 10
+INITIAL_POPULATION_SIZE: 50
+LOGGING_RATE: 5
+
+PICKLE_RATE: 0
+CHECKPOINT_RATE: 0
+SNAPSHOT_RATE: 0
+INTERVAL_RATE: 0
+POPGENSTATS_RATE: 0
+
+# Spatial model
+LATTICE_MODE: true
+LATTICE_TARGET_DENSITY: 0.2
+MIGRATION_RATE: 0.1
+MIGRATION_LONG_RATE: 0.005
+
+# Asexual reproduction (current path) — no mating constraint needed
+REPRODUCTION_MODE: asexual
+MATURATION_AGE: 2
+MAX_OFFSPRING_NUMBER: 1
+
+BITS_PER_LOCUS: 8
+ENVDRIFT_RATE: 0
+G_surv_lo: 0.9
+G_repr_hi: 1.0
+
+ABIOTIC_HAZARD_OFFSET: 0
+ABIOTIC_HAZARD_AMPLITUDE: 0
+ABIOTIC_HAZARD_SHAPE: flat
+
+RESOURCE_INITIAL_AMOUNT: 100
+RESOURCE_MAXIMUM_AMOUNT: 200
+RESOURCE_ADDITIVE_GROWTH: 50

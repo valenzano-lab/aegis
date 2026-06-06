@@ -198,6 +198,47 @@ class Bioreactor:
         )
         offspring_sexes = submodels.sexsystem.get_sex(len(offspring_genomes))
 
+        # Spatial lattice: place each offspring at a random empty cell
+        # adjacent to its mother. If no adjacent empty cell, birth fails for
+        # that offspring (filtered out below). Currently asexual-only — for
+        # sexual reproduction, `who` may not align with offspring index after
+        # pairing.py shuffles indices, so we fall back to global placement
+        # there until the mating refactor lands. No-op when LATTICE_MODE is False.
+        offspring_positions = None
+        if parametermanager.parameters.LATTICE_MODE and self.population.positions is not None:
+            asexual = parametermanager.parameters.REPRODUCTION_MODE == "asexual"
+            if asexual and len(offspring_genomes) == len(who):
+                parent_positions = self.population.positions[who]
+            else:
+                # Sexual mode (or anything where offspring count doesn't equal
+                # parent-index count): no parent-tracked positions available
+                # here; use whole-lattice random placement as the fallback.
+                parent_positions = None
+
+            offspring_positions = np.full((len(offspring_genomes), 2), -1, dtype=np.int32)
+            placed = np.zeros(len(offspring_genomes), dtype=bool)
+            for i in range(len(offspring_genomes)):
+                if parent_positions is not None:
+                    cur_q, cur_r = int(parent_positions[i, 0]), int(parent_positions[i, 1])
+                    target = submodels.lattice.random_empty_adjacent(cur_q, cur_r)
+                else:
+                    target = submodels.lattice.random_empty_anywhere()
+                if target is None:
+                    continue  # birth fails (no space)
+                submodels.lattice.claim(target[0], target[1])
+                offspring_positions[i] = target
+                placed[i] = True
+
+            # Filter out offspring whose birth failed (no empty cell).
+            if not placed.all():
+                offspring_genomes = offspring_genomes[placed]
+                offspring_sexes = offspring_sexes[placed]
+                if offspring_ancestry is not None:
+                    offspring_ancestry = offspring_ancestry[placed]
+                offspring_positions = offspring_positions[placed]
+                # Note: ages_repr and muta_prob are not stored on offspring,
+                # so they don't need to be filtered. who is similarly not used past here.
+
         # Lineage tracking — asexual only (sexual would need plumbing through pairing.py;
         # the warn-and-skip happens once at the start of the sim, not per step).
         offspring_lineage_id = None
@@ -206,9 +247,19 @@ class Bioreactor:
             if parametermanager.parameters.REPRODUCTION_MODE == "asexual":
                 # For asexual reproduction, len(offspring_genomes) == len(who), and
                 # offspring[i] descends from parent at self.population[who[i]].
-                if len(offspring_genomes) == len(who):
-                    offspring_parent_lineage_id = self.population.lineage_id[who].astype(np.int64)
-                    offspring_lineage_id = variables.next_lineage_ids(len(offspring_genomes))
+                # If lattice placement filtered out some offspring, who[] must be
+                # filtered the same way so parent->child mapping stays correct.
+                if parametermanager.parameters.LATTICE_MODE and offspring_positions is not None:
+                    # `placed` was already applied to offspring_genomes above.
+                    # Re-derive the filtered `who` from the same mask.
+                    who_filtered = who[placed]
+                    if len(offspring_genomes) == len(who_filtered):
+                        offspring_parent_lineage_id = self.population.lineage_id[who_filtered].astype(np.int64)
+                        offspring_lineage_id = variables.next_lineage_ids(len(offspring_genomes))
+                else:
+                    if len(offspring_genomes) == len(who):
+                        offspring_parent_lineage_id = self.population.lineage_id[who].astype(np.int64)
+                        offspring_lineage_id = variables.next_lineage_ids(len(offspring_genomes))
 
         # Randomize order of newly laid egg attributes ..
         # .. because the order will affect their probability to be removed because of limited carrying capacity
@@ -226,6 +277,8 @@ class Bioreactor:
                 child_lineage_ids=offspring_lineage_id,
                 step=variables.steps,
             )
+        if offspring_positions is not None:
+            offspring_positions = offspring_positions[order]
 
         # Make eggs
         eggs = Population.make_eggs(
@@ -236,6 +289,7 @@ class Bioreactor:
             offspring_ancestry=offspring_ancestry,
             offspring_lineage_id=offspring_lineage_id,
             offspring_parent_lineage_id=offspring_parent_lineage_id,
+            offspring_positions=offspring_positions,
         )
         if self.eggs is None:
             self.eggs = eggs
@@ -246,6 +300,11 @@ class Bioreactor:
             indices = np.arange(len(self.eggs))[-parametermanager.parameters.CARRYING_CAPACITY_EGGS :]
             # TODO biased
             self.eggs *= indices
+            # Truncated eggs lose their claim on the lattice cells too.
+            if parametermanager.parameters.LATTICE_MODE and self.population.positions is not None:
+                submodels.lattice.resync_occupancy_from_positions(
+                    self.population.positions, self.eggs.positions
+                )
 
     def growth(self):
         # TODO use already scavenged resources to determine growth
@@ -374,10 +433,14 @@ class Bioreactor:
         # Retain survivors
         self.population *= ~mask_kill
 
-        # Keep the lattice's occupancy grid consistent with population.positions
-        # after the shrink. No-op when LATTICE_MODE is False.
+        # Keep the lattice's occupancy grid consistent. Include incubating
+        # eggs' positions so they remain claimed during incubation periods.
+        # No-op when LATTICE_MODE is False.
         if parametermanager.parameters.LATTICE_MODE and self.population.positions is not None:
-            submodels.lattice.resync_occupancy_from_positions(self.population.positions)
+            eggs_positions = self.eggs.positions if self.eggs is not None else None
+            submodels.lattice.resync_occupancy_from_positions(
+                self.population.positions, eggs_positions
+            )
 
     def __len__(self):
         """Return the number of living individuals and saved eggs."""
