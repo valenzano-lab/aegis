@@ -37,6 +37,7 @@ from .vcfrecorder import VCFRecorder
 from .gvcfrecorder import GVCFRecorder
 from .lineagerecorder import LineageRecorder
 from .selectionrecorder import SelectionRecorder
+from .latticerecorder import LatticeRecorder
 
 # TODO write tests
 
@@ -264,6 +265,7 @@ class RecordingManager:
         self.gvcfrecorder = GVCFRecorder(odir=self.odir)
         self.lineagerecorder = LineageRecorder(odir=self.odir)
         self.selectionrecorder = SelectionRecorder(odir=self.odir)
+        self.latticerecorder = LatticeRecorder(odir=self.odir)
 
     #############
     # UTILITIES #

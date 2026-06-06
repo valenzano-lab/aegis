@@ -896,6 +896,18 @@ DEFAULT_PARAMETERS = {
         inrange=lambda x: x >= 1,
         evalrange=[1, 3, 5, 10],
     ),
+    "LATTICE_RECORD_RATE": Parameter(
+        key="LATTICE_RECORD_RATE",
+        name="",
+        domain="recording",
+        default=0,
+        info="Cadence (in steps) at which to write a per-individual lattice snapshot CSV",
+        info_extended="0 disables lattice snapshots. When >0, AEGIS writes /lattice/step{N}.csv at step 1, every LATTICE_RECORD_RATE steps, and at the final step. Columns: step, q, r, age, sex, lineage_id (-1 if LINEAGE_TRACING off), ancestry_fraction (-1 if INTROGRESSION not used). Use runs/lattice_animate.py to turn the snapshots into a PNG montage or animated GIF. No-op when LATTICE_MODE is False.",
+        dtype=int,
+        drange="[0, inf)",
+        inrange=lambda x: x >= 0,
+        evalrange=[0, 10, 100],
+    ),
     "PREDATOR_GROWTH": Parameter(
         key="PREDATOR_GROWTH",
         name="",

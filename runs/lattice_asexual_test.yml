@@ -16,6 +16,7 @@ CHECKPOINT_RATE: 0
 SNAPSHOT_RATE: 0
 INTERVAL_RATE: 0
 POPGENSTATS_RATE: 0
+LATTICE_RECORD_RATE: 2     # snapshot every 2 steps so the animation has 15+ frames
 
 # Spatial model
 LATTICE_MODE: true
