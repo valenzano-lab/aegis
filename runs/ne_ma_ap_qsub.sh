@@ -8,6 +8,9 @@
 #$ -t 1-36
 # SGE array wrapper for the Ne x {MA, AP} x {sexual, asexual} sweep.
 #
+# gen100 is the HEAD/LOGIN node -- submit from it, never run anything on it.
+# Jobs execute on the compute nodes; storage is under /scratch/merlin.
+#
 #   cd <AEGIS_REPO_ON_CLUSTER>
 #   python runs/ne_ma_ap_configs.py --outdir configs/ --steps 1000000 --seeds 1 2 3
 #   mkdir -p logs
