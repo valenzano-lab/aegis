@@ -48,7 +48,7 @@ class TestPairingOutputShape:
         ages = np.arange(4, dtype=np.int32)
         muta_prob = np.ones(4) * 0.01
 
-        children, _, _ = pairing(genomes, sexes, ages, muta_prob)
+        children, _, _, _ = pairing(genomes, sexes, ages, muta_prob)
 
         assert children.shape == (2, 2, 6, 1)  # 2 children, ploidy 2, 6 loci, 1 bpl
 
@@ -59,7 +59,7 @@ class TestPairingOutputShape:
         ages = np.arange(6, dtype=np.int32)
         muta_prob = np.ones(6) * 0.01
 
-        children, _, _ = pairing(genomes, sexes, ages, muta_prob)
+        children, _, _, _ = pairing(genomes, sexes, ages, muta_prob)
 
         assert children.shape == (3, 2, 10, 8)
 
@@ -73,7 +73,7 @@ class TestPairingSexBalance:
         ages = np.arange(6, dtype=np.int32)
         muta_prob = np.ones(6) * 0.01
 
-        children, _, _ = pairing(genomes, sexes, ages, muta_prob)
+        children, _, _, _ = pairing(genomes, sexes, ages, muta_prob)
         assert len(children) == 3
 
     def test_more_males(self):
@@ -82,7 +82,7 @@ class TestPairingSexBalance:
         ages = np.arange(5, dtype=np.int32)
         muta_prob = np.ones(5) * 0.01
 
-        children, _, _ = pairing(genomes, sexes, ages, muta_prob)
+        children, _, _, _ = pairing(genomes, sexes, ages, muta_prob)
         assert len(children) == 1
 
     def test_more_females(self):
@@ -91,7 +91,7 @@ class TestPairingSexBalance:
         ages = np.arange(5, dtype=np.int32)
         muta_prob = np.ones(5) * 0.01
 
-        children, _, _ = pairing(genomes, sexes, ages, muta_prob)
+        children, _, _, _ = pairing(genomes, sexes, ages, muta_prob)
         assert len(children) == 1
 
 
@@ -104,7 +104,7 @@ class TestPairingNoChildren:
         ages = np.arange(3, dtype=np.int32)
         muta_prob = np.ones(3) * 0.01
 
-        children, _, _ = pairing(genomes, sexes, ages, muta_prob)
+        children, _, _, _ = pairing(genomes, sexes, ages, muta_prob)
         assert len(children) == 0
 
     def test_all_females(self):
@@ -113,7 +113,7 @@ class TestPairingNoChildren:
         ages = np.arange(3, dtype=np.int32)
         muta_prob = np.ones(3) * 0.01
 
-        children, _, _ = pairing(genomes, sexes, ages, muta_prob)
+        children, _, _, _ = pairing(genomes, sexes, ages, muta_prob)
         assert len(children) == 0
 
 
@@ -136,7 +136,7 @@ class TestPairingGameteOrigin:
         ages = np.arange(n, dtype=np.int32)
         muta_prob = np.ones(n) * 0.01
 
-        children, _, _ = pairing(genomes, sexes, ages, muta_prob)
+        children, _, _, _ = pairing(genomes, sexes, ages, muta_prob)
 
         # Each child's chromatid 0 should come from a male's gamete
         # Each child's chromatid 1 should come from a female's gamete
@@ -165,7 +165,7 @@ class TestPairingReturnedMetadata:
         ages = np.array([10, 20, 30, 40], dtype=np.int32)
         muta_prob = np.array([0.01, 0.02, 0.03, 0.04])
 
-        _, returned_ages, returned_muta = pairing(genomes, sexes, ages, muta_prob)
+        _, returned_ages, returned_muta, _ = pairing(genomes, sexes, ages, muta_prob)
 
         # Returned ages should be from female indices (2 and 3)
         assert all(a in [30, 40] for a in returned_ages)
@@ -177,7 +177,7 @@ class TestPairingReturnedMetadata:
         ages = np.array([10, 20, 30, 40], dtype=np.int32)
         muta_prob = np.array([0.01, 0.02, 0.03, 0.04])
 
-        _, _, returned_muta = pairing(genomes, sexes, ages, muta_prob)
+        _, _, returned_muta, _ = pairing(genomes, sexes, ages, muta_prob)
 
         assert all(m in [0.03, 0.04] for m in returned_muta)
         assert len(returned_muta) == 2
@@ -194,15 +194,16 @@ class TestPairingDeterminism:
 
         variables.rng = np.random.default_rng(99)
         np.random.seed(99)
-        c1, a1, m1 = pairing(genomes, sexes, ages, muta_prob)
+        c1, a1, m1, f1 = pairing(genomes, sexes, ages, muta_prob)
 
         variables.rng = np.random.default_rng(99)
         np.random.seed(99)
-        c2, a2, m2 = pairing(genomes, sexes, ages, muta_prob)
+        c2, a2, m2, f2 = pairing(genomes, sexes, ages, muta_prob)
 
         np.testing.assert_array_equal(c1, c2)
         np.testing.assert_array_equal(a1, a2)
         np.testing.assert_array_equal(m1, m2)
+        np.testing.assert_array_equal(f1, f2)
 
 
 class TestPairingRealisticScale:
@@ -216,8 +217,9 @@ class TestPairingRealisticScale:
         ages = np.arange(n, dtype=np.int32)
         muta_prob = np.ones(n) * 0.001
 
-        children, returned_ages, returned_muta = pairing(genomes, sexes, ages, muta_prob)
+        children, returned_ages, returned_muta, returned_females = pairing(genomes, sexes, ages, muta_prob)
 
+        assert len(returned_females) == 500
         assert len(children) == 500
         assert children.shape == (500, 2, 200, 1)
         assert children.dtype == np.bool_
