@@ -36,11 +36,21 @@
 # ---------------------------------------------------------------------------
 #
 # Single-threaded: aegis is numpy-vectorised but not parallel, so no -pe threads.
-# If aegis lives in a conda env on Merlin, uncomment and point PATH at it
-# (the QTL scripts do this, e.g. .conda/envs/<env>/bin):
-# export PATH=/home/<user>/.conda/envs/<aegis_env>/bin:$PATH
 
 set -uo pipefail
+
+# Point PATH at the conda env holding aegis. The QTL scripts use -V *and* an explicit
+# export, so -V alone has evidently not been sufficient here. Override for a different
+# user/env by exporting AEGIS_ENV before qsub, e.g.
+#   AEGIS_ENV=/scratch/merlin/data/user/<you>/.conda/envs/aegis qsub runs/ne_ma_ap_qsub.sh
+AEGIS_ENV="${AEGIS_ENV:-/home/lakatos/dvalenza/.conda/envs/aegis}"
+export PATH="${AEGIS_ENV}/bin:${PATH}"
+
+if ! command -v aegis >/dev/null 2>&1; then
+    echo "ERROR: 'aegis' not on PATH. AEGIS_ENV=${AEGIS_ENV}"
+    echo "       set AEGIS_ENV to the conda env that has aegis installed."
+    exit 1
+fi
 
 TASK_ID="${SGE_TASK_ID:-1}"
 
