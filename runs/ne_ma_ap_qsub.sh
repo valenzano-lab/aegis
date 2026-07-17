@@ -54,14 +54,20 @@ fi
 
 TASK_ID="${SGE_TASK_ID:-1}"
 
-CONFIG=$(ls configs/*.yml | sed -n "${TASK_ID}p")
+# Where the configs live -- and therefore where output lands, since aegis writes
+# beside the config. Keep this OUTSIDE the git tree: the sweep produces ~GBs and
+# only runs/*/ is gitignored. Override with CONFIG_DIR before qsub.
+CONFIG_DIR="${CONFIG_DIR:-/wins/vlzno/projects/aegis_runs}"
+
+CONFIG=$(ls "${CONFIG_DIR}"/*.yml 2>/dev/null | sed -n "${TASK_ID}p")
 if [ -z "${CONFIG}" ]; then
-    echo "no config for task ${TASK_ID} -- is -t larger than the number of configs?"
+    echo "no config for task ${TASK_ID} in ${CONFIG_DIR}"
+    echo "  -- is -t larger than the number of configs, or CONFIG_DIR wrong?"
     exit 1
 fi
 
 NAME=$(basename "${CONFIG}" .yml)
-OUTDIR="configs/${NAME}"     # aegis writes output beside the config, named after it
+OUTDIR="${CONFIG_DIR}/${NAME}"   # aegis writes output beside the config, named after it
 
 echo "host: $(hostname) | task: ${TASK_ID} | run: ${NAME} | started: $(date)"
 
