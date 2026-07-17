@@ -117,6 +117,10 @@ def main():
     p.add_argument("--outdir", default="configs")
     p.add_argument("--steps", type=int, default=1_000_000)
     p.add_argument("--seeds", type=int, nargs="+", default=[1, 2, 3])
+    p.add_argument("--modes", nargs="+", default=MODES, choices=MODES,
+                   help="reproduction modes to emit (default: both)")
+    p.add_argument("--ne", type=int, nargs="+", default=NE_VALUES,
+                   help="population sizes to emit (default: 300 3000 30000)")
     args = p.parse_args()
 
     out = pathlib.Path(args.outdir)
@@ -124,15 +128,18 @@ def main():
 
     n = 0
     for arm in ARMS:
-        for ne in NE_VALUES:
-            for mode in MODES:
+        for ne in args.ne:
+            for mode in args.modes:
                 for seed in args.seeds:
                     name = f"{arm}_Ne{ne}_{mode}_seed{seed}"
                     with open(out / f"{name}.yml", "w") as f:
                         yaml.safe_dump(build(arm, ne, mode, seed, args.steps), f, sort_keys=True)
                     n += 1
-    print(f"wrote {n} configs to {out}/ ({len(ARMS)} arms x {len(NE_VALUES)} Ne "
-          f"x {len(MODES)} modes x {len(args.seeds)} seeds), {args.steps} stages each")
+    print(f"wrote {n} configs to {out}/ ({len(ARMS)} arms x {len(args.ne)} Ne "
+          f"x {len(args.modes)} modes x {len(args.seeds)} seeds), {args.steps} stages each")
+    print("\nsubmit with:  qsub -t 1-%d runs/ne_ma_ap_qsub.sh" % n)
+    for i, f in enumerate(sorted(out.glob("*.yml")), start=1):
+        print(f"  task {i:>2}  {f.name}")
 
 
 if __name__ == "__main__":
