@@ -36,6 +36,17 @@
 # ---------------------------------------------------------------------------
 #
 # Single-threaded: aegis is numpy-vectorised but not parallel, so no -pe threads.
+# CRUCIAL on the FLI nodes (49-112 cores): OpenBLAS/OMP/numba otherwise spawn one
+# thread per core and pre-reserve per-thread buffers sized to the core count, which
+# exhausts the process before the sim's own arrays allocate -- it dies with
+# "OpenBLAS: Memory allocation still failed" / a spurious tiny ArrayMemoryError.
+# Pinning every math backend to 1 thread fixes it and is correct for a single-core slot.
+export OPENBLAS_NUM_THREADS=1
+export OMP_NUM_THREADS=1
+export MKL_NUM_THREADS=1
+export NUMEXPR_NUM_THREADS=1
+export NUMBA_NUM_THREADS=1
+export VECLIB_MAXIMUM_THREADS=1
 
 set -uo pipefail
 
