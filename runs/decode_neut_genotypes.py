@@ -34,32 +34,79 @@ import pathlib
 import numpy as np
 import pandas as pd
 
-BITS = 20
-N_SURV = 50          # surv occupies logical loci 0..49
-N_NEUT = 50          # neut occupies logical loci 50..99
-N_LOCI = N_SURV + N_NEUT
 PLOIDY = 2
 MUT_EQUILIBRIUM = 0.1 / 1.1  # neutral ON fraction at MUTATION_RATIO=0.1
 
+#: Trait order in the genome, from aegis_sim.constants.GENETIC_TRAITS.
+GENETIC_TRAITS = ("surv", "repr", "muta", "neut", "grow")
 
-def neut_physical_positions():
-    """Physical storage index of each logical neut locus (j = 0..49)."""
+#: Fallback layout: surv + neut evolvable, AGE_LIMIT 50 (the Ne x MA/AP model).
+#: Prefer layout_from_config() -- a run with repr evolvable has a different one.
+BITS = 20
+N_NEUT = 50
+N_LOCI = 100
+N_SURV = 50
+
+
+def layout_from_config(run_dir):
+    """(bits, n_loci, neut_start, n_neut) read from a run's own final_config.yml.
+
+    Trait lengths depend on which traits are evolvable: only evolvable ones occupy
+    loci, and they are packed in GENETIC_TRAITS order. Hardcoding a surv+neut layout
+    silently decodes the wrong columns for a run where repr also evolves.
+    """
+    import yaml
+
+    cfg = yaml.safe_load(open(pathlib.Path(run_dir) / "final_config.yml"))
+    age_limit = int(cfg["AGE_LIMIT"])
+    bits = int(cfg["BITS_PER_LOCUS"])
+
+    start, neut_start, n_neut = 0, None, 0
+    for trait in GENETIC_TRAITS:
+        if not cfg.get(f"G_{trait}_evolvable", False):
+            continue
+        agespecific = cfg.get(f"G_{trait}_agespecific", True)
+        length = age_limit if agespecific is True else (1 if agespecific is False else int(agespecific))
+        if trait == "neut":
+            neut_start, n_neut = start, length
+        start += length
+    if neut_start is None:
+        raise ValueError(f"{run_dir} has no evolvable neut trait — no neutral clock to read")
+    return bits, start, neut_start, n_neut
+
+
+def neut_physical_positions(n_loci=None, neut_start=None, n_neut=None):
+    """Physical storage index of each logical neut locus."""
+    n_loci = N_LOCI if n_loci is None else n_loci
+    neut_start = N_SURV if neut_start is None else neut_start
+    n_neut = N_NEUT if n_neut is None else n_neut
     # Fixed seed 0: every population shares this layout (see CompositeArchitecture).
-    perm = np.random.default_rng(0).permutation(N_LOCI)
-    return perm[N_SURV:N_SURV + N_NEUT]
+    perm = np.random.default_rng(0).permutation(n_loci)
+    return perm[neut_start:neut_start + n_neut]
 
 
-def decode(genotype_df):
-    """Return (signal, load), each shape (n_individuals, N_NEUT).
+def decode(genotype_df, layout=None):
+    """Return (signal, load), each shape (n_individuals, n_neut).
 
     signal[k, j] = bit-0 dosage of neut locus j in individual k  (matches neut_j)
-    load[k, j]   = mean ON fraction over all 20 bits x 2 chromatids of neut locus j
+    load[k, j]   = mean ON fraction over all bits x 2 chromatids of neut locus j
+
+    `layout` is (bits, n_loci, neut_start, n_neut) from layout_from_config(); without
+    it the surv+neut fallback is used, which is wrong for any run where repr evolves.
     """
+    bits, n_loci, neut_start, n_neut = layout or (BITS, N_LOCI, N_SURV, N_NEUT)
     g = genotype_df.values.astype(np.float32)  # (n_ind, ploidy*n_loci*bits)
     n = len(g)
-    g = g.reshape(n, PLOIDY, N_LOCI, BITS)      # undo the flatten
-    phys = neut_physical_positions()
-    neut = g[:, :, phys, :]                      # (n_ind, ploidy, N_NEUT, bits)
+    expected = PLOIDY * n_loci * bits
+    if g.shape[1] != expected:
+        raise ValueError(
+            f"genotype snapshot has {g.shape[1]} columns but the layout implies "
+            f"{expected} ({PLOIDY} x {n_loci} loci x {bits} bits). Pass the run's own "
+            f"layout via layout_from_config()."
+        )
+    g = g.reshape(n, PLOIDY, n_loci, bits)      # undo the flatten
+    phys = neut_physical_positions(n_loci, neut_start, n_neut)
+    neut = g[:, :, phys, :]                      # (n_ind, ploidy, n_neut, bits)
 
     # signal: collapse the two chromatids' bit 0 the way ploider does
     # (homozygous on -> 1, het -> 0.5, homozygous off -> 0) == mean over chromatids.
