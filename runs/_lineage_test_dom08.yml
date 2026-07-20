@@ -1,0 +1,39 @@
+# Same as lineage_test.yml but with per-trait dominance pinned to 0.8
+# (matches the pre-session global DOMINANCE_FACTOR default). Used to test
+# whether the new 0.5 codominant default is causing fast extinction.
+
+RANDOM_SEED: 7
+STEPS_PER_SIMULATION: 30
+AGE_LIMIT: 10
+INITIAL_POPULATION_SIZE: 50
+
+PICKLE_RATE: 0
+CHECKPOINT_RATE: 0
+SNAPSHOT_RATE: 0
+INTERVAL_RATE: 0
+POPGENSTATS_RATE: 0
+
+LINEAGE_TRACING: true
+LINEAGE_RATE: 1
+
+# This is the key change: restore the old default heterozygote behavior
+G_surv_dominance: 0.8
+G_repr_dominance: 0.8
+G_neut_dominance: 0.8
+G_muta_dominance: 0.8
+G_grow_dominance: 0.8
+
+MATURATION_AGE: 2
+MAX_OFFSPRING_NUMBER: 2
+REPRODUCTION_MODE: asexual
+
+BITS_PER_LOCUS: 8
+ENVDRIFT_RATE: 0
+
+ABIOTIC_HAZARD_OFFSET: 0.0
+ABIOTIC_HAZARD_AMPLITUDE: 0
+ABIOTIC_HAZARD_SHAPE: flat
+
+RESOURCE_INITIAL_AMOUNT: 200
+RESOURCE_MAXIMUM_AMOUNT: 500
+RESOURCE_ADDITIVE_GROWTH: 100

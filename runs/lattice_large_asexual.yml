@@ -1,0 +1,45 @@
+# Large-scale lattice + asexual demo.
+# Lattice ~100x100 (10k cells), N=1000, 100 steps. Asexual lineage tracking
+# enabled (clonal lineages are biologically meaningful here, unlike sexual).
+# At this scale you can see: founder-cluster formation, wave-of-advance
+# dynamics, lineage-fixation patterns, and isolation-by-distance.
+
+RANDOM_SEED: 11
+STEPS_PER_SIMULATION: 100
+AGE_LIMIT: 20
+INITIAL_POPULATION_SIZE: 2000
+LOGGING_RATE: 10
+
+PICKLE_RATE: 0
+CHECKPOINT_RATE: 0
+SNAPSHOT_RATE: 0
+INTERVAL_RATE: 0
+POPGENSTATS_RATE: 0
+LATTICE_RECORD_RATE: 5     # snapshot every 5 steps -> ~20 frames for the animation
+LINEAGE_TRACING: true
+LINEAGE_RATE: 1
+
+# Spatial model
+LATTICE_MODE: true
+LATTICE_TARGET_DENSITY: 0.2     # 20% occupancy at carrying capacity
+MIGRATION_RATE: 0.05
+MIGRATION_LONG_RATE: 0.001
+
+# Asexual — lineage_id assignment is meaningful; founder chains build a real tree
+REPRODUCTION_MODE: asexual
+MATURATION_AGE: 3
+MAX_OFFSPRING_NUMBER: 2
+
+BITS_PER_LOCUS: 8
+ENVDRIFT_RATE: 0
+G_surv_lo: 0.9
+G_repr_hi: 1.0
+
+ABIOTIC_HAZARD_OFFSET: 0
+ABIOTIC_HAZARD_AMPLITUDE: 0
+ABIOTIC_HAZARD_SHAPE: flat
+
+# Resources sized so density at carrying capacity matches LATTICE_TARGET_DENSITY
+RESOURCE_INITIAL_AMOUNT: 2000
+RESOURCE_MAXIMUM_AMOUNT: 2000
+RESOURCE_ADDITIVE_GROWTH: 500
