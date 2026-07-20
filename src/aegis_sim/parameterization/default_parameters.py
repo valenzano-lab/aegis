@@ -403,6 +403,18 @@ DEFAULT_PARAMETERS = {
     #
     #
     # RESOURCES
+    "RESOURCE_DEFICIT_CARRYOVER": Parameter(
+        key="RESOURCE_DEFICIT_CARRYOVER",
+        name="",
+        domain="ecology",
+        default=False,
+        info="If True, resource overdraw carries as a debt that is subtracted from the "
+        "next step's additive increment, so recovery from a crash is gradual "
+        "(the rule of Sajina & Valenzano 2016). If False (default), a depleted pool "
+        "returns to the full additive increment in one step.",
+        dtype=bool,
+        drange="",
+    ),
     "RESOURCE_INITIAL_AMOUNT": Parameter(
         key="RESOURCE_INITIAL_AMOUNT",
         name="",

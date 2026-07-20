@@ -61,6 +61,7 @@ def init(self, parametermanager):
         RESOURCE_MULTIPLICATIVE_GROWTH=parametermanager.parameters.RESOURCE_MULTIPLICATIVE_GROWTH,
         RESOURCE_MAXIMUM_AMOUNT=parametermanager.parameters.RESOURCE_MAXIMUM_AMOUNT,
         RESOURCE_INITIAL_AMOUNT=parametermanager.parameters.RESOURCE_INITIAL_AMOUNT,
+        RESOURCE_DEFICIT_CARRYOVER=parametermanager.parameters.RESOURCE_DEFICIT_CARRYOVER,
     )
 
     # Reproduction
