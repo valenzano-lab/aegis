@@ -8,7 +8,8 @@ from aegis_sim.parameterization import parametermanager
 from aegis_sim.recording import recordingmanager
 
 
-def run(custom_config_path, pickle_path, overwrite, custom_input_params, resume_path=None, extend_steps=None):
+def run(custom_config_path, pickle_path, overwrite, custom_input_params, resume_path=None, extend_steps=None,
+        resume_overrides=None):
     if resume_path is not None:
         odir = pathlib.Path(resume_path)
         checkpoint_file = odir / "checkpoint"
@@ -34,7 +35,8 @@ def run(custom_config_path, pickle_path, overwrite, custom_input_params, resume_
             )
         else:
             # Output dir + checkpoint → resume
-            population, eggs = init_resume(resume_path, extend_steps=extend_steps)
+            population, eggs = init_resume(resume_path, extend_steps=extend_steps,
+                                          overrides=resume_overrides)
     else:
         init(custom_config_path, overwrite, pickle_path, custom_input_params)
         population = (
@@ -96,12 +98,15 @@ def init(custom_config_path, overwrite=False, pickle_path=None, custom_input_par
         )
 
 
-def init_resume(resume_path, extend_steps=None):
+def init_resume(resume_path, extend_steps=None, overrides=None):
     """Initialize all modules from the latest checkpoint in the given output directory.
 
     Args:
         resume_path: Path to the output directory containing the checkpoint.
         extend_steps: If set, override STEPS_PER_SIMULATION to extend the run.
+        overrides: Optional dict of parameter overrides applied on top of the
+            checkpointed config. Structural parameters are rejected --
+            see ParameterManager.STRUCTURAL_PARAMETERS.
     """
     from aegis_sim.checkpoint import Checkpoint
 
@@ -110,7 +115,8 @@ def init_resume(resume_path, extend_steps=None):
     checkpoint = Checkpoint.load(checkpoint_path)
 
     # Restore parameters from checkpoint config
-    parametermanager.init_from_config(checkpoint.final_config, checkpoint.custom_config_path)
+    parametermanager.init_from_config(checkpoint.final_config, checkpoint.custom_config_path,
+                                      overrides=overrides)
 
     # Apply --extend override if provided
     if extend_steps is not None:

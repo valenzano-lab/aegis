@@ -17,12 +17,56 @@ class ParameterManager:
 
         self.parameters = self()
 
-    def init_from_config(self, final_config, custom_config_path):
-        """Initialize from a saved config dict (used when resuming from checkpoint)."""
+    #: Parameters that define the SHAPE of the checkpointed genome, phenotype and
+    #: population arrays. Overriding any of these on resume would leave the restored
+    #: arrays structurally inconsistent with the parameters describing them -- e.g.
+    #: raising AGE_LIMIT would make trait slices index past the end of a genome that
+    #: was built for the old value. Rejected loudly rather than silently corrupting.
+    STRUCTURAL_PARAMETERS = frozenset(
+        {
+            "AGE_LIMIT",
+            "BITS_PER_LOCUS",
+            "PLOIDY",
+            "GENARCH_TYPE",
+            "REPRODUCTION_MODE",
+            "MODIF_GENOME_SIZE",
+        }
+        | {f"G_{trait}_{attr}" for trait in ("surv", "repr", "muta", "neut", "grow") for attr in ("evolvable", "agespecific")}
+        #: not structural, but the RNG state is restored from the checkpoint, so a new
+        #: seed would be silently ignored -- reject rather than mislead.
+        | {"RANDOM_SEED"}
+    )
+
+    def init_from_config(self, final_config, custom_config_path, overrides=None):
+        """Initialize from a saved config dict (used when resuming from checkpoint).
+
+        `overrides` applies parameter changes on top of the checkpointed config. This
+        is what makes a two-phase experiment expressible: burn a population in to
+        equilibrium under one regime, then resume the SAME checkpoint several times
+        under different regimes, so every arm shares an identical equilibrated
+        ancestor and between-arm differences cannot come from the burn-in.
+
+        Only non-structural parameters may be overridden; see STRUCTURAL_PARAMETERS.
+        """
         self.custom_config_path = custom_config_path
         self.custom_input_params = {}
         self.final_config = final_config.copy()
-        self.parameters = types.SimpleNamespace(**final_config)
+
+        if overrides:
+            self.validate(overrides)
+            illegal = sorted(set(overrides) & self.STRUCTURAL_PARAMETERS)
+            if illegal:
+                raise ValueError(
+                    f"Cannot override {illegal} on resume: these define the shape of the "
+                    f"checkpointed genome/phenotype arrays (or, for RANDOM_SEED, are "
+                    f"superseded by the restored RNG state). Start a fresh run instead."
+                )
+            for key, value in overrides.items():
+                old = self.final_config.get(key)
+                self.final_config[key] = value
+                logging.info(f"Resume override: {key} {old!r} -> {value!r}")
+
+        self.parameters = types.SimpleNamespace(**self.final_config)
         logging.info("Parameters restored from checkpoint.")
 
     def __call__(self):

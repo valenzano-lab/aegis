@@ -64,6 +64,19 @@ def get_parser():
         default=None,
     )
 
+    subparser_sim.add_argument(
+        "--override",
+        action="append",
+        metavar="KEY=VALUE",
+        help=(
+            "override a parameter when resuming (repeatable), e.g. "
+            "--override RESOURCE_MAXIMUM_AMOUNT=5000. Lets one burnt-in checkpoint be "
+            "resumed under several regimes. Parameters defining genome/array shape "
+            "(AGE_LIMIT, BITS_PER_LOCUS, PLOIDY, ...) are rejected."
+        ),
+        default=None,
+    )
+
     # subparser_gui
     subparser_gui = subparsers.add_parser("gui", help="run GUI")
     subparser_gui.add_argument(
