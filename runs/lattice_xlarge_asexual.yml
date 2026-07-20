@@ -1,0 +1,43 @@
+# Extra-large lattice + asexual long-term demo.
+# Lattice 200x200 (40k cells), N=5000, 1000 steps. Shows long-term metapopulation
+# structure: cluster formation, lineage coexistence vs displacement,
+# isolation-by-distance signatures over many generations.
+
+RANDOM_SEED: 11
+STEPS_PER_SIMULATION: 1000
+AGE_LIMIT: 20
+INITIAL_POPULATION_SIZE: 5000
+LOGGING_RATE: 100
+
+PICKLE_RATE: 0
+CHECKPOINT_RATE: 0
+SNAPSHOT_RATE: 0
+INTERVAL_RATE: 0
+POPGENSTATS_RATE: 0
+LATTICE_RECORD_RATE: 20    # snapshot every 20 steps -> 50 frames
+LINEAGE_TRACING: true
+LINEAGE_RATE: 1
+
+# Spatial model
+LATTICE_MODE: true
+LATTICE_TARGET_DENSITY: 0.125    # 5000 / 0.125 = 40000 cells = 200 x 200
+MIGRATION_RATE: 0.05
+MIGRATION_LONG_RATE: 0.001
+
+# Asexual — lineage tracking is biologically meaningful
+REPRODUCTION_MODE: asexual
+MATURATION_AGE: 3
+MAX_OFFSPRING_NUMBER: 2
+
+BITS_PER_LOCUS: 8
+ENVDRIFT_RATE: 0
+G_surv_lo: 0.9
+G_repr_hi: 1.0
+
+ABIOTIC_HAZARD_OFFSET: 0
+ABIOTIC_HAZARD_AMPLITUDE: 0
+ABIOTIC_HAZARD_SHAPE: flat
+
+RESOURCE_INITIAL_AMOUNT: 5000
+RESOURCE_MAXIMUM_AMOUNT: 5000
+RESOURCE_ADDITIVE_GROWTH: 1000
