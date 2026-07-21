@@ -51,8 +51,13 @@ def arm_metrics(run_dir, release):
     n_path = run_dir / "popsize_before_reproduction.csv"
     if not n_path.exists():
         return None
-    n = pd.read_csv(n_path, header=None).squeeze("columns").to_numpy(dtype=float)
+    try:
+        n = pd.read_csv(n_path, header=None).squeeze("columns").to_numpy(dtype=float)
+    except pd.errors.EmptyDataError:
+        print(f"  WARN {run_dir.name:<40} popsize file is EMPTY -- transfer or run failure")
+        return None
     if len(n) <= release + 100:
+        print(f"  ({run_dir.name}: {len(n):,} rows, released phase needs > {release:,})")
         return None
     seg = n[release:]
 
