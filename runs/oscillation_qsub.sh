@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 #$ -N oscph
 #$ -cwd
-#$ -o logs/oscph.$TASK_ID.out
-#$ -e logs/oscph.$TASK_ID.err
+#$ -o logs/oscph$PHASE.$TASK_ID.out
+#$ -e logs/oscph$PHASE.$TASK_ID.err
 #$ -l h_vmem=8G
 #$ -V
 #$ -t 1-3
@@ -30,6 +30,11 @@
 #   PHASE=2 qsub -t 1-36 runs/oscillation_qsub.sh
 #
 # Set -t to the number of tasks: phase 1 = n_seeds, phase 2 = n_seeds * 12.
+#
+# Logs carry the phase in their name (oscph1.N.out / oscph2.N.out): both phases use
+# the same task numbers, so a shared name lets phase 2 overwrite phase 1's record.
+# PHASE must therefore be exported at submit time, not just set in the environment:
+#   PHASE=2 CONFIG_DIR=... qsub -t 1-36 runs/oscillation_qsub.sh   (with #$ -V)
 #
 # Measured locally: ~200k burn-in steps at ~23 ms/step ~= 80 min, 26.6 steps/generation
 # under regulation (17.8 without -- the cap removes starvation mortality, so individuals
