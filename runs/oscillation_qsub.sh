@@ -150,9 +150,16 @@ else
 
     # Each arm needs its own copy of the burnt-in state: resume writes in place, so
     # twelve arms sharing one directory would overwrite each other.
+    #
+    # cp -al hard-links instead of copying bytes. The ancestor is ~170 MB and there are
+    # 12 arms per seed, so a plain cp -r means ~6 GB of duplication -- issued by all
+    # arms at once onto a network mount. Hard links are near-instant and near-free:
+    # aegis writes output files afresh rather than editing in place, so an arm's writes
+    # break its own link and never reach the ancestor. Falls back to cp -r if the
+    # filesystem refuses hard links.
     ARMDIR="${CONFIG_DIR}/${NAME}_k$(echo "1 + ${MULT}" | bc)_cap${CAP}"
     if [ ! -d "${ARMDIR}" ]; then
-        cp -r "${OUTDIR}" "${ARMDIR}" || exit 1
+        cp -al "${OUTDIR}" "${ARMDIR}" 2>/dev/null || cp -r "${OUTDIR}" "${ARMDIR}" || exit 1
         rm -f "${ARMDIR}/.phase1_done"
     fi
     cp "${CONFIG}" "${ARMDIR}.yml"

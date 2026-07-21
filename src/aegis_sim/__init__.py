@@ -146,8 +146,19 @@ def init_resume(resume_path, extend_steps=None, overrides=None):
     from aegis_sim.submodels.resources.resources import resources
     resources.capacity = checkpoint.resource_capacity
 
-    # Init recording in append mode (don't overwrite, don't write headers)
-    recordingmanager.init_for_resume(checkpoint.custom_config_path)
+    # Init recording in append mode (don't overwrite, don't write headers).
+    #
+    # Use the config path the CALLER resumed from, not the one stored in the checkpoint.
+    # They differ whenever a checkpoint is copied elsewhere and resumed there -- which is
+    # how a burnt-in ancestor is branched into several experimental arms. Taking the
+    # stored path would send every arm's output back to the ancestor's directory, so the
+    # arms would silently overwrite each other and the ancestor (and, run concurrently,
+    # race over the same checkpoint file).
+    resumed_config_path = odir.parent / f"{odir.name}.yml"
+    if not resumed_config_path.exists():
+        resumed_config_path = checkpoint.custom_config_path
+    recordingmanager.init_for_resume(resumed_config_path)
+    variables.custom_config_path = resumed_config_path
     recordingmanager.initialize_recorders(
         TICKER_RATE=parametermanager.parameters.TICKER_RATE,
         resuming=True,
