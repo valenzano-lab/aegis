@@ -140,6 +140,11 @@ def main():
     p = argparse.ArgumentParser()
     p.add_argument("--outdir", default="~/aegis_data/resource_oscillation")
     p.add_argument("--steps", type=int, default=STEPS)
+    p.add_argument("--burnin", action="store_true",
+                   help="emit PHASE-1 burn-in configs: constant resources with "
+                        "REPRODUCTION_REGULATION so N is pinned, one per seed. Run these "
+                        "to equilibrium (check with check_equilibration.py), then branch "
+                        "phase-2 arms off their checkpoints with `aegis sim -r --override`.")
     p.add_argument("--rbar", type=int, nargs="+",
                    help="Rbar values for a Ne-descent sweep (variable + constant, all seeds)")
     p.add_argument("--seeds", type=int, nargs="+", default=[1])
@@ -157,7 +162,16 @@ def main():
     # age 10 can consume: a k=1.1 test reached R = 3.7e11 by step 200. The paper's k
     # must therefore be <= 1. k = 1 gives resource peaks ~2.4x Rbar against the
     # paper's ~4x, so it is the right regime; scan DOWNWARD (k=0.5) if needed.
-    if args.rbar:
+    if args.burnin:
+        # Phase 1. Constant, regulated resources: N is pinned at the cap, no overshoot,
+        # no starvation. The population equilibrates -- the neutral locus relaxes to
+        # MUTATION_RATIO/(1+MUTATION_RATIO) -- so phase 2 measures the response of an
+        # equilibrated population rather than a transient from initialization.
+        runs = []
+        for rbar in (args.rbar or [2000]):
+            for seed in args.seeds:
+                runs.append((f"burnin_R{rbar}_s{seed}", rbar, False, 0.0, seed))
+    elif args.rbar:
         # Ne-descent sweep: does low Ne under VARIABLE resources depress early-life
         # survival, as in Fig 5B? Constant controls at the same Rbar separate the
         # effect of low Ne from the effect of oscillation itself. Note that an
@@ -181,6 +195,11 @@ def main():
     for name, rbar, variable, mult, seed in runs:
         cfg = build(rbar, variable, mult, args.steps, args.age_limit, args.maturation)
         cfg["RANDOM_SEED"] = seed
+        if args.burnin:
+            cfg["REPRODUCTION_REGULATION"] = True   # pin N; released in phase 2
+            cfg["CHECKPOINT_RATE"] = 20_000         # phase 2 branches from a checkpoint
+            cfg["SNAPSHOT_RATE"] = 10_000           # genotype snapshots -> neutral clock
+            cfg["LOGGING_RATE"] = 20_000
         with open(out / f"{name}.yml", "w") as f:
             yaml.safe_dump(cfg, f, sort_keys=True)
         kind = "variable" if variable else "constant"
