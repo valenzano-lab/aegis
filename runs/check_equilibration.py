@@ -40,7 +40,14 @@ def main():
                    help="fraction of the initial gap that may remain (default 0.01 = 99%% relaxed)")
     args = p.parse_args()
 
-    cfg = yaml.safe_load(open(args.run_dir / "final_config.yml"))
+    cfg_path = args.run_dir / "final_config.yml"
+    if not cfg_path.exists():
+        raise SystemExit(
+            f"{args.run_dir} has no final_config.yml yet -- the run has not started "
+            f"(or the path is wrong). final_config.yml is written when a run begins; "
+            f"check `qstat` and try again once it is under way."
+        )
+    cfg = yaml.safe_load(open(cfg_path))
     ratio = float(cfg["MUTATION_RATIO"])
     p_star = ratio / (1 + ratio)
     p0 = float(cfg["G_neut_initgeno"])
