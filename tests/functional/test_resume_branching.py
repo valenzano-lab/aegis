@@ -65,6 +65,38 @@ class TestResumeBranching:
         assert _rows(d / "arm_a" / "popsize_before_reproduction.csv") == 300
         assert _rows(d / "arm_b" / "popsize_before_reproduction.csv") == 400
 
+    def test_hardlinked_copy_corrupts_the_ancestor(self, ancestor):
+        """Documents WHY the wrapper must use a real copy, not cp -al.
+
+        Resume opens the output CSVs in append mode, so a hard-linked copy shares inodes
+        with the ancestor and an arm's appends write straight into the ancestor's file.
+        The engine cannot prevent this -- append mode follows the inode -- so the fix
+        lives in the qsub wrapper (see test_wrapper_uses_real_copy). This test pins the
+        hazard: if it ever starts PASSING, resume stopped appending and hard links might
+        be safe again, at which point revisit the wrapper.
+        """
+        d, cfg = ancestor
+        anc_series = d / "anc" / "popsize_before_reproduction.csv"
+        before = _rows(anc_series)
+
+        arm = d / "arm_hardlink"
+        subprocess.run(["cp", "-al", str(d / "anc"), str(arm)], check=True)
+        shutil.copy(cfg, d / "arm_hardlink.yml")
+        assert _run("-c", str(d / "arm_hardlink.yml"), "-r", "--extend", "300").returncode == 0
+
+        assert _rows(anc_series) != before, (
+            "hard-linked arm did NOT corrupt the ancestor -- resume may have stopped "
+            "appending; revisit whether cp -al is now safe in the wrapper"
+        )
+
+    def test_wrapper_uses_real_copy_not_hardlink(self):
+        """The oscillation wrapper must copy bytes; cp -al corrupts the ancestor (above)."""
+        import pathlib
+        wrapper = pathlib.Path(__file__).parents[2] / "runs" / "oscillation_qsub.sh"
+        text = wrapper.read_text()
+        assert "cp -r" in text, "wrapper must use a real byte copy"
+        assert "cp -al" not in text, "cp -al shares inodes with the ancestor -- see above"
+
     def test_arms_can_diverge_by_override(self, ancestor):
         """Two arms off one ancestor, differing only in an overridden parameter."""
         d, cfg = ancestor
