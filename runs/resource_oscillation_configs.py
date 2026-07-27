@@ -145,6 +145,16 @@ def main():
                         "REPRODUCTION_REGULATION so N is pinned, one per seed. Run these "
                         "to equilibrium (check with check_equilibration.py), then branch "
                         "phase-2 arms off their checkpoints with `aegis sim -r --override`.")
+    p.add_argument("--burnin-osc", action="store_true",
+                   help="emit an OSCILLATING baseline burn-in: regulation OFF, deficit "
+                        "carryover ON, so the population adapts to crashing life itself. "
+                        "Starts FRESH (not from a regulated ancestor) so the neutral clock "
+                        "relaxes UNDER oscillation and reaching p* signals oscillation-"
+                        "adaptation. Phase 2 then branches into a range of Rbar (+R/-R). "
+                        "Use --osc-cap to set the resource ceiling.")
+    p.add_argument("--osc-cap", type=int, default=10000,
+                   help="RESOURCE_MAXIMUM_AMOUNT for --burnin-osc (default 10000 = 5x the "
+                        "Rbar=2000 baseline; moderate crashes, viable per the k x cap scan)")
     p.add_argument("--rbar", type=int, nargs="+",
                    help="Rbar values for a Ne-descent sweep (variable + constant, all seeds)")
     p.add_argument("--seeds", type=int, nargs="+", default=[1])
@@ -162,7 +172,19 @@ def main():
     # age 10 can consume: a k=1.1 test reached R = 3.7e11 by step 200. The paper's k
     # must therefore be <= 1. k = 1 gives resource peaks ~2.4x Rbar against the
     # paper's ~4x, so it is the right regime; scan DOWNWARD (k=0.5) if needed.
-    if args.burnin:
+    if args.burnin_osc:
+        # OSCILLATING baseline burn-in. Regulation OFF + carryover ON at a mid Rbar, so
+        # the population evolves UNDER crashing conditions. The common-mode "adapt to
+        # oscillation" shift (late-life survival erosion) happens HERE, in the burn-in,
+        # instead of contaminating phase 2 -- which then measures only the response to a
+        # change in resource LEVEL (+R / -R = varying Rbar, the paper's own axis).
+        # Fresh start is essential: the neutral clock must relax from 0.5 under
+        # oscillation, so reaching p* signals genetic equilibrium UNDER the regime.
+        runs = []
+        for rbar in (args.rbar or [2000]):
+            for seed in args.seeds:
+                runs.append((f"burnin_osc_R{rbar}_s{seed}", rbar, True, 0.0, seed))
+    elif args.burnin:
         # Phase 1. Constant, regulated resources: N is pinned at the cap, no overshoot,
         # no starvation. The population equilibrates -- the neutral locus relaxes to
         # MUTATION_RATIO/(1+MUTATION_RATIO) -- so phase 2 measures the response of an
@@ -199,6 +221,13 @@ def main():
             cfg["REPRODUCTION_REGULATION"] = True   # pin N; released in phase 2
             cfg["CHECKPOINT_RATE"] = 20_000         # phase 2 branches from a checkpoint
             cfg["SNAPSHOT_RATE"] = 10_000           # genotype snapshots -> neutral clock
+            cfg["LOGGING_RATE"] = 20_000
+        if args.burnin_osc:
+            # build(variable=True) already set regulation OFF, carryover ON, cap=inf.
+            # Bind the cap to a moderate ceiling for viability over the long burn-in.
+            cfg["RESOURCE_MAXIMUM_AMOUNT"] = float(args.osc_cap)
+            cfg["CHECKPOINT_RATE"] = 20_000
+            cfg["SNAPSHOT_RATE"] = 10_000
             cfg["LOGGING_RATE"] = 20_000
         with open(out / f"{name}.yml", "w") as f:
             yaml.safe_dump(cfg, f, sort_keys=True)
