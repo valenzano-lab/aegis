@@ -142,13 +142,28 @@ def main():
 
     print("\n=== VERDICT: amplitude vs Rbar ===")
     g = S.groupby("rbar")["cv"].mean()
-    if len(g) > 1:
-        lo, hi = g.iloc[0], g.iloc[-1]
-        trend = ("DESTABILIZES (RM / paradox of enrichment)" if hi > lo * 1.1 else
-                 "STABILIZES (matches Sajina & Valenzano Fig 5A)" if hi < lo * 0.9 else
-                 "flat / non-monotonic")
-        print("  CV(N) vs Rbar: " + "  ".join(f"{r}:{v:.3f}" for r, v in g.items()))
-        print(f"  -> {trend}")
+    print("  CV(N) vs Rbar: " + "  ".join(f"{r}:{v:.3f}" for r, v in g.items()))
+    if len(g) > 2:
+        # The shape matters, not just the endpoints. Compare the ABOVE-baseline arms to
+        # the baseline: if enrichment above the adapted level leaves amplitude flat, that
+        # is scale-invariance -- neither the paper's stabilization nor RM enrichment.
+        anchor = 2000  # the ancestor's regime
+        vals = g.to_dict()
+        above = [v for r, v in vals.items() if r >= anchor]
+        below = [v for r, v in vals.items() if r < anchor]
+        flat_above = (max(above) - min(above)) < 0.1 * np.mean(above)
+        if flat_above:
+            note = ("SCALE-INVARIANT above the adapted baseline (amplitude flat for "
+                    "Rbar >= 2000) -- NOT paper stabilization, NOT RM enrichment. "
+                    "The paradox of enrichment seen on the CAP axis is driven by the "
+                    "cap:inflow ratio, not resource magnitude.")
+            if below and np.mean(below) < min(above) * 0.95:
+                note += " Impoverishment below baseline mildly REDUCES amplitude."
+        else:
+            lo, hi = g.iloc[0], g.iloc[-1]
+            note = ("DESTABILIZES (RM)" if hi > lo * 1.1 else
+                    "STABILIZES (Fig 5A)" if hi < lo * 0.9 else "flat / non-monotonic")
+        print(f"  -> {note}")
 
 
 if __name__ == "__main__":
