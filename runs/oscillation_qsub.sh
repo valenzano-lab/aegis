@@ -127,8 +127,47 @@ if [ "${PHASE}" = "1" ]; then
     STATUS=$?
     [ ${STATUS} -eq 0 ] && touch "${OUTDIR}/.phase1_done"
 
+elif [ "${SWEEP:-kcap}" = "rbar" ]; then
+    # Phase 2, +R/-R sweep (SWEEP=rbar). Branch an OSCILLATING, oscillation-adapted
+    # ancestor (burnin_osc_*, regulation already off, carryover on) into a range of
+    # resource LEVELS -- varying Rbar, the paper's own axis. The cap scales with Rbar
+    # (5x) so the sweep is pure resource magnitude at fixed dynamical shape; the middle
+    # level (Rbar 2000 / cap 10000) is the ancestor's own regime. 5 levels x n_seeds.
+    RBARS=(500 1000 2000 4000 8000)
+    N_ARMS=${#RBARS[@]}
+    SEED_IDX=$(( (TASK_ID - 1) / N_ARMS ))
+    ARM=$(( (TASK_ID - 1) % N_ARMS ))
+    RBAR=${RBARS[$ARM]}
+    CAP=$(( RBAR * 5 ))
+
+    CONFIG=$(ls "${CONFIG_DIR}"/burnin_*.yml 2>/dev/null | sed -n "$(( SEED_IDX + 1 ))p")
+    if [ -z "${CONFIG}" ]; then
+        echo "no burn-in config for seed index ${SEED_IDX}"; exit 1
+    fi
+    NAME=$(basename "${CONFIG}" .yml)
+    OUTDIR="${CONFIG_DIR}/${NAME}"
+    if [ ! -f "${OUTDIR}/.phase1_done" ]; then
+        echo "ERROR: ${NAME} has not finished phase 1 -- run PHASE=1 first and CHECK equilibration"
+        exit 1
+    fi
+
+    # Real byte copy per arm (see the k x cap branch for why never cp -al). Stagger.
+    ARMDIR="${CONFIG_DIR}/${NAME}_R${RBAR}"
+    if [ ! -d "${ARMDIR}" ]; then
+        sleep $(( (TASK_ID % N_ARMS) * 3 ))
+        cp -r "${OUTDIR}" "${ARMDIR}" || exit 1
+        rm -f "${ARMDIR}/.phase1_done"
+    fi
+    cp "${CONFIG}" "${ARMDIR}.yml"
+
+    echo "run: $(basename "${ARMDIR}")  Rbar=${RBAR} cap=${CAP} (ancestor already oscillating)"
+    aegis sim -c "${ARMDIR}.yml" -r --extend "${EXTEND}" \
+        --override RESOURCE_ADDITIVE_GROWTH="${RBAR}" \
+        --override RESOURCE_MAXIMUM_AMOUNT="${CAP}"
+    STATUS=$?
+
 else
-    # Phase 2: task -> (seed, mult, cap). 12 arms per seed.
+    # Phase 2, k x cap grid (default). task -> (seed, mult, cap). 12 arms per seed.
     N_ARMS=$(( ${#MULTS[@]} * ${#CAPS[@]} ))
     SEED_IDX=$(( (TASK_ID - 1) / N_ARMS ))
     ARM=$(( (TASK_ID - 1) % N_ARMS ))
