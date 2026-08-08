@@ -9,7 +9,7 @@ not end users.
 
 The public webserver at https://genome.leibniz-fli.de/aegis/ runs as a
 rootless **podman** container on the `merlin` HPC host, with the FLI
-infrastructure team (Bernd Hartke) managing the host and deploys.
+infrastructure team (Bernd Senf) managing the host and deploys.
 
 The container is rebuilt and restarted by the sysadmin on demand. There
 is no auto-deploy from GitHub: a deliberate security decision given
