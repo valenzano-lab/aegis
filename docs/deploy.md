@@ -9,7 +9,7 @@ not end users.
 
 The public webserver at https://genome.leibniz-fli.de/aegis/ runs as a
 rootless **podman** container on the `merlin` HPC host, with the FLI
-infrastructure team (Bernd Hartke) managing the host and deploys.
+the FLI infrastructure team (Bernd Senf) managing the host and deploys.
 
 The container is rebuilt and restarted by the sysadmin on demand. There
 is no auto-deploy from GitHub: a deliberate security decision given
@@ -84,7 +84,7 @@ No functional change today.
 ## What a deploy round looks like
 
 1. Developer pushes changes to the `v2` branch on GitHub. CI runs `pytest`.
-2. Developer notifies sysadmin (Bernd) that a deploy is ready, with a
+2. Developer notifies sysadmin (Bernd Senf) that a deploy is ready, with a
    one-line summary of what's in it.
 3. Sysadmin rebuilds the container (10 minutes), which pulls fresh
    `v2`, runs the install, captures commit + build date.
