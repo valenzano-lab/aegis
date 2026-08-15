@@ -132,6 +132,73 @@ def concordance(cells):
                 pairs=tot_pairs)
 
 
+def block_fst(run_dir, block=10, min_per_block=8):
+    """Wright's F_ST between square blocks of the lattice -- the REAL structure metric.
+
+    WHY THIS REPLACED THE LINEAGE METRIC. `lineage_id` is a per-individual pedigree node,
+    not a clan label: DEFAULT_PARAMETERS says "each individual is assigned a UNIQUE
+    lineage_id at birth and stores the parent's lineage_id". So no two individuals ever
+    share one, and any concordance statistic built on it is identically zero whatever the
+    spatial model did. Founder clans could be rebuilt by walking parent_lineage_id through
+    /lineage/births.csv, but that needs LINEAGE_RATE > 0 and a rerun. Genotypes are
+    already on disk and measure the thing we actually care about -- genetic structure,
+    not genealogy.
+
+    JOIN VALIDITY. latticerecorder writes one row per individual in population order
+    (`for i in range(n)` over the population arrays) and featherrecorder builds its frame
+    from the same population without reordering, so row i matches in both. Asserted below
+    on the row counts; a mismatch aborts rather than silently pairing wrong individuals.
+
+    F_ST = mean_j Var_b(p_bj) / mean_j pbar_j(1 - pbar_j)   over polymorphic sites j,
+    the ratio-of-averages form. Blocks with fewer than `min_per_block` occupants are
+    dropped. Small blocks inflate F_ST through sampling noise, but every arm here shares a
+    lattice size and census, so the bias is common to all of them and the ACROSS-ARM
+    comparison stands; treat the absolute value as an upper bound.
+    """
+    import warnings
+    import numpy as np
+    import pandas as pd
+    # pandas 3.x routes read_feather through a pyarrow API deprecated in pyarrow 24;
+    # it is their internal call, nothing we can do about it, and it buries the table.
+    warnings.filterwarnings("ignore", category=FutureWarning,
+                            module="pandas.io.feather_format")
+
+    d = pathlib.Path(run_dir)
+    snaps = sorted((d / "snapshots" / "genotypes").glob("*.feather"),
+                   key=lambda p: int(p.stem))
+    lat = sorted((d / "lattice").glob("step*.csv"),
+                 key=lambda p: int(p.stem.replace("step", ""))) if (d / "lattice").is_dir() else []
+    if not snaps or not lat:
+        return None
+    if int(snaps[-1].stem) != int(lat[-1].stem.replace("step", "")):
+        raise SystemExit(
+            f"ABORT {d.name}: last genotype snapshot is step {snaps[-1].stem} but last lattice "
+            f"snapshot is step {lat[-1].stem.replace('step','')}. They must be the same step to "
+            "be row-aligned.")
+
+    pos = pd.read_csv(lat[-1])
+    G = pd.read_feather(snaps[-1]).to_numpy()
+    if len(pos) != len(G):
+        raise SystemExit(
+            f"ABORT {d.name}: lattice snapshot has {len(pos)} rows but genotype snapshot has "
+            f"{len(G)}. The row-index join is invalid -- do not interpret.")
+
+    G = G.astype(np.float64)
+    blk_q, blk_r = pos["q"].to_numpy() // block, pos["r"].to_numpy() // block
+    blk = blk_q * (blk_r.max() + 1) + blk_r
+    keep = [b for b in np.unique(blk) if (blk == b).sum() >= min_per_block]
+    if len(keep) < 4:
+        return None
+
+    pbar = G.mean(axis=0)
+    poly = (pbar > 0) & (pbar < 1)
+    if not poly.any():
+        return None
+    P = np.vstack([G[blk == b][:, poly].mean(axis=0) for b in keep])   # (blocks, sites)
+    fst = P.var(axis=0, ddof=1).mean() / (pbar[poly] * (1 - pbar[poly])).mean()
+    return dict(fst=float(fst), n_blocks=len(keep), n_poly=int(poly.sum()))
+
+
 def summarize(run_dir):
     name = pathlib.Path(run_dir).name
     cfg = read_config(run_dir)
@@ -159,10 +226,24 @@ def summarize(run_dir):
         c = concordance(cells)
         if c:
             row.update(c)
+            # lineage_id is a UNIQUE-PER-INDIVIDUAL pedigree node, not a clan label, so
+            # when every individual has its own the statistic is vacuously 0. Say so
+            # rather than reporting a confident "no structure".
+            if c["n_lineages"] >= 0.99 * c["n"]:
+                row["lineage_unusable"] = True
             density = cfg.get("LATTICE_TARGET_DENSITY")
             if density and row.get("n_mean"):
                 # n_cells is sized at init from expected capacity / target density.
                 row["occ"] = c["n"] / (row["K"] / density) if row.get("K") else None
+
+    if row["lattice"]:
+        try:
+            f = block_fst(run_dir)
+        except ImportError:
+            f = None
+            row["fst_needs_pandas"] = True
+        if f:
+            row.update(f)
 
     rec = genetic_ne.read_simple(run_dir)
     if rec and None not in (rec.get("ne"), rec.get("theta"), rec.get("theta_w")):
@@ -190,47 +271,60 @@ def main():
 
     rows = [summarize(d) for d in args.run_dirs]
     w = max(len(r["name"]) for r in rows)
-    print(f"{'run':<{w}}  {'mig':>6} {'long':>6} {'N_mean':>8} {'N_harm':>8} {'N_min':>7} "
-          f"{'occ':>5} {'lin':>5} {'P_adj':>6} {'P_rnd':>6} {'I':>6} {'Ne_glob':>8}")
+    print(f"{'run':<{w}}  {'mig':>6} {'long':>6} {'N_mean':>8} {'N_min':>7} "
+          f"{'occ':>5} {'F_ST':>7} {'blk':>4} {'poly':>6} {'Ne_glob':>8}")
     for r in rows:
         print(f"{r['name']:<{w}}  "
               f"{fmt(r.get('mig'), '6.3f', 6)} {fmt(r.get('mig_long'), '6.3f', 6)} "
-              f"{fmt(r.get('n_mean'), '8.0f', 8)} {fmt(r.get('n_harm'), '8.0f', 8)} "
+              f"{fmt(r.get('n_mean'), '8.0f', 8)} "
               f"{fmt(r.get('n_min'), '7.0f', 7)} {fmt(r.get('occ'), '5.2f', 5)} "
-              f"{fmt(r.get('n_lineages'), '5d', 5)} {fmt(r.get('p_adj'), '6.3f', 6)} "
-              f"{fmt(r.get('p_rnd'), '6.3f', 6)} {fmt(r.get('index'), '6.3f', 6)} "
-              f"{fmt(r.get('ne_glob'), '8.0f', 8)}")
+              f"{fmt(r.get('fst'), '7.4f', 7)} {fmt(r.get('n_blocks'), '4d', 4)} "
+              f"{fmt(r.get('n_poly'), '6d', 6)} {fmt(r.get('ne_glob'), '8.0f', 8)}")
 
     print()
     verdicts = []
-    lat = [r for r in rows if r.get("lattice") and "index" in r]
-    ctrl = [r for r in rows if not r.get("lattice")]
+    lat = [r for r in rows if r.get("lattice") and "fst" in r]
 
     for r in rows:
         if r.get("n_mean") and r.get("K") and r["n_mean"] < 0.75 * r["K"]:
             verdicts.append(
                 f"Q1 FAIL  {r['name']}: mean N = {r['n_mean']:.0f} vs K = {r['K']}. Local "
                 "placement failure is regulating below K, so this arm is NOT 'equal K'.")
-        if r.get("n_lineages") == 1:
-            verdicts.append(
-                f"metric dead  {r['name']}: all lineages coalesced to 1; I is undefined. "
-                "Shorten the run or raise INITIAL_POPULATION_SIZE.")
-
-    if len(lat) >= 2:
-        lo = min(lat, key=lambda r: r["index"]); hi = max(lat, key=lambda r: r["index"])
+    if not any(v.startswith("Q1 FAIL") for v in verdicts) and rows:
+        ns = [r["n_mean"] for r in rows if "n_mean" in r]
         verdicts.append(
-            f"Q2/Q3   isolation-by-distance index spans I={lo['index']:.3f} "
-            f"({lo['name']}) .. I={hi['index']:.3f} ({hi['name']}). "
-            + ("Viscosity is a real structure knob -- proceed to the sweep."
-               if hi["index"] - lo["index"] > 0.1 else
-               "Range is TOO NARROW to sweep; viscosity is not buying structure here."))
-    if ctrl and lat:
-        nes = [r["ne_glob"] for r in rows if "ne_glob" in r]
-        if len(nes) >= 2 and max(nes) < 1.5 * min(nes):
-            verdicts.append(
-                "Q4      global Ne is flat across arms while structure varies -- the "
-                "Wahlund effect predicted this. The panmictic estimator CANNOT measure "
-                "the fragmentation arm; the sweep needs within-neighbourhood sampling.")
+            f"Q1 PASS  census N holds at K across every arm (mean {min(ns):.0f}-{max(ns):.0f}). "
+            "Lattice local density regulation does NOT depress N, so 'equal K' is intact.")
+
+    if any(r.get("lineage_unusable") for r in rows):
+        verdicts.append(
+            "note     lineage_id is unique per individual (a pedigree node, not a clan), so the "
+            "old concordance index is vacuous and has been dropped. F_ST above replaces it. To "
+            "use genealogy instead, set LINEAGE_RATE>0 and walk parent_lineage_id in births.csv.")
+
+    if any(r.get("fst_needs_pandas") for r in rows):
+        verdicts.append("F_ST skipped: needs pandas+pyarrow. Use ~/aegis-venv/bin/python.")
+    elif len(lat) >= 2:
+        lo = min(lat, key=lambda r: r["fst"]); hi = max(lat, key=lambda r: r["fst"])
+        spread = hi["fst"] / lo["fst"] if lo["fst"] > 0 else float("inf")
+        verdicts.append(
+            f"Q2/Q3   F_ST spans {lo['fst']:.4f} ({lo['name']}) .. {hi['fst']:.4f} "
+            f"({hi['name']}), a {spread:.1f}x spread. "
+            + ("Viscosity IS a structure knob -- proceed, and set the sweep grid from these."
+               if spread >= 2 else
+               "Too narrow to sweep: viscosity is not buying structure at this run length."))
+    elif not lat:
+        verdicts.append(
+            "Q2/Q3   NO F_ST computed -- genotype snapshots missing. rsync "
+            "snapshots/genotypes/ alongside lattice/ and rerun this script.")
+
+    nes = [r["ne_glob"] for r in rows if "ne_glob" in r]
+    if nes and lat and max(r["fst"] for r in lat) / max(min(r["fst"] for r in lat), 1e-9) >= 2 \
+            and max(nes) < 1.5 * min(nes):
+        verdicts.append(
+            "Q4      global Ne is flat while F_ST varies -- the Wahlund effect predicted "
+            "exactly this. The panmictic estimator cannot measure the fragmentation arm; "
+            "the sweep needs within-neighbourhood sampling.")
     for v in verdicts:
         print(" ", v)
 

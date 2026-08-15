@@ -122,13 +122,73 @@ and it *is* population fragmentation, so design and biology coincide.
   collapses. `runs/genetic_ne.py` on a global sample would report "Ne unchanged" and be wrong.
   Flat global Ne + rising structure is the *signature*, not a null result.
 
-### Calibration (WRITTEN 2026-08-15, NOT YET RUN) — gate before any fragmentation sweep
+### CALIBRATION RESULT (RAN 2026-08-15, job 974216, K=3000, 5000 steps, seed 1)
+| arm | migration | long | N_mean | occ | **F_ST** | Ne_glob |
+|---|--:|--:|--:|--:|--:|--:|
+| cal_1 wellmixed (no lattice) | — | — | 3000 | — | — | 251 |
+| cal_2 | 0.5 | 0 | 3000 | 0.30 | 0.245 | 210 |
+| cal_3 | 0.1 | 0 | 3000 | 0.30 | 0.445 | 227 |
+| cal_4 | 0.01 | 0 | 3000 | 0.30 | 0.677 | 266 |
+| cal_5 | 0.0 | 0 | 3000 | 0.30 | 0.680 | 276 |
+| cal_6 | 0.01 | 0.005 | 3000 | 0.30 | 0.172 | 199 |
+
+- **Q1 PASS.** N_mean = N_min = 3000 and occupancy = 0.30 in EVERY arm. Lattice local density
+  regulation (birth fails with no adjacent empty cell) does **not** depress N below K. Equal-K holds.
+- **Q2/Q3 PASS.** F_ST is monotone in viscosity over a 4× spread. Viscosity is a real structure knob.
+- **SATURATION below migration ≈ 0.01**: 0.677 (m=0.01) vs 0.680 (m=0) are the same. Do **not** spend
+  an arm on m=0 — the axis is exhausted by m=0.01.
+- **LONG-DISTANCE DISPERSAL IS THE STRONGER KNOB.** `MIGRATION_LONG_RATE=0.005` on top of m=0.01 gives
+  F_ST 0.172 — *below* m=0.5 with no long dispersal (0.245). A rare global channel erases more
+  structure than 50× more local diffusion. Local migration is diffusive and mixes slowly across the
+  lattice; long dispersal is global. **Use `MIGRATION_LONG_RATE` as the primary sweep axis.**
+- **No panmictic lattice reference yet.** Island-model inversion `Nm ≈ (1−F_ST)/(4·F_ST)` gives
+  Nm ≈ 0.12 (cal_5) to 1.2 (cal_6): drift beats migration in *every* arm, so even cal_6 is structured.
+  The sweep needs a genuinely well-mixed lattice endpoint — push `MIGRATION_LONG_RATE` toward 0.05.
+- **Q4 CONFIRMED — global Ne is blind.** Ne_glob moves only 199→276 while F_ST spans 4×, and it moves
+  in the *Wahlund* direction (more isolation → more retained global diversity → higher apparent Ne).
+  `runs/genetic_ne.py` on a global sample MUST NOT be used to measure the fragmentation arm.
+  The sweep needs within-neighbourhood sampling for local Ne.
+- Sampling caveat: ~30 individuals/block inflates F_ST by roughly (1−F_ST)/2n ≈ 0.017 — negligible
+  against a 0.17–0.68 signal, and common to all arms.
+- Caveat on Ne_glob generally: at 5000 steps (~400 generations) diversity is far from its 4Ne·µ
+  equilibrium (~2Ne ≈ 6000 generations), so all Ne_glob values are transients. F_ST is trustworthy
+  because spatial structure builds on the migration timescale, not the coalescent one.
+
+### ⚠️ A METRIC THAT FAILED — do not repeat
+The first calibration analyzer measured isolation-by-distance as *neighbour lineage concordance*
+using `lineage_id` from the lattice snapshot. It returned exactly 0 for every arm. **`lineage_id` is
+a UNIQUE-PER-INDIVIDUAL pedigree node, not a clan label** — `DEFAULT_PARAMETERS` says so: "each
+individual is assigned a unique lineage_id at birth and stores the parent's lineage_id". No two
+individuals ever share one, so the statistic was vacuously zero. Founder clans would need
+`LINEAGE_RATE > 0` and a walk back through `parent_lineage_id` in `/lineage/births.csv`.
+Replaced by block F_ST from the genotype snapshot joined to lattice positions **by row index** —
+valid because `latticerecorder` writes `for i in range(n)` over the population arrays and
+`featherrecorder` builds from the same population unreordered. The analyzer asserts both the row
+counts and the step numbers match rather than trusting it.
+
+### Calibration scripts — `--sweep {migration,longdispersal}`, gate before the fragmentation sweep
+Batch 1 (`--sweep migration`, the default) is DONE — results above. Batch 2 maps the
+long-dispersal axis, which batch 1 identified as the stronger and wider knob. **Use a separate
+CONFIG_DIR per batch**: the qsub globs `cal_*.yml`, so two batches in one directory would interleave
+and silently shift the `-t` task numbering. The generator refuses to write into a dir that already
+holds `cal_*.yml`.
 ```
-CONFIG_DIR=/wins/vlzno/projects/aegis_latcal
-python experiments/ne_lifespan/lattice_calibration_configs.py --outdir $CONFIG_DIR
+# batch 2 -- long-dispersal axis at fixed MIGRATION_RATE=0.01
+CONFIG_DIR=/wins/vlzno/projects/aegis_latcal2
+python experiments/ne_lifespan/lattice_calibration_configs.py --outdir $CONFIG_DIR --sweep longdispersal
 mkdir -p logs
 CONFIG_DIR=$CONFIG_DIR qsub -t 1-6 experiments/ne_lifespan/lattice_calibration_qsub.sh
-python experiments/ne_lifespan/analyze_lattice_calibration.py $CONFIG_DIR/cal_*/
+```
+`cal_1_ld0000` repeats batch 1's `cal_4` exactly (m=0.01, long=0) as a free reproducibility check —
+it must return F_ST ≈ 0.677. If it does not, the pipeline is not deterministic and nothing else here
+can be trusted.
+**Pull the genotype snapshots too** — F_ST needs them, and the first pull missed them:
+```
+rsync -av --prune-empty-dirs --include='*/' --include='cal_*.yml' \
+  --include='popsize_after_reproduction.csv' --include='popgen/***' --include='lattice/***' \
+  --include='*.feather' --exclude='*' \
+  dvalenza@gen100:/wins/vlzno/projects/aegis_latcal2/ ~/aegis_data/latcal2/
+~/aegis-venv/bin/python experiments/ne_lifespan/analyze_lattice_calibration.py ~/aegis_data/latcal2/cal_*/
 ```
 6 arms, identical K=3000, 5000 steps, differing only in viscosity. Answers: Q1 does N track K under
 lattice regulation; Q2/Q3 does viscosity buy structure range; Q4 does the global Ne estimator go blind.
@@ -185,9 +245,14 @@ the Ne×MA/AP sweep of 2026-07-17→20), not assumed:
 `~/aegis` = cluster checkout · `dvalenza@gen100` = ssh target · `/wins/vlzno/projects/<name>` =
 run storage · `~/aegis_data/<name>/` = where results are pulled to on the Mac (**never** into the
 repo — it is inside Dropbox).
-⚠️ **`AEGIS_ENV` is the one path NOT verified.** Every qsub script defaults to
-`/home/lakatos/dvalenza/.conda/envs/aegis`, but the env NAME was recorded as an open question and
-never confirmed. The scripts fail loudly if `aegis` is not on PATH — check it before submitting.
+**`AEGIS_ENV` VERIFIED 2026-08-15** (it was an open question for a year): the env
+`/home/lakatos/dvalenza/.conda/envs/aegis` exists and holds `bin/aegis`, and its `aegis_sim` is an
+**editable install pointing at `~/aegis`** — so `git checkout` in that repo updates the engine and
+**no `pip install` is needed**. The qsub default is correct. Still `conda activate aegis` before
+submitting: the base env has no aegis, and `#$ -V` then carries the right env to the compute nodes
+too. (Note `export PATH="${AEGIS_ENV}/bin:${PATH}"` only *prepends* — a wrong AEGIS_ENV would be a
+silent no-op that leaves the `-V`-inherited PATH in charge, which is how earlier runs succeeded
+without anyone confirming the path.)
 ⚠️ The `# storage is under /scratch/merlin` comment in `runs/ne_ma_ap_qsub.sh` is **stale**: every
 actual run used `/wins/vlzno/projects/`. Corrected 2026-08-15.
 SGE array jobs (`#$ -t`) were once flagged untested; the 36-arm oscillation array settled that —

@@ -69,9 +69,10 @@ export VECLIB_MAXIMUM_THREADS=1
 
 set -uo pipefail
 
-# NOT VERIFIED: the env NAME was recorded as an open question and never
-# confirmed against a real run. Check `command -v aegis` on gen100 first;
-# override with AEGIS_ENV=... before qsub if it is wrong.
+# VERIFIED 2026-08-15 on gen100: this env exists and holds bin/aegis, and its
+# aegis_sim is an EDITABLE install pointing at ~/aegis -- so checking out a branch
+# in that repo updates the engine, no pip install needed. `conda activate aegis`
+# before qsub anyway: #$ -V then carries it to the compute nodes as well.
 AEGIS_ENV="${AEGIS_ENV:-/home/lakatos/dvalenza/.conda/envs/aegis}"
 export PATH="${AEGIS_ENV}/bin:${PATH}"
 
