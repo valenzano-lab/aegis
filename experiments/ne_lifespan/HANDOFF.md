@@ -154,6 +154,52 @@ and it *is* population fragmentation, so design and biology coincide.
   equilibrium (~2Ne ≈ 6000 generations), so all Ne_glob values are transients. F_ST is trustworthy
   because spatial structure builds on the migration timescale, not the coalescent one.
 
+### CALIBRATION BATCH 2 RESULT (long-dispersal axis, 2026-08-15) — THE SWEEP GRID
+`MIGRATION_RATE=0.01` fixed, `MIGRATION_LONG_RATE` varied. K=3000, 5000 steps, seed 1.
+
+| long | F_ST | Nm = (1−F_ST)/4F_ST |
+|--:|--:|--:|
+| 0 | **0.677** | 0.12 |
+| 0.001 | **0.334** | 0.50 |
+| 0.005 | **0.172** | 1.21 |
+| 0.02 | **0.092** | 2.47 |
+| 0.05 | 0.058 | 4.09 |
+| 0.1 | **0.045** | 5.27 |
+
+- **REPRODUCIBILITY CONFIRMED.** `cal_1_ld0000` (m=0.01, long=0) returned F_ST **0.6772**, bit-identical
+  to batch 1's `cal_4`. The pipeline is deterministic.
+- **15× spread, monotone, and the bolded five form a factor-of-2 ladder in F_ST.** That is the sweep grid.
+  Drop long=0.05 — redundant with 0.1.
+- **Panmixia is NOT reachable**; F_ST flattens toward ~0.045 (0.05→0.1 halves the mixing but only
+  drops F_ST 21%). Offspring are always placed adjacent to a parent, so some structure is intrinsic
+  to the model. ~0.017 of that floor is small-block sampling noise, so the true floor is ~0.03.
+  0.045 is the "mixed" endpoint; it is good enough, and the range is 15×.
+- **Q4 DECISIVE.** Ne_glob across the six arms: 266, 218, 199, 205, 214, 182 — **no relation** to a
+  15× change in F_ST. The panmictic estimator is completely blind to fragmentation. The experiment
+  needs within-neighbourhood sampling for local Ne; F_ST is the trustworthy structure axis meanwhile.
+
+## THE THREE-ROUTE EXPERIMENT (built 2026-08-15, NOT YET RUN)
+`routes_configs.py` + `routes_qsub.sh`. One lattice burn-in per seed at the MOST MIXED setting
+(long=0.1, so every arm starts unstructured), then 9 arms branch by resume `--override`:
+
+| arm | override | moves | holds fixed |
+|---|---|---|---|
+| `ctrl` | — | — | shared baseline for all three |
+| `A_ld0200/0050/0010/0000` | `MIGRATION_LONG_RATE` | **Ne** (F_ST 0.09→0.68) | K, N, N·u |
+| `B_mu05/20/40` | `G_muta_initpheno` ×0.5/2/4 | **N·u** | K, N, Ne |
+| `C_starv` | `REPRODUCTION_REGULATION=false` | **extrinsic mortality** | K, N·u, ~Ne |
+
+9 arms × 3 seeds = 27 phase-2 jobs. K=3000, 100k burn-in + 200k released.
+Feasibility facts checked before building: `G_muta_evolvable` defaults to **False** (so the mutation
+rate is a fixed parameter and arm B is meaningful), and none of `MIGRATION_LONG_RATE`,
+`G_muta_initpheno`, `REPRODUCTION_REGULATION` are in `STRUCTURAL_PARAMETERS`, so all three arms
+branch from one ancestor.
+
+⚠️ **`--extend N` is a TOTAL, not an increment** — `init_resume` sets `STEPS_PER_SIMULATION = N`
+outright and rejects N ≤ the checkpoint step. Phase 2 must be given `TOTAL=300000` (burn+fwd), not
+200000, or every arm is silently truncated to half its released phase. `routes_configs.py` prints
+the correct number.
+
 ### ⚠️ A METRIC THAT FAILED — do not repeat
 The first calibration analyzer measured isolation-by-distance as *neighbour lineage concordance*
 using `lineage_id` from the lattice snapshot. It returned exactly 0 for every arm. **`lineage_id` is
