@@ -9,7 +9,9 @@
 # SGE array wrapper for the Ne x {MA, AP} x {sexual, asexual} sweep.
 #
 # gen100 is the HEAD/LOGIN node -- submit from it, never run anything on it.
-# Jobs execute on the compute nodes; storage is under /scratch/merlin.
+# Jobs execute on the compute nodes. Run storage is /wins/vlzno/projects/<name>
+# -- corrected 2026-08-15: this line used to say /scratch/merlin, but every run that
+# has actually happened (this sweep, the oscillation arrays) used /wins/vlzno/projects.
 #
 #   cd <AEGIS_REPO_ON_CLUSTER>
 #   python runs/ne_ma_ap_configs.py --outdir configs/ --steps 1000000 --seeds 1 2 3

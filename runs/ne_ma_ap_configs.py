@@ -102,7 +102,12 @@ def build(arm, ne, mode, seed, steps):
         CHECKPOINT_RATE=100_000,
         PICKLE_RATE=100_000,
         SNAPSHOT_RATE=100_000,
-        POPGENSTATS_RATE=0,
+        # Record population-genetic statistics so genetic (drift) Ne = theta_w/(2*ploidy*mu)
+        # can be compared to the census get_ne(). Was 0 (=off), which left the sweep unable
+        # to check that its carrying-capacity "Ne" is the drift-relevant Ne. 10k steps ->
+        # ~100 records/run; sample 100 genomes for theta_w. See runs/genetic_ne.py.
+        POPGENSTATS_RATE=10_000,
+        POPGENSTATS_SAMPLE_SIZE=100,
         INTERVAL_RATE=100_000,
         LOGGING_RATE=100_000,
     )
