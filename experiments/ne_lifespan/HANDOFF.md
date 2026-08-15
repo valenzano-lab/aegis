@@ -200,6 +200,26 @@ outright and rejects N ≤ the checkpoint step. Phase 2 must be given `TOTAL=300
 200000, or every arm is silently truncated to half its released phase. `routes_configs.py` prints
 the correct number.
 
+### FUTURE: the REPRODUCTIVE-AGING axis (Ruchitha) — deliberately NOT in this run
+Decision 2026-08-15 (Dario): keep `G_repr_evolvable=False` for the runs now in flight, so this
+experiment stays on the survival axis. What a reproduction arm will need when it happens:
+- ⚠️ **It cannot be added by `--override`.** `G_repr_evolvable` and `G_repr_agespecific` are in
+  `STRUCTURAL_PARAMETERS` (the set covers `G_{trait}_{evolvable,agespecific}` for every trait), so
+  they change the genome/phenotype array shape. A reproduction arm needs **its own burn-in from
+  scratch** — it cannot branch off the current ancestor.
+- ⚠️ **Turning repr on needs lo/hi pre-compensation**, exactly as `surv` does. The lo/hi
+  double-rescale means the defaults would give an effective range `[0, 0.25]`, not `[0, 0.5]`.
+  Use `G_repr_lo: 0, G_repr_hi: 0.7071` (d = sqrt(0.5)). Same trick as `G_surv_lo: 0.4523`.
+- Genome grows: `surv` + `repr` + `neut` age-specific loci instead of `surv` + `neut`, so L rises
+  and `genetic_ne.py` picks the new L up automatically from `allele_frequencies.csv`.
+- The capability is already published: the AEGIS tool paper (Bagic, Šajina, Bradshaw & Valenzano,
+  PLOS Comput Biol 2026) reports that somatic **and reproductive** aging evolve spontaneously.
+- **Why this axis is the better novelty bet.** Lehtonen 2020 and Aubier & Galipaud 2024 both model
+  MORTALITY (lethal, age-specific mutations); Lohr 2014 measured lifespan. None of them treat
+  fecundity. Ne → *reproductive* senescence is far less crowded than Ne → lifespan, and Hamilton's
+  selection gradients differ between survival and fecundity, so the two need not erode at the same
+  rate under drift — which is a testable, genuinely open question.
+
 ### ⚠️ A METRIC THAT FAILED — do not repeat
 The first calibration analyzer measured isolation-by-distance as *neighbour lineage concordance*
 using `lineage_id` from the lattice snapshot. It returned exactly 0 for every arm. **`lineage_id` is
