@@ -70,6 +70,7 @@ CONFIG_DIR="${CONFIG_DIR:-/wins/vlzno/projects/aegis_routes}"
 # burn_steps + fwd_steps. routes_configs.py prints the right number; do not pass the
 # forward count alone or every arm is silently truncated.
 TOTAL="${TOTAL:-300000}"
+BURN_TOTAL="${BURN_TOTAL:-}"   # phase 1 only: extend a finished burn-in to this many TOTAL steps
 
 # Arm name -> the single --override that defines it. MUST match ARMS in routes_configs.py.
 # Order fixes the phase-2 task mapping, so do not reorder without re-reading the -t range.
@@ -99,6 +100,21 @@ if [ "${PHASE}" = "1" ]; then
     OUTDIR="${CONFIG_DIR}/${NAME}"
     echo "run: ${NAME} (lattice burn-in, most-mixed regime)"
 
+    # BURN_TOTAL lets a FINISHED burn-in be pushed further without losing it, e.g.
+    #   BURN_TOTAL=400000 PHASE=1 qsub -t 1-3 ...
+    # Needed because the neutral-locus relaxation time scales as -ln(tol)/mu generations,
+    # and at G_muta_initpheno=1.7e-4 that could be ~27k generations (~400-550k steps) --
+    # far more than the 100k default. Do not guess: run check_equilibration.py, read the
+    # "gap left" column, and extend only if it says so. --extend is a TOTAL.
+    if [ -n "${BURN_TOTAL}" ] && [ -d "${OUTDIR}" ] && [ -e "${OUTDIR}/checkpoint" ]; then
+        echo "extending burn-in to ${BURN_TOTAL} TOTAL steps"
+        rm -f "${OUTDIR}/.phase1_done"
+        aegis sim -c "${CONFIG}" -r --extend "${BURN_TOTAL}"
+        STATUS=$?
+        [ ${STATUS} -eq 0 ] && [ -f "${OUTDIR}/output_summary.json" ] && touch "${OUTDIR}/.phase1_done"
+        echo "finished: $(date) | exit: ${STATUS}"
+        exit ${STATUS}
+    fi
     if [ -f "${OUTDIR}/.phase1_done" ]; then
         echo "already complete -- skipping"; exit 0
     fi
