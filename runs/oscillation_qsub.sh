@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 #$ -N oscph
 #$ -cwd
-#$ -o logs/oscph$PHASE.$TASK_ID.out
-#$ -e logs/oscph$PHASE.$TASK_ID.err
+#$ -o logs/oscph.$JOB_ID.$TASK_ID.out
+#$ -e logs/oscph.$JOB_ID.$TASK_ID.err
 #$ -l h_vmem=8G
 #$ -V
 #$ -t 1-3

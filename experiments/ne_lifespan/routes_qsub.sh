@@ -1,8 +1,12 @@
 #!/usr/bin/env bash
 #$ -N routes
 #$ -cwd
-#$ -o logs/routes$PHASE.$TASK_ID.out
-#$ -e logs/routes$PHASE.$TASK_ID.err
+# $JOB_ID/$TASK_ID are SGE pseudo-variables and DO interpolate here; ordinary
+# environment variables do NOT -- an earlier version used $PHASE and produced files
+# literally named 'routes$PHASE.1.out'. $JOB_ID keeps each submission's logs separate,
+# so phase 2 cannot overwrite phase 1's. (oscillation_qsub.sh has the same latent bug.)
+#$ -o logs/routes.$JOB_ID.$TASK_ID.out
+#$ -e logs/routes.$JOB_ID.$TASK_ID.err
 #$ -l h_vmem=16G
 #$ -V
 #$ -t 1-3
