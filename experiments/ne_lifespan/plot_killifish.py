@@ -1,0 +1,162 @@
+"""Slide figure: evolved survival against age, one panel per water window.
+
+Each panel contrasts the two generation structures at one window:
+  annual   (INCUBATION_PERIOD=-1) -- whole egg bank hatches at the dry-down, synchronous cohort
+  overlap  (INCUBATION_PERIOD=3)  -- eggs hatch in waves, age classes coexist
+against the no-dry-down control, with the water window marked and everything beyond it
+shaded as the region selection cannot see.
+
+FORM. Change over an ordered variable (age) -> lines. Four windows -> small multiples on a
+shared y-axis rather than eight series on one plot. Two series per panel, so hues come from
+the fixed categorical order; the control is recessive grey because it is a reference, not a
+third category.
+
+COLOR. Pastel blue / pastel coral, validated rather than eyeballed: normal-vision OKLab
+dE 19.3 (floor 15) and worst-case dichromat dE 13.3 (floor 8, deuteran/protan/tritan all
+checked). Pastel means low contrast on a light surface, so the relief rule applies and both
+series carry direct labels -- identity never depends on the legend or on colour alone.
+
+Usage:
+    python experiments/ne_lifespan/plot_killifish.py --datadir ~/aegis_data/routes --out killifish.png
+"""
+import argparse
+import pathlib
+import warnings
+
+import numpy as np
+import pandas as pd
+import matplotlib
+
+matplotlib.use("Agg")
+import matplotlib.pyplot as plt
+import matplotlib.patheffects as pe
+
+warnings.filterwarnings("ignore", category=FutureWarning)
+
+WINDOWS = [12, 18, 24, 30]
+SEEDS = [1, 2, 3]
+
+# Validated categorical pair (see module docstring) + recessive reference/ink tokens.
+BLUE, CORAL = "#7fb3e0", "#f4a582"
+INK, INK_SOFT, GRID = "#0b0b0b", "#52514e", "#e6e5e1"
+SURFACE, SHADE = "#fcfcfb", "#f0efeb"
+REF = "#b9b8b2"
+
+
+def px_of(run_dir):
+    d = pathlib.Path(run_dir) / "snapshots" / "phenotypes"
+    if not d.is_dir():
+        return None
+    snaps = sorted(d.glob("*.feather"), key=lambda p: int(p.stem))
+    if not snaps:
+        return None
+    p = pd.read_feather(snaps[-1])
+    cols = sorted([c for c in p.columns if c.startswith("surv_")],
+                  key=lambda c: int(c.split("_")[1]))
+    return p[cols].mean(axis=0).values
+
+
+def mean_curve(base, arm_fmt, seeds):
+    """Mean per-age px across seeds, plus mean e0. None if no seed is present."""
+    rows = [px_of(base / arm_fmt.format(s=s)) for s in seeds]
+    rows = [r for r in rows if r is not None]
+    if not rows:
+        return None, None
+    m = np.mean(rows, axis=0)
+    e0 = float(np.mean([np.cumprod(r).sum() for r in rows]))
+    return m, e0
+
+
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--datadir", default="~/aegis_data/routes")
+    ap.add_argument("--out", default="killifish_windows.png")
+    ap.add_argument("--seeds", type=int, nargs="+", default=SEEDS)
+    args = ap.parse_args()
+    base = pathlib.Path(args.datadir).expanduser()
+
+    ctrl, ctrl_e0 = mean_curve(base, "burn_s{s}_K_ctrl", args.seeds)
+    if ctrl is None:
+        raise SystemExit(f"no control arm found under {base} -- check --datadir")
+    ages = np.arange(len(ctrl))
+
+    plt.rcParams.update({
+        "font.family": "DejaVu Sans", "font.size": 13,
+        "axes.edgecolor": GRID, "axes.linewidth": 1.0,
+        "figure.facecolor": SURFACE, "axes.facecolor": SURFACE,
+        "text.color": INK, "axes.labelcolor": INK_SOFT,
+        "xtick.color": INK_SOFT, "ytick.color": INK_SOFT,
+    })
+    # Collect every curve first so the shared y-axis is derived, never guessed: the
+    # hardcoded floor clipped the annual line off-axis at the longer windows.
+    curves = {}
+    for W in WINDOWS:
+        curves[(W, "annual")] = mean_curve(base, f"burn_s{{s}}_K_W{W}_annual", args.seeds)
+        curves[(W, "overlap")] = mean_curve(base, f"burn_s{{s}}_K_W{W}_overlap", args.seeds)
+    allc = [c for c, _ in curves.values() if c is not None] + [ctrl]
+    lo = min(c.min() for c in allc)
+    ylo, yhi = lo - 0.06, 1.01
+
+    fig, axes = plt.subplots(1, len(WINDOWS), figsize=(15.5, 4.6), sharey=True, dpi=200)
+
+    for i, (ax, W) in enumerate(zip(axes, WINDOWS)):
+        # The shadow: every age at or beyond the window is invisible to selection.
+        ax.axvspan(W, ages[-1], facecolor=SHADE, edgecolor="none", zorder=0)
+        ax.axvline(W, color=INK_SOFT, lw=1.4, ls=(0, (4, 3)), zorder=1)
+
+        ax.plot(ages, ctrl, color=REF, lw=2.0, ls=(0, (2, 2)), zorder=2)
+
+        ann, ann_e0 = curves[(W, "annual")]
+        ovl, ovl_e0 = curves[(W, "overlap")]
+        if ann is not None:
+            ax.plot(ages, ann, color=BLUE, lw=3.4, solid_capstyle="round", zorder=4)
+        if ovl is not None:
+            ax.plot(ages, ovl, color=CORAL, lw=3.4, solid_capstyle="round", zorder=3)
+
+        ax.set_title(f"Water window = {W} steps\n({W // 6}× age at maturity)",
+                     fontsize=14, color=INK, pad=12, linespacing=1.5)
+        ax.set_xlabel("Age (steps)", fontsize=13)
+        ax.set_xlim(0, ages[-1])
+        ax.set_ylim(ylo, yhi)
+        ax.set_xticks([0, 6, 12, 18, 24, 30])
+        ax.grid(axis="y", color=GRID, lw=0.8, zorder=0)
+        ax.set_axisbelow(True)
+        for s in ("top", "right"):
+            ax.spines[s].set_visible(False)
+
+        # Relief rule: pastel hues sit under 3:1 on a light surface, so identity is
+        # carried by direct labels, not by colour alone. Label in the SHADOW, where the
+        # two series are furthest apart -- in the flat pre-window region they overlap.
+        if i == 0:
+            ax.set_ylabel("Evolved survival per step", fontsize=13.5)
+            mid = (W + ages[-1]) / 2
+            halo = [pe.withStroke(linewidth=4, foreground=SURFACE)]
+            ax.text(mid, np.mean(ann[W:]) - 0.040, "annual", color=BLUE, fontsize=13,
+                    fontweight="bold", ha="center", va="top", path_effects=halo, zorder=6)
+            ax.text(mid, np.mean(ovl[W:]) + 0.045, "overlapping", color=CORAL, fontsize=13,
+                    fontweight="bold", ha="center", va="bottom", path_effects=halo, zorder=6)
+            ax.text(W + 0.5, yhi - 0.012, "selection blind →", color=INK_SOFT, fontsize=11,
+                    style="italic", va="top", ha="left", zorder=6,
+                    path_effects=[pe.withStroke(linewidth=4, foreground=SHADE)])
+
+        # Headline numbers, in ink rather than series colour, parked top-left where no
+        # curve runs (survival is flat and high there in every panel).
+        if ann_e0 and ovl_e0:
+            ax.text(0.03, 0.06, f"lifespan   {ann_e0:.1f}  /  {ovl_e0:.1f}",
+                    transform=ax.transAxes, ha="left", fontsize=11.5, color=INK_SOFT)
+
+    handles = [plt.Line2D([], [], color=BLUE, lw=3.4, label="Non-overlapping (annual)"),
+               plt.Line2D([], [], color=CORAL, lw=3.4, label="Overlapping generations"),
+               plt.Line2D([], [], color=REF, lw=2.0, ls=(0, (2, 2)), label="No dry-down (control)")]
+    fig.legend(handles=handles, loc="upper center", bbox_to_anchor=(0.5, 1.005),
+               ncol=3, frameon=False, fontsize=13)
+    fig.suptitle("Evolved survival collapses exactly where the pool dries",
+                 fontsize=17, y=1.10, color=INK)
+    fig.tight_layout(rect=(0, 0, 1, 0.94))
+    fig.savefig(args.out, bbox_inches="tight", facecolor=SURFACE)
+    print(f"wrote {args.out}")
+    print(f"control e0 = {ctrl_e0:.2f}")
+
+
+if __name__ == "__main__":
+    main()
