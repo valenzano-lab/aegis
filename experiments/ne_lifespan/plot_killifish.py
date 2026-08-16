@@ -67,6 +67,59 @@ def mean_curve(base, arm_fmt, seeds):
     return m, e0
 
 
+def draw_schematic(ax):
+    """Horizontal timeline: one pre-evolved ancestor, then allocation to water regimes.
+
+    The design's whole claim rests on a SHARED ancestor -- every regime starts from the
+    same equilibrated population, so divergence downstream cannot be burn-in history. The
+    schematic exists to make that legible at a glance, so the branch point is the visual
+    centre of gravity.
+
+    Dry-downs cannot be drawn to scale: a 200,000-step arm at W=12 contains ~16,700 of
+    them. The tick spacing is therefore schematic and ordered by W (dense = dries often),
+    and labelled as such rather than implying a literal count.
+    """
+    BURN_END, TOTAL = 430, 630
+    rows = {12: 3, 18: 2, 24: 1, 30: 0}
+
+    ax.add_patch(plt.Rectangle((0, 1.15), BURN_END, 0.7, facecolor=REF, alpha=0.45,
+                               edgecolor="none", zorder=2))
+    ax.text(BURN_END / 2, 1.5, "pre-evolved ancestor", ha="center", va="center",
+            fontsize=13, fontweight="bold", color=INK, zorder=3)
+    ax.text(BURN_END / 2, 0.72, "430,000 steps  ·  K = 3,000  ·  permanent water\n"
+            "neutral locus equilibrated before any regime is applied",
+            ha="center", va="top", fontsize=11, color=INK_SOFT, linespacing=1.5, zorder=3)
+
+    ax.plot([BURN_END, BURN_END], [-0.35, 3.70], color=INK_SOFT, lw=1.3,
+            ls=(0, (4, 3)), zorder=4)
+    # Each caption gets its own horizontal band -- these three previously overlapped.
+    ax.text(BURN_END, 4.75, "pools colonised", ha="center", va="bottom",
+            fontsize=11.5, style="italic", color=INK_SOFT)
+
+    for W, r in rows.items():
+        y = r * 0.95 - 0.35
+        ax.plot([BURN_END, BURN_END + 14], [1.5, y + 0.26], color=REF, lw=1.4, zorder=1)
+        ax.add_patch(plt.Rectangle((BURN_END + 14, y), TOTAL - BURN_END - 14, 0.52,
+                                   facecolor=SHADE, edgecolor=REF, lw=1.0, zorder=2))
+        # Schematic dry-down ticks: spacing ordered by W, not to scale (see docstring).
+        x = BURN_END + 14
+        while x < TOTAL - 2:
+            ax.plot([x, x], [y, y + 0.52], color=BLUE, lw=1.6, alpha=0.75, zorder=3)
+            x += W * 1.15
+        ax.text(TOTAL + 8, y + 0.26, f"dries every {W} steps", va="center",
+                fontsize=11.5, color=INK, zorder=3)
+
+    ax.text(BURN_END + 14 + (TOTAL - BURN_END - 14) / 2, 3.90,
+            "200,000 steps per regime  ·  both generation structures  ·  3 seeds",
+            ha="center", va="bottom", fontsize=11, color=INK_SOFT)
+    ax.text(BURN_END + 14, -0.95, "dry-down ticks schematic, not to scale",
+            fontsize=9.5, color=INK_SOFT, style="italic", va="center", ha="left")
+
+    ax.set_xlim(-8, TOTAL + 125)
+    ax.set_ylim(-1.3, 5.4)
+    ax.axis("off")
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--datadir", default="~/aegis_data/routes")
@@ -97,7 +150,15 @@ def main():
     lo = min(c.min() for c in allc)
     ylo, yhi = lo - 0.06, 1.01
 
-    fig, axes = plt.subplots(1, len(WINDOWS), figsize=(15.5, 4.6), sharey=True, dpi=200)
+    fig = plt.figure(figsize=(15.5, 7.0), dpi=200)
+    gs = fig.add_gridspec(2, len(WINDOWS), height_ratios=[1.0, 2.3], hspace=0.62)
+    sch = fig.add_subplot(gs[0, :])
+    draw_schematic(sch)
+    axes = [fig.add_subplot(gs[1, j]) for j in range(len(WINDOWS))]
+    for j, ax in enumerate(axes):
+        if j:
+            ax.sharey(axes[0])
+            ax.tick_params(labelleft=False)
 
     for i, (ax, W) in enumerate(zip(axes, WINDOWS)):
         # The shadow: every age at or beyond the window is invisible to selection.
@@ -148,12 +209,12 @@ def main():
     handles = [plt.Line2D([], [], color=BLUE, lw=3.4, label="Non-overlapping (annual)"),
                plt.Line2D([], [], color=CORAL, lw=3.4, label="Overlapping generations"),
                plt.Line2D([], [], color=REF, lw=2.0, ls=(0, (2, 2)), label="No dry-down (control)")]
-    fig.legend(handles=handles, loc="upper center", bbox_to_anchor=(0.5, 1.005),
+    fig.legend(handles=handles, loc="lower center", bbox_to_anchor=(0.5, -0.035),
                ncol=3, frameon=False, fontsize=13)
     fig.suptitle("Evolved survival collapses exactly where the pool dries",
-                 fontsize=17, y=1.10, color=INK)
-    fig.tight_layout(rect=(0, 0, 1, 0.94))
-    fig.savefig(args.out, bbox_inches="tight", facecolor=SURFACE)
+                 fontsize=18, y=0.99, color=INK)
+    fig.savefig(args.out, bbox_inches="tight", facecolor=SURFACE,
+                pad_inches=0.35)
     print(f"wrote {args.out}")
     print(f"control e0 = {ctrl_e0:.2f}")
 
