@@ -411,3 +411,40 @@ Needs an aegis env: python3.11 + `numpy pandas pyyaml pyarrow platformdirs psuti
 `pip install -e <aegis repo> --no-deps` (GUI deps like dash NOT needed — run the engine via
 `aegis_sim.run`, not the `aegis` CLI which imports the GUI). The installed pypi `aegis-sim 2.2` is
 too old (pre-`aegis_sim` refactor); use the local repo.
+
+## ANNUAL-KILLIFISH WATER-WINDOW EXPERIMENT (built 2026-08-16, NOT YET RUN)
+`killifish_qsub.sh`. Scenario (Dario): killifish live about as long as their pool holds water while
+time to maturity is conserved; the explanation is that a long-lived ancestor colonising
+faster-drying pools accumulates mutations affecting survival BEYOND the window, because selection
+cannot see past it. The window is an **absolute** selection horizon, unlike Hamilton's gradual decline.
+
+**Zero burn-in cost.** Every parameter needed is non-structural, so all arms `--override` off the
+SAME ancestor as the three-route experiment (`burn_s{1,2,3}`, AGE_LIMIT=30, MATURATION_AGE=6,
+K=3000, equilibrated at 430k). The ancestor has ABIOTIC amplitude/offset = 0, i.e. it evolved in
+permanent water — exactly the premise.
+
+**Verified in code, not from docstrings:**
+- `instant_fatal` returns hazard 1 every `ABIOTIC_HAZARD_PERIOD` steps; `FRAILTY_MODIFIER`=0 leaves
+  it undistorted; `rng.random() < 1` is always true ⇒ deterministic TOTAL kill. `abiotic` is in the
+  default `MORTALITY_ORDER`. `ABIOTIC_HAZARD_OFFSET`=0 so no background mortality is added.
+- `mortality_abiotic()` touches `self.population` only, **never `self.eggs`** — the egg bank
+  survives the dry-down. That is the whole trick.
+- Step order (mortality=2, hatch=7) gives the annual cycle: at step W everyone dies, nobody
+  reproduces, and `INCUBATION_PERIOD=-1` sees an empty population and hatches the egg bank in the
+  same step. Hatchlings at a dry-down step are therefore safe in both generation modes.
+- ⚠️ **Do NOT set `CARRYING_CAPACITY_EGGS`.** Its cull takes the LAST N eggs
+  (`bioreactor.py:323`, `# TODO biased`) and eggs here accumulate for a whole season — it would
+  reward late-season reproduction, the very axis under test. Unset, the cap is applied instead at
+  hatch by `REPRODUCTION_REGULATION` via `rng.choice(..., replace=False)`: a genuine random sample.
+
+**Grid.** Shadow = ages [W, 30]: W=12 (2× maturation, 60% of the age range unseen), 18 (3×, 40%),
+24 (4×, 20%), 30 (5×, 0% — coincides with AGE_LIMIT, the natural control). × two generation modes
+(`INCUBATION_PERIOD` −1 = annual/synchronous, 3 = overlapping waves) + a no-window control = 9 arms
+× 3 seeds = 27.
+
+**Prediction:** a KNEE in the evolved survival curve AT W, moving with W across arms — the
+environmental analogue of the umbral horizon `a*`, set by ecology rather than by Ne.
+
+⚠️ **Check before committing compute:** the ancestor must retain meaningful survival out to age ~30,
+or the W=24 and W=30 arms have no shadow to erode. Read `px` per age off the burn-in's final
+phenotype snapshot first.
