@@ -67,7 +67,7 @@ def mean_curve(base, arm_fmt, seeds):
     return m, e0
 
 
-def draw_schematic(ax):
+def draw_schematic(ax, anc_e0=None):
     """Horizontal timeline: one pre-evolved ancestor, then allocation to water regimes.
 
     The design's whole claim rests on a SHARED ancestor -- every regime starts from the
@@ -89,6 +89,11 @@ def draw_schematic(ax):
     ax.text(BURN_END / 2, 0.72, "430,000 steps  ·  K = 3,000  ·  permanent water\n"
             "neutral locus equilibrated before any regime is applied",
             ha="center", va="top", fontsize=11, color=INK_SOFT, linespacing=1.5, zorder=3)
+    # The starting point every regime splits from -- state it, or the panels' lifespans
+    # have nothing to be read against.
+    if anc_e0 is not None:
+        ax.text(BURN_END / 2, 2.15, f"evolved lifespan  {anc_e0:.1f} steps",
+                ha="center", va="bottom", fontsize=12.5, fontweight="bold", color=INK, zorder=3)
 
     ax.plot([BURN_END, BURN_END], [-0.35, 3.70], color=INK_SOFT, lw=1.3,
             ls=(0, (4, 3)), zorder=4)
@@ -128,6 +133,7 @@ def main():
     args = ap.parse_args()
     base = pathlib.Path(args.datadir).expanduser()
 
+    anc, anc_e0 = mean_curve(base, "burn_s{s}", args.seeds)   # the shared pre-evolved ancestor
     ctrl, ctrl_e0 = mean_curve(base, "burn_s{s}_K_ctrl", args.seeds)
     if ctrl is None:
         raise SystemExit(f"no control arm found under {base} -- check --datadir")
@@ -160,7 +166,7 @@ def main():
     fig = plt.figure(figsize=(15.5, 7.0), dpi=200)
     gs = fig.add_gridspec(2, len(WINDOWS), height_ratios=[1.0, 2.3], hspace=0.62)
     sch = fig.add_subplot(gs[0, :])
-    draw_schematic(sch)
+    draw_schematic(sch, anc_e0)
     axes = [fig.add_subplot(gs[1, j]) for j in range(len(WINDOWS))]
     for j, ax in enumerate(axes):
         if j:
@@ -216,8 +222,11 @@ def main():
         # Headline numbers, in ink rather than series colour, parked top-left where no
         # curve runs (survival is flat and high there in every panel).
         if ann_e0 and ovl_e0:
-            ax.text(0.03, 0.06, f"lifespan   {ann_e0:.1f}  /  {ovl_e0:.1f}",
-                    transform=ax.transAxes, ha="left", fontsize=11.5, color=INK_SOFT)
+            txt = f"lifespan   {ann_e0:.1f}  /  {ovl_e0:.1f}"
+            if anc_e0 is not None:
+                txt += f"        ancestor {anc_e0:.1f}"
+            ax.text(0.03, 0.06, txt, transform=ax.transAxes, ha="left",
+                    fontsize=11.5, color=INK_SOFT)
 
     handles = [plt.Line2D([], [], color=BLUE, lw=3.4, label="Non-overlapping (annual)"),
                plt.Line2D([], [], color=CORAL, lw=3.4, label="Overlapping generations"),
@@ -229,7 +238,9 @@ def main():
     fig.savefig(args.out, bbox_inches="tight", facecolor=SURFACE,
                 pad_inches=0.35)
     print(f"wrote {args.out}")
-    print(f"control e0 = {ctrl_e0:.2f}")
+    print(f"ancestor e0 = {anc_e0:.2f}" if anc_e0 else
+          "ancestor not found -- rsync burn_s*/snapshots/phenotypes/430000.feather")
+    print(f"control  e0 = {ctrl_e0:.2f}")
 
 
 if __name__ == "__main__":
