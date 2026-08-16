@@ -41,6 +41,11 @@ BLUE, CORAL = "#7fb3e0", "#f4a582"
 INK, INK_SOFT, GRID = "#0b0b0b", "#52514e", "#e6e5e1"
 SURFACE, SHADE = "#fcfcfb", "#f0efeb"
 REF = "#b9b8b2"
+# The ancestor is the reference every panel is read against, so it is drawn darker
+# than a background element. The no-dry-down control is NOT drawn: it sits within
+# 0.06 of the ancestor at every age (e0 20.7 vs 20.9), so a second grey line would
+# be redundant -- its value is reported as a number instead.
+ANC = "#6b6a65"
 
 
 def px_of(run_dir):
@@ -67,7 +72,7 @@ def mean_curve(base, arm_fmt, seeds):
     return m, e0
 
 
-def draw_schematic(ax, anc_e0=None):
+def draw_schematic(ax, anc_e0=None, ctrl_e0=None):
     """Horizontal timeline: one pre-evolved ancestor, then allocation to water regimes.
 
     The design's whole claim rests on a SHARED ancestor -- every regime starts from the
@@ -86,9 +91,13 @@ def draw_schematic(ax, anc_e0=None):
                                edgecolor="none", zorder=2))
     ax.text(BURN_END / 2, 1.5, "pre-evolved ancestor", ha="center", va="center",
             fontsize=13, fontweight="bold", color=INK, zorder=3)
-    ax.text(BURN_END / 2, 0.72, "430,000 steps  ·  K = 3,000  ·  permanent water\n"
-            "neutral locus equilibrated before any regime is applied",
-            ha="center", va="top", fontsize=11, color=INK_SOFT, linespacing=1.5, zorder=3)
+    cap = ("430,000 steps  ·  K = 3,000  ·  permanent water\n"
+           "neutral locus equilibrated before any regime is applied")
+    if ctrl_e0 is not None:
+        cap += (f"\nkept in permanent water for the same 200,000 steps: "
+                f"lifespan unchanged at {ctrl_e0:.1f}")
+    ax.text(BURN_END / 2, 0.72, cap, ha="center", va="top", fontsize=11,
+            color=INK_SOFT, linespacing=1.6, zorder=3)
     # The starting point every regime splits from -- state it, or the panels' lifespans
     # have nothing to be read against.
     if anc_e0 is not None:
@@ -120,8 +129,9 @@ def draw_schematic(ax, anc_e0=None):
     ax.text(BURN_END + 14, -0.95, "dry-down ticks schematic, not to scale",
             fontsize=9.5, color=INK_SOFT, style="italic", va="center", ha="left")
 
+
     ax.set_xlim(-8, TOTAL + 125)
-    ax.set_ylim(-1.3, 5.4)
+    ax.set_ylim(-2.0, 5.4)
     ax.axis("off")
 
 
@@ -168,7 +178,7 @@ def main():
     fig = plt.figure(figsize=(15.5, 7.0), dpi=200)
     gs = fig.add_gridspec(2, len(WINDOWS), height_ratios=[1.0, 2.3], hspace=0.62)
     sch = fig.add_subplot(gs[0, :])
-    draw_schematic(sch, anc_e0)
+    draw_schematic(sch, anc_e0, ctrl_e0)
     axes = [fig.add_subplot(gs[1, j]) for j in range(len(WINDOWS))]
     for j, ax in enumerate(axes):
         if j:
@@ -180,7 +190,8 @@ def main():
         ax.axvspan(W, ages[-1], facecolor=SHADE, edgecolor="none", zorder=0)
         ax.axvline(W, color=INK_SOFT, lw=1.4, ls=(0, (4, 3)), zorder=1)
 
-        ax.plot(ages, ctrl, color=REF, lw=2.0, ls=(0, (2, 2)), zorder=2)
+        ref = anc if anc is not None else ctrl
+        ax.plot(ages, ref, color=ANC, lw=2.4, ls=(0, (5, 3)), zorder=5)
 
         ann, ann_e0 = curves[(W, "annual")]
         ovl, ovl_e0 = curves[(W, "overlap")]
@@ -224,15 +235,13 @@ def main():
         # Headline numbers, in ink rather than series colour, parked top-left where no
         # curve runs (survival is flat and high there in every panel).
         if ann_e0 and ovl_e0:
-            txt = f"lifespan   {ann_e0:.1f}  /  {ovl_e0:.1f}"
-            if anc_e0 is not None:
-                txt += f"        ancestor {anc_e0:.1f}"
-            ax.text(0.03, 0.06, txt, transform=ax.transAxes, ha="left",
-                    fontsize=11.5, color=INK_SOFT)
+            ax.text(0.03, 0.06, f"lifespan   {ann_e0:.1f}  /  {ovl_e0:.1f}",
+                    transform=ax.transAxes, ha="left", fontsize=11.5, color=INK_SOFT)
 
-    handles = [plt.Line2D([], [], color=BLUE, lw=3.4, label="Non-overlapping (annual)"),
-               plt.Line2D([], [], color=CORAL, lw=3.4, label="Overlapping generations"),
-               plt.Line2D([], [], color=REF, lw=2.0, ls=(0, (2, 2)), label="No dry-down (control)")]
+    handles = [plt.Line2D([], [], color=ANC, lw=2.4, ls=(0, (5, 3)),
+                          label="Pre-evolved ancestor (starting point)"),
+               plt.Line2D([], [], color=BLUE, lw=3.4, label="Non-overlapping (annual)"),
+               plt.Line2D([], [], color=CORAL, lw=3.4, label="Overlapping generations")]
     fig.legend(handles=handles, loc="lower center", bbox_to_anchor=(0.5, -0.035),
                ncol=3, frameon=False, fontsize=13)
     fig.suptitle("Evolved survival collapses exactly where the pool dries",
