@@ -128,7 +128,9 @@ def draw_schematic(ax, anc_e0=None):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--datadir", default="~/aegis_data/routes")
-    ap.add_argument("--out", default="killifish_windows.png")
+    REPO = pathlib.Path(__file__).resolve().parents[2]
+    ap.add_argument("--out", default=str(REPO / "runs" / "killifish_windows.png"),
+                    help="default: runs/killifish_windows.png, beside the other figures")
     ap.add_argument("--seeds", type=int, nargs="+", default=SEEDS)
     args = ap.parse_args()
     base = pathlib.Path(args.datadir).expanduser()
