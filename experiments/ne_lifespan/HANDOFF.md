@@ -178,7 +178,37 @@ and it *is* population fragmentation, so design and biology coincide.
   15× change in F_ST. The panmictic estimator is completely blind to fragmentation. The experiment
   needs within-neighbourhood sampling for local Ne; F_ST is the trustworthy structure axis meanwhile.
 
-## THE THREE-ROUTE EXPERIMENT (built 2026-08-15, NOT YET RUN)
+## THREE-ROUTE EXPERIMENT — RUN LOG
+
+**Phase 1 (burn-ins).** Job 974220 ran 100k steps; `check_equilibration.py` said **34.0% gap left**
+— not equilibrated. Sizing from that single point: `ln(0.340) = −1.0788` over 100k steps gives
+τ ≈ 92,700 steps, so 99% relaxation needs τ·ln(100) ≈ **427,000 steps**. Extended to 430,000 (job
+974223). Cross-check: 427,000 / 27,089 generations = **15.8 steps per generation — a MEASURED
+generation time for this architecture**, superseding the ~20 estimated from birth-weighted parental
+age (biased upward). The prediction held: the checker reports equilibration crossing between the
+400k snapshot and 429,941.
+
+⚠️ **SEEDS 2 AND 3 BRANCHED SLIGHTLY UNDER-RELAXED.** At step 430,000: s1 = 0.0% gap (load 0.0908
+vs p* 0.0909), **s2 = 2.5%**, **s3 = 2.9%**. Phase 2 was submitted anyway. Why that is acceptable,
+recorded so it is not rediscovered as an anomaly:
+- All 9 arms of a seed `cp -r` the SAME ancestor, so the residual (~0.010 in neutral load) is
+  **common-mode within a seed** — and every planned comparison is within-seed (arm vs `ctrl`).
+- 200k released steps = 2.16τ, so a 2.5% gap decays to **~0.3% by the final snapshot**, which is
+  where the readout is taken.
+- **Seed 1 is clean** and serves as the internal reference.
+- The one place it could bite is **arm B**: different mutation rates relax at different speeds, so
+  `B_mu05` retains ~0.85% of the residual while `B_mu40` sheds it immediately. That artefact runs
+  OPPOSITE to arm B's expected signal (higher µ → more load at selected sites, but *less* residual
+  neutral load), so it is conservative, not signal-generating. Check it if arm B looks marginal.
+
+**Phase 2.** Job 974224, 27 tasks, submitted 2026-08-16 08:58, `TOTAL=630000`. Task→arm mapping
+verified live: task 1 → `burn_s1_ctrl` (no override), task 10 → `burn_s2_ctrl` (seed-block boundary
+correct), task 6 → `burn_s1_B_mu05` (`G_muta_initpheno=8.5e-05`). Tasks land on both `all.q` and
+`merlin.q`, so completion times will be uneven.
+
+**Timing measured:** 330k lattice steps at K=3000 took 4.8–7.7 h ⇒ ~50–85 ms/step.
+
+## THE THREE-ROUTE EXPERIMENT (design)
 `routes_configs.py` + `routes_qsub.sh`. One lattice burn-in per seed at the MOST MIXED setting
 (long=0.1, so every arm starts unstructured), then 9 arms branch by resume `--override`:
 
