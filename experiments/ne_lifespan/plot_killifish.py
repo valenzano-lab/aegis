@@ -146,6 +146,13 @@ def main():
     for W in WINDOWS:
         curves[(W, "annual")] = mean_curve(base, f"burn_s{{s}}_K_W{W}_annual", args.seeds)
         curves[(W, "overlap")] = mean_curve(base, f"burn_s{{s}}_K_W{W}_overlap", args.seeds)
+    # Which panel shows the two series furthest apart? That is where direct labels
+    # actually identify something.
+    seps = {W: (float(np.max(curves[(W, "annual")][0] - curves[(W, "overlap")][0]))
+                if curves[(W, "annual")][0] is not None and curves[(W, "overlap")][0] is not None
+                else -1) for W in WINDOWS}
+    LABEL_PANEL = WINDOWS.index(max(seps, key=seps.get))
+
     allc = [c for c, _ in curves.values() if c is not None] + [ctrl]
     lo = min(c.min() for c in allc)
     ylo, yhi = lo - 0.06, 1.01
@@ -190,15 +197,21 @@ def main():
         # two series are furthest apart -- in the flat pre-window region they overlap.
         if i == 0:
             ax.set_ylabel("Evolved survival per step", fontsize=13.5)
-            mid = (W + ages[-1]) / 2
-            halo = [pe.withStroke(linewidth=4, foreground=SURFACE)]
-            ax.text(mid, np.mean(ann[W:]) - 0.040, "annual", color=BLUE, fontsize=13,
-                    fontweight="bold", ha="center", va="top", path_effects=halo, zorder=6)
-            ax.text(mid, np.mean(ovl[W:]) + 0.045, "overlapping", color=CORAL, fontsize=13,
-                    fontweight="bold", ha="center", va="bottom", path_effects=halo, zorder=6)
             ax.text(W + 0.5, yhi - 0.012, "selection blind →", color=INK_SOFT, fontsize=11,
                     style="italic", va="top", ha="left", zorder=6,
                     path_effects=[pe.withStroke(linewidth=4, foreground=SHADE)])
+
+        # Direct labels go on whichever panel separates the two series most, found from
+        # the data rather than assumed. At the shortest window the two arms are tangled
+        # together in the shadow, so labelling there points at nothing.
+        if i == LABEL_PANEL and ann is not None and ovl is not None:
+            gap = ann - ovl
+            x = int(np.argmax(gap))
+            halo = [pe.withStroke(linewidth=4, foreground=SURFACE)]
+            ax.text(x, ann[x] + 0.012, "annual", color=BLUE, fontsize=13,
+                    fontweight="bold", ha="center", va="bottom", path_effects=halo, zorder=6)
+            ax.text(x, ovl[x] - 0.014, "overlapping", color=CORAL, fontsize=13,
+                    fontweight="bold", ha="center", va="top", path_effects=halo, zorder=6)
 
         # Headline numbers, in ink rather than series colour, parked top-left where no
         # curve runs (survival is flat and high there in every panel).
