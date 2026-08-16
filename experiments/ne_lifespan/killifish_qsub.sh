@@ -113,7 +113,11 @@ OVERRIDE=${ARM_OVERRIDE[$ARM]}
 
 echo "host: $(hostname) | task: ${TASK_ID} | started: $(date)"
 
-CONFIG=$(ls "${CONFIG_DIR}"/burn_s*.yml 2>/dev/null | sed -n "$(( SEED_IDX + 1 ))p")
+# STRICT glob: match burn_s<N>.yml ONLY. Phase 2 writes an arm config beside every
+# run (burn_s1_ctrl.yml, burn_s1_A_ld0000.yml, ...), so a bare burn_s*.yml glob
+# silently starts resolving ARM configs as ancestors once any arm has run -- which
+# is exactly what killed killifish tasks 10-27 on 2026-08-16.
+CONFIG=$(ls "${CONFIG_DIR}"/burn_s*.yml 2>/dev/null | grep -E "/burn_s[0-9]+\.yml$" | sed -n "$(( SEED_IDX + 1 ))p")
 if [ -z "${CONFIG}" ]; then
     echo "no burn-in config for seed index ${SEED_IDX} -- is -t larger than n_arms*n_seeds?"
     exit 1

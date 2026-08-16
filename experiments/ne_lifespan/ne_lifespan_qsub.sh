@@ -146,7 +146,11 @@ run_config() {
 
 if [ "${PHASE}" = "1" ]; then
     # ---- BURN-IN: one common ancestor per seed --------------------------------
-    CONFIG=$(ls "${CONFIG_DIR}"/burn_s*.yml 2>/dev/null | sed -n "${TASK_ID}p")
+    # STRICT glob: match burn_s<N>.yml ONLY. Phase 2 writes an arm config beside every
+    # run (burn_s1_ctrl.yml, burn_s1_A_ld0000.yml, ...), so a bare burn_s*.yml glob
+    # silently starts resolving ARM configs as ancestors once any arm has run -- which
+    # is exactly what killed killifish tasks 10-27 on 2026-08-16.
+    CONFIG=$(ls "${CONFIG_DIR}"/burn_s*.yml 2>/dev/null | grep -E "/burn_s[0-9]+\.yml$" | sed -n "${TASK_ID}p")
     if [ -z "${CONFIG}" ]; then
         echo "no burn-in config for task ${TASK_ID} in ${CONFIG_DIR}"
         echo "  generate them: python experiments/ne_lifespan/ne_lifespan_configs.py \\"
