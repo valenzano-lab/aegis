@@ -13,13 +13,18 @@ limit`, and `build()` sets `INITIAL_POPULATION_SIZE = RESOURCE_MAXIMUM_AMOUNT =
 RESOURCE_ADDITIVE_GROWTH = ne`. So the sweep never varied Ne independently of K, and there was
 no measurement of Ne to appeal to.
 
-Your proposed fix — use N·u to decouple things — needed one correction, which Dario spotted
-straight away: **N·u and Ne are different quantities.** N·u is the *supply* of new variants;
-Ne is *selectability*, whether selection can resolve a variant at all (|s| vs 1/2Ne). Changing
-the mutation rate µ does not change Ne. So "vary µ to vary Ne" varies supply, not drift.
+Your proposed fix was to decouple the variables using N·u. One relabelling was needed —
+**N·u and Ne are different quantities.** N·u is the *supply* of new variants; Ne is
+*selectability*, whether selection can resolve a variant at all (|s| vs 1/2Ne). Changing µ does
+not change Ne, so "vary µ to vary Ne" varies supply, not drift.
 
-But the instinct was correct, and it turns out K reaches life history by **three** distinct
-paths, not two:
+But the manipulation you proposed was worth running on its own terms — and when we ran it
+(route 2 below) **it produced the largest effect of the three.** You proposed the right
+experiment; it was measuring a different thing than the label suggested, and that thing turned
+out to matter most.
+
+The instinct — that the variables had to be pulled apart — was exactly right, and it turns out K
+reaches life history by **three** distinct paths, not two:
 
 | | route | what it changes |
 |---|---|---|
@@ -175,6 +180,43 @@ away and worth doing before this is used in an argument.
    sample of the fragmented arms, would have reported "Ne went *up*, so the drift-barrier story
    is wrong" — a confident, wrong conclusion from an arithmetically correct calculation of the
    wrong quantity. That is documented in `HANDOFF.md` as a trap, not a footnote.
+
+### Migration is what makes a "global" population exist at all
+
+Converting F_ST into **migrants per generation** — the quantity that decides whether patches are
+one population or many — `Nm = (1 − F_ST) / (4 F_ST)`:
+
+| arm | F_ST | **Nm** | Δ lifespan |
+|---|--:|--:|--:|
+| A_ld0200 | 0.092 | 2.47 | +0.21 |
+| A_ld0050 | 0.172 | 1.20 | +0.00 |
+| A_ld0010 | 0.334 | 0.50 | −0.71 |
+| A_ld0000 | 0.677 | 0.12 | −2.29 |
+
+**The lifespan effect switches on exactly where Nm crosses 1** — Wright's classic
+one-migrant-per-generation threshold, the line between "one population" and "many", showing up
+in an ageing phenotype. Above it, nothing; below it, the effect appears and grows fourfold.
+
+And this is why the global number stops being meaningful. `Ne_global ≈ N/(1−F_ST)` gives 3,304 at
+F_ST 0.09, 9,288 at 0.68, and **diverges to infinity** as F_ST → 1. That divergence is the formula
+announcing that its object has ceased to exist: with no migration there is no global population,
+only independent lineages, and pooling them yields a statistic about a sample rather than the
+effective size of anything evolving.
+
+So global Ne is not a property of a set of organisms. It is a property of a set of organisms
+**plus enough migration to bind them into one evolutionary unit**. Which gives a useful paradox:
+
+> the global/local distinction matters **least** where the global number is well defined, and
+> **most** where it barely means anything.
+
+At Nm ≫ 1 the two coincide and one number suffices. At Nm ≪ 1 they diverge — but the global one
+is then describing a fiction. The interesting band is Nm ≈ 1, where both are meaningful *and*
+different. That is where our effect turns on, and plausibly where fragmented killifish pools sit.
+
+⚠️ The Nm values invert the *island* model (`F_ST ≈ 1/(1+4Nm)`) while our lattice is a
+stepping-stone, so the ordering is robust but the absolute values are approximate — the apparent
+coincidence with exactly 1 is suggestive, not measured. Countable directly from the lattice
+snapshots if it matters.
 
 ---
 
