@@ -501,7 +501,7 @@ Strongest arm of each route, against `ctrl` (e0 20.78 ± 0.16, early px 0.9802, 
 |---|---|--:|--:|--:|--:|
 | 1 drift barrier | F_ST 0.09→0.68 | −2.28 | −0.0055 | −0.0261 | 4.7× |
 | 2 mutational supply | µ ×4 | −6.05 | −0.0262 | −0.1003 | 3.8× |
-| 3 extrinsic mortality | starvation deaths | −4.71 | −0.0146 | −0.1225 | 8.4× |
+| 3 extrinsic mortality | starvation deaths | −4.38 | −0.0118 | −0.1236 | **10.5×** |
 
 - **Route 3 is NOT the compensation artifact I predicted.** Compensation for the resource
   multiplier would raise survival UNIFORMLY (the multiplier is age-independent); the deficit is
@@ -517,4 +517,8 @@ Strongest arm of each route, against `ctrl` (e0 20.78 ± 0.16, early px 0.9802, 
   extra mutations arrive at every age; extrinsic mortality is the most late-concentrated (8.4×)
   because it acts directly on the selection gradient. Usable to tell mechanisms apart in real data
   independently of effect size.
-- ⚠️ `C_starv_pen` reported at **n=2**; seed 1 was still running. Re-pull and re-run to confirm.
+- **FINAL, all arms n=3** (2026-08-17). `C_starv_pen` e0 = 16.39 ± 0.53 — the third seed moved it
+  from 16.07 and it stays inside the 15–18 band of the earlier independent finding. Every arm
+  reporting n=3 is itself the completion check: a crashed task would show n<3.
+- **EXPERIMENT COMPLETE.** Open next: the reproductive-aging axis (own burn-in required —
+  `G_repr_evolvable` is structural; see the section above for the lo/hi pre-compensation trap).
