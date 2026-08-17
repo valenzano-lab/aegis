@@ -1,6 +1,6 @@
 # Is it carrying capacity or Ne? — what we ran, and what came out
 
-**Figures:** `runs/routes_decomposition.png` · `runs/killifish_windows.png`
+**Figures:** `runs/spatial_structure.png` · `runs/routes_decomposition.png` · `runs/killifish_windows.png`
 **Code and full record:** `experiments/ne_lifespan/` (branch `exp-ne-lifespan`), details in `HANDOFF.md`
 
 ---
@@ -45,6 +45,14 @@ killifish pools.
 We calibrated it first rather than assuming (12 short runs): `MIGRATION_LONG_RATE` turned out to
 be the strong knob, mapping onto spatial structure F_ST over a **15× range** while census N held
 at exactly 3000 in every arm.
+
+![structure](../../runs/spatial_structure.png)
+
+That figure is what F_ST is measuring. Each dot is one individual at its lattice cell, coloured
+by PC1 of its genome — the same axis a PCA of real genomes would show. On the left, offspring
+disperse far and the genome is spatial noise. On the right they don't, neighbours are relatives,
+and the population breaks into patches. **Carrying capacity, census size and total mutational
+input are identical across all four panels.** The only difference is how far offspring travel.
 
 Then: **one** pre-evolved ancestor (430,000 steps, equilibrated on the neutral locus), branched
 into every treatment. Because all arms share that ancestor, nothing downstream can be burn-in
