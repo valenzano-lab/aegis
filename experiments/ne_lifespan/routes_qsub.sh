@@ -187,7 +187,13 @@ else
 
     echo "run: $(basename "${ARMDIR}")  arm=${ARM_NAME}  override='${OVERRIDE:-none}'  extend-to=${TOTAL} (TOTAL steps, incl. burn-in)"
     if [ -n "${OVERRIDE}" ]; then
-        aegis sim -c "${ARMDIR}.yml" -r --extend "${TOTAL}" --override "${OVERRIDE}"
+        # ${OVERRIDE} is deliberately UNQUOTED: an arm may carry several settings as
+        # "A=1 --override B=2", and word-splitting is what turns that into separate
+        # arguments. Quoting it passes the whole string as one --override value, which
+        # fails as "expects a boolean, got 'false --override STARVATION_PENALTY=0.1'".
+        # Harmless for single-setting arms, which is why it survived until arm C_starv_pen.
+        # shellcheck disable=SC2086
+        aegis sim -c "${ARMDIR}.yml" -r --extend "${TOTAL}" --override ${OVERRIDE}
     else
         aegis sim -c "${ARMDIR}.yml" -r --extend "${TOTAL}"
     fi
