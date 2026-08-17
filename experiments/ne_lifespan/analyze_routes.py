@@ -39,7 +39,15 @@ LATE_FROM = 15
 # arm -> (label, x-axis value) ; F_ST measured in the lattice calibration, batch 2.
 ARM_A = [("A_ld0200", 0.09), ("A_ld0050", 0.17), ("A_ld0010", 0.33), ("A_ld0000", 0.68)]
 ARM_B = [("B_mu05", 0.5), ("B_mu20", 2.0), ("B_mu40", 4.0)]
-ARM_C = [("C_starv", None)]
+# C_starv_pen is the REAL route-3 test: REPRODUCTION_REGULATION off AND the starvation
+# penalty actually on, so density feedback regulates the population instead of a birth cap.
+# Its N fluctuates around ~3000 (measured 2216-3885), i.e. MATCHED to ctrl -- extrinsic
+# mortality isolated with no population-size confound.
+ARM_C = [("C_starv_pen", None)]
+# C_starv is NOT route 3: STARVATION_PENALTY was 0.0, so nothing regulated the population and
+# it grew to 9885 (3.3x K) with no mortality penalty at all. Reported separately as an extra
+# route-1 data point -- more N, more Ne, longer life.
+ARM_HIGH_N = [("C_starv", None)]
 
 
 def px_of(d):
@@ -107,11 +115,15 @@ def main():
     a = block("ROUTE 1 — DRIFT BARRIER   (K, census N and N·u all identical; only structure varies)",
               ARM_A, "F_ST")
     b = block("ROUTE 2 — MUTATIONAL SUPPLY   (Ne untouched; N·u scaled)", ARM_B, "µ ×")
-    c = block("ROUTE 3 — EXTRINSIC MORTALITY   (density feedback instead of a birth cap)",
+    c = block("ROUTE 3 — EXTRINSIC MORTALITY   (starvation deaths; N matched to ctrl at ~3000)",
               ARM_C, "")
+    block("BONUS ROUTE-1 EVIDENCE — unregulated high-N arm   (N ~ 9885, no mortality penalty)",
+          ARM_HIGH_N, "")
 
     # The comparison that decides it: how far does each route move lifespan?
     print("EFFECT SIZE BY ROUTE  (largest |Δe0| from ctrl within each arm)")
+    print("  ranges are NOT commensurable: F_ST moved 7.5x, µ 8x. Compare directions and")
+    print("  age-specificity, and weigh by how much each varies in real populations.")
     for name, rows in [("1 drift (fragmentation)", a), ("2 supply (mutation rate)", b),
                        ("3 extrinsic mortality", c)]:
         if not rows:
