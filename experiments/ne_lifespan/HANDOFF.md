@@ -489,3 +489,32 @@ alongside genetic e0 for this arm, and check the population actually overshot K
 override never took and the arm measured nothing).
 
 Analysis: `analyze_routes.py` (effect size per route, age specificity, F_ST dose–response).
+
+### ROUTE 3 RESOLVED (job 974233, 2026-08-17) — and all three routes are real
+The first `C_starv` arm never applied extrinsic mortality (see above). `C_starv_pen`
+(`REPRODUCTION_REGULATION=false` **and** `STARVATION_PENALTY=0.1`) is the real test: population
+fluctuates 2216–3885 around ~3000, i.e. **N matched to ctrl**, so extrinsic mortality is isolated
+with no population-size confound.
+
+Strongest arm of each route, against `ctrl` (e0 20.78 ± 0.16, early px 0.9802, late px 0.8999):
+| route | manipulation | Δe0 | Δearly | Δlate | late/early |
+|---|---|--:|--:|--:|--:|
+| 1 drift barrier | F_ST 0.09→0.68 | −2.28 | −0.0055 | −0.0261 | 4.7× |
+| 2 mutational supply | µ ×4 | −6.05 | −0.0262 | −0.1003 | 3.8× |
+| 3 extrinsic mortality | starvation deaths | −4.71 | −0.0146 | −0.1225 | 8.4× |
+
+- **Route 3 is NOT the compensation artifact I predicted.** Compensation for the resource
+  multiplier would raise survival UNIFORMLY (the multiplier is age-independent); the deficit is
+  8.4× stronger late. It is the force-of-selection mechanism. It also **independently reproduces**
+  the year-old recorded finding (starvation regimes e0 ≈ 15–18 vs 19–20 birth-regulated): this arm
+  lands at 16.07.
+- **THE ANSWER TO RUCHITHA:** not "Ne" and not "K" — K reaches life history by three distinct
+  paths and all three carry real signal. The original sweep set "Ne" via `RESOURCE_MAXIMUM_AMOUNT`,
+  so it moved N (hence Ne), N·u **and** resource-limited mortality together; the published effect
+  was their sum. What survives for the Ne position: route 1 shows Ne ALONE, at identical K/N/N·u,
+  gives a monotone dose–response with r = −0.998. No comparative dataset can isolate that.
+- **The late/early ratio is a second discriminator.** Supply is the most uniform (3.8×) because
+  extra mutations arrive at every age; extrinsic mortality is the most late-concentrated (8.4×)
+  because it acts directly on the selection gradient. Usable to tell mechanisms apart in real data
+  independently of effect size.
+- ⚠️ `C_starv_pen` reported at **n=2**; seed 1 was still running. Re-pull and re-run to confirm.
