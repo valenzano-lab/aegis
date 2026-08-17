@@ -78,7 +78,12 @@ ARMS = {
     "B_mu40":   {"G_muta_initpheno": MU0 * 4.0},
     # arm C -- extrinsic mortality. Population overshoots resources and pays proportional
     # surv/repr penalties (the intended density feedback), instead of being birth-capped.
-    "C_starv":  {"REPRODUCTION_REGULATION": False},
+    # ⚠️ C_starv does NOT test extrinsic mortality. ARCH sets STARVATION_PENALTY=0.0 and
+    # the multiplier is (1-penalty)**steps = 1.0 always, so dropping the birth cap left the
+    # population unregulated: it grew to 9885 (3.3x K) with no mortality penalty at all.
+    # Kept as a high-N arm (a real route-1 data point) -- the corrected route-3 arm is below.
+    "C_starv":     {"REPRODUCTION_REGULATION": False},
+    "C_starv_pen": {"REPRODUCTION_REGULATION": False, "STARVATION_PENALTY": 0.1},
 }
 
 

@@ -78,7 +78,12 @@ BURN_TOTAL="${BURN_TOTAL:-}"   # phase 1 only: extend a finished burn-in to this
 
 # Arm name -> the single --override that defines it. MUST match ARMS in routes_configs.py.
 # Order fixes the phase-2 task mapping, so do not reorder without re-reading the -t range.
-ARM_NAMES=(ctrl A_ld0200 A_ld0050 A_ld0010 A_ld0000 B_mu05 B_mu20 B_mu40 C_starv)
+# C_starv turned out NOT to test extrinsic mortality: ARCH sets STARVATION_PENALTY=0.0,
+# and the multiplier is (1-penalty)**steps = 1.0 always, so removing the birth cap left
+# nothing regulating the population at all -- it grew to 9885 (3.3x K) with no penalty.
+# It is retained as a genuine high-N arm (an extra route-1 point, +2.12 in e0), and
+# C_starv_pen is the CORRECTED route-3 arm with the penalty actually switched on.
+ARM_NAMES=(ctrl A_ld0200 A_ld0050 A_ld0010 A_ld0000 B_mu05 B_mu20 B_mu40 C_starv C_starv_pen)
 ARM_OVERRIDE=(
     ""
     "MIGRATION_LONG_RATE=0.02"
@@ -89,6 +94,7 @@ ARM_OVERRIDE=(
     "G_muta_initpheno=0.00034"
     "G_muta_initpheno=0.00068"
     "REPRODUCTION_REGULATION=false"
+    "REPRODUCTION_REGULATION=false --override STARVATION_PENALTY=0.1"
 )
 
 echo "host: $(hostname) | phase: ${PHASE} | task: ${TASK_ID} | started: $(date)"
