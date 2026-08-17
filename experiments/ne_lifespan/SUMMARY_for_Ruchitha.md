@@ -128,7 +128,57 @@ less tightly coupled lifespans.
 
 ---
 
-## 5. Where this sits in the literature
+## 5. The distinction this forces: global Ne vs local Ne
+
+This is the part most worth carrying beyond the simulation.
+
+**"Ne" is not one number.** Under spatial structure there are at least two, and under
+fragmentation they move in **opposite directions**:
+
+| | what it governs | under fragmentation |
+|---|---|---|
+| **global Ne** | total genetic diversity across the whole population | **rises** — subdivision preserves variants by holding them in different patches (Wahlund); `Ne_global ≈ N/(1−F_ST)` |
+| **local Ne** | whether selection can resolve a variant among the individuals actually competing | **falls** — the neighbourhood is small |
+
+Selection efficiency depends on the **local** one. Diversity-based estimators measure the
+**global** one.
+
+Our runs show the divergence directly. Across the fragmentation gradient, genome-wide genetic
+Ne rose from ~182 to ~266 while evolved lifespan fell from 20.99 to 18.49. More structure meant
+**more retained diversity and worse selection at the same time.**
+
+⚠️ Caveat on those particular numbers: the Ne values come from the short calibration runs
+(5,000 steps, still far from mutation–drift equilibrium) and the lifespans from the 200,000-step
+route-1 arms. Same F_ST grid, different runs — so treat the table as indicative of direction, not
+as a within-run measurement. Measuring global Ne inside the route-1 arms themselves is one rsync
+away and worth doing before this is used in an argument.
+
+### Why it matters outside the simulation
+
+1. **It can invert an inference from real genomes.** Estimating Ne from genome-wide diversity
+   (θ_w, π, the SFS) gives the *global* number. In a structured species that estimate can go
+   **up** exactly when selection efficiency goes **down**. Anyone concluding "diversity is high,
+   so selection is efficient" in a fragmented population may have it backwards. Killifish pools
+   are about as structured as natural populations get — so whether a diversity estimate was
+   computed within pools or pooled across them is not a detail, it decides the sign.
+
+2. **The theory needs to say which Ne.** Lehtonen's drift barrier and Aubier & Galipaud's
+   extension both write a single `Ne` into `1/(2Ne)`. It has to be the local one. That is a
+   genuine refinement rather than a quibble, because the two can move oppositely.
+
+3. **It predicts a signature that looks contradictory under a one-Ne model:** high genome-wide
+   diversity together with high mutation load, in the same population. Under a single Ne those
+   should be anti-correlated. Under structure they are not — and the combination is diagnostic of
+   fragmentation specifically.
+
+4. **It is why we could not use the standard tool.** `runs/genetic_ne.py`, applied to a global
+   sample of the fragmented arms, would have reported "Ne went *up*, so the drift-barrier story
+   is wrong" — a confident, wrong conclusion from an arithmetically correct calculation of the
+   wrong quantity. That is documented in `HANDOFF.md` as a trap, not a footnote.
+
+---
+
+## 6. Where this sits in the literature
 
 Worth knowing before writing anything up: **Ne → lifespan is not untouched ground.**
 
@@ -146,7 +196,7 @@ method.
 
 ---
 
-## 6. Caveats
+## 7. Caveats
 
 - Three seeds, one genetic architecture, `AGE_LIMIT = 30`.
 - Seeds 2 and 3 branched at 2.5% / 2.9% of the neutral gap remaining rather than <1%. Within-seed
@@ -160,7 +210,7 @@ method.
 
 ---
 
-## 7. What's open — and it's yours
+## 8. What's open — and it's yours
 
 The reproductive axis. Every result above is **survival**; reproduction was locked
 (`G_repr_evolvable = False`) throughout.
