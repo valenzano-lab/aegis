@@ -448,3 +448,44 @@ environmental analogue of the umbral horizon `a*`, set by ecology rather than by
 ⚠️ **Check before committing compute:** the ancestor must retain meaningful survival out to age ~30,
 or the W=24 and W=30 arms have no shadow to erode. Read `px` per age off the burn-in's final
 phenotype snapshot first.
+
+## THREE-ROUTE RESULT (job 974224, 3 seeds, 2026-08-16/17)
+Reference `ctrl` (unfragmented, baseline µ, birth-regulated): **e0 = 20.78 ± 0.16**, early px 0.9802,
+late px 0.8999. Ancestor before any regime: e0 20.87 — i.e. 200k further steps under the burn-in
+regime changed nothing, so elapsed time is not doing the work.
+
+**ROUTE 1 — drift barrier. CONFIRMED.** K, census N and N·u all identical; only spatial structure varies.
+| F_ST | e0 | Δe0 | Δlate px |
+|--:|--:|--:|--:|
+| 0.09 | 20.99 | +0.21 | +0.0019 |
+| 0.17 | 20.78 | +0.01 | +0.0056 |
+| 0.33 | 20.07 | −0.71 | −0.0118 |
+| 0.68 | 18.49 | −2.28 | −0.0261 |
+
+**corr(F_ST, e0) = −0.998** over a 7× range, sd 0.20–0.38 against a 2.3-unit effect, and the erosion is
+**age-specific**: mean Δlate −0.0076 vs Δearly −0.0013, a ~6× concentration at late ages exactly as the
+drift barrier predicts. **This answers Ruchitha: Ne does the work, not carrying capacity.**
+(The earlier n=1 peek — one arm 0.68 below ctrl — was inside the noise. The gradient is the result.)
+
+**ROUTE 2 — mutational supply. LARGER than route 1 over the ranges tested.**
+µ ×0.5 → e0 22.32 (+1.55); ×2 → 18.10 (−2.67); ×4 → **14.72 (−6.05)**.
+⚠️ **Corrects an earlier claim in this file's history.** It was argued that supply would be
+"quantitatively minor" because MA load depends on 2Ne·s rather than N·u. That is incomplete: the
+equilibrium frequency of a deleterious allele is ~u/s, so load scales with **µ directly**. The two
+knobs are not commensurable though — F_ST was moved 7.5×, µ 8× — and which dominates *in nature*
+depends on which varies more between real populations. Fragmentation varies enormously between
+killifish pools; germline µ is comparatively conserved within a species.
+
+**ROUTE 3 — extrinsic mortality. NUMBER NOT TRUSTWORTHY AS PRINTED.**
+`C_starv` gives e0 = 22.90 ± 0.22 (+2.12) — *longer* life, opposite in sign to Williams/Medawar AND to
+the earlier recorded finding (starvation regimes evolved e0 ≈ 15–18 vs 19–20 birth-regulated).
+⚠️ **Probable measurement artifact, not biology.** Under `REPRODUCTION_REGULATION=false` the starvation
+response MULTIPLIES the survival phenotype by `resource_ratio`. Selection compensates by pushing the
+GENETIC value up, so genetic e0 rises while realized survival falls. The rule "read aging off the
+genetic phenotype" is right for arms A and B, where nothing multiplies the phenotype — but **genetic e0
+is not comparable across regulation regimes.** Before route 3 is used: report realized survivorship
+alongside genetic e0 for this arm, and check the population actually overshot K
+(`tail -1 burn_s1_C_starv/popsize_after_reproduction.csv` — expect > 3000; if it reads 3000 the
+override never took and the arm measured nothing).
+
+Analysis: `analyze_routes.py` (effect size per route, age specificity, F_ST dose–response).
