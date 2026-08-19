@@ -16,6 +16,7 @@ class Trait:
         self.agespecific = get("agespecific")
         self.interpreter = get("interpreter")
         self.initgeno = get("initgeno")
+        self.custom_weights = get("custom_weights")
 
         # Relevant if genetic architecture is modifying
         self.initpheno = get("initpheno")
@@ -39,7 +40,7 @@ class Trait:
             else:  # no loci for a constant trait
                 self.length = 0
 
-            self._validate()
+            self._validate(BITS_PER_LOCUS=cnf.BITS_PER_LOCUS)
 
             # Infer positions in the genome
             # self.start = start
@@ -59,7 +60,7 @@ class Trait:
 
         self.slice = slice(self.start, self.end)
 
-    def _validate(self):
+    def _validate(self, BITS_PER_LOCUS):
         """Check whether input parameters are legal."""
         if not isinstance(self.evolvable, bool):
             raise TypeError
@@ -82,8 +83,27 @@ class Trait:
                 "single_bit",
                 "const1",
                 "threshold",
+                "custom_weighted",
             ):
                 raise ValueError(f"{self.interpreter} is not a valid interpreter type")
+
+            if self.interpreter == "custom_weighted":
+                if not isinstance(self.custom_weights, list):
+                    raise ValueError(
+                        f"G_{self.name}_custom_weights must be a list when "
+                        f"G_{self.name}_interpreter is custom_weighted."
+                    )
+                if len(self.custom_weights) != BITS_PER_LOCUS:
+                    raise ValueError(
+                        f"G_{self.name}_custom_weights must contain exactly "
+                        f"{BITS_PER_LOCUS} weights, but has {len(self.custom_weights)}."
+                    )
+                if any(not isinstance(weight, (int, float)) for weight in self.custom_weights):
+                    raise ValueError(f"G_{self.name}_custom_weights must contain only numbers.")
+                if any(weight < 0 for weight in self.custom_weights):
+                    raise ValueError(f"G_{self.name}_custom_weights cannot contain negative weights.")
+                if sum(self.custom_weights) <= 0:
+                    raise ValueError(f"G_{self.name}_custom_weights must have a positive total.")
 
             if not 0 <= self.lo <= 1:
                 raise ValueError
