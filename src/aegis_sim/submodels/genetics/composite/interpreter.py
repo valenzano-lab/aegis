@@ -34,12 +34,15 @@ class Interpreter:
         linear_weights = np.arange(self.BITS_PER_LOCUS)[::-1] + 1
         self.linear_weights = linear_weights / linear_weights.sum()
 
-    def call(self, loci, interpreter_kind):
+    def call(self, loci, interpreter_kind, custom_weights=None):
         """Exposed method"""
 
         # shape is (n_individuals, ?, bits_per_locus)
         assert loci.shape[0] > 0, f"loci.shape[0] is {loci.shape[0]}"
         assert loci.shape[2] == self.BITS_PER_LOCUS
+
+        if interpreter_kind == "custom_weighted":
+            return self._custom_weighted(loci, custom_weights)
 
         method = {
             "const1": self._const1,
@@ -72,6 +75,13 @@ class Interpreter:
 
     def _linear(self, loci):
         return np.matmul(loci, self.linear_weights)
+
+    @staticmethod
+    def _custom_weighted(loci, custom_weights):
+        """Map locus bits using trait-specific, user-defined weights."""
+        weights = np.asarray(custom_weights, dtype=np.float32)
+        normalized_weights = weights / weights.sum()
+        return np.matmul(loci, normalized_weights)
 
     def _binary(self, loci):
         """Interpret locus as a binary number and normalize.

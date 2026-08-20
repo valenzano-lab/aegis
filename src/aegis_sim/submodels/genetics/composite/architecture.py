@@ -108,7 +108,11 @@ class CompositeArchitecture:
         interpretome = np.zeros(shape=(genomes.shape[0], genomes.shape[1]), dtype=np.float32)
         for trait in parameterization.traits.values():
             loci = genomes[:, trait.slice]  # fetch
-            probs = self.interpreter.call(loci, trait.interpreter)  # interpret
+            probs = self.interpreter.call(
+                loci,
+                trait.interpreter,
+                custom_weights=trait.custom_weights,
+            )  # interpret
             # self.diffuse(probs)
             interpretome[:, trait.slice] += probs  # add back
 
