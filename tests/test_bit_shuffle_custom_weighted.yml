@@ -1,0 +1,9 @@
+STEPS_PER_SIMULATION: 1
+LOGGING_RATE: 1
+INITIAL_POPULATION_SIZE: 10
+BITS_PER_LOCUS: 4
+G_surv_evolvable: true
+G_surv_agespecific: false
+G_surv_interpreter: custom_weighted
+G_surv_custom_weights: [10, 3, 1, 1]
+G_surv_initgeno: 0.5

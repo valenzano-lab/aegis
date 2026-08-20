@@ -96,7 +96,46 @@ def test_compute_matches_manual_unshuffled_interpretation(architecture):
     expected = np.zeros(shape=(logical.shape[0], logical.shape[1]), dtype=np.float32)
     for trait in parameterization.traits.values():
         loci = logical[:, trait.slice]
-        probs = architecture.interpreter.call(loci, trait.interpreter)
+        probs = architecture.interpreter.call(loci, trait.interpreter, custom_weights=trait.custom_weights)
         expected[:, trait.slice] += probs
 
     assert np.allclose(result, expected)
+
+
+CUSTOM_WEIGHTED_CONFIG_PATH = pathlib.Path(__file__).absolute().parent / "test_bit_shuffle_custom_weighted.yml"
+
+
+def test_custom_weighted_interpreter_reads_logical_bit_order_despite_physical_shuffle():
+    """custom_weighted is bit-position-sensitive within a locus (weight[i] applies to
+    logical bit i). This confirms the physical bit shuffle does not corrupt that
+    mapping -- i.e. compute() correctly un-shuffles before the interpreter runs."""
+    aegis_sim.init(custom_config_path=CUSTOM_WEIGHTED_CONFIG_PATH, overwrite=True)
+    architecture = submodels.architect.architecture
+    from aegis_sim import parameterization
+
+    surv = parameterization.traits["surv"]
+    assert surv.interpreter == "custom_weighted"
+    assert surv.custom_weights == [10, 3, 1, 1]
+    assert architecture.bit_permutation.tolist() != list(range(architecture.length))  # sanity: actually shuffled
+
+    popsize = 4
+    genomes = architecture.init_genome_array(popsize)  # (popsize, ploidy, n_loci, BITS_PER_LOCUS), physical order
+
+    # Known logical bit patterns for surv's single locus, individual by individual.
+    logical_patterns = np.array(
+        [
+            [True, False, True, False],  # (10 + 1) / 15
+            [False, False, False, False],  # 0 / 15
+            [True, True, True, True],  # 15 / 15
+            [False, True, False, True],  # (3 + 1) / 15
+        ]
+    )
+    logical = architecture.to_logical(genomes)
+    surv_locus = surv.start  # single locus (agespecific=False), same for both chromatids
+    logical[:, :, surv_locus, :] = logical_patterns[:, None, :]
+    genomes = architecture.to_physical(logical)
+
+    result = architecture.compute(genomes.copy())
+
+    expected_surv = np.array([11 / 15, 0 / 15, 15 / 15, 4 / 15], dtype=np.float32)
+    assert np.allclose(result[:, surv_locus], expected_surv)
