@@ -106,12 +106,20 @@ class PopgenStatsRecorder(Recorder):
         frequency parameter: POPGENSTATS_RATE
         structure: A float matrix.
         """
-        submodels.popgenstats.record_pop_size_history(genomes.array)
+        # If the architecture stores genomes in a shuffled physical bit order
+        # (composite architecture's bit_permutation), report popgen stats in the
+        # logical (trait x age x bit) order users expect instead of physical order.
+        architecture = submodels.architect.architecture
+        array = genomes.array
+        if hasattr(architecture, "to_logical"):
+            array = architecture.to_logical(array)
+
+        submodels.popgenstats.record_pop_size_history(array)
 
         if skip("POPGENSTATS_RATE") or len(genomes) == 0:
             return
 
-        submodels.popgenstats.calc(genomes.array, mutation_rates)
+        submodels.popgenstats.calc(array, mutation_rates)
 
         # Record simple statistics
         array = list(submodels.popgenstats.emit_simple().values())
