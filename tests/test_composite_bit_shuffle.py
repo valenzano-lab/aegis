@@ -139,3 +139,33 @@ def test_custom_weighted_interpreter_reads_logical_bit_order_despite_physical_sh
 
     expected_surv = np.array([11 / 15, 0 / 15, 15 / 15, 4 / 15], dtype=np.float32)
     assert np.allclose(result[:, surv_locus], expected_surv)
+
+
+def test_custom_weighted_output_identical_with_and_without_shuffle():
+    """Direct A/B check: for the same logical genome content, custom_weighted output
+    with the real (shuffled) bit_permutation must equal output computed with an
+    identity permutation (i.e. the pre-shuffle, custom-weighted-interpreter-branch
+    behavior). This isolates the shuffle's effect to storage/recombination only --
+    it must not change what a fixed genome interprets to."""
+    aegis_sim.init(custom_config_path=CUSTOM_WEIGHTED_CONFIG_PATH, overwrite=True)
+    architecture = submodels.architect.architecture
+
+    popsize = 30
+    genomes_physical = architecture.init_genome_array(popsize)  # real shuffled storage
+    logical = architecture.to_logical(genomes_physical)
+
+    result_with_shuffle = architecture.compute(genomes_physical.copy())
+
+    identity_perm = np.arange(architecture.length)
+    ploidy = genomes_physical.shape[1]
+    genomes_no_shuffle = logical.reshape(popsize, ploidy, architecture.length)[:, :, identity_perm]
+    genomes_no_shuffle = genomes_no_shuffle.reshape(genomes_physical.shape)
+
+    original_perm = architecture.bit_permutation
+    architecture.bit_permutation = identity_perm
+    try:
+        result_without_shuffle = architecture.compute(genomes_no_shuffle.copy())
+    finally:
+        architecture.bit_permutation = original_perm
+
+    assert np.allclose(result_with_shuffle, result_without_shuffle)
