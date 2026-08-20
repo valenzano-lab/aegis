@@ -1,4 +1,4 @@
-GENETIC_TRAITS = ("surv", "repr", "muta", "neut", "grow")
+GENETIC_TRAITS = ("surv", "repr", "muta", "neut", "grow", "selectable_via_surv")
 TRAIT_N = len(GENETIC_TRAITS)
 
 

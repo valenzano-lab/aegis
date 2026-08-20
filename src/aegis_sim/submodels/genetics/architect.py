@@ -5,6 +5,7 @@ Abstract away genetic architecture.
 from aegis_sim.submodels.genetics.envdrift import Envdrift
 from aegis_sim.submodels.genetics.composite.architecture import CompositeArchitecture
 from aegis_sim.submodels.genetics.modifying.architecture import ModifyingArchitecture
+from aegis_sim.submodels.genetics import selectable_surv
 from aegis_sim.dataclasses.phenotypes import Phenotypes
 
 
@@ -34,6 +35,8 @@ class Architect:
         self.architecture = architecture
         self.envdrift = Envdrift(ENVDRIFT_RATE=ENVDRIFT_RATE, genome_shape=self.architecture.get_shape())
 
+        selectable_surv.validate()
+
     def __call__(self, genomes):
         """Translate genomes into an array of phenotypes probabilities."""
 
@@ -46,5 +49,6 @@ class Architect:
 
         smooth_pheno_array = Phenotypes.gaussian_smoothing(pheno_array)
         phenotypes = Phenotypes(smooth_pheno_array)
+        phenotypes = selectable_surv.apply(phenotypes)
 
         return phenotypes

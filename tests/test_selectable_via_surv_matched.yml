@@ -1,0 +1,16 @@
+STEPS_PER_SIMULATION: 1
+LOGGING_RATE: 1
+INITIAL_POPULATION_SIZE: 10
+AGE_LIMIT: 3
+G_surv_agespecific: true
+G_selectable_via_surv_evolvable: true
+G_selectable_via_surv_agespecific: true
+G_selectable_via_surv_interpreter: uniform
+G_selectable_via_surv_lo: 0
+G_selectable_via_surv_hi: 1
+G_selectable_via_surv_mode: stabilizing_selection
+G_selectable_via_surv_stabilizing_sel_mean: 0.5
+G_selectable_via_surv_stabilizing_sel_sd: 0.1
+G_selectable_via_surv_stabilizing_sel_max_benefit: 0.2
+G_selectable_via_surv_stabilizing_sel_const_penalty: -0.3
+G_selectable_via_surv_stabilizing_sel_const_penalty_beyond_sd: 2

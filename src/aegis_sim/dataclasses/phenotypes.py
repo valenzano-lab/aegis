@@ -148,12 +148,8 @@ class Phenotypes:
 
     @staticmethod
     def get_trait_position(trait_name):
-        index = GENETIC_TRAITS.index(trait_name)
-        AGE_LIMIT = parameterization.parametermanager.parameters.AGE_LIMIT
-        start = index * AGE_LIMIT
-        end = start + AGE_LIMIT
-        slice_ = slice(start, end)
-        return start, end, slice_
+        trait = parameterization.traits[trait_name]
+        return trait.start, trait.end, trait.slice
 
     # @staticmethod
     # def clip_array_to_01(array):

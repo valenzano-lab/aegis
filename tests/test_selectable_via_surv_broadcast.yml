@@ -1,0 +1,14 @@
+STEPS_PER_SIMULATION: 1
+LOGGING_RATE: 1
+INITIAL_POPULATION_SIZE: 10
+AGE_LIMIT: 3
+G_surv_agespecific: true
+G_selectable_via_surv_evolvable: true
+G_selectable_via_surv_agespecific: false
+G_selectable_via_surv_interpreter: uniform
+G_selectable_via_surv_lo: 0
+G_selectable_via_surv_hi: 1
+G_selectable_via_surv_mode: directional_selection
+G_selectable_via_surv_directional_sel_cutoff_value: 0.5
+G_selectable_via_surv_directional_sel_constant_benefit: 0.1
+G_selectable_via_surv_directional_sel_constant_penalty: -0.2
