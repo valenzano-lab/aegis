@@ -30,6 +30,7 @@ from .resourcerecorder import ResourcesRecorder
 from .ticker import Ticker
 from .configrecorder import ConfigRecorder
 from .envdriftmaprecorder import Envdriftmaprecorder
+from .equilibriumrecorder import EquilibriumRecorder
 
 # TODO write tests
 
@@ -78,6 +79,7 @@ class RecordingManager:
         self.resourcerecorder = ResourcesRecorder(odir=self.odir)
         self.configrecorder = ConfigRecorder(odir=self.odir)
         self.envdriftmaprecorder = Envdriftmaprecorder(odir=self.odir)
+        self.equilibriumrecorder = EquilibriumRecorder(odir=self.odir)
 
     #############
     # UTILITIES #

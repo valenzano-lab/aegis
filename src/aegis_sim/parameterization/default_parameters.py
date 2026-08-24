@@ -1342,4 +1342,56 @@ DEFAULT_PARAMETERS = {
         drange="{by_loop, by_dot, by_dummy}",
         inrange=lambda x: x in ("by_loop", "by_dot", "by_dummy"),
     ),
+    #
+    #
+    # EQUILIBRIUM DETECTION
+    "EQUILIBRIUM_TERMINATION": Parameter(
+        key="EQUILIBRIUM_TERMINATION",
+        name="",
+        domain="equilibrium",
+        default=False,
+        info="Stop the simulation early once the population is judged to have reached equilibrium",
+        info_extended="When True, every EQUILIBRIUM_CHECK_RATE steps the population size and the phenotype "
+        "trait-age medians are recorded; once the last EQUILIBRIUM_WINDOW checks all vary by less than "
+        "EQUILIBRIUM_TOLERANCE (relative, coefficient of variation), the simulation is judged to be at "
+        "equilibrium and stops early instead of running the full STEPS_PER_SIMULATION. An "
+        "equilibrium_summary.json file is written recording the step at which equilibrium was reached and "
+        "how many steps were saved. When False (default), this check never runs and behavior is unchanged.",
+        dtype=bool,
+        drange="",
+    ),
+    "EQUILIBRIUM_CHECK_RATE": Parameter(
+        key="EQUILIBRIUM_CHECK_RATE",
+        name="",
+        domain="equilibrium",
+        default=1000,
+        info="Frequency of equilibrium checks (in steps)",
+        dtype=int,
+        drange="[1, inf)",
+        inrange=lambda x: x >= 1,
+        evalrange=[100, 10000],
+    ),
+    "EQUILIBRIUM_WINDOW": Parameter(
+        key="EQUILIBRIUM_WINDOW",
+        name="",
+        domain="equilibrium",
+        default=10,
+        info="Number of consecutive equilibrium checks used to judge stability",
+        dtype=int,
+        drange="[2, inf)",
+        inrange=lambda x: x >= 2,
+        evalrange=[3, 50],
+    ),
+    "EQUILIBRIUM_TOLERANCE": Parameter(
+        key="EQUILIBRIUM_TOLERANCE",
+        name="",
+        domain="equilibrium",
+        default=0.02,
+        info="Maximum coefficient of variation (std/mean) allowed, across the check window, for population "
+        "size and for each phenotype trait-age median, for the population to be judged at equilibrium",
+        dtype=float,
+        drange="(0, inf)",
+        inrange=lambda x: x > 0,
+        evalrange=[0.005, 0.5],
+    ),
 }
